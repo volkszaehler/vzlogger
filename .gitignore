@@ -1,10 +1,32 @@
+# Binaries
+/src/vzlogger
+
+# Compiled Object files
+*.slo
+*.lo
 *.o
-src/vzlogger
-src/Makefile
-autom4te.cache/
-config.status
-config.h
-debian/vzlogger.1
-src/.deps
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# http://www.gnu.org/software/automake
+Makefile.in
+
+# http://www.gnu.org/software/autoconf
+/autom4te.cache
+/aclocal.m4
+/compile
+/configure
+/depcomp
+/install-sh
+/missing
+
+/config.status
+/config.h
+/src/.deps
 stamp-h1
-Makefile
