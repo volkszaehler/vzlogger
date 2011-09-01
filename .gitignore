@@ -27,6 +27,7 @@ Makefile.in
 /missing
 
 /config.status
+/config.log
 /config.h
 /src/.deps
 stamp-h1
