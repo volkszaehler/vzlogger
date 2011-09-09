@@ -22,52 +22,42 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#include "../main.h"
-#include "../protocol.h"
-#include "random.h"
+#include "../include/random.h"
 
-/**
- * Initialize prng
- * @return random_state_t
- */
-void * random_init(char *options) {
-	random_state_t *state;
-	state = malloc(sizeof(random_state_t));
+int meter_random_open(meter_handle_random_t *handle, char *options) {
+	srand(time(NULL)); /* initialize PNRG */
 
-	srand(time(NULL));
-	
-	state->min = 0; // TODO parse from options
-	state->max = strtof(options, NULL);
-	state->last = state->max * ((float) rand() / RAND_MAX); /* start value */
-	
-	return (void *) state;
+	handle->min = 0; // TODO parse from options
+	handle->max = strtof(options, NULL);
+	handle->last = handle->max * ((float) rand() / RAND_MAX); /* start value */
+
+	return 0; /* always succeeds */
 }
 
-void random_close(void *handle) {
-	free(handle);
+void meter_random_close(meter_handle_random_t *handle) {
+	/* nothing todo */
 }
 
-reading_t random_get(void *handle) {
-	random_state_t *state = (random_state_t *) handle;
-	reading_t rd;
-	
-	state->last += ltqnorm((float) rand() / RAND_MAX);
-	
+meter_reading_t meter_random_read(meter_handle_random_t *handle) {
+	meter_reading_t rd;
+
+	handle->last += ltqnorm((float) rand() / RAND_MAX);
+
 	/* check bounaries */
-	if (state->last > state->max) {
-		state->last = state->max;
+	if (handle->last > handle->max) {
+		handle->last = handle->max;
 	}
-	else if (state->last < state->min) {
-		state->last = state->min;
+	else if (handle->last < handle->min) {
+		handle->last = handle->min;
 	}
-	
-	rd.value = state->last;
+
+	rd.value = handle->last;
 	gettimeofday(&rd.tv, NULL);
-	
+
 	return rd;
 }

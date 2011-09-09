@@ -1,14 +1,10 @@
 /**
- * Wrapper around libsml
+ * S0 Hutschienenzähler directly connected to an rs232 port
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
- * @copyright Copyright (c) 2011, DAI-Labor, TU-Berlin
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
- * @author Juri Glass
- * @author Mathias Runge
- * @author Nadim El Sayed 
  */
 /*
  * This file is part of volkzaehler.org
@@ -27,20 +23,20 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _SML_H_
-#define _SML_H_
+#ifndef _S0_H_
+#define _S0_H_
 
-#include "../protocol.h"
+#include <termios.h>
+
+#include "reading.h"
 
 typedef struct {
-	int fd;
-	// termios etc..
-} sml_state_t;
+	int fd; /* file descriptor of port */
+	struct termios oldtio; /* required to reset port */
+} meter_handle_s0_t;
 
-void * sml_init(char *port);
-void sml_close(void *handle);
-reading_t sml_get(void *handle);
-int sml_open_port(char *device);
-void sml_transport_receiver(unsigned char *buffer, size_t buffer_len);
+int meter_s0_open(meter_handle_s0_t *handle, char *options);
+void meter_s0_close(meter_handle_s0_t *handle);
+meter_reading_t meter_s0_read(meter_handle_s0_t *handle);
 
-#endif /* _SML_H_ */
+#endif /* _S0_H_ */

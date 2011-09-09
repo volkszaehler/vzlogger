@@ -22,53 +22,20 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _ONEWIRE_H_
+#define _ONEWIRE_H_
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#include "../main.h"
-#include "../protocol.h"
-#include "1wire.h"
+#include "reading.h"
 
-/**
- * Initialize sensor
- *
- * @param address path to the sensor in the owfs
- * @return pointer to file descriptor
- */
-void * onewire_init(char *address) {
-	FILE * fd  = fopen(address, "r");
+typedef struct {
+	FILE *file;
+} meter_handle_onewire_t;
 
-	if (fd == NULL) {
-		perror(address);
-		print(-1, "Failed to open sensor: %s", NULL, address);
-		exit(EXIT_FAILURE);
-	}
+int meter_onewire_open(meter_handle_onewire_t *handle, char *options);
+void meter_onewire_close(meter_handle_onewire_t *handle);
+meter_reading_t meter_onewire_read(meter_handle_onewire_t *handle);
 
-	return (void *) fd;
-}
-
-void onewire_close(void *handle) {
-	fclose((FILE *) handle);
-}
-
-reading_t onewire_get(void *handle) {
-	reading_t rd;
-	char buffer[16];
-	int bytes;
-
-	do {
-		rewind((FILE *) handle);
-		bytes = fread(buffer, 1, 16, (FILE *) handle);
-		buffer[bytes] = '\0'; /* zero terminated, required? */
-
-		if (bytes) {
-			print(4, "Read from sensor file: %s", NULL, buffer);
-
-			rd.value = strtof(buffer, NULL);
-			gettimeofday(&rd.tv, NULL);
-		}
-	} while (rd.value == 85); /* skip invalid readings */
-
-	return rd;
-}
+#endif /* _ONEWIRE_H_ */

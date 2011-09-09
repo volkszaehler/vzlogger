@@ -1,16 +1,19 @@
-# what flags you want to pass to the C compiler & linker
-AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_CFLAGS)
+AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99
+AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_LDFLAGS =
 
-# this lists the binaries to produce, the (non-PHONY, binary) targets in
-# the previous manual Makefile
-bin_PROGRAMS = vzlogger
+noinst_LIBRARIES = libmeter.a libobis.a
 
-vzlogger_SOURCES = main.c api.c queue.c ltqnorm.c protocols/1wire.c protocols/obis.c protocols/rawS0.c protocols/random.c
-vzlogger_LDADD = -lpthread -lm $(DEPS_LIBS)
+libmeter_a_SOURCES = meter.c d0.c s0.c random.c onewire.c ltqnorm.c
+#libmeter_a_HEADERS = meter.h
 
-if LOCAL
-vzlogger_SOURCES += local.c
-vzlogger_LDADD += $(DEPS_LOCAL_LIBS)
-AM_CFLAGS += $(DEPS_LOCAL_CFLAGS)
+libobis_a_SOURCES = obis.c
+#libobis_a_HEADERS = obis.h
+
+# SML support
+####################################################################
+if SML_SUPPORT
+libmeter_a_SOURCES += sml.c
+libmeter_a_LIBADD = libobis.a
+AM_CFLAGS += $(DEPS_SML_CFLAGS)
 endif

@@ -26,39 +26,50 @@
 #include <json/json.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
-#include "main.h"
+#include "vzlogger.h"
 #include "local.h"
+#include "options.h"
+#include "api.h"
 
-extern channel_t chans[MAX_CHANNELS];
+extern list_t chans;
 extern options_t opts;
 
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url, const char *method,
 			const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
-	const char * json_str;
+
 	int ret;
-	int num_chans = *(int *) cls;
-	print(2, "Local request received: %s %s %s", NULL, version, method, url);
+	const char *json_str;
+	const char *uuid = url+1;
+
+	struct timespec ts;
+	struct timeval tp;
 
 	struct MHD_Response *response;
 
 	struct json_object *json_obj = json_object_new_object();
 	struct json_object *json_data = json_object_new_object();
 
-	for (int i = 0; i < num_chans; i++) {
-		channel_t *ch = &chans[i];
-		reading_t rd;
+	print(2, "Local request received: %s %s %s", NULL, version, method, url);
 
-		if (strcmp(url, "/") == 0 || strcmp(ch->uuid, url + 1) == 0) {
-			pthread_mutex_lock(&ch->mutex);
-				/* wait for new data comet-like blocking of HTTP response */
-				pthread_cond_wait(&ch->condition, &ch->mutex); // TODO use pthread_cond_timedwait()
-			pthread_mutex_unlock(&ch->mutex);
+	for (channel_t *ch = chans.start; ch != NULL; ch = ch->next) {
+		if (strcmp(url, "/") == 0 || strcmp(ch->uuid, uuid) == 0) {
+			/* convert from timeval to timespec */
+			gettimeofday(&tp, NULL);
+			ts.tv_sec  = tp.tv_sec;
+			ts.tv_nsec = tp.tv_usec * 1000;
+			ts.tv_sec += COMET_TIMEOUT;
 
-			struct json_object *json_tuples = api_json_tuples(ch, TRUE);
+			/* blocking until new data arrives (comet-like blocking of HTTP response) */
+			pthread_mutex_lock(&ch->buffer.mutex);
+			pthread_cond_timedwait(&ch->condition, &ch->buffer.mutex, &ts);
+			pthread_mutex_unlock(&ch->buffer.mutex);
 
 			json_object_object_add(json_data, "uuid", json_object_new_string(ch->uuid));
 			json_object_object_add(json_data, "interval", json_object_new_int(ch->interval));
+
+			struct json_object *json_tuples = api_json_tuples(&ch->buffer, ch->buffer.start);
 			json_object_object_add(json_data, "tuples", json_tuples);
 		}
 	}

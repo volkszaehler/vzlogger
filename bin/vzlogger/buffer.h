@@ -1,5 +1,7 @@
 /**
- * Header file for volkszaehler.org API calls
+ * Circular buffer (double linked, threadsafe)
+ *
+ * Used to store recent readings and buffer in case of net inconnectivity
  *
  * @author Steffen Vogel <info@steffenvogel.de>
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,26 +25,33 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _API_H_
-#define _API_H_
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
-#include <stddef.h>
-#include <curl/curl.h>
-#include <json/json.h>
+#include <pthread.h>
+#include <sys/time.h>
 
-#include "main.h"
-#include "protocol.h"
+#include <reading.h>
 
 typedef struct {
-	char *data;
-	size_t size;
-} CURLresponse;
+	meter_reading_t *last;
+	meter_reading_t *start;
+	meter_reading_t *sent;
 
-/* curl callbacks */
-int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
-size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
+	int size;	/* number of readings currently in the buffer */
+	int memory;	/* number of readings to keep in mind for local interface */
 
-json_object * api_json_tuples(channel_t *ch, bool_t all);
-void * api_thread(void *arg);
+	pthread_mutex_t mutex;
+} buffer_t;
 
-#endif /* _API_H_ */
+/* Prototypes */
+void buffer_init(buffer_t *buf, int mem);
+int buffer_push(buffer_t *buf, meter_reading_t rd);
+void buffer_free(buffer_t *buf);
+void buffer_clean(buffer_t *buf);
+void buffer_clear(buffer_t *buf);
+char * buffer_dump(buffer_t *buf, char *dump, int len);
+
+
+#endif /* _BUFFER_H_ */
+

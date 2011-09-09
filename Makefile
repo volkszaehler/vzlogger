@@ -36,7 +36,7 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	depcomp install-sh missing
+	compile depcomp install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -137,10 +137,12 @@ CPPFLAGS =
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-DEPS_CFLAGS = -I/usr/include/json  
-DEPS_LIBS = -ljson -lcurl  
 DEPS_LOCAL_CFLAGS = 
 DEPS_LOCAL_LIBS = 
+DEPS_SML_CFLAGS = -I/usr/include/sml -I/usr/include/uuid  
+DEPS_SML_LIBS = -lsml -luuid  
+DEPS_VZ_CFLAGS = -I/usr/include/json  
+DEPS_VZ_LIBS = -ljson -lcurl  
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
@@ -170,6 +172,7 @@ PATH_SEPARATOR = :
 PKG_CONFIG = /usr/bin/pkg-config
 PKG_CONFIG_LIBDIR = 
 PKG_CONFIG_PATH = 
+RANLIB = ranlib
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = 
@@ -217,7 +220,7 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 sysconf_DATA = etc/vzlogger.conf
-SUBDIRS = src docs
+SUBDIRS = src bin/vzlogger
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -725,6 +728,7 @@ uninstall-am: uninstall-sysconfDATA
 	mostlyclean-generic pdf pdf-am ps ps-am tags tags-recursive \
 	uninstall uninstall-am uninstall-sysconfDATA
 
+# bin/reader docs
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

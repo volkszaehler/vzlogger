@@ -1,8 +1,8 @@
 /**
- * OBIS protocol parser
+ * Plaintext protocol according to DIN EN 62056-21
  *
- * This is our example protocol. Use this skeleton to add your own
- * protocols and meters.
+ * This protocol uses OBIS to identify the readout data
+ * And is also sometimes called "D0"
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,20 +26,20 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _OBIS_H_
-#define _OBIS_H_
+#ifndef _D0_H_
+#define _D0_H_
 
 #include <termios.h>
 
-#include "../protocol.h"
+#include "reading.h"
 
 typedef struct {
 	int fd; /* file descriptor of port */
 	struct termios oldtio; /* required to reset port */
-} obis_state_t;
+} meter_handle_d0_t;
 
-void * obis_init(char *port);
-void obis_close(void *handle);
-reading_t obis_get(void *handle);
+int meter_d0_open(meter_handle_d0_t *handle, char *options);
+void meter_d0_close(meter_handle_d0_t *handle);
+meter_reading_t meter_d0_read(meter_handle_d0_t *handle);
 
-#endif /* _OBIS_H_ */
+#endif /* _D0_H_ */

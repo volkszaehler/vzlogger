@@ -1,5 +1,7 @@
 /**
- * OBIS protocol parser
+ * Plaintext protocol according to DIN EN 62056-21
+ *
+ * This protocol uses OBIS to identify the readout data
  *
  * This is our example protocol. Use this skeleton to add your own
  * protocols and meters.
@@ -33,14 +35,21 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "obis.h"
+#include "../include/d0.h"
 
-void * obis_init(char *port) {
+int meter_d0_open(meter_handle_d0_t *handle, char *options) {
 	struct termios tio;
-	int *fd = malloc(sizeof(int));
-	
 	memset(&tio, 0, sizeof(tio));
-	
+
+	/* open serial port */
+	handle->fd = open(options, O_RDWR); // | O_NONBLOCK);
+
+	if (handle->fd < 0) {
+        	return -1;
+        }
+
+	// TODO save oldtio
+
 	tio.c_iflag = 0;
 	tio.c_oflag = 0;
 	tio.c_cflag = CS7|CREAD|CLOCAL; // 7n1, see termios.h for more information
@@ -48,26 +57,22 @@ void * obis_init(char *port) {
 	tio.c_cc[VMIN] = 1;
 	tio.c_cc[VTIME] = 5;
 
-	*fd = open(port, O_RDWR); // | O_NONBLOCK);
 	cfsetospeed(&tio, B9600); // 9600 baud
 	cfsetispeed(&tio, B9600); // 9600 baud
-	
-	return (void *) fd;
+
+	return 0;
 }
 
-void obis_close(void *handle) {
-	int *fd = (int *) handle;
-	
-	close(*fd);
-	free(handle);
+void meter_d0_close(meter_handle_d0_t *handle) {
+	close(handle->fd);
 }
 
-reading_t obis_get(void *handle) {
-	reading_t rd;
-	
+meter_reading_t meter_d0_read(meter_handle_d0_t *handle) {
+	meter_reading_t rd;
+
 	rd.value = 33.3334;
 	gettimeofday(&rd.tv, NULL);
-	
+
 	return rd;
 }
 

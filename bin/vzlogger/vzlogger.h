@@ -1,5 +1,5 @@
 /**
- * Generate pseudo random data series with a random walk
+ * Main header file
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,20 +22,24 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
 
-#include "../protocol.h"
+#ifndef _VZLOGGER_H_
+#define _VZLOGGER_H_
 
-typedef struct {
-	float min, max, last;
-} random_state_t;
+#include "../../config.h"
 
-double ltqnorm(double p);
+#include <meter.h>
 
-void * random_init(char *port);
-void random_close(void *handle);
-reading_t random_get(void *handle);
+#include "channel.h"
 
-#endif /* _RANDOM_H_ */
+/* some hard coded configuration */
+#define RETRY_PAUSE 10 //600	/* seconds to wait after failed request */
+#define BUFFER_DURATION 60	/* in seconds */
+#define BUFFER_LENGTH 256	/* in readings */
+#define COMET_TIMEOUT 30	/* seconds */
+
+/* Prototypes */
+void print(int level, char *format, channel_t *ch, ... );
+void usage(char ** argv);
+
+#endif /* _VZLOGGER_H_ */

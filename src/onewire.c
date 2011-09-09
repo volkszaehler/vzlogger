@@ -1,5 +1,5 @@
 /**
- * Circular queue to buffer readings
+ * Wrapper to read Dallas 1-wire Sensors via the 1-wire Filesystem (owfs)
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,38 +22,42 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef _QUEUE_H_
-#define _QUEUE_H_
 
-#include "protocol.h"
+#include <stdlib.h>
 
-#ifndef TRUE
-#define TRUE 1
-#endif
+#include "../include/onewire.h"
 
-#ifndef FALSE
-#define FALSE 0
-#endif
+/**
+ * Initialize sensor
+ *
+ * @param address path to the sensor in the owfs
+ * @return pointer to file descriptor
+ */
+int meter_onewire_open(meter_handle_onewire_t *handle, char *options) {
+	handle->file  = fopen(options, "r");
 
-typedef char bool_t;
+	return (handle->file == NULL) ? -1 : 0;
+}
 
-typedef struct {
-	size_t size;
-	
-	size_t read_p;
-	size_t write_p;
-	
-	reading_t *buf;
-} queue_t;
+void meter_onewire_close(meter_handle_onewire_t *handle) {
+	fclose(handle->file);
+}
 
-bool_t queue_init(queue_t *q, size_t size);
-bool_t queue_is_empty(queue_t *q);
-bool_t queue_get(queue_t *q, size_t index, reading_t *rd);
-bool_t queue_push(queue_t *q, reading_t rd);
-void queue_clear(queue_t *q);
-void queue_free(queue_t *q);
-char * queue_print(queue_t *q);
+meter_reading_t meter_onewire_read(meter_handle_onewire_t *handle) {
+	meter_reading_t rd;
+	char buffer[16];
+	int bytes;
 
-#endif /* _QUEUE_H_ */
+	do {
+		rewind(handle->file);
+		bytes = fread(buffer, 1, 16, handle->file);
+		buffer[bytes] = '\0'; /* zero terminated, required? */
 
+		if (bytes) {
+			rd.value = strtof(buffer, NULL);
+			gettimeofday(&rd.tv, NULL);
+		}
+	} while (rd.value == 85); /* skip invalid readings */
+
+	return rd;
+}

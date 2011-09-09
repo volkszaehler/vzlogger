@@ -1,5 +1,5 @@
 /**
- * S0 Hutschienenzähler directly connected to an rs232 port
+ * Linked list to manage channels
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,20 +23,19 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _RAWS0_H_
-#define _RAWS0_H_
+#ifndef _LIST_H_
+#define _LIST_H_
 
-#include <termios.h>
-
-#include "../protocol.h"
+#include "channel.h"
 
 typedef struct {
-	int fd; /* file descriptor of port */
-	struct termios oldtio; /* required to reset port */
-} rawS0_state_t;
+	channel_t *start;
+	int size;
+} list_t;
 
-void * rawS0_init(char *port);
-void rawS0_close(void *handle);
-reading_t rawS0_get(void *handle);
+/* Prototypes */
+void list_init(list_t *ls);
+int list_push(list_t *ls, channel_t ch);
+void list_free(list_t *ls);
 
-#endif /* _RAWS0_H_ */
+#endif /* _LIST_H_ */

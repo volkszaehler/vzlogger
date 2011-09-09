@@ -1,5 +1,5 @@
 /**
- * Wrapper to read Dallas 1-wire Sensors via the 1-wire Filesystem (owfs)
+ * Linked list to manage channels
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,14 +22,47 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef _1WIRE_H_
-#define _1WIRE_H_
 
-#include "../protocol.h"
+#include <stdlib.h>
+#include <string.h>
 
-void * onewire_init(char *port);
-void onewire_close(void *handle);
-reading_t onewire_get(void *handle);
+#include "list.h"
 
-#endif /* _1WIRE_H_ */
+void list_init(list_t *ls) {
+	ls->start = NULL;
+	ls->size = 0;
+}
+
+int list_push(list_t *ls, channel_t ch) {
+	channel_t *new = malloc(sizeof(channel_t));
+
+	if (!new) {
+		return 0; /* cannot allocate memory */
+	}
+
+	memcpy(new, &ch, sizeof(channel_t));
+
+	if (ls->start == NULL) { /* empty list */
+		new->next = NULL;
+	}
+	else {
+		new->next = ls->start;
+	}
+
+	ls->start = new;
+	ls->size++;
+
+	return ls->size;
+}
+
+void list_free(list_t *ls) {
+	channel_t *ch = ls->start;
+	do {
+		channel_t *tmp = ch;
+		ch = ch->next;
+		channel_free(tmp);
+	} while (ch);
+
+	ls->start = NULL;
+	ls->size = 0;
+}
