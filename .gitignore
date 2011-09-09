@@ -1,5 +1,5 @@
 # Binaries
-/src/vzlogger
+/src/vzlogger/vzlogger
 
 # Compiled Object files
 *.slo
