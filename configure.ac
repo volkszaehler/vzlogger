@@ -15,9 +15,7 @@ AC_CONFIG_FILES([Makefile
 
 # Checks for programs.
 AC_PROG_CC
-
-# We want to build a lib
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
 # We use per target compiler flags
 AM_PROG_CC_C_O
@@ -41,13 +39,13 @@ AC_CHECK_FUNCS([gettimeofday memset sqrt strchr strtol])
 # SML support
 AC_ARG_ENABLE(
     [sml],
-    [AS_HELP_STRING([--enable-sml], [enable support for smart messaging language (def=no)])],
-    [sml=true],
-    [sml=false]
+    [AS_HELP_STRING([--enable-sml], [enable support for smart messaging language (def=yes)])],
+    [sml=$enableval],
+    [sml=yes]
 )
 
-AM_CONDITIONAL([SML_SUPPORT], [test x"$sml" = x"true"])
-if test x"$sml" = x"true"; then
+AM_CONDITIONAL([SML_SUPPORT], [test x"$sml" = x"yes"])
+if test x"$sml" = x"yes"; then
     AC_DEFINE([SML_SUPPORT], [], [Smart Messaging Language])
     PKG_CHECK_MODULES([DEPS_SML], [sml >= 0.1])
 fi
@@ -55,27 +53,37 @@ fi
 # local interface support
 AC_ARG_ENABLE(
     [local], 
-    [AS_HELP_STRING([--enable-local], [enable support for local HTTPd (def=no)])],
-    [local=true],
-    [local=false]
+    [AS_HELP_STRING([--enable-local], [enable support for local HTTPd (def=yes)])],
+    [local=$enableval],
+    [local=yes]
 )
 
-AM_CONDITIONAL([LOCAL_SUPPORT], [test x"$local" = x"true"])
-if test x"$local" = x"true"; then
+AM_CONDITIONAL([LOCAL_SUPPORT], [test x"$local" = x"yes"])
+if test x"$local" = x"yes"; then
     AC_DEFINE([LOCAL_SUPPORT], [], [Local interface])
     PKG_CHECK_MODULES([DEPS_LOCAL], [libmicrohttpd >= 0.9.3])
 fi
+
+# build reader binary
+AC_ARG_WITH(
+    [reader],
+    [AS_HELP_STRING([--with-reader], [compile reader to for testing your meters (def=yes)])],
+    [reader=$withval]
+    [reader=yes]
+)
+
+AM_CONDITIONAL([READER_BUILD], [test x"$reader" = x"yes"])
 
 # debug compilation support
 AC_ARG_ENABLE(
     [debug],
     [AS_HELP_STRING([--enable-debug], [enable debug data generation (def=no)])],
-    [debug=true],
-    [debug=false]
+    [debug=$enableval],
+    [debug=no]
 )
 
-if test x"$debug" = x"true"; then
-    AC_DEFINE([DEBUG],[],[Debug Mode])
+if test x"$debug" = x"yes"; then
+    AC_DEFINE([DEBUG], [], [Debug Mode])
     AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
 else
     AM_CXXFLAGS="$AM_CXXFLAGS -O3"

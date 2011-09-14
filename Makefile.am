@@ -1,4 +1,7 @@
 sysconf_DATA = etc/vzlogger.conf
 
-SUBDIRS = src bin/vzlogger
-# bin/reader docs
+SUBDIRS = src docs bin/vzlogger
+
+if READER_BUILD
+SUBDIRS += bin/reader
+endif

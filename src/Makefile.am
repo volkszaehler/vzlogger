@@ -2,18 +2,14 @@ AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_LDFLAGS =
 
-noinst_LIBRARIES = libmeter.a libobis.a
+lib_LTLIBRARIES = libmeter.la libobis.la
 
-libmeter_a_SOURCES = meter.c d0.c s0.c random.c onewire.c ltqnorm.c
-#libmeter_a_HEADERS = meter.h
-
-libobis_a_SOURCES = obis.c
-#libobis_a_HEADERS = obis.h
+libmeter_la_SOURCES = meter.c d0.c s0.c random.c onewire.c ltqnorm.c
+libobis_la_SOURCES = obis.c
 
 # SML support
 ####################################################################
 if SML_SUPPORT
-libmeter_a_SOURCES += sml.c
-libmeter_a_LIBADD = libobis.a
+libmeter_la_SOURCES += sml.c
 AM_CFLAGS += $(DEPS_SML_CFLAGS)
 endif

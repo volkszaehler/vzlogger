@@ -3,7 +3,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 
 bin_PROGRAMS = vzlogger
 vzlogger_SOURCES = vzlogger.c channel.c api.c options.c list.c buffer.c
-vzlogger_LDADD = ../../src/libmeter.a ../../src/libobis.a
+vzlogger_LDADD = ../../src/libmeter.la ../../src/libobis.la
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 
 # local interface support
