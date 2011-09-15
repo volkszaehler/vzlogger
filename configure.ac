@@ -22,7 +22,7 @@ AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
 # Checks for libraries.
-PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.21.0])
+PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.19])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stddef.h stdint.h stdlib.h string.h sys/time.h termios.h unistd.h])
