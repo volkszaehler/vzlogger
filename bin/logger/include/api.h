@@ -42,8 +42,8 @@ typedef struct {
 int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
 size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 
-json_object * api_json_tuples(buffer_t *buf, meter_reading_t *start);
-void * api_thread(void *arg);
+json_object * api_json_tuples(buffer_t *buf, meter_reading_t *first, meter_reading_t *last);
+void * logging_thread(void *arg);
 double api_tvtof(struct timeval tv);
 
 #endif /* _API_H_ */

@@ -32,7 +32,7 @@ typedef struct meter_reading {
 	float value;
 	struct timeval tv;
 	
-	struct meter_reading *next, *prev; /* pointers for linked list */
+	struct meter_reading *next; /* pointer for linked list */
 } meter_reading_t;
 
 #endif /* _READING_H_ */

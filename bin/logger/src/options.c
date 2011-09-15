@@ -40,7 +40,7 @@
 
 extern meter_type_t meter_types[];
 
-options_t opts = { /* setting default options */
+const options_t opts = { /* setting default options */
 	"/etc/vzlogger.conf",	/* config file */
 	8080,			/* port for local interface */
 	0,			/* verbosity level */
@@ -51,7 +51,7 @@ options_t opts = { /* setting default options */
 /**
  * Command line options
  */
-struct option long_options[] = {
+const struct option long_options[] = {
 	{"config", 	required_argument,	0,	'c'},
 	{"daemon", 	required_argument,	0,	'd'},
 #ifdef LOCAL_SUPPORT
@@ -168,7 +168,9 @@ void parse_channels(char *filename, list_t *chans) {
 		char *middleware, *options, *uuid;
 		unsigned long interval;
 		channel_t ch;
+		
 		meter_type_t *type;
+		meter_conn_t connection;
 
 		/* parse tokens (required) */
 		memset(tokens, 0, 5);
@@ -182,6 +184,7 @@ void parse_channels(char *filename, list_t *chans) {
 		for (type = meter_types; type->name != NULL; type++) { /* linear search */
 			if (strcmp(type->name, tokens[0]) == 0) break;
 		}
+		
 					
 		if (type->name == NULL) { /* reached end */
 			print(-1, "Invalid protocol: %s in %s:%i", NULL, tokens[0], filename, lineno);
@@ -213,6 +216,8 @@ void parse_channels(char *filename, list_t *chans) {
 		else {
 			interval = 0;
 		}
+		
+		/* connection */
 		
 		/* options (optional) */
 		options = tokens[type->periodical ? 4 : 3];

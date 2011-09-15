@@ -46,10 +46,10 @@
 
 /* global variables */
 list_t chans;
-extern options_t opts;
-extern char *long_options_descs[];
-extern struct option long_options[];
-extern meter_type_t meter_types[];
+extern const options_t opts;
+extern const char *long_options_descs[];
+extern const struct option long_options[];
+extern const meter_type_t meter_types[];
 
 /**
  * Print available options and some other usefull information
@@ -147,13 +147,14 @@ int main(int argc, char *argv[]) {
 		meter_open(&ch->meter);
 		
 		print(5, "Starting threads", ch);
-		pthread_create(&ch->logging_thread, NULL, &api_thread, (void *) ch);
+		pthread_create(&ch->logging_thread, NULL, &logging_thread, (void *) ch);
 		pthread_create(&ch->reading_thread, NULL, &reading_thread, (void *) ch);
 	}
 
 #ifdef LOCAL_SUPPORT
+	 /* start webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
-	if (opts.local) { /* start webserver for local interface */
+	if (opts.local) {
 		print(5, "Starting local interface HTTPd on port %i", NULL, opts.port);
 		httpd_handle = MHD_start_daemon(
 			MHD_USE_THREAD_PER_CONNECTION,

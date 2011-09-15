@@ -38,7 +38,7 @@ bin_PROGRAMS = vzlogger$(EXEEXT)
 
 # local interface support
 ####################################################################
-@LOCAL_SUPPORT_TRUE@am__append_1 = local.c
+@LOCAL_SUPPORT_TRUE@am__append_1 = src/local.c
 @LOCAL_SUPPORT_TRUE@am__append_2 = $(DEPS_LOCAL_LIBS)
 @LOCAL_SUPPORT_TRUE@am__append_3 = $(DEPS_LOCAL_CFLAGS)
 
@@ -46,7 +46,7 @@ bin_PROGRAMS = vzlogger$(EXEEXT)
 ####################################################################
 @SML_SUPPORT_TRUE@am__append_4 = $(DEPS_SML_LIBS)
 @SML_SUPPORT_TRUE@am__append_5 = $(DEPS_SML_CFLAGS)
-subdir = bin/vzlogger
+subdir = bin/logger
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -58,8 +58,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__vzlogger_SOURCES_DIST = vzlogger.c channel.c api.c options.c \
-	list.c buffer.c local.c
+am__vzlogger_SOURCES_DIST = src/vzlogger.c src/channel.c src/api.c \
+	src/options.c src/list.c src/buffer.c src/local.c
 @LOCAL_SUPPORT_TRUE@am__objects_1 = local.$(OBJEXT)
 am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
 	api.$(OBJEXT) options.$(OBJEXT) list.$(OBJEXT) \
@@ -68,8 +68,9 @@ vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @LOCAL_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
-vzlogger_DEPENDENCIES = ../../src/libmeter.la ../../src/libobis.la \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
+vzlogger_DEPENDENCIES = $(top_srcdir)/src/libmeter.la \
+	$(top_srcdir)/src/libobis.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 vzlogger_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(vzlogger_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -215,11 +216,11 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_VZ_CFLAGS) \
 	$(am__append_3) $(am__append_5)
-AM_CPPFLAGS = -I$(top_srcdir)/include
-vzlogger_SOURCES = vzlogger.c channel.c api.c options.c list.c \
-	buffer.c $(am__append_1)
-vzlogger_LDADD = ../../src/libmeter.la ../../src/libobis.la \
-	$(am__append_2) $(am__append_4)
+AM_CPPFLAGS = -I$(top_srcdir)/include -Iinclude
+vzlogger_SOURCES = src/vzlogger.c src/channel.c src/api.c \
+	src/options.c src/list.c src/buffer.c $(am__append_1)
+vzlogger_LDADD = $(top_srcdir)/src/libmeter.la \
+	$(top_srcdir)/src/libobis.la $(am__append_2) $(am__append_4)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
 
@@ -234,9 +235,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu bin/vzlogger/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu bin/logger/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu bin/vzlogger/Makefile
+	  $(AUTOMAKE) --gnu bin/logger/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -336,6 +337,104 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+vzlogger.o: src/vzlogger.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vzlogger.o -MD -MP -MF $(DEPDIR)/vzlogger.Tpo -c -o vzlogger.o `test -f 'src/vzlogger.c' || echo '$(srcdir)/'`src/vzlogger.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/vzlogger.Tpo $(DEPDIR)/vzlogger.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/vzlogger.c' object='vzlogger.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vzlogger.o `test -f 'src/vzlogger.c' || echo '$(srcdir)/'`src/vzlogger.c
+
+vzlogger.obj: src/vzlogger.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vzlogger.obj -MD -MP -MF $(DEPDIR)/vzlogger.Tpo -c -o vzlogger.obj `if test -f 'src/vzlogger.c'; then $(CYGPATH_W) 'src/vzlogger.c'; else $(CYGPATH_W) '$(srcdir)/src/vzlogger.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/vzlogger.Tpo $(DEPDIR)/vzlogger.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/vzlogger.c' object='vzlogger.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vzlogger.obj `if test -f 'src/vzlogger.c'; then $(CYGPATH_W) 'src/vzlogger.c'; else $(CYGPATH_W) '$(srcdir)/src/vzlogger.c'; fi`
+
+channel.o: src/channel.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT channel.o -MD -MP -MF $(DEPDIR)/channel.Tpo -c -o channel.o `test -f 'src/channel.c' || echo '$(srcdir)/'`src/channel.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/channel.Tpo $(DEPDIR)/channel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/channel.c' object='channel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o channel.o `test -f 'src/channel.c' || echo '$(srcdir)/'`src/channel.c
+
+channel.obj: src/channel.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT channel.obj -MD -MP -MF $(DEPDIR)/channel.Tpo -c -o channel.obj `if test -f 'src/channel.c'; then $(CYGPATH_W) 'src/channel.c'; else $(CYGPATH_W) '$(srcdir)/src/channel.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/channel.Tpo $(DEPDIR)/channel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/channel.c' object='channel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o channel.obj `if test -f 'src/channel.c'; then $(CYGPATH_W) 'src/channel.c'; else $(CYGPATH_W) '$(srcdir)/src/channel.c'; fi`
+
+api.o: src/api.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT api.o -MD -MP -MF $(DEPDIR)/api.Tpo -c -o api.o `test -f 'src/api.c' || echo '$(srcdir)/'`src/api.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/api.Tpo $(DEPDIR)/api.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/api.c' object='api.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o api.o `test -f 'src/api.c' || echo '$(srcdir)/'`src/api.c
+
+api.obj: src/api.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT api.obj -MD -MP -MF $(DEPDIR)/api.Tpo -c -o api.obj `if test -f 'src/api.c'; then $(CYGPATH_W) 'src/api.c'; else $(CYGPATH_W) '$(srcdir)/src/api.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/api.Tpo $(DEPDIR)/api.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/api.c' object='api.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o api.obj `if test -f 'src/api.c'; then $(CYGPATH_W) 'src/api.c'; else $(CYGPATH_W) '$(srcdir)/src/api.c'; fi`
+
+options.o: src/options.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT options.o -MD -MP -MF $(DEPDIR)/options.Tpo -c -o options.o `test -f 'src/options.c' || echo '$(srcdir)/'`src/options.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/options.Tpo $(DEPDIR)/options.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/options.c' object='options.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o options.o `test -f 'src/options.c' || echo '$(srcdir)/'`src/options.c
+
+options.obj: src/options.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT options.obj -MD -MP -MF $(DEPDIR)/options.Tpo -c -o options.obj `if test -f 'src/options.c'; then $(CYGPATH_W) 'src/options.c'; else $(CYGPATH_W) '$(srcdir)/src/options.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/options.Tpo $(DEPDIR)/options.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/options.c' object='options.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o options.obj `if test -f 'src/options.c'; then $(CYGPATH_W) 'src/options.c'; else $(CYGPATH_W) '$(srcdir)/src/options.c'; fi`
+
+list.o: src/list.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT list.o -MD -MP -MF $(DEPDIR)/list.Tpo -c -o list.o `test -f 'src/list.c' || echo '$(srcdir)/'`src/list.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/list.Tpo $(DEPDIR)/list.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/list.c' object='list.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o list.o `test -f 'src/list.c' || echo '$(srcdir)/'`src/list.c
+
+list.obj: src/list.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT list.obj -MD -MP -MF $(DEPDIR)/list.Tpo -c -o list.obj `if test -f 'src/list.c'; then $(CYGPATH_W) 'src/list.c'; else $(CYGPATH_W) '$(srcdir)/src/list.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/list.Tpo $(DEPDIR)/list.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/list.c' object='list.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o list.obj `if test -f 'src/list.c'; then $(CYGPATH_W) 'src/list.c'; else $(CYGPATH_W) '$(srcdir)/src/list.c'; fi`
+
+buffer.o: src/buffer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT buffer.o -MD -MP -MF $(DEPDIR)/buffer.Tpo -c -o buffer.o `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/buffer.Tpo $(DEPDIR)/buffer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/buffer.c' object='buffer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o buffer.o `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c
+
+buffer.obj: src/buffer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT buffer.obj -MD -MP -MF $(DEPDIR)/buffer.Tpo -c -o buffer.obj `if test -f 'src/buffer.c'; then $(CYGPATH_W) 'src/buffer.c'; else $(CYGPATH_W) '$(srcdir)/src/buffer.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/buffer.Tpo $(DEPDIR)/buffer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/buffer.c' object='buffer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o buffer.obj `if test -f 'src/buffer.c'; then $(CYGPATH_W) 'src/buffer.c'; else $(CYGPATH_W) '$(srcdir)/src/buffer.c'; fi`
+
+local.o: src/local.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT local.o -MD -MP -MF $(DEPDIR)/local.Tpo -c -o local.o `test -f 'src/local.c' || echo '$(srcdir)/'`src/local.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/local.Tpo $(DEPDIR)/local.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/local.c' object='local.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o local.o `test -f 'src/local.c' || echo '$(srcdir)/'`src/local.c
+
+local.obj: src/local.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT local.obj -MD -MP -MF $(DEPDIR)/local.Tpo -c -o local.obj `if test -f 'src/local.c'; then $(CYGPATH_W) 'src/local.c'; else $(CYGPATH_W) '$(srcdir)/src/local.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/local.Tpo $(DEPDIR)/local.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/local.c' object='local.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o local.obj `if test -f 'src/local.c'; then $(CYGPATH_W) 'src/local.c'; else $(CYGPATH_W) '$(srcdir)/src/local.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

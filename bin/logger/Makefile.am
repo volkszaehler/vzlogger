@@ -1,15 +1,15 @@
 AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_VZ_CFLAGS)
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -Iinclude
 
 bin_PROGRAMS = vzlogger
-vzlogger_SOURCES = vzlogger.c channel.c api.c options.c list.c buffer.c
-vzlogger_LDADD = ../../src/libmeter.la ../../src/libobis.la
+vzlogger_SOURCES = src/vzlogger.c src/channel.c src/api.c src/options.c src/list.c src/buffer.c
+vzlogger_LDADD = $(top_srcdir)/src/libmeter.la $(top_srcdir)/src/libobis.la
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 
 # local interface support
 ####################################################################
 if LOCAL_SUPPORT
-vzlogger_SOURCES += local.c
+vzlogger_SOURCES += src/local.c
 vzlogger_LDADD += $(DEPS_LOCAL_LIBS)
 AM_CFLAGS += $(DEPS_LOCAL_CFLAGS)
 endif

@@ -55,6 +55,6 @@ typedef struct channel {
 void channel_init(channel_t *ch, char *uuid, char *middleware, unsigned long interval, char *options, meter_type_t *type);
 void channel_free(channel_t *ch);
 
-void reading_thread(void *arg);
+void * reading_thread(void *arg);
 
 #endif /* _CHANNEL_H_ */

@@ -35,8 +35,8 @@
 /* some hard coded configuration */
 #define RETRY_PAUSE 10 //600	/* seconds to wait after failed request */
 #define BUFFER_DURATION 60	/* in seconds */
-#define BUFFER_LENGTH 256	/* in readings */
-#define COMET_TIMEOUT 30	/* seconds */
+#define BUFFER_LENGTH 10 // 256	/* in readings */
+#define COMET_TIMEOUT 6 //30	/* in seconds */
 
 /* Prototypes */
 void print(int level, char *format, channel_t *ch, ... );

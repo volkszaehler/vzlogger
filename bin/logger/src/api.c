@@ -96,17 +96,19 @@ double api_tvtof(struct timeval tv) {
  * Create JSON object of tuples
  *
  * @param buf	the buffer our readings are stored in (required for mutex)
- * @param start	the first tuple of our linked list which should be encoded
+ * @param first	the first tuple of our linked list which should be encoded
+ * @param last	the last tuple of our linked list which should be encoded
  */
-json_object * api_json_tuples(buffer_t *buf, meter_reading_t *start) {
+json_object * api_json_tuples(buffer_t *buf, meter_reading_t *first, meter_reading_t *last) {
 	json_object *json_tuples = json_object_new_array();
+	meter_reading_t *it;
 
-	for (meter_reading_t *rd = start; rd != NULL; rd = rd->next) {
+	for (it = first; it != last->next; it = it->next) {
 		struct json_object *json_tuple = json_object_new_array();
 
 		pthread_mutex_lock(&buf->mutex);
-		double timestamp = api_tvtof(rd->tv); // TODO use long int of new json-c version
-		double value = rd->value;
+		double timestamp = api_tvtof(it->tv); // TODO use long int of new json-c version
+		double value = it->value;
 		pthread_mutex_unlock(&buf->mutex);
 
 		json_object_array_add(json_tuple, json_object_new_double(timestamp));
@@ -179,15 +181,27 @@ void api_parse_exception(CURLresponse response, char *err) {
  *
  * Logs buffered readings against middleware
  */
-void * api_thread(void *arg) {
+void logging_thread_cleanup(void *arg) {
+	curl_easy_cleanup((CURL *) arg); /* always cleanup */
+}
+ 
+void * logging_thread(void *arg) {
 	CURL *curl;
 	channel_t *ch = (channel_t *) arg; /* casting argument */
+	
+	/* we don't to log in local only mode */
+	if (opts.local && !opts.daemon) {
+		return NULL;
+	}
 
 	curl = api_curl_init(ch);
+	pthread_cleanup_push(&logging_thread_cleanup, curl);
 
-	while (TRUE) { /* start thread mainloop */
+	do { /* start thread mainloop */
 		CURLresponse response;
 		json_object *json_obj;
+		meter_reading_t *last;
+
 		const char *json_str;
 		long int http_code, curl_code;
 
@@ -201,7 +215,8 @@ void * api_thread(void *arg) {
 		}
 		pthread_mutex_unlock(&ch->buffer.mutex);
 		
-		json_obj = api_json_tuples(&ch->buffer, ch->buffer.sent);
+		last = ch->buffer.last;
+		json_obj = api_json_tuples(&ch->buffer, ch->buffer.sent, last);
 		json_str = json_object_to_json_string(json_obj);
 		
 		print(10, "JSON request body: %s", ch, json_str);
@@ -216,7 +231,7 @@ void * api_thread(void *arg) {
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
 			print(4, "Request succeeded with code: %i", ch, http_code);
-			ch->buffer.sent = NULL;
+			ch->buffer.sent = last->next;
 		}
 		else { /* error */
 			if (curl_code != CURLE_OK) {
@@ -233,16 +248,13 @@ void * api_thread(void *arg) {
 		free(response.data);
 		json_object_put(json_obj);
 		
-		if (!opts.daemon) {
-			break;
-		}
-		else if (curl_code != CURLE_OK || http_code != 200) {
+		if (opts.daemon && (curl_code != CURLE_OK || http_code != 200)) {
 			print(2, "Sleeping %i seconds due to previous failure", ch, RETRY_PAUSE);
 			sleep(RETRY_PAUSE);
 		}
-	}
-
-	curl_easy_cleanup(curl); /* always cleanup */
+	} while (opts.daemon);
+	
+	pthread_cleanup_pop(1);
 
 	return NULL;
 }

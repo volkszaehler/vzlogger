@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 
 #include <math.h>
 
@@ -41,8 +42,8 @@
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#include "obis.h"
-#include "unit.h"
+#include <obis.h>
+#include <unit.h>
 
 obis_id_t filter;
 
@@ -57,15 +58,23 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 			sml_list *entry;
 			sml_get_list_response *body;
 			
+			struct timeval time;
+			int time_mode = 0;
+			
 			body = (sml_get_list_response *) message->message_body->data;
 			
-			printf("new message from: %*s\n", body->server_id->len, body->server_id->str);
+			//printf("new message from: %*s\n", body->server_id->len, body->server_id->str);
+			
+			if (body->act_sensor_time) {
+				time.tv_sec = *body->act_sensor_time->data.timestamp;
+				time.tv_usec = 0;
+				time_mode = 1;
+			}
 			
 			for (entry = body->val_list; entry != NULL; entry = entry->next) { /* linked list */
 				obis_id_t id = obis_init(entry->obj_name->str);
 				
 				if (memcmp(&id, &filter, sizeof(obis_id_t)) == 0) {
-					struct timeval time;
 					int unit = (entry->unit) ? *entry->unit : 0;
 					int scaler = (entry->scaler) ? *entry->scaler : 1;
 					double value;
@@ -81,24 +90,25 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 						case 0x68: value = *entry->value->data.uint64; break;
 				
 						default:
-							fprintf(stderr, "Unknown value type: %x", type);
+							fprintf(stderr, "Unknown value type: %x", entry->value->type);
 							value = 0;
 					}
 					
 					/* apply scaler */
 					value *= pow(10, scaler);
 					
-					
 					/* get time */
 					if (entry->val_time) { // TODO handle SML_TIME_SEC_INDEX
 						time.tv_sec = *entry->val_time->data.timestamp;
 						time.tv_usec = 0;
+						time_mode = 2;
 					}
-					else {
+					else if (time_mode == 0) {
 						gettimeofday(&time, NULL);
+						time_mode = 3;
 					}
 
-					printf("%lu.%lu\t%.2f %s\n", time.tv_sec, time.tv_usec, value, dlms_get_unit(unit));
+					printf("%lu.%lu (%i)\t%.2f %s\n", time.tv_sec, time.tv_usec, time_mode, value, dlms_get_unit(unit));
 				}
 			}
 		}

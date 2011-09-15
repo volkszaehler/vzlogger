@@ -34,19 +34,19 @@
 #include <reading.h>
 
 typedef struct {
-	meter_reading_t *last;
+	meter_reading_t *last;	/* the oldest reading NOT sent */
 	meter_reading_t *start;
 	meter_reading_t *sent;
 
 	int size;	/* number of readings currently in the buffer */
-	int memory;	/* number of readings to keep in mind for local interface */
+	int keep;	/* number of readings to cache for local interface */
 
 	pthread_mutex_t mutex;
 } buffer_t;
 
 /* Prototypes */
-void buffer_init(buffer_t *buf, int mem);
-int buffer_push(buffer_t *buf, meter_reading_t rd);
+void buffer_init(buffer_t *buf, int keep);
+meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd);
 void buffer_free(buffer_t *buf);
 void buffer_clean(buffer_t *buf);
 void buffer_clear(buffer_t *buf);

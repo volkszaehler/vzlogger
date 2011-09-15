@@ -29,7 +29,7 @@
 #include "../include/meter.h"
 
 /* List of available meter types */
-meter_type_t meter_types[] = {
+const meter_type_t meter_types[] = {
 	{ONEWIRE,	"onewire",	"Dallas 1-Wire sensors (via OWFS)",		1},
 	{RANDOM,	"random",	"Random walk",					1},
 	{S0,		"S0",		"S0 on RS232",					0},
@@ -39,7 +39,7 @@ meter_type_t meter_types[] = {
 #endif /* SML_SUPPORT */
 	{} /* stop condition for iterator */
 };
-
+	
 void meter_init(meter_t *meter, meter_type_t *type, char *options) {
 	meter->type = type;
 	meter->options = strdup(options);

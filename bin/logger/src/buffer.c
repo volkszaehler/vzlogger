@@ -31,7 +31,7 @@
 
 #include "buffer.h"
 
-void buffer_init(buffer_t *buf, int mem) {
+void buffer_init(buffer_t *buf, int keep) {
 	pthread_mutex_init(&buf->mutex, NULL);
 
 	pthread_mutex_lock(&buf->mutex);
@@ -39,44 +39,54 @@ void buffer_init(buffer_t *buf, int mem) {
 	buf->start = NULL;
 	buf->sent = NULL;
 	buf->size = 0;
-	buf->memory = mem;
+	buf->keep = keep;
 	pthread_mutex_unlock(&buf->mutex);
 }
 
-int buffer_push(buffer_t *buf, meter_reading_t rd) {
-	meter_reading_t *new = malloc(sizeof(meter_reading_t));
+meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd) {
+	meter_reading_t *new;
+	
+	/* allocate memory for new reading */
+	new = malloc(sizeof(meter_reading_t));
 
-	if (!new) {
-		return 0; /* cannot allocate memory */
+	/* cannot allocate memory */
+	if (new == NULL) {
+		/* => delete old readings (ring buffer) */
+		if (buf->size > 0) {
+			pthread_mutex_lock(&buf->mutex);	
+			new = buf->start;
+			buf->start = new->next;
+			buf->size--;
+			pthread_mutex_unlock(&buf->mutex);
+		}
+		else { /* giving up :-( */
+			return NULL;
+		}
 	}
 
 	memcpy(new, &rd, sizeof(meter_reading_t));
 
 	pthread_mutex_lock(&buf->mutex);
-	if (buf->last == NULL) { /* empty buffer */
+	if (buf->size == 0) { /* empty buffer */
 		buf->start = new;
 	}
 	else {
 		buf->last->next = new;
 	}
 
-	if (buf->sent == NULL) { /* add reading to send queue */
-		buf->sent = new;
-	}
-
 	new->next = NULL;
+	
 	buf->last = new;
 	buf->size++;
+	
 	pthread_mutex_unlock(&buf->mutex);
 
-	buffer_clean(buf);
-	
-	return buf->size;
+	return new;
 }
 
 void buffer_clean(buffer_t *buf) {
 	pthread_mutex_lock(&buf->mutex);
-	while(buf->size > buf->memory && buf->start != buf->sent) {
+	while(buf->size > buf->keep && buf->start != buf->sent) {
 		meter_reading_t *pop = buf->start;
 
 		buf->start = buf->start->next;
