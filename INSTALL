@@ -1,1 +1,4 @@
+vzlogger is build with the GNU Autotools buildsystem. All required files
+are included in this repository. There is no dependecy on autotools!
+
 Just use the standard './configure && make && make install' triplet

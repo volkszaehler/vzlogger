@@ -24,16 +24,13 @@ Makefile
 
 # autoconf
 /autom4te.cache
-/aclocal.m4
-/compile
-/depcomp
-/install-sh
-/missing
 
 /config.status
 /config.log
 /config.h
 stamp-h1
+
+/libtool
 
 # Debian packaging
 /debian/config.log

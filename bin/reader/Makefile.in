@@ -35,6 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @SML_SUPPORT_TRUE@bin_PROGRAMS = smlreader$(EXEEXT)
+@SML_SUPPORT_TRUE@am__append_1 = $(DEPS_SML_CFLAGS)
 subdir = bin/reader
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,15 +48,12 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__smlreader_SOURCES_DIST = smlreader.c
-@SML_SUPPORT_TRUE@am_smlreader_OBJECTS =  \
-@SML_SUPPORT_TRUE@	smlreader-smlreader.$(OBJEXT)
+am__smlreader_SOURCES_DIST = src/smlreader.c
+@SML_SUPPORT_TRUE@am_smlreader_OBJECTS = smlreader.$(OBJEXT)
 smlreader_OBJECTS = $(am_smlreader_OBJECTS)
 am__DEPENDENCIES_1 =
-@SML_SUPPORT_TRUE@smlreader_DEPENDENCIES = $(am__DEPENDENCIES_1)
-smlreader_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(smlreader_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+@SML_SUPPORT_TRUE@smlreader_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+@SML_SUPPORT_TRUE@	../../src/libobis.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -198,11 +196,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
 # what flags you want to pass to the C compiler & linker
-AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_CFLAGS)
+AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_VZ_CFLAGS) \
+	$(am__append_1)
+AM_CPPFLAGS = -I$(top_srcdir)/include -Iinclude
 AM_LDFLAGS = 
-@SML_SUPPORT_TRUE@smlreader_SOURCES = smlreader.c
-@SML_SUPPORT_TRUE@smlreader_LDADD = -lm $(DEPS_SML_LIBS)
-@SML_SUPPORT_TRUE@smlreader_CFLAGS = $(AM_CFLAGS) $(DEPS_SML_CFLAGS)
+@SML_SUPPORT_TRUE@smlreader_SOURCES = src/smlreader.c
+@SML_SUPPORT_TRUE@smlreader_LDADD = -lm $(DEPS_SML_LIBS) ../../src/libobis.la
 all: all-am
 
 .SUFFIXES:
@@ -282,7 +281,7 @@ clean-binPROGRAMS:
 	rm -f $$list
 smlreader$(EXEEXT): $(smlreader_OBJECTS) $(smlreader_DEPENDENCIES) 
 	@rm -f smlreader$(EXEEXT)
-	$(smlreader_LINK) $(smlreader_OBJECTS) $(smlreader_LDADD) $(LIBS)
+	$(LINK) $(smlreader_OBJECTS) $(smlreader_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -290,7 +289,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smlreader-smlreader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smlreader.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -313,19 +312,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-smlreader-smlreader.o: smlreader.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(smlreader_CFLAGS) $(CFLAGS) -MT smlreader-smlreader.o -MD -MP -MF $(DEPDIR)/smlreader-smlreader.Tpo -c -o smlreader-smlreader.o `test -f 'smlreader.c' || echo '$(srcdir)/'`smlreader.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/smlreader-smlreader.Tpo $(DEPDIR)/smlreader-smlreader.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smlreader.c' object='smlreader-smlreader.o' libtool=no @AMDEPBACKSLASH@
+smlreader.o: src/smlreader.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smlreader.o -MD -MP -MF $(DEPDIR)/smlreader.Tpo -c -o smlreader.o `test -f 'src/smlreader.c' || echo '$(srcdir)/'`src/smlreader.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/smlreader.Tpo $(DEPDIR)/smlreader.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/smlreader.c' object='smlreader.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(smlreader_CFLAGS) $(CFLAGS) -c -o smlreader-smlreader.o `test -f 'smlreader.c' || echo '$(srcdir)/'`smlreader.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smlreader.o `test -f 'src/smlreader.c' || echo '$(srcdir)/'`src/smlreader.c
 
-smlreader-smlreader.obj: smlreader.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(smlreader_CFLAGS) $(CFLAGS) -MT smlreader-smlreader.obj -MD -MP -MF $(DEPDIR)/smlreader-smlreader.Tpo -c -o smlreader-smlreader.obj `if test -f 'smlreader.c'; then $(CYGPATH_W) 'smlreader.c'; else $(CYGPATH_W) '$(srcdir)/smlreader.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/smlreader-smlreader.Tpo $(DEPDIR)/smlreader-smlreader.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smlreader.c' object='smlreader-smlreader.obj' libtool=no @AMDEPBACKSLASH@
+smlreader.obj: src/smlreader.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT smlreader.obj -MD -MP -MF $(DEPDIR)/smlreader.Tpo -c -o smlreader.obj `if test -f 'src/smlreader.c'; then $(CYGPATH_W) 'src/smlreader.c'; else $(CYGPATH_W) '$(srcdir)/src/smlreader.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/smlreader.Tpo $(DEPDIR)/smlreader.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/smlreader.c' object='smlreader.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(smlreader_CFLAGS) $(CFLAGS) -c -o smlreader-smlreader.obj `if test -f 'smlreader.c'; then $(CYGPATH_W) 'smlreader.c'; else $(CYGPATH_W) '$(srcdir)/smlreader.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o smlreader.obj `if test -f 'src/smlreader.c'; then $(CYGPATH_W) 'src/smlreader.c'; else $(CYGPATH_W) '$(srcdir)/src/smlreader.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -4,13 +4,14 @@
 AC_PREREQ([2.67])
 AC_INIT([vzlogger], [0.2], [http://bugs.volkszaehler.org])
 AM_INIT_AUTOMAKE(vzlogger, 0.2)
+LT_INIT
 AC_CONFIG_SRCDIR([src/meter.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
 		   docs/Makefile
 		   src/Makefile
 		   bin/reader/Makefile
-		   bin/vzlogger/Makefile
+		   bin/logger/Makefile
 		])
 
 # Checks for programs.
