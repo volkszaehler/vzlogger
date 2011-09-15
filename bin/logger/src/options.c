@@ -40,7 +40,7 @@
 
 extern meter_type_t meter_types[];
 
-const options_t opts = { /* setting default options */
+options_t opts = { /* setting default options */
 	"/etc/vzlogger.conf",	/* config file */
 	8080,			/* port for local interface */
 	0,			/* verbosity level */
@@ -170,7 +170,6 @@ void parse_channels(char *filename, list_t *chans) {
 		channel_t ch;
 		
 		meter_type_t *type;
-		meter_conn_t connection;
 
 		/* parse tokens (required) */
 		memset(tokens, 0, 5);
@@ -216,9 +215,7 @@ void parse_channels(char *filename, list_t *chans) {
 		else {
 			interval = 0;
 		}
-		
-		/* connection */
-		
+
 		/* options (optional) */
 		options = tokens[type->periodical ? 4 : 3];
 

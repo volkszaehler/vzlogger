@@ -46,7 +46,7 @@
 
 /* global variables */
 list_t chans;
-extern const options_t opts;
+extern options_t opts;
 extern const char *long_options_descs[];
 extern const struct option long_options[];
 extern const meter_type_t meter_types[];
@@ -55,9 +55,9 @@ extern const meter_type_t meter_types[];
  * Print available options and some other usefull information
  */
 void usage(char *argv[]) {
-	char **desc = long_options_descs;
-	struct option *op = long_options;
-	meter_type_t *type = meter_types;
+	const char **desc = long_options_descs;
+	const struct option *op = long_options;
+	const meter_type_t *type = meter_types;
 
 	printf("Usage: %s [options]\n\n", argv[0]);
 	printf("  following options are available:\n");
