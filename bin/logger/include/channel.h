@@ -27,34 +27,27 @@
 #define _CHANNEL_H_
 
 #include <pthread.h>
-#include <signal.h>
-
 #include <meter.h>
 
+#include "vzlogger.h"
 #include "buffer.h"
 
-typedef struct channel {
-	unsigned int id;		/* only for internal usage & debugging */
+typedef struct {
+	char id[5];			/* only for internal usage & debugging */
 	char *middleware;		/* url to middleware */
-	char *options;			/* protocols specific configuration */
 	char *uuid;			/* unique identifier for middleware */
-
-	unsigned long interval;		/* polling interval (for sensors only) */
-
-	meter_t meter;			/* handle to store connection status */
+	unsigned long interval;		/* polling interval (== 0 for meters) */
+	
+	reading_id_t identifier;	/* channel identifier (OBIS, string) */
 	buffer_t buffer;		/* circular queue to buffer readings */
 
-	pthread_t logging_thread;	/* pthread for asynchronus logging */
-	pthread_t reading_thread;	/* pthread for asynchronus reading */
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
-
-	struct channel *next;		/* pointer for linked list */
+	pthread_t thread;		/* pthread for asynchronus logging */
+	pthread_status_t status;
 } channel_t;
 
 /* Prototypes */
-void channel_init(channel_t *ch, char *uuid, char *middleware, unsigned long interval, char *options, meter_type_t *type);
+void channel_init(channel_t *ch, char *uuid, char *middleware, unsigned long interval, reading_id_t identifier);
 void channel_free(channel_t *ch);
-
-void * reading_thread(void *arg);
 
 #endif /* _CHANNEL_H_ */

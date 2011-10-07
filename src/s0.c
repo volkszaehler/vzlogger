@@ -29,14 +29,17 @@
 #include <string.h>
 #include <errno.h>
 
-#include "../include/s0.h"
+#include "meter.h"
+#include "s0.h"
 
 /**
  * Setup serial port
  */
-int meter_s0_open(meter_handle_s0_t *handle, char *options) {
+int meter_open_s0(meter_t *mtr) {
+	meter_handle_s0_t *handle = &mtr->handle.s0;
+
 	/* open port */
-	handle->fd = open(options, O_RDWR | O_NOCTTY); 
+	handle->fd = open(mtr->connection, O_RDWR | O_NOCTTY); 
 
         if (handle->fd < 0) {
         	return -1;
@@ -44,7 +47,6 @@ int meter_s0_open(meter_handle_s0_t *handle, char *options) {
 
 	/* save current port settings */
 	tcgetattr(handle->fd, &handle->oldtio);
-
 
 	/* configure port */
 	struct termios tio;
@@ -63,7 +65,9 @@ int meter_s0_open(meter_handle_s0_t *handle, char *options) {
         return 0;
 }
 
-void meter_s0_close(meter_handle_s0_t *handle) {
+void meter_close_s0(meter_t *mtr) {
+	meter_handle_s0_t *handle = &mtr->handle.s0;
+
 	/* reset serial port */
 	tcsetattr(handle->fd, TCSANOW, &handle->oldtio);
 
@@ -71,21 +75,25 @@ void meter_s0_close(meter_handle_s0_t *handle) {
 	close(handle->fd);
 }
 
-meter_reading_t meter_s0_read(meter_handle_s0_t *handle) {
+size_t meter_read_s0(meter_t *mtr, reading_t rds[], size_t n) {
+	meter_handle_s0_t *handle = &mtr->handle.s0;
+	
 	char buf[8];
 	
-	meter_reading_t rd;
+	rds->value = 1;
 	
-	rd.value = 1;
-	
+	/* clear input buffer */
         tcflush(handle->fd, TCIOFLUSH);
 	
-	read(handle->fd, buf, 8); /* blocking until one character/pulse is read */
-	gettimeofday(&rd.tv, NULL);
+	/* blocking until one character/pulse is read */
+	read(handle->fd, buf, 8);
+	
+	/* store current timestamp */
+	gettimeofday(&rds->time, NULL);
 	
 	/* wait some ms for debouncing */
 	usleep(30000);
 	
-	return rd;
+	return 1;
 }
 

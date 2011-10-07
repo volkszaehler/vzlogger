@@ -32,18 +32,35 @@
 #include <sys/time.h>
 
 #include "buffer.h"
+#include "channel.h"
 
 typedef struct {
 	char *data;
 	size_t size;
 } CURLresponse;
 
-/* curl callbacks */
+CURL * api_curl_init(channel_t *ch);
+
+/**
+ * Reformat CURLs debugging output
+ */
 int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
+
 size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 
-json_object * api_json_tuples(buffer_t *buf, meter_reading_t *first, meter_reading_t *last);
-void * logging_thread(void *arg);
-double api_tvtof(struct timeval tv);
+/**
+ * Create JSON object of tuples
+ *
+ * @param buf	the buffer our readings are stored in (required for mutex)
+ * @param first	the first tuple of our linked list which should be encoded
+ * @param last	the last tuple of our linked list which should be encoded
+ * @return the json_object (has to be free'd)
+ */
+json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last);
+
+/**
+ * Parses JSON encoded exception and stores describtion in err
+ */
+void api_parse_exception(CURLresponse response, char *err, size_t n);
 
 #endif /* _API_H_ */

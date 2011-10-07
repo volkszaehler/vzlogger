@@ -31,12 +31,12 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#include <reading.h>
+#include <meter.h>
 
 typedef struct {
-	meter_reading_t *last;	/* the oldest reading NOT sent */
-	meter_reading_t *start;
-	meter_reading_t *sent;
+	reading_t *tail;
+	reading_t *head;
+	reading_t *sent;
 
 	int size;	/* number of readings currently in the buffer */
 	int keep;	/* number of readings to cache for local interface */
@@ -45,8 +45,8 @@ typedef struct {
 } buffer_t;
 
 /* Prototypes */
-void buffer_init(buffer_t *buf, int keep);
-meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd);
+void buffer_init(buffer_t *buf);
+reading_t * buffer_push(buffer_t *buf, reading_t *rd);
 void buffer_free(buffer_t *buf);
 void buffer_clean(buffer_t *buf);
 void buffer_clear(buffer_t *buf);

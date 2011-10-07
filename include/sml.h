@@ -33,24 +33,78 @@
 #define SML_BUFFER_LEN 8096
 
 #include <sml/sml_file.h>
+#include <sml/sml_value.h>
 
-#include "reading.h"
 #include "obis.h"
 
 typedef struct {
 	int fd;
-	obis_id_t id;	/* which OBIS we want to log */
-	float counter;	/* Zählerstand */
-	// termios etc..
+	//float counter;	/* Zählerstand */
+	//termios old_tio;
 } meter_handle_sml_t;
 
-int meter_sml_open(meter_handle_sml_t *handle, char *options);
-void meter_sml_close(meter_handle_sml_t *handle);
-meter_reading_t meter_sml_read(meter_handle_sml_t *handle);
+struct meter;	/* forward declaration */
+struct reading;	/* forward declaration */
 
-meter_reading_t meter_sml_parse(sml_file *file, obis_id_t which);
+/**
+ * Cast arbitrary sized sml_value to double
+ *
+ * @param value the sml_value which should be casted
+ * @return double value representation of sml_value, NAN if an error occured
+ */
+double sml_value_todouble(sml_value *value);
 
-int meter_sml_open_port(char *device);
-int meter_sml_open_socket(char *node, char *service);
+/**
+ * Open connection via serial port or socket to meter
+ *
+ * @param mtr the meter structure
+ * @return 0 on success, -1 on error
+ */
+int meter_open_sml(struct meter *mtr);
+
+/**
+ * Reset port/socket and freeing handle
+ *
+ * @param mtr the meter structure
+ */
+void meter_close_sml(struct meter *mtr);
+
+/**
+ * Blocking read on meter
+ *
+ * Most EDL conform meters periodically send data every
+ * 3-4 seconds.
+ *
+ * @param mtr the meter structure
+ * @param rds pointer to array of readings with size n
+ * @param n size of the rds array
+ * @return number of readings stored to rds
+ */
+size_t meter_read_sml(struct meter *mtr, struct reading *rds, size_t n);
+
+/**
+ * Parses SML list entry and stores it in reading pointed by rd
+ *
+ * @param list the list entry
+ * @param rd the reading to store to
+ */
+void meter_sml_parse(sml_list *list, struct reading *rd);
+
+/**
+ * Open serial port by device
+ *
+ * @param device the device path, usually /dev/ttyS*
+ * @return file descriptor, -1 on error
+ */
+int meter_sml_open_port(const char *device);
+
+/**
+ * Open socket
+ *
+ * @param node the hostname or ASCII encoded IP address
+ * @param the ASCII encoded portnum or service as in /etc/services
+ * @return file descriptor, -1 on error
+ */
+int meter_sml_open_socket(const char *node, const char *service);
 
 #endif /* _SML_H_ */

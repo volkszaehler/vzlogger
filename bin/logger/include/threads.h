@@ -1,5 +1,5 @@
 /**
- * Linked list to manage channels
+ * Thread headers
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,46 +23,12 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#ifndef _THREADS_H_
+#define _THREADS_H_
 
-#include "list.h"
+void logging_thread_cleanup(void *arg);
 
-void list_init(list_t *ls) {
-	ls->start = NULL;
-	ls->size = 0;
-}
+void * logging_thread(void *arg);
+void * reading_thread(void *arg);
 
-int list_push(list_t *ls, channel_t ch) {
-	channel_t *new = malloc(sizeof(channel_t));
-
-	if (!new) {
-		return 0; /* cannot allocate memory */
-	}
-
-	memcpy(new, &ch, sizeof(channel_t));
-
-	if (ls->start == NULL) { /* empty list */
-		new->next = NULL;
-	}
-	else {
-		new->next = ls->start;
-	}
-
-	ls->start = new;
-	ls->size++;
-
-	return ls->size;
-}
-
-void list_free(list_t *ls) {
-	channel_t *ch = ls->start;
-	do {
-		channel_t *tmp = ch;
-		ch = ch->next;
-		channel_free(tmp);
-	} while (ch);
-
-	ls->start = NULL;
-	ls->size = 0;
-}
+#endif /* _THREADS_H_ */

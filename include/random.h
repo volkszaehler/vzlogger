@@ -26,16 +26,16 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-#include "reading.h"
-
 typedef struct {
 	double min, max, last;
 } meter_handle_random_t;
 
-double ltqnorm(double p); /* forward declaration */
+struct meter;			/* forward declaration */
+struct reading;			/* forward declaration */
+double ltqnorm(double p);	/* forward declaration */
 
-int meter_random_open(meter_handle_random_t *handle, char *options);
-void meter_random_close(meter_handle_random_t *handle);
-meter_reading_t meter_random_read(meter_handle_random_t *handle);
+int meter_open_random(struct meter *mtr);
+void meter_close_random(struct meter *mtr);
+size_t meter_read_random(struct meter *mtr, struct reading *rds, size_t n);
 
 #endif /* _RANDOM_H_ */

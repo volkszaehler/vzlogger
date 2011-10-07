@@ -47,69 +47,120 @@
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#include "../include/sml.h"
-#include "../include/obis.h"
+#include "meter.h"
+#include "sml.h"
+#include "obis.h"
 
-int meter_sml_open(meter_handle_sml_t *handle, char *options) {
-	char *node = strsep(&options, ":");
-	char *service = strsep(&options, ":");
-	
-	handle->id = obis_parse(options);
+int meter_open_sml(meter_t *mtr) {
+	meter_handle_sml_t *handle = &mtr->handle.sml;
+
+	char *addr = strdup(mtr->connection);
+	char *node = strsep(&addr, ":");
+	char *service = strsep(&addr, ":");
+
 	handle->fd = meter_sml_open_socket(node, service);
-	//handle->fd = meter_sml_open_port(options);
-	
+	//handle->fd = meter_sml_open_port(args);
+
+	free(addr);
+
 	return (handle->fd < 0) ? -1 : 0;
 }
 
-void meter_sml_close(meter_handle_sml_t *handle) {
+void meter_close_sml(meter_t *meter) {
+	meter_handle_sml_t *handle = &meter->handle.sml;
+
 	// TODO reset serial port
 	close(handle->fd);
 }
 
-meter_reading_t meter_sml_read(meter_handle_sml_t *handle) {
+size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
+	meter_handle_sml_t *handle = &meter->handle.sml;
+
  	unsigned char buffer[SML_BUFFER_LEN];
-	size_t bytes;
-	sml_file *sml_file;
-	meter_reading_t rd;
-	
+	size_t bytes, m = 0;
+
+	sml_file *file;
+	sml_get_list_response *body;
+	sml_list *entry;
+
 	/* blocking read from fd */
 	bytes = sml_transport_read(handle->fd, buffer, SML_BUFFER_LEN);
-	
-	/* sml parsing & stripping escape sequences */
-	sml_file = sml_file_parse(buffer + 8, bytes - 16);
-	
-	/* extraction of readings */
-	rd = meter_sml_parse(sml_file, handle->id);
+
+	/* parse SML file & stripping escape sequences */
+	file = sml_file_parse(buffer + 8, bytes - 16);
+
+	/* obtain SML messagebody of type getResponseList */
+	for (short i = 0; i < file->messages_len; i++) {
+		sml_message *message = file->messages[i];
+
+		if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
+			body = (sml_get_list_response *) message->message_body->data;
+			entry = body->val_list;
+
+			/* iterating through linked list */
+			for (m = 0; m < n && entry != NULL; m++) {
+				meter_sml_parse(entry, &rds[m]);
+				entry = entry->next;
+			}
+		}
+	}
 
 	/* free the malloc'd memory */
-	sml_file_free(sml_file);
-	
-	return rd;
+	sml_file_free(file);
+
+	return m+1;
 }
 
-int meter_sml_open_socket(char *node, char *service) {
+void meter_sml_parse(sml_list *entry, reading_t *rd) {
+	//int unit = (entry->unit) ? *entry->unit : 0;
+	int scaler = (entry->scaler) ? *entry->scaler : 1;
+
+	rd->value = sml_value_to_double(entry->value) * pow(10, scaler);
+	rd->identifier.obis = obis_init(entry->obj_name->str);
+
+	/* get time */
+	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
+	if (entry->val_time) {
+		rd->time.tv_sec = *entry->val_time->data.timestamp;
+		rd->time.tv_usec = 0;
+	}
+	else {
+		gettimeofday(&rd->time, NULL);
+	}
+}
+
+int meter_sml_open_socket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
-	int fd, res;
-	
+	int fd, res, flags;
+	char byte;
+
 	getaddrinfo(node, service, NULL, &ais);
 	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
-	
+
 	fd = socket(PF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
+		fprintf(stderr, "error: socket(): %s\n", strerror(errno));
+		return -1;
+	}
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
+	if (res < 0) {
+		fprintf(stderr, "error: connect(%s, %s): %s\n", node, service, strerror(errno));
+		return -1;
+	}
 	
-	return (res < 0) ? -1 : fd;
+	return fd;
 }
 
-int meter_sml_open_port(char *device) {
+int meter_sml_open_port(const char *device) {
 	int bits;
 	struct termios config;
 	memset(&config, 0, sizeof(config));
 
 	int fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd < 0) {
-		printf("error: open(%s): %s\n", device, strerror(errno));
+		fprintf(stderr, "error: open(%s): %s\n", device, strerror(errno));
 		return -1;
 	}
 
@@ -118,7 +169,7 @@ int meter_sml_open_port(char *device) {
 	bits |= TIOCM_RTS;
 	ioctl(fd, TIOCMSET, &bits);
 
-	tcgetattr( fd, &config ) ;
+	tcgetattr(fd, &config) ;
 
 	// set 8-N-1
 	config.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -133,59 +184,4 @@ int meter_sml_open_port(char *device) {
 
 	tcsetattr(fd, TCSANOW, &config);
 	return fd;
-}
-
-meter_reading_t meter_sml_parse(sml_file *file, obis_id_t which) {
-	meter_reading_t rd;
-
-	for (int i = 0; i < file->messages_len; i++) {
-		sml_message *message = file->messages[i];
-		
-		if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
-			sml_list *entry;
-			sml_get_list_response *body;
-			
-			body = (sml_get_list_response *) message->message_body->data;
-			
-			for (entry = body->val_list; entry != NULL; entry = entry->next) { /* linked list */
-				obis_id_t id = obis_init(entry->obj_name->str);
-				
-				if (obis_compare(which, id) == 0) {
-					//int unit = (entry->unit) ? *entry->unit : 0;
-					int scaler = (entry->scaler) ? *entry->scaler : 1;
-				
-					switch (entry->value->type) {
-						case 0x51: rd.value = *entry->value->data.int8; break;
-						case 0x52: rd.value = *entry->value->data.int16; break;
-						case 0x54: rd.value = *entry->value->data.int32; break;
-						case 0x58: rd.value = *entry->value->data.int64; break;
-						case 0x61: rd.value = *entry->value->data.uint8; break;
-						case 0x62: rd.value = *entry->value->data.uint16; break;
-						case 0x64: rd.value = *entry->value->data.uint32; break;
-						case 0x68: rd.value = *entry->value->data.uint64; break;
-				
-						default:
-							fprintf(stderr, "Unknown value type: %x", entry->value->type);
-					}
-					
-					/* apply scaler */
-					rd.value *= pow(10, scaler);
-					
-					
-					/* get time */
-					if (entry->val_time) { // TODO handle SML_TIME_SEC_INDEX
-						rd.tv.tv_sec = *entry->val_time->data.timestamp;
-						rd.tv.tv_usec = 0;
-					}
-					else {
-						gettimeofday(&rd.tv, NULL);
-					}
-					
-					return rd; /* skipping rest */
-				}
-			}
-		}
-	}
-	
-	return rd;
 }

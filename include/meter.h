@@ -28,16 +28,19 @@
 
 /**
  * We have 2 diffrent protocol types:
- * - SENSOR:	a readout is triggered in equidistant intervals by calling
+ * - sensors:	a readout is triggered in equidistant intervals by calling
  *		the read function with an POSIX timer.
  *		The interval is set in the configuration.
- * - METER:	the meter itselfs triggers a readout.
+ * - meters:	the meter itselfs triggers a readout.
  *		The pointer to the read function shoul be NULL.
  *		The 'interval' column in the configuration as no meaning.
  */
 
-#include "../config.h"
-#include "reading.h"
+#include <sys/socket.h>
+#include <sys/time.h>
+
+#include "config.h"
+#include "obis.h"
 
 /* meter types */
 #include "random.h"
@@ -48,26 +51,37 @@
 #include "sml.h"
 #endif /* SML_SUPPORT */
 
-typedef enum {
-	S0,
-	D0,
-	ONEWIRE,
-	RANDOM,
-#ifdef SML_SUPPORT
-	SML
-#endif /* SML_SUPPORT */
-} meter_tag_t;
+typedef union reading_id {
+	obis_id_t obis;
+} reading_id_t;
+
+typedef struct reading {
+	float value;
+	struct timeval time;
+	union reading_id identifier;
+	
+	struct reading *next; /* pointer for linked list */
+} reading_t;
 
 typedef struct {
-	meter_tag_t tag;
-	char *name;		/* short identifier for protocol */
-	char *desc;		/* more detailed description */
-	int periodical:1;	/* does this meter has be triggered periodically? */
+	enum {
+		RANDOM,
+		S0,
+		D0,
+		ONEWIRE,
+		SML
+	} id;
+	const char *name;	/* short identifier for protocol */
+	const char *desc;	/* more detailed description */
+	size_t max_readings;	/* how many readings can be read with 1 call */
+	int periodic:1;		/* does this meter has be triggered periodically? */
 } meter_type_t;
 
-typedef struct {
+typedef struct meter {
+	char id[5];		/* only for internal usage & debugging */
+	char *connection;	/* args for connection, further configuration etc */
 	meter_type_t *type;
-	char *options;
+		
 	union {
 		meter_handle_s0_t s0;
 		meter_handle_d0_t d0;
@@ -79,12 +93,60 @@ typedef struct {
 	} handle;
 } meter_t;
 
-/* prototypes */
-void meter_init(meter_t *meter, meter_type_t *type, char *options);
-void meter_free(meter_t *meter);
-meter_reading_t meter_read(meter_t *meter);
+/* Prototypes */
 
-int meter_open(meter_t *meter);
-void meter_close(meter_t *meter);
+/**
+ * Converts timeval structure to double
+ *
+ * @param tv the timeval structure
+ * @return the double value
+ */
+double tvtod(struct timeval tv);
+
+/**
+ * Initialize meter
+ *
+ * @param mtr the meter structure to initialze
+ * @param type the type it should be initialized with
+ * @param connection type specific initialization arguments (connection settings, port, etc..)
+ */
+void meter_init(meter_t *mtr, meter_type_t *type, const char *connection);
+
+/**
+ * Freeing all memory which has been allocated during the initialization
+ *
+ * @param mtr the meter structure
+ */
+void meter_free(meter_t *mtr);
+
+/**
+ * Dispatcher for blocking read from meters of diffrent types
+ *
+ * rds has to point to an array with space for at least n readings!
+ *
+ * @param mtr the meter structure
+ * @param rds the array to store the readings to
+ * @param n the size of the array
+ * @return number of readings
+ */
+size_t meter_read(meter_t *mtr, reading_t rds[], size_t n);
+
+/**
+ * Dispatcher for opening meters of diffrent types,
+ * 
+ * Establish connection, initialize meter etc.
+ *
+ * @param mtr the meter structure
+ */
+int meter_open(meter_t *mtr);
+
+/**
+ * Dispatcher for closing meters of diffrent types
+ * 
+ * Reset ports, shutdown meter etc.
+ *
+ * @param mtr the meter structure
+ */
+void meter_close(meter_t *mtr);
 
 #endif /* _METER_H_ */

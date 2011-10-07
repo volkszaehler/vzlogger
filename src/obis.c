@@ -28,46 +28,68 @@
 #include <string.h>
 #include <regex.h>
 
-#include "../include/obis.h"
+#include "obis.h"
 
 obis_alias_t obis_aliases[] = {
-//   A   B   C   D   E   F     abbreviation	description
-//=====================================================================================
-{{"\x81\x81\xC7\x82\x03\xFF"}, "voltage",	""},
-{{"\x81\x81\xC7\x82\x03\xFF"}, "current",	""},
-{{"\x81\x81\xC7\x82\x03\xFF"}, "frequency",	""},
-{{"\x81\x81\xC7\x82\x03\xFF"}, "powerfactor",	""},
+/**
+ * 255 is considered as wildcard!
+ *
+ *   A    B    C    D    E    F    alias	description
+ * ===================================================================================*/
+
+/* General */
+{{{  1,   0,  12,   7,   0, 255}}, "voltage",	""},
+{{{  1,   0,  11,   7,   0, 255}}, "current",	""},
+{{{  1,   0,  14,   7,   0, 255}}, "frequency",	""},
+{{{  1,   0,  12,   7,   0, 255}}, "powerfactor",""},
+
+{{{  1,   0,   1,   7, 255, 255}}, "power",	"Active Power Instantaneous value Total"},
+{{{  1,   0,  21,   7, 255, 255}}, "power-l1",	"L1 Active Power Instantaneous value Total"},
+{{{  1,   0,  41,   7, 255, 255}}, "power-l2",	"L1 Active Power Instantaneous value Total"},
+{{{  1,   0,  61,   7, 255, 255}}, "power-l3",	"L3 Active Power Instantaneous value Total"},
+
+{{{  1,   0,   1,   8,	0, 255}}, "counter",	"Active Power Counter Total"},
+
+/* Easymeter */
+{{{  1,   0,  96,   5,   5, 255}}, "status",	"Meter status flag"},
 
 /* ESYQ3B (Easymeter Q3B) */
-{{"\x81\x81\xC7\x82\x03\xFF"}, "vendor",	"vendor specific"},
-{{"\x01\x00\x01\x08\x00\xFF"}, "counter",	"Active Power Counter Total"},
-{{"\x01\x00\x01\x08\x01\xFF"}, "counter-tarif1","Active Power Counter Tariff 1"},
-{{"\x01\x00\x01\x08\x02\xFF"}, "counter-tarif2","Active Power Counter Tariff 2"},
-{{"\x01\x00\x01\x07\x00\xFF"}, "power",		"Active Power Instantaneous value Total"},
-{{"\x01\x00\x15\x07\x00\xFF"}, "power-l1",	"L1 Active Power Instantaneous value Total"},
-{{"\x01\x00\x29\x07\x00\xFF"}, "power-l2",	"L1 Active Power Instantaneous value Total"},
-{{"\x01\x00\x3D\x07\x00\xFF"}, "power-l2",	"L3 Active Power Instantaneous value Total"},
-{{"\x01\x00\x60\x05\x05\xFF"}, "status",	"Meter status flag"},
+{{{129, 129, 199, 130,   3, 255}}, "",		""}, // ???
+{{{  1,   0,   1,   8,   1, 255}}, "counter-t1",	"Active Power Counter Tariff 1"},
+{{{  1,   0,   1,   8,   2, 255}}, "counter-t2",	"Active Power Counter Tariff 2"},
+
+/* ESYQ3D (Easymeter Q3D) */
+{{{  0,   0,  96,   1, 255, 255}}, "device",	"Complete device ID"},
+{{{  0,   0,   0,   0,   0, 255}}, "",		""}, // ???
+
 {} /* stop condition for iterator */
 };
 
-obis_id_t obis_init(unsigned char *raw) {
+obis_id_t obis_init(const unsigned char *raw) {
 	obis_id_t id;
-	memcpy(id.raw, raw, 6);
+	
+	if (raw == NULL) {
+		memset(id.raw, 0, 6); /* initialize with zeros */
+	}
+	else {
+		memcpy(id.raw, raw, 6);
+	}
+	
 	return id;
 }
 
-obis_id_t obis_parse(char *str) {
+obis_id_t obis_parse(const char *str) {
 	obis_id_t id;
-	regex_t expr;
+	regex_t re;
 	regmatch_t matches[7];
 
-	regcomp(&expr, "^([0-9])-([a-f0-9]{,2}):([a-f0-9]{,2})\\.([a-f0-9]{,2})\\.([a-f0-9]{,2})(\\*[a-f0-9]{,2})?$", REG_EXTENDED | REG_ICASE);
+	regcomp(&re, "^([0-9])-([0-9]{,2}):([0-9]{,2})\\.([0-9]{,2})\\.([0-9]{,2})(\\[*&][0-9]{,2})?$", REG_EXTENDED | REG_ICASE);
+	// TODO make values A B C optional to allow notations like "1.8.0"
 
-	if (regexec(&expr, str, 7, matches, 0) == 0) { /* found string in OBIS notation */
+	if (regexec(&re, str, 7, matches, 0) == 0) { /* found string in OBIS notation */
 		for (int i=0; i<6; i++) {
 			if (matches[i+1].rm_so != -1) {
-				id.raw[i] = strtoul(str+matches[i+1].rm_so, NULL, 16);
+				id.raw[i] = strtoul(str+matches[i+1].rm_so, NULL, 10);
 			}
 			else {
 				id.raw[i] = 0xff; /* default value */
@@ -75,26 +97,25 @@ obis_id_t obis_parse(char *str) {
 		}
 	}
 	else { /* looking for alias */
-		obis_alias_t *it = obis_aliases;
-		do { /* linear search */
-			if (strcmp(it->name, str) == 0) {
-				return it->id;
-			}
-		} while ((++it)->name);
+		id = obis_lookup_alias(str);
 	}
+	
+	regfree(&re); /* householding */
 
 	return id;
 }
 
-char obis_is_manufacturer_specific(obis_id_t id) {
-	return (
-		(id.groups.channel >= 128 && id.groups.channel <= 199) ||
-		(id.groups.indicator >= 128 && id.groups.indicator <= 199) ||
-		(id.groups.indicator == 240) ||
-		(id.groups.mode >= 128 && id.groups.mode <= 254) ||
-		(id.groups.quantities >= 128 && id.groups.quantities <= 254) ||
-		(id.groups.storage >= 128 && id.groups.storage <= 254)
-	);
+obis_id_t obis_lookup_alias(const char *alias) {
+	obis_id_t nf = obis_init(NULL); /* not found */
+	obis_alias_t *it = obis_aliases;
+
+	do { /* linear search */
+		if (strcmp(it->name, alias) == 0) {
+			return it->id;
+		}
+	} while ((++it)->name);
+	
+	return nf;
 }
 
 int obis_unparse(obis_id_t id, char *buffer) {
@@ -107,4 +128,43 @@ int obis_unparse(obis_id_t id, char *buffer) {
 		id.groups.storage
 	);
 }
+
+int obis_compare(obis_id_t a, obis_id_t b) {
+	for (int i = 0; i < 6; i++) {
+		if (a.raw[i] == b.raw[i] || a.raw[i] == 255 || b.raw[i] == 255 ) {
+			continue; /* skip on wildcard or equal */
+		}
+		else if (a.raw[i] < b.raw[i]) {
+			return -1;
+		}
+		else if (a.raw[i] > b.raw[i]) {
+			return 1;
+		}
+	}
+	
+	return 0; /* equal */
+}
+
+int obis_is_null(obis_id_t id) {
+	return !(
+		id.raw[0] ||
+		id.raw[1] ||
+		id.raw[2] ||
+		id.raw[3] ||
+		id.raw[4] ||
+		id.raw[5]
+	);
+}
+
+int obis_is_manufacturer_specific(obis_id_t id) {
+	return (
+		(id.groups.channel >= 128 && id.groups.channel <= 199) ||
+		(id.groups.indicator >= 128 && id.groups.indicator <= 199) ||
+		(id.groups.indicator == 240) ||
+		(id.groups.mode >= 128 && id.groups.mode <= 254) ||
+		(id.groups.quantities >= 128 && id.groups.quantities <= 254) ||
+		(id.groups.storage >= 128 && id.groups.storage <= 254)
+	);
+}
+
 

@@ -31,15 +31,16 @@
 
 #include <termios.h>
 
-#include "reading.h"
-
 typedef struct {
 	int fd; /* file descriptor of port */
 	struct termios oldtio; /* required to reset port */
 } meter_handle_d0_t;
 
-int meter_d0_open(meter_handle_d0_t *handle, char *options);
-void meter_d0_close(meter_handle_d0_t *handle);
-meter_reading_t meter_d0_read(meter_handle_d0_t *handle);
+struct meter;	/* forward declaration */
+struct reading;	/* forward declaration */
+
+int meter_open_d0(struct meter *mtr);
+void meter_close_d0(struct meter *mtr);
+size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
 
 #endif /* _D0_H_ */

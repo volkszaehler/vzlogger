@@ -31,31 +31,32 @@
 
 #include "buffer.h"
 
-void buffer_init(buffer_t *buf, int keep) {
+void buffer_init(buffer_t *buf) {
 	pthread_mutex_init(&buf->mutex, NULL);
 
 	pthread_mutex_lock(&buf->mutex);
-	buf->last = NULL;
-	buf->start = NULL;
+	buf->head = NULL;
+	buf->tail = NULL;
 	buf->sent = NULL;
 	buf->size = 0;
-	buf->keep = keep;
+	buf->keep = 0;
 	pthread_mutex_unlock(&buf->mutex);
 }
 
-meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd) {
-	meter_reading_t *new;
+reading_t * buffer_push(buffer_t *buf, reading_t *rd) {
+	reading_t *new;
 	
 	/* allocate memory for new reading */
-	new = malloc(sizeof(meter_reading_t));
+	new = malloc(sizeof(reading_t));
 
 	/* cannot allocate memory */
 	if (new == NULL) {
 		/* => delete old readings (ring buffer) */
 		if (buf->size > 0) {
-			pthread_mutex_lock(&buf->mutex);	
-			new = buf->start;
-			buf->start = new->next;
+			new = buf->head;
+
+			pthread_mutex_lock(&buf->mutex);
+			buf->head = new->next;
 			buf->size--;
 			pthread_mutex_unlock(&buf->mutex);
 		}
@@ -64,21 +65,20 @@ meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd) {
 		}
 	}
 
-	memcpy(new, &rd, sizeof(meter_reading_t));
+	memcpy(new, rd, sizeof(reading_t));
 
 	pthread_mutex_lock(&buf->mutex);
 	if (buf->size == 0) { /* empty buffer */
-		buf->start = new;
+		buf->head = new;
 	}
 	else {
-		buf->last->next = new;
+		buf->tail->next = new;
 	}
 
 	new->next = NULL;
 	
-	buf->last = new;
+	buf->tail = new;
 	buf->size++;
-	
 	pthread_mutex_unlock(&buf->mutex);
 
 	return new;
@@ -86,10 +86,10 @@ meter_reading_t * buffer_push(buffer_t *buf, meter_reading_t rd) {
 
 void buffer_clean(buffer_t *buf) {
 	pthread_mutex_lock(&buf->mutex);
-	while(buf->size > buf->keep && buf->start != buf->sent) {
-		meter_reading_t *pop = buf->start;
+	while(buf->size > buf->keep && buf->head != buf->sent) {
+		reading_t *pop = buf->head;
 
-		buf->start = buf->start->next;
+		buf->head = buf->head->next;
 		buf->size--;
 
 		free(pop);
@@ -100,7 +100,7 @@ void buffer_clean(buffer_t *buf) {
 char * buffer_dump(buffer_t *buf, char *dump, int len) {
 	strcpy(dump, "|");
 
-	for (meter_reading_t *rd = buf->start; rd != NULL; rd = rd->next) {
+	for (reading_t *rd = buf->head; rd != NULL; rd = rd->next) {
 		char tmp[16];
 		sprintf(tmp, "%.2f|", rd->value);
 
@@ -122,12 +122,16 @@ char * buffer_dump(buffer_t *buf, char *dump, int len) {
 void buffer_free(buffer_t *buf) {
 	pthread_mutex_destroy(&buf->mutex);
 
-	meter_reading_t *rd = buf->start;
-	do {
-		meter_reading_t *tmp = rd;
+	reading_t *rd = buf->head;
+	if (rd)	do {
+		reading_t *tmp = rd;
 		rd = rd->next;
 		free(tmp);
 	} while (rd);
 
-	memset(buf, 0, sizeof(buffer_t));
+	buf->head = NULL;
+	buf->tail = NULL;
+	buf->sent = NULL;
+	buf->size = 0;
+	buf->keep = 0;
 }

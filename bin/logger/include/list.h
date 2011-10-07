@@ -1,5 +1,5 @@
 /**
- * Linked list to manage channels
+ * Generic linked list
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,16 +26,81 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-#include "channel.h"
+#include <stdlib.h>
+
+#define foreach(list, it) \
+	for( \
+		__list_item_t *(it) = (list).head; \
+		(it) != NULL; \
+		(it) = (it)->next \
+	) \
+	
+typedef struct __list_item {
+	void *data;
+	struct __list_item *prev;
+	struct __list_item *next;
+} __list_item_t;
 
 typedef struct {
-	channel_t *start;
 	int size;
+	__list_item_t *head;
+	__list_item_t *tail;
 } list_t;
 
-/* Prototypes */
-void list_init(list_t *ls);
-int list_push(list_t *ls, channel_t ch);
-void list_free(list_t *ls);
+inline void list_init(list_t *list) {
+	list->size = 0;
+	list->head = list->tail = NULL;
+}
+
+inline int list_push(list_t *list, void *data) {
+	__list_item_t *new = malloc(sizeof(__list_item_t));
+	
+	if (new == NULL) return -1; /* cannot allocate memory */
+	
+	new->data = data;
+	new->prev = list->tail;
+	new->next = NULL;
+	
+	if (list->tail == NULL) {
+		list->head = new;
+	}
+	else {
+		list->tail->next = new;
+	}
+	
+	list->tail = new;
+	list->size = list->size + 1;
+	
+	return list->size;
+}
+
+inline void * list_pop(list_t *list) {
+	__list_item_t *old = list->tail;
+	void *data = old->data;
+	
+	list->tail = old->prev;
+	list->size--;
+	
+	if (list->head == old) {
+		list->head = NULL;
+	}
+	
+	free(old);
+	
+	return data;
+}
+
+inline void list_free(list_t *list) {
+	while (list->head != NULL) {
+		__list_item_t *old = list->head;
+		list->head = old->next;
+
+		free(old->data);
+		free(old);
+	}
+	
+	list->size = 0;
+	list->tail = NULL;
+}
 
 #endif /* _LIST_H_ */

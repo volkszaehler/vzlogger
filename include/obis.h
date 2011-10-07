@@ -104,15 +104,13 @@ typedef struct {
 	char *desc;
 } obis_alias_t;
 
-/* prototypes */
-obis_id_t obis_init(unsigned char *raw);
-obis_id_t obis_parse(char *str);
+/* Prototypes */
+obis_id_t obis_init(const unsigned char *raw);
+obis_id_t obis_parse(const char *str);
+obis_id_t obis_lookup_alias(const char *alias);
 int obis_unparse(obis_id_t id, char *buffer);
-char obis_is_manufacturer_specific(obis_id_t id);
-
-/* inline functions */
-inline int obis_compare(obis_id_t a, obis_id_t b) {
-	return memcmp(&a, &b, sizeof(obis_id_t));
-}
+int obis_compare(obis_id_t a, obis_id_t b);
+int obis_is_manufacturer_specific(obis_id_t id);
+int obis_is_null(obis_id_t id);
 
 #endif /* _OBIS_H_ */

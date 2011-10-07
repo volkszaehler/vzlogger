@@ -69,7 +69,15 @@ void transport_receiver(unsigned char *buffer, size_t buffer_len) {
 				time.tv_sec = *body->act_sensor_time->data.timestamp;
 				time.tv_usec = 0;
 				time_mode = 1;
+				printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
 			}
+
+			if (body->act_gateway_time) {
+                                time.tv_sec = *body->act_sensor_time->data.timestamp;
+                                time.tv_usec = 0;
+                                time_mode = -1;
+				printf("sensor time: %lu.%lu, %i\n", time.tv_sec, time.tv_usec, *body->act_sensor_time->tag);
+                        }
 			
 			for (entry = body->val_list; entry != NULL; entry = entry->next) { /* linked list */
 				obis_id_t id = obis_init(entry->obj_name->str);

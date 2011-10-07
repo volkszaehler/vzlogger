@@ -26,25 +26,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
-#include "../include/random.h"
+#include "meter.h"
+#include "random.h"
 
-int meter_random_open(meter_handle_random_t *handle, char *options) {
+int meter_open_random(meter_t *mtr) {
+	meter_handle_random_t *handle = &mtr->handle.random;
+
+	// TODO rewrite to use /dev/u?random
 	srand(time(NULL)); /* initialize PNRG */
 
 	handle->min = 0; // TODO parse from options
-	handle->max = strtof(options, NULL);
+	handle->max = strtof(mtr->connection, NULL);
 	handle->last = handle->max * ((float) rand() / RAND_MAX); /* start value */
 
 	return 0; /* always succeeds */
 }
 
-void meter_random_close(meter_handle_random_t *handle) {
-	/* nothing todo */
+void meter_close_random(meter_t *mtr) {
+	//meter_handle_random_t *handle = &mtr->handle.random;
 }
 
-meter_reading_t meter_random_read(meter_handle_random_t *handle) {
-	meter_reading_t rd;
+size_t meter_read_random(meter_t *mtr, reading_t rds[], size_t n) {
+	meter_handle_random_t *handle = &mtr->handle.random;	
 
 	handle->last += ltqnorm((float) rand() / RAND_MAX);
 
@@ -56,8 +61,8 @@ meter_reading_t meter_random_read(meter_handle_random_t *handle) {
 		handle->last = handle->min;
 	}
 
-	rd.value = handle->last;
-	gettimeofday(&rd.tv, NULL);
+	rds->value = handle->last;
+	gettimeofday(&rds->time, NULL);
 
-	return rd;
+	return 1;
 }

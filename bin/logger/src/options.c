@@ -31,16 +31,15 @@
 #include <getopt.h>
 #include <regex.h>
 
-#include "../../config.h"
+#include <meter.h>
 
-#include "list.h"
 #include "options.h"
 #include "channel.h"
 #include "vzlogger.h"
 
 extern meter_type_t meter_types[];
 
-options_t opts = { /* setting default options */
+options_t options = { /* setting default options */
 	"/etc/vzlogger.conf",	/* config file */
 	8080,			/* port for local interface */
 	0,			/* verbosity level */
@@ -65,6 +64,15 @@ const struct option long_options[] = {
 };
 
 /**
+ * Options for config file
+ */
+struct {
+	char *key;
+	int level;
+}
+ 
+
+/**
  * Descriptions vor command line options
  */
 char *long_options_descs[] = {
@@ -85,14 +93,10 @@ char *long_options_descs[] = {
  */
 void parse_options(int argc, char * argv[], options_t * opts) {
 	while (1) {
-		/* getopt_long stores the option index here. */
-		int option_index = 0;
-
-		int c = getopt_long(argc, argv, "i:c:p:lhVdv::", long_options, &option_index);
+		int c = getopt_long(argc, argv, "i:c:p:lhVdv::", long_options, NULL);
 
 		/* detect the end of the options. */
-		if (c == -1)
-			break;
+		if (c == -1) break;
 
 		switch (c) {
 			case 'v':
@@ -123,15 +127,18 @@ void parse_options(int argc, char * argv[], options_t * opts) {
 				exit(EXIT_SUCCESS);
 				break;
 
-			case 'h':
 			case '?':
+			case 'h':
+			default:
 				usage(argv);
 				exit((c == '?') ? EXIT_FAILURE : EXIT_SUCCESS);
 		}
 	}
+	
+	opts->logging = (!opts->local || opts->daemon);
 }
 
-void parse_channels(char *filename, list_t *chans) {
+void parse_channels(const char *filename, list_t *assocs) {
 	FILE *file = fopen(filename, "r"); /* open configuration */
 	
 	if (!filename) { /* nothing found */
@@ -146,84 +153,66 @@ void parse_channels(char *filename, list_t *chans) {
 	else {
 		print(2, "Start parsing configuration from %s", NULL, filename);
 	}
-
-	int lineno = 1;
-	char *buffer = malloc(256);
-	char *tokens[5];
-	char *line;
 	
 	/* compile regular expressions */
-	regex_t re_uuid, re_middleware;
-	regcomp(&re_uuid, "^[a-f0-9]{8}-([a-f0-9]{4}-){3,3}[a-f0-9]{12}$", REG_EXTENDED | REG_ICASE | REG_NOSUB);
-	regcomp(&re_middleware, "^https?://[a-z0-9.-]+\\.[a-z]{2,6}(/\\S*)?$", REG_EXTENDED | REG_ICASE | REG_NOSUB);
+	regex_t re_uuid, re_middleware, re_section, re_value;
+	regcomp(&re_uuid, "^[:xdigit:]{8}-([:xdigit:]{4}-){3}[:xdigit:]{12}$", REG_EXTENDED | REG_NOSUB);
+	regcomp(&re_middleware, "^https?://[[:alnum:].-]+(\\.[:alpha:]{2,6})?(:[:digit:]{1,5})?(/\\S*)?$", REG_EXTENDED | REG_NOSUB);
 
-	/*regerror(err, &re_uuid, buffer, 256);
-        printf("Error analyzing regular expression: %s.\n", buffer);*/
-
-	while ((line = fgets(buffer, 256, file)) != NULL) {	/* read a line */
-		line[strcspn(line, "\n\r;")] = '\0';		/* strip newline and comments */
-		if (strlen(line) == 0) continue;		/* skip empty lines */
-
-		/* channel properties */
-		char *middleware, *options, *uuid;
-		unsigned long interval;
-		channel_t ch;
-		
-		meter_type_t *type;
-
-		/* parse tokens (required) */
-		memset(tokens, 0, 5);
-		for (int i = 0; i < 5; i++) {
-			do {
-				tokens[i] = strsep(&line, " \t");
-			} while (tokens[i] == NULL && line != NULL);
+	regcomp(&re_section, "^[:blank:]*<(/?)([:alpha]+)>[:blank:]*$", REG_EXTENDED);
+	regcomp(&re_value, "^[:blank:]*([:alpha]+)[:blank:]+(.+)[:blank:]*$", REG_EXTENDED);
+	
+	struct options {
+		char *key;
+		enum context;
+		//char regex;
+	}
+	
+	/* read a line */
+	while ((line = fgets(buffer, 256, file)) != NULL) {
+		if (regex(&re_section) == 0) {
+			
 		}
-		
-		/* protocol (required) */
-		for (type = meter_types; type->name != NULL; type++) { /* linear search */
-			if (strcmp(type->name, tokens[0]) == 0) break;
-		}
-		
+		else if (regex(&re_value) == 0) {
+			switch (context) {
+				case GLOBAL:
+					/* no values allowed here */
+					break;
 					
-		if (type->name == NULL) { /* reached end */
-			print(-1, "Invalid protocol: %s in %s:%i", NULL, tokens[0], filename, lineno);
-			exit(EXIT_FAILURE);
-		}
-		
-		/* middleware (required) */
-		middleware = tokens[1];
-		if (regexec(&re_middleware, middleware, 0, NULL, 0) == 0) {
-			print(-1, "Invalid interval: %s in %s:%i", NULL, tokens[1], filename, lineno);
-			exit(EXIT_FAILURE);
-		}
-
-		/* uuid (required) */
-		uuid = tokens[2];
-		if (regexec(&re_uuid, uuid, 0, NULL, 0) != 0) {
-			print(-1, "Invalid uuid: %s in %s:%i", NULL, tokens[2], filename, lineno);
-			exit(EXIT_FAILURE);
-		}
-		
-		/* interval (only if protocol is sensor) */
-		if (type->periodical) {
-			interval = strtol(tokens[3], (char **) NULL, 10);
-			if (errno == EINVAL || errno == ERANGE) {
-				print(-1, "Invalid interval: %s in %s:%i", NULL, tokens[3], filename, lineno);
-				exit(EXIT_FAILURE);
+				case METER:
+					if (strcasecmp(key, "protocol") == 0) {
+				
+					}
+					else if (strcasecmp(key, "interval") == 0) {
+				
+					}
+					else if (strcasecmp(key, "host") == 0) {
+				
+					}
+					else if (strcasecmp(key, "port") == 0) {
+				
+					}
+					break;
+				
+				case CHANNEL:
+					if (strcasecmp(key, "uuid") == 0) {
+				
+					}
+					else if (strcasecmp(key, "middlware") == 0) {
+				
+					}
+					else if (strcasecmp(key, "identifier") == 0) {
+				
+					}
+				
+					break;
+				
+				char *key, *value;
+				
+				
 			}
 		}
-		else {
-			interval = 0;
-		}
-
-		/* options (optional) */
-		options = tokens[type->periodical ? 4 : 3];
-
-		channel_init(&ch, uuid, middleware, interval, options, type);
-		print(1, "Parsed (protocol=%s interval=%i uuid=%s middleware=%s options=%s)", &ch, type->name, interval, uuid, middleware, options);
-
-		list_push(chans, ch);
-		lineno++;
+	
 	}
 	
 	fclose(file);
@@ -231,3 +220,5 @@ void parse_channels(char *filename, list_t *chans) {
 	regfree(&re_middleware);
 	regfree(&re_uuid);
 }
+
+

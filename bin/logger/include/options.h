@@ -27,6 +27,7 @@
 #define _OPTIONS_H_
 
 #include "list.h"
+#include "channel.h"
 
 /**
  * Options from command line
@@ -36,13 +37,14 @@ typedef struct {
 	unsigned int port;	/* tcp port for local interface */
 	int verbose;		/* verbosity level */
 
-	/* boolean bitfields, at the end of struct */
-	int daemon:1;
+	/* boolean bitfields, padding at the end of struct */
+	int daemon:1;		/* run in background */
 	int local:1;		/* enable local interface */
+	int logging:1;		/* start logging threads */
 } options_t;
 
 /* Prototypes */
-void parse_options(int argc, char *argv[], options_t *opts);
-void parse_channels(char *filename, list_t *chans);
+void parse_options(int argc, char *argv[], options_t *options);
+void parse_channels(const char *filename, list_t *meters);
 
 #endif /* _OPTIONS_H_ */

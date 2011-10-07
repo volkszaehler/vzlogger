@@ -4,17 +4,14 @@ AM_LDFLAGS =
 
 VERSION = 1:0:0
 
-lib_LTLIBRARIES = libmeter.la libobis.la
+lib_LIBRARIES = libmeter.a
 
-libmeter_la_SOURCES = meter.c d0.c s0.c random.c onewire.c ltqnorm.c
-libmeter_la_LDFLAGS = -version-info $(VERSION)
-
-libobis_la_SOURCES = obis.c
-libobis_la_LDFLAGS = -version-info $(VERSION)
+libmeter_a_SOURCES = meter.c d0.c s0.c random.c onewire.c ltqnorm.c obis.c
+libmeter_a_LDFLAGS = -version-info $(VERSION)
 
 # SML support
 ####################################################################
 if SML_SUPPORT
-libmeter_la_SOURCES += sml.c
+libmeter_a_SOURCES += sml.c
 AM_CFLAGS += $(DEPS_SML_CFLAGS)
 endif

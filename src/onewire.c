@@ -25,7 +25,8 @@
 
 #include <stdlib.h>
 
-#include "../include/onewire.h"
+#include "meter.h"
+#include "onewire.h"
 
 /**
  * Initialize sensor
@@ -33,18 +34,23 @@
  * @param address path to the sensor in the owfs
  * @return pointer to file descriptor
  */
-int meter_onewire_open(meter_handle_onewire_t *handle, char *options) {
-	handle->file  = fopen(options, "r");
+int meter_open_onewire(meter_t *mtr) {
+	meter_handle_onewire_t *handle = &mtr->handle.onewire;
+
+	handle->file = fopen(mtr->connection, "r");
 
 	return (handle->file == NULL) ? -1 : 0;
 }
 
-void meter_onewire_close(meter_handle_onewire_t *handle) {
+void meter_close_onewire(meter_t *mtr) {
+	meter_handle_onewire_t *handle = &mtr->handle.onewire;
+
 	fclose(handle->file);
 }
 
-meter_reading_t meter_onewire_read(meter_handle_onewire_t *handle) {
-	meter_reading_t rd;
+size_t meter_read_onewire(meter_t *mtr, reading_t rds[], size_t n) {
+	meter_handle_onewire_t *handle = &mtr->handle.onewire;
+
 	char buffer[16];
 	int bytes;
 
@@ -54,10 +60,10 @@ meter_reading_t meter_onewire_read(meter_handle_onewire_t *handle) {
 		buffer[bytes] = '\0'; /* zero terminated, required? */
 
 		if (bytes) {
-			rd.value = strtof(buffer, NULL);
-			gettimeofday(&rd.tv, NULL);
+			rds->value = strtof(buffer, NULL);
+			gettimeofday(&rds->time, NULL);
 		}
-	} while (rd.value == 85); /* skip invalid readings */
+	} while (rds->value == 85); /* skip invalid readings */
 
-	return rd;
+	return 1;
 }

@@ -25,102 +25,79 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#include "../include/meter.h"
+#include "../bin/logger/include/list.h"
+
+#include "meter.h"
 
 /* List of available meter types */
 const meter_type_t meter_types[] = {
-	{ONEWIRE,	"onewire",	"Dallas 1-Wire sensors (via OWFS)",		1},
-	{RANDOM,	"random",	"Random walk",					1},
-	{S0,		"S0",		"S0 on RS232",					0},
-//	{D0,		"D0",		"On-site plaintext protocol (DIN EN 62056-21)",	0},
+	{ONEWIRE,	"onewire",	"Dallas 1-Wire sensors (via OWFS)",		1, 1},
+	{RANDOM,	"random",	"Random walk",					1, 1},
+	{S0,		"s0",		"S0 on RS232",					1, 0},
+//	{D0,		"d0",		"On-site plaintext protocol (DIN EN 62056-21)",	16, 0},
 #ifdef SML_SUPPORT
-	{SML,		"sml",		"Smart Meter Language",				0},
+	{SML,		"sml",		"Smart Meter Language",				16, 0},
 #endif /* SML_SUPPORT */
 	{} /* stop condition for iterator */
 };
+
+double tvtod(struct timeval tv) {
+	return tv.tv_sec + tv.tv_usec / 1e6;
+}
 	
-void meter_init(meter_t *meter, meter_type_t *type, char *options) {
-	meter->type = type;
-	meter->options = strdup(options);
+void meter_init(meter_t *mtr, meter_type_t *type, const char *connection) {
+	static int instances; /* static to generate channel ids */
+	snprintf(mtr->id, 5, "mtr%i", instances++);
+
+	mtr->type = type;
+	mtr->connection = strdup(connection);
 }
 
-void meter_free(meter_t *meter) {
-	free(meter->options);
+void meter_free(meter_t *mtr) {
+	free(mtr->connection);
 }
 
-int meter_open(meter_t *meter) {
-	switch (meter->type->tag) {
-		case RANDOM:
-			return meter_random_open(&meter->handle.random, meter->options);
-
-		case S0:
-			return meter_s0_open(&meter->handle.s0, meter->options);
-
-		case D0:
-			return meter_d0_open(&meter->handle.d0, meter->options);
-
+int meter_open(meter_t *mtr) {
+	switch (mtr->type->id) {
+		case RANDOM:  return meter_open_random(mtr);
+		case S0:      return meter_open_s0(mtr);
+		case D0:      return meter_open_d0(mtr);
+		case ONEWIRE: return meter_open_onewire(mtr);
 #ifdef SML_SUPPORT
-		case SML:
-			return meter_sml_open(&meter->handle.sml, meter->options);
+		case SML:     return meter_open_sml(mtr);
 #endif /* SML_SUPPORT */
-
-		case ONEWIRE:
-			return meter_onewire_open(&meter->handle.onewire, meter->options);
-			
-		default:
-			return -1;
+		default: fprintf(stderr, "error: unknown meter type: %i\n", mtr->type->id);
 	}
-}
-
-void meter_close(meter_t *meter) {
-	switch (meter->type->tag) {
-		case RANDOM:
-			meter_random_close(&meter->handle.random);
-			break;
-
-		case S0:
-			meter_s0_close(&meter->handle.s0);
-			break;
-
-		case D0:
-			meter_d0_close(&meter->handle.d0);
-			break;
-
-#ifdef SML_SUPPORT
-		case SML:
-			meter_sml_close(&meter->handle.sml);
-			break;
-#endif /* SML_SUPPORT */
-
-		case ONEWIRE:
-			meter_onewire_close(&meter->handle.onewire);
-			break;
-	}
-}
-
-meter_reading_t meter_read(meter_t *meter) {
-	meter_reading_t rd;
 	
-	switch (meter->type->tag) {
-		case RANDOM:
-			return meter_random_read(&meter->handle.random);
+	return -1;
+}
 
-		case S0:
-			return meter_s0_read(&meter->handle.s0);
-
-		case D0:
-			return meter_d0_read(&meter->handle.d0);
-
+void meter_close(meter_t *mtr) {
+	switch (mtr->type->id) {
+		case RANDOM:  meter_close_random(mtr);  break;
+		case S0:      meter_close_s0(mtr);      break;
+		case D0:      meter_close_d0(mtr);      break;
+		case ONEWIRE: meter_close_onewire(mtr); break;
 #ifdef SML_SUPPORT
-		case SML:
-			return meter_sml_read(&meter->handle.sml);
+		case SML:     meter_close_sml(mtr);     break;
 #endif /* SML_SUPPORT */
-
-		case ONEWIRE:
-			return meter_onewire_read(&meter->handle.onewire);
-			
-		default:
-			return rd;
+		default: fprintf(stderr, "error: unknown meter type: %i\n", mtr->type->id);
 	}
+}
+
+size_t meter_read(meter_t *mtr, reading_t rds[], size_t n) {
+	switch (mtr->type->id) {
+		case RANDOM:  return meter_read_random(mtr, rds, n);
+		case S0:      return meter_read_s0(mtr, rds, n);
+		case D0:      return meter_read_d0(mtr, rds, n);
+		case ONEWIRE: return meter_read_onewire(mtr, rds, n);
+#ifdef SML_SUPPORT
+		case SML:     return meter_read_sml(mtr, rds, n);
+#endif /* SML_SUPPORT */
+		default: fprintf(stderr, "error: unknown meter type: %i\n", mtr->type->id);
+	}
+	
+	return 0;
 }

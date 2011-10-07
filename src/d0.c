@@ -35,14 +35,17 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../include/d0.h"
+#include "meter.h"
+#include "d0.h"
 
-int meter_d0_open(meter_handle_d0_t *handle, char *options) {
+int meter_open_d0(meter_t *mtr) {
+	meter_handle_d0_t *handle = &mtr->handle.d0;
 	struct termios tio;
+	
 	memset(&tio, 0, sizeof(tio));
 
 	/* open serial port */
-	handle->fd = open(options, O_RDWR); // | O_NONBLOCK);
+	handle->fd = open(mtr->connection, O_RDWR); // | O_NONBLOCK);
 
 	if (handle->fd < 0) {
         	return -1;
@@ -63,16 +66,17 @@ int meter_d0_open(meter_handle_d0_t *handle, char *options) {
 	return 0;
 }
 
-void meter_d0_close(meter_handle_d0_t *handle) {
+void meter_close_d0(meter_t *mtr) {
+	meter_handle_d0_t *handle = &mtr->handle.d0;
+
 	close(handle->fd);
 }
 
-meter_reading_t meter_d0_read(meter_handle_d0_t *handle) {
-	meter_reading_t rd;
+size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
+	// TODO implement
+	rds->value = 123.456;
+	gettimeofday(&rds->time, NULL);
 
-	rd.value = 33.3334;
-	gettimeofday(&rd.tv, NULL);
-
-	return rd;
+	return 1;
 }
 

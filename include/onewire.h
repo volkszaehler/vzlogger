@@ -28,14 +28,15 @@
 
 #include <stdio.h>
 
-#include "reading.h"
-
 typedef struct {
 	FILE *file;
 } meter_handle_onewire_t;
 
-int meter_onewire_open(meter_handle_onewire_t *handle, char *options);
-void meter_onewire_close(meter_handle_onewire_t *handle);
-meter_reading_t meter_onewire_read(meter_handle_onewire_t *handle);
+struct meter;	/* forward declaration */
+struct reading;	/* forward declaration */
+
+int meter_open_onewire(struct meter *mtr);
+void meter_close_onewire(struct meter *mtr);
+size_t meter_read_onewire(struct meter *mtr, struct reading *rds, size_t n);
 
 #endif /* _ONEWIRE_H_ */

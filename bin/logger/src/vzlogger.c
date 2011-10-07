@@ -26,27 +26,27 @@
 
 #include <stdio.h> /* for print() */
 #include <stdarg.h>
-
+#include <math.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <getopt.h>
+#include <curl/curl.h>
 
 #include "vzlogger.h"
-
 #include "list.h"
-#include "buffer.h"
 #include "channel.h"
-#include "api.h"
 #include "options.h"
+#include "threads.h"
 
 #ifdef LOCAL_SUPPORT
 #include <microhttpd.h>
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
 
-/* global variables */
-list_t chans;
-extern options_t opts;
+list_t assocs; /* mapping between meters and channels */
+
+extern options_t options;
 extern const char *long_options_descs[];
 extern const struct option long_options[];
 extern const meter_type_t meter_types[];
@@ -86,25 +86,28 @@ void usage(char *argv[]) {
  * @param ch could be NULL for general messages
  * @todo integrate into syslog
  */
-void print(int level, char * format, channel_t *ch, ... ) {
+void print(int level, const char *format, void *id, ... ) {
 	va_list args;
 
 	struct timeval now;
 	struct tm * timeinfo;
-	char buffer[1024] = "[", *pos = buffer+1;
+	char buffer[1024], *pos = buffer;
 
-	if (level <= opts.verbose) {
+	if (level <= options.verbose) {
 		gettimeofday(&now, NULL);
 		timeinfo = localtime(&now.tv_sec);
+		
+		pos += sprintf(pos, "[");
 		pos += strftime(pos, 16, "%b %d %H:%M:%S", timeinfo);
 
-		pos += sprintf(pos, ".%03lu] ", now.tv_usec / 1000);
-
-		if (ch != NULL) {
-			pos += sprintf(pos, "[ch#%i] ", ch->id);
+		if (id != NULL) {
+			pos += sprintf(pos, "][%s]\t", (char *) id);
+		}
+		else {
+			pos += sprintf(pos, "]\t");
 		}
 
-		va_start(args, ch);
+		va_start(args, id);
 		pos += vsprintf(pos, format, args);
 		va_end(args);
 
@@ -119,9 +122,17 @@ void print(int level, char * format, channel_t *ch, ... ) {
  */
 void quit(int sig) {
 	print(2, "Closing connections to terminate", NULL);
-	for (channel_t *ch = chans.start; ch != NULL; ch = ch->next) {
-		pthread_cancel(ch->logging_thread);
-		pthread_cancel(ch->reading_thread);
+	
+	foreach(assocs, it) {
+		assoc_t *assoc = (assoc_t *) it->data;
+	
+		pthread_cancel(assoc->thread);
+		
+		foreach(assoc->channels, it) {
+			channel_t *ch = (channel_t *) it->data;
+			
+			pthread_cancel(ch->thread);
+		}
 	}
 }
 
@@ -129,6 +140,7 @@ void quit(int sig) {
  * The main loop
  */
 int main(int argc, char *argv[]) {
+
 	/* bind signal handler */
 	struct sigaction action;
 	sigemptyset(&action.sa_mask);
@@ -136,58 +148,89 @@ int main(int argc, char *argv[]) {
 	action.sa_handler = quit;
 	sigaction(SIGINT, &action, NULL);
 
-	list_init(&chans);
-	parse_options(argc, argv, &opts); /* parse command line arguments */
-	parse_channels(opts.config, &chans); /* parse channels from configuration */
+	/* initialize adts and apis */
+	curl_global_init(CURL_GLOBAL_ALL);
+	list_init(&assocs);
+	
+	parse_options(argc, argv, &options);	/* parse command line arguments */
+	parse_channels(options.config, &assocs);/* parse channels from configuration */
 
-	curl_global_init(CURL_GLOBAL_ALL); /* global intialization for all threads */
-
-	for (channel_t *ch = chans.start; ch != NULL; ch = ch->next) {
-		print(5, "Opening connection to meter", ch);
-		meter_open(&ch->meter);
+	/* open connection meters & start threads */
+	foreach(assocs, it) {
+		assoc_t *assoc = (assoc_t *) it->data;
+		meter_t *mtr = &assoc->meter;
+	
+		int res = meter_open(mtr);
+		if (res < 0) {
+			exit(EXIT_FAILURE);
+		}
+		print(5, "Meter connected", mtr);
+		pthread_create(&assoc->thread, NULL, &reading_thread, (void *) assoc);
+		print(5, "Meter thread started", mtr);
 		
-		print(5, "Starting threads", ch);
-		pthread_create(&ch->logging_thread, NULL, &logging_thread, (void *) ch);
-		pthread_create(&ch->reading_thread, NULL, &reading_thread, (void *) ch);
+		foreach(assoc->channels, it) {
+			channel_t *ch = (channel_t *) it->data;
+			
+			/* set buffer length for perriodic meters */
+			if (mtr->type->periodic && options.local) {
+				ch->buffer.keep = ceil(BUFFER_KEEP / (double) ch->interval);
+			}
+			
+			if (ch->status != RUNNING && options.logging) {
+				pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
+				print(5, "Logging thread started", ch);
+			}
+		}
 	}
 
 #ifdef LOCAL_SUPPORT
 	 /* start webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
-	if (opts.local) {
-		print(5, "Starting local interface HTTPd on port %i", NULL, opts.port);
+	if (options.local) {
+		print(5, "Starting local interface HTTPd on port %i", NULL, options.port);
 		httpd_handle = MHD_start_daemon(
 			MHD_USE_THREAD_PER_CONNECTION,
-			opts.port,
+			options.port,
 			NULL, NULL,
-			handle_request,
-			NULL,
+			&handle_request, &assocs,
 			MHD_OPTION_END
 		);
 	}
 #endif /* LOCAL_SUPPORT */
 
 	/* wait for all threads to terminate */
-	for (channel_t *ch = chans.start; ch != NULL; ch = ch->next) {
-		pthread_join(ch->logging_thread, NULL);
-		pthread_join(ch->reading_thread, NULL);
+	foreach(assocs, it) {
+		assoc_t *assoc = (assoc_t *) it->data;
+		meter_t *mtr = &assoc->meter;
+		
+		pthread_join(assoc->thread, NULL);
+		
+		foreach(assoc->channels, it) {
+			channel_t *ch = (channel_t *) it->data;
+			
+			pthread_join(ch->thread, NULL);
+			
+			channel_free(ch);
+		}
+		
+		list_free(&assoc->channels);
 
-		meter_close(&ch->meter); /* closing connection */
+		meter_close(mtr); /* closing connection */
+		meter_free(mtr);
 	}
-
+	
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */
 	if (httpd_handle) {
-		print(8, "Stopping local interface HTTPd on port %i", NULL, opts.port);
+		print(8, "Stopping local interface HTTPd on port %i", NULL, options.port);
 		MHD_stop_daemon(httpd_handle);
 	}
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
-	list_free(&chans);
+	list_free(&assocs);
 	curl_global_cleanup();
 	
 	print(10, "Bye bye!", NULL);
-
 	return EXIT_SUCCESS;
 }

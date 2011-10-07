@@ -26,20 +26,37 @@
 #ifndef _VZLOGGER_H_
 #define _VZLOGGER_H_
 
-#include "../../config.h"
-
+#include <pthread.h>
 #include <meter.h>
 
-#include "channel.h"
+#include "config.h"
+
+#include "list.h"
 
 /* some hard coded configuration */
-#define RETRY_PAUSE 10 //600	/* seconds to wait after failed request */
-#define BUFFER_DURATION 60	/* in seconds */
-#define BUFFER_LENGTH 10 // 256	/* in readings */
-#define COMET_TIMEOUT 6 //30	/* in seconds */
+#define RETRY_PAUSE 30		/* seconds to wait after failed request */
+#define BUFFER_KEEP 600		/* for the local interface; in seconds */
+#define COMET_TIMEOUT 30	/* in seconds */
+
+typedef enum {
+	UNKNOWN,
+	RUNNING,
+	TERMINATED,
+	CANCELED
+} pthread_status_t;
+
+/**
+ * Type for associating channels to meters
+ */
+typedef struct {
+	meter_t meter;
+	list_t channels;
+	pthread_t thread;
+	pthread_status_t status;
+} assoc_t;
 
 /* Prototypes */
-void print(int level, char *format, channel_t *ch, ... );
+void print(int level, const char *format, void *id, ... );
 void usage(char ** argv);
 
 #endif /* _VZLOGGER_H_ */
