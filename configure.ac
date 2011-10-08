@@ -4,7 +4,6 @@
 AC_PREREQ([2.67])
 AC_INIT([vzlogger], [0.2], [http://bugs.volkszaehler.org])
 AM_INIT_AUTOMAKE(vzlogger, 0.2)
-LT_INIT
 AC_CONFIG_SRCDIR([src/meter.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
@@ -16,10 +15,12 @@ AC_CONFIG_FILES([Makefile
 
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_LIBTOOL
 
 # We use per target compiler flags
 AM_PROG_CC_C_O
+
+# Link libraries
+AC_PROG_RANLIB
 
 # Checks for libraries.
 PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.19])
@@ -62,7 +63,7 @@ AC_ARG_ENABLE(
 AM_CONDITIONAL([LOCAL_SUPPORT], [test x"$local" = x"yes"])
 if test x"$local" = x"yes"; then
     AC_DEFINE([LOCAL_SUPPORT], [], [Local interface])
-    PKG_CHECK_MODULES([DEPS_LOCAL], [libmicrohttpd >= 0.9.3])
+    PKG_CHECK_MODULES([DEPS_LOCAL], [libmicrohttpd >= 0.4.6])
 fi
 
 # build reader binary

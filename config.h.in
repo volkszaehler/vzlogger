@@ -7,9 +7,6 @@
    don't. */
 #undef HAVE_DECL_STRERROR_R
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
-
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
@@ -77,10 +74,6 @@
 
 /* Local interface */
 #undef LOCAL_SUPPORT
-
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
