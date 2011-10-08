@@ -1,3 +1,10 @@
+vzlogger (0.2.1-1) stable; urgency=low
+
+  * A lot of rewrite
+  * Added SML support
+
+ -- Steffen Vogel <info@steffenvogel.de>  Thu, 15 Sep 2011 23:26:31 +0200
+
 vzlogger (0.2-1) stable; urgency=low
 
   * Fixed some bugs after porting to armel architecture

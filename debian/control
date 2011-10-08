@@ -2,7 +2,7 @@ Source: vzlogger
 Section: net
 Priority: optional
 Maintainer: Steffen Vogel <info@steffenvogel.de>
-Build-Depends: debhelper (>= 7.0.50~), pkg-config (>= 0.25), libjson0-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19), libmicrohttpd-dev (>= 9.3)
+Build-Depends: debhelper (>= 7.0.50~), pkg-config (>= 0.25), libjson0-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19), libmicrohttpd-dev (>= 0.4.6)
 Standards-Version: 3.9.1
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
 Vcs-Git: git://github.com/volkszaehler/volkszaehler.org.git
@@ -13,9 +13,11 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: program for logging measurements to an volkszaehler.org middelware
  vzlogger...
-  * is a tiny shell tool to log measurements of a wide variety of
-    smartmeters, sensors & protocols against the volkszaehler.org middleware.
-  * can run as a daemon or can be invoked periodically by cron.
+  * is a tool to read and log measurements of a wide variety of smartmeters and
+    sensors to the volkszaehler.org middleware.
+  * can run as a daemon or via Cron.
   * includes a tiny onboard httpd to serve
-    realtime readings to the ajax web frontend.
-  * is written in pure ansi c and should run on most embedded devices.
+    realtime readings to the AJAX web frontend.
+  * is written in ANSI C and should run on most embedded devices
+    which conform to the POSIX standard.
+

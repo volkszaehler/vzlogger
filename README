@@ -1,10 +1,11 @@
 vzlogger...
-  * is a tiny shell tool to log measurements of a wide variety of smartmeters, sensors & protocols against the volkszaehler.org middleware.
-  * can run as a daemon or can be invoked periodically by cron.
-  * includes a tiny onboard httpd to serve realtime readings to the ajax web frontend.
-  * is written in pure ansi c and should run on most embedded devices.
+  * is a tool to read and log measurements of a wide variety of smartmeters, sensors to the volkszaehler.org middleware.
+  * can run as a daemon or via Cron.
+  * includes a tiny onboard httpd to serve realtime readings to the AJAX web frontend.
+  * is written in ANSI C and should run on most embedded devices which conform to the POSIX standard.
 
-Feel free to add your own hardware ;)
+Feel free to implement support your own hardware ;)
+If you have questions, contact Steffen Vogel <info@steffenvogel.de>
 
-More information are available in our wiki:
+More information is available in our wiki:
 http://wiki.volkszaehler.org/software/controller/vzlogger

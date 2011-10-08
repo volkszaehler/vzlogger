@@ -1,8 +1,8 @@
 *~
 
 # Binaries
-/src/vzlogger/vzlogger
-/src/reader/reader
+/bin/logger/vzlogger
+/bin/reader/reader
 
 # Compiled Object files
 *.slo
