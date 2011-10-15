@@ -45,7 +45,7 @@ void buffer_init(buffer_t *buf) {
 
 reading_t * buffer_push(buffer_t *buf, reading_t *rd) {
 	reading_t *new;
-	
+
 	/* allocate memory for new reading */
 	new = malloc(sizeof(reading_t));
 

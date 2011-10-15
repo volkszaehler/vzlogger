@@ -33,6 +33,8 @@
 #include "local.h"
 #include "api.h"
 
+extern options_t options;
+
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url, const char *method,
 			const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
 
@@ -44,48 +46,63 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 	struct MHD_Response *response;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
-	print(2, "Local request received: method=%s url=%s mode=%s", NULL, method, url, mode);
-	
+	print(2, "Local request received: method=%s url=%s mode=%s", "http", method, url, mode);
+
 	if (strcmp(method, "GET") == 0) {
 		struct timespec ts;
 		struct timeval tp;
-		
+
 		struct json_object *json_obj = json_object_new_object();
 		struct json_object *json_data = json_object_new_array();
-		
-		const char *uuid = url+1;
+		struct json_object *json_exception = NULL;
+
+		const char *uuid = url + 1; /* strip leading slash */
 		const char *json_str;
-	
+		int show_all = 0;
+
+		if (strcmp(url, "/") == 0) {
+			if (options.channel_index) {
+				show_all = TRUE;
+			}
+			else {
+				json_exception = json_object_new_object();
+
+				json_object_object_add(json_exception, "message", json_object_new_string("channel indexing is disabled"));
+				json_object_object_add(json_exception, "code", json_object_new_int((int) 0));
+			}
+		}
+
 		foreach(*assocs, it) {
 			assoc_t *assoc = (assoc_t *) it->data;
-		
+
 			foreach(assoc->channels, it) {
 				channel_t *ch = (channel_t *) it->data;
-				
-				if (strcmp(url, "/") == 0 || strcmp(ch->uuid, uuid) == 0) {
+
+				if (strcmp(ch->uuid, uuid) == 0 || show_all) {
 					response_code = MHD_HTTP_OK;
 
-					/* blocking until new data arrives (comet-like blocking of HTTP response) */			
-					if (strcmp(url, "/") != 0 && mode && strcmp(mode, "comet") == 0) {
+					/* blocking until new data arrives (comet-like blocking of HTTP response) */
+					if (mode && strcmp(mode, "comet") == 0) {
 						/* convert from timeval to timespec */
 						gettimeofday(&tp, NULL);
-						ts.tv_sec  = tp.tv_sec + COMET_TIMEOUT;
+						ts.tv_sec  = tp.tv_sec + options.comet_timeout;
 						ts.tv_nsec = tp.tv_usec * 1000;
-						
+
 						pthread_mutex_lock(&ch->buffer.mutex);
 						pthread_cond_timedwait(&ch->condition, &ch->buffer.mutex, &ts);
 						pthread_mutex_unlock(&ch->buffer.mutex);
 					}
-					
+
 					struct json_object *json_ch = json_object_new_object();
 
 					json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid));
 					json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware));
-					json_object_object_add(json_ch, "interval", json_object_new_int(ch->interval));
+					json_object_object_add(json_ch, "interval", json_object_new_int(assoc->interval));
+					json_object_object_add(json_ch, "protocol", json_object_new_int(assoc->meter.type->name));
 
 					struct json_object *json_tuples = api_json_tuples(&ch->buffer, ch->buffer.head, ch->buffer.tail);
 					json_object_object_add(json_ch, "tuples", json_tuples);
-					
+
 					json_object_array_add(json_data, json_ch);
 				}
 			}
@@ -94,6 +111,10 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 		json_object_object_add(json_obj, "version", json_object_new_string(VERSION));
 		json_object_object_add(json_obj, "generator", json_object_new_string(PACKAGE));
 		json_object_object_add(json_obj, "data", json_data);
+
+		if (json_exception) {
+			json_object_object_add(json_obj, "exception", json_exception);
+		}
 
 		json_str = json_object_to_json_string(json_obj);
 		response = MHD_create_response_from_data(strlen(json_str), (void *) json_str, FALSE, TRUE);
@@ -109,10 +130,9 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
 		MHD_add_response_header(response, "Content-type", "text/text");
 	}
-	
-	
+
 	status = MHD_queue_response(connection, response_code, response);
-	
+
 	MHD_destroy_response(response);
 
 	return status;

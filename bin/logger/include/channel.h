@@ -36,7 +36,6 @@ typedef struct {
 	char id[5];			/* only for internal usage & debugging */
 	char *middleware;		/* url to middleware */
 	char *uuid;			/* unique identifier for middleware */
-	unsigned long interval;		/* polling interval (== 0 for meters) */
 	
 	reading_id_t identifier;	/* channel identifier (OBIS, string) */
 	buffer_t buffer;		/* circular queue to buffer readings */
@@ -47,7 +46,7 @@ typedef struct {
 } channel_t;
 
 /* Prototypes */
-void channel_init(channel_t *ch, char *uuid, char *middleware, unsigned long interval, reading_id_t identifier);
+void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier);
 void channel_free(channel_t *ch);
 
 #endif /* _CHANNEL_H_ */

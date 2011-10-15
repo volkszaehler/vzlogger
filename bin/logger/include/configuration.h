@@ -23,28 +23,19 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _OPTIONS_H_
-#define _OPTIONS_H_
+#ifndef _CONFIGURATION_H_
+#define _CONFIGURATION_H_
 
-#include "list.h"
+#include <json/json.h>
+
 #include "channel.h"
+#include "list.h"
+#include "vzlogger.h"
 
-/**
- * Options from command line
- */
-typedef struct {
-	char *config;		/* path to config file */
-	unsigned int port;	/* tcp port for local interface */
-	int verbose;		/* verbosity level */
+void parse_configuration(char *filename, list_t *assocs, options_t *opts);
+channel_t * parse_channel(struct json_object *jso);
+assoc_t * parse_meter(struct json_object *jso);
 
-	/* boolean bitfields, padding at the end of struct */
-	int daemon:1;		/* run in background */
-	int local:1;		/* enable local interface */
-	int logging:1;		/* start logging threads */
-} options_t;
+int check_type(char *key, struct json_object *jso, enum json_type type);
 
-/* Prototypes */
-void parse_options(int argc, char *argv[], options_t *options);
-void parse_channels(const char *filename, list_t *meters);
-
-#endif /* _OPTIONS_H_ */
+#endif /* _CONFIGURATION_H_ */

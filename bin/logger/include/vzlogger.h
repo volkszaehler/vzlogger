@@ -30,13 +30,15 @@
 #include <meter.h>
 
 #include "config.h"
-
 #include "list.h"
 
-/* some hard coded configuration */
-#define RETRY_PAUSE 30		/* seconds to wait after failed request */
-#define BUFFER_KEEP 600		/* for the local interface; in seconds */
-#define COMET_TIMEOUT 30	/* in seconds */
+enum {
+	LOG_ERROR = -1,
+	LOG_STD = 0,
+	LOG_INFO = 5,
+	LOG_DEBUG = 10,
+	LOG_FINEST = 15
+};
 
 typedef enum {
 	UNKNOWN,
@@ -51,12 +53,38 @@ typedef enum {
 typedef struct {
 	meter_t meter;
 	list_t channels;
+	int interval;
+
 	pthread_t thread;
 	pthread_status_t status;
 } assoc_t;
 
+/**
+ * Options from command line
+ */
+typedef struct {
+	char *config;		/* filename of configuration */
+	char *log;		/* filename for logging */
+	FILE *logfd;
+
+	int port;		/* TCP port for local interface */
+	int verbosity;		/* verbosity level */
+	int comet_timeout;	/* in seconds;  */
+	int buffer_length;	/* in seconds; how long to buffer readings for local interfalce */
+	int retry_pause;	/* in seconds; how long to pause after an unsuccessful HTTP request */
+
+	/* boolean bitfields, padding at the end of struct */
+	int channel_index:1;	/* give a index of all available channels via local interface */
+	int daemon:1;		/* run in background */
+	int foreground:1;	/* dont fork in background */
+	int local:1;		/* enable local interface */
+	int logging:1;		/* start logging threads, depends on local & daemon */
+} options_t;
+
 /* Prototypes */
 void print(int level, const char *format, void *id, ... );
 void usage(char ** argv);
+void quit(int sig);
+void parse_options(int argc, char *argv[], options_t *options);
 
 #endif /* _VZLOGGER_H_ */

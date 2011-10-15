@@ -31,7 +31,7 @@
 #include <meter.h>
 
 #include "api.h"
-#include "options.h"
+#include "vzlogger.h"
 
 extern options_t options;
 
@@ -87,11 +87,11 @@ json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last) 
 	json_object *json_tuples = json_object_new_array();
 	reading_t *it;
 
-	for (it = first; it != last->next; it = it->next) {
+	for (it = first; it != NULL && it != last->next; it = it->next) {
 		struct json_object *json_tuple = json_object_new_array();
 
 		pthread_mutex_lock(&buf->mutex);
-		
+
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
 		double timestamp = tvtod(it->time) * 1000; 
@@ -128,7 +128,7 @@ CURL * api_curl_init(channel_t *ch) {
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, (int) options.verbose);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, options.verbosity);
 	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
 	curl_easy_setopt(curl, CURLOPT_DEBUGDATA, (void *) ch);
 

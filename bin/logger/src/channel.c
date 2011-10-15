@@ -30,11 +30,10 @@
 
 #include "channel.h"
 
-void channel_init(channel_t *ch, char *uuid, char *middleware, unsigned long interval, reading_id_t identifier) {
+void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier) {
 	static int instances; /* static to generate channel ids */
 	snprintf(ch->id, 5, "ch%i", instances++);
-	
-	ch->interval = interval;
+
 	ch->identifier = identifier;
 	ch->status = UNKNOWN;
 

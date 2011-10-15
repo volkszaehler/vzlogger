@@ -29,6 +29,8 @@
 #ifndef _D0_H_
 #define _D0_H_
 
+#define D0_BUFFER_LENGTH 1024
+
 #include <termios.h>
 
 typedef struct {

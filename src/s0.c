@@ -39,29 +39,33 @@ int meter_open_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
 	/* open port */
-	handle->fd = open(mtr->connection, O_RDWR | O_NOCTTY); 
+	int fd = open(mtr->connection, O_RDWR | O_NOCTTY); 
 
-        if (handle->fd < 0) {
+        if (fd < 0) {
+		perror(mtr->connection);
         	return -1;
         }
 
 	/* save current port settings */
-	tcgetattr(handle->fd, &handle->oldtio);
+	tcgetattr(fd, &handle->oldtio);
 
 	/* configure port */
 	struct termios tio;
 	memset(&tio, 0, sizeof(struct termios));
-	
+
 	tio.c_cflag = B300 | CS8 | CLOCAL | CREAD;
-        tio.c_iflag = IGNPAR;
-        tio.c_oflag = 0;
-        tio.c_lflag = 0;	/* set input mode (non-canonical, no echo,...) */        
-        tio.c_cc[VTIME] = 0;	/* inter-character timer unused */
-        tio.c_cc[VMIN] = 1; 	/* blocking read until data is received */
-        
+	tio.c_iflag = IGNPAR;
+	tio.c_oflag = 0;
+	tio.c_lflag = 0;
+	tio.c_cc[VMIN]=1;
+	tio.c_cc[VTIME]=0;
+
+        tcflush(fd, TCIFLUSH);
+
         /* apply configuration */
-        tcsetattr(handle->fd, TCSANOW, &tio);
-        
+        tcsetattr(fd, TCSANOW, &tio);
+	handle->fd = fd;
+
         return 0;
 }
 
@@ -77,23 +81,21 @@ void meter_close_s0(meter_t *mtr) {
 
 size_t meter_read_s0(meter_t *mtr, reading_t rds[], size_t n) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
-	
 	char buf[8];
-	
-	rds->value = 1;
-	
+
 	/* clear input buffer */
         tcflush(handle->fd, TCIOFLUSH);
-	
+
 	/* blocking until one character/pulse is read */
 	read(handle->fd, buf, 8);
-	
+
 	/* store current timestamp */
 	gettimeofday(&rds->time, NULL);
-	
+	rds->value = 1;
+
 	/* wait some ms for debouncing */
 	usleep(30000);
-	
+
 	return 1;
 }
 

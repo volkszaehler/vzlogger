@@ -46,8 +46,8 @@ const meter_type_t meter_types[] = {
 double tvtod(struct timeval tv) {
 	return tv.tv_sec + tv.tv_usec / 1e6;
 }
-	
-void meter_init(meter_t *mtr, meter_type_t *type, const char *connection) {
+
+void meter_init(meter_t *mtr, const meter_type_t *type, const char *connection) {
 	static int instances; /* static to generate channel ids */
 	snprintf(mtr->id, 5, "mtr%i", instances++);
 

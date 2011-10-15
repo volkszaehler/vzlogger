@@ -110,7 +110,7 @@ double tvtod(struct timeval tv);
  * @param type the type it should be initialized with
  * @param connection type specific initialization arguments (connection settings, port, etc..)
  */
-void meter_init(meter_t *mtr, meter_type_t *type, const char *connection);
+void meter_init(meter_t *mtr, const meter_type_t *type, const char *connection);
 
 /**
  * Freeing all memory which has been allocated during the initialization
