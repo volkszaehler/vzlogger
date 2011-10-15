@@ -45,4 +45,6 @@ int meter_open_d0(struct meter *mtr);
 void meter_close_d0(struct meter *mtr);
 size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
 
+int meter_d0_parse_line(struct reading *rd, char *line, size_t n);
+
 #endif /* _D0_H_ */

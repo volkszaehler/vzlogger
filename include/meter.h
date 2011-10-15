@@ -80,7 +80,7 @@ typedef struct {
 typedef struct meter {
 	char id[5];		/* only for internal usage & debugging */
 	char *connection;	/* args for connection, further configuration etc */
-	meter_type_t *type;
+	const meter_type_t *type;
 		
 	union {
 		meter_handle_s0_t s0;

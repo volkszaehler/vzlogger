@@ -60,7 +60,7 @@ void * reading_thread(void *arg) {
 		foreach(assoc->channels, it) {
 			channel_t *ch = (channel_t *) it->data;
 			buffer_t *buf = &ch->buffer;
-			reading_t *added;
+			reading_t *added = NULL;
 
 			for (int i = 0; i < n; i++) {
 				switch (mtr->type->id) {
@@ -86,7 +86,7 @@ void * reading_thread(void *arg) {
 
 			/* queue reading into sending buffer logging thread if
 			   logging is enabled & sent queue is empty */
-			if (options.logging && !buf->sent) {
+			if (options.logging && buf->sent == NULL) {
 				buf->sent = added;
 			}
 

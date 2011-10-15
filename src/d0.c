@@ -105,18 +105,20 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 	while (m < n && byte != '!') {
 
 		meter_d0_parse_line(&rds[m], line, j);
+		rds[m].time = time; /* use timestamp of data block arrival for all readings */
 	}
 
 	return 1;
 }
 
-int meter_d0_parse_line(reading_t &rd, char *line, size_t n) {
+int meter_d0_parse_line(reading_t *rd, char *line, size_t n) {
 	char id[16];
 	char value[32];
 	char unit[16];
 
-	rds[m].time = time; /* use timestamp of data block arrival for all readings */
-	rds[m].value = ;
-	rds[m].identifier.obis = ;
+	rd->value = 123.123; // TODO
+	rd->identifier.obis = obis_init(NULL); // TODO
+	
+	return 0;
 }
 

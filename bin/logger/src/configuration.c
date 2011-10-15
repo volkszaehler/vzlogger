@@ -32,7 +32,7 @@
 extern const meter_type_t meter_types[];
 
 void parse_configuration(char *filename, list_t *assocs, options_t *options) {
-	struct json_object *json_config;
+	struct json_object *json_config = NULL;
 	struct json_tokener *json_tok = json_tokener_new();
 
 	char buf[JSON_FILE_BUF_SIZE];
@@ -40,7 +40,6 @@ void parse_configuration(char *filename, list_t *assocs, options_t *options) {
 
 	/* open configuration file */
 	FILE *file = fopen(filename, "r");
-
 	if (file == NULL) {
 		print(LOG_ERROR, "Cannot open configfile %s: %s", NULL, filename, strerror(errno)); /* why didn't the file open? */
 		exit(EXIT_FAILURE);
@@ -64,7 +63,7 @@ void parse_configuration(char *filename, list_t *assocs, options_t *options) {
 	fclose(file);
 	json_tokener_free(json_tok);
 
-	/* parse configuration */
+	/* read settings */
 	json_object_object_foreach(json_config, key, value) {
 		if (strcmp(key, "daemon") == 0 && check_type(key, value, json_type_boolean)) {
 			options->daemon = json_object_get_boolean(value);

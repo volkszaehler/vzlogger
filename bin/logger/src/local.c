@@ -68,7 +68,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 				json_exception = json_object_new_object();
 
 				json_object_object_add(json_exception, "message", json_object_new_string("channel indexing is disabled"));
-				json_object_object_add(json_exception, "code", json_object_new_int((int) 0));
+				json_object_object_add(json_exception, "code", json_object_new_int(0));
 			}
 		}
 
@@ -98,7 +98,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 					json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid));
 					json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware));
 					json_object_object_add(json_ch, "interval", json_object_new_int(assoc->interval));
-					json_object_object_add(json_ch, "protocol", json_object_new_int(assoc->meter.type->name));
+					json_object_object_add(json_ch, "protocol", json_object_new_string(assoc->meter.type->name));
 
 					struct json_object *json_tuples = api_json_tuples(&ch->buffer, ch->buffer.head, ch->buffer.tail);
 					json_object_object_add(json_ch, "tuples", json_tuples);

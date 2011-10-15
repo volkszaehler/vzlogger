@@ -132,8 +132,7 @@ void meter_sml_parse(sml_list *entry, reading_t *rd) {
 int meter_sml_open_socket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
-	int fd, res, flags;
-	char byte;
+	int fd, res;
 
 	getaddrinfo(node, service, NULL, &ais);
 	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
@@ -149,7 +148,7 @@ int meter_sml_open_socket(const char *node, const char *service) {
 		fprintf(stderr, "error: connect(%s, %s): %s\n", node, service, strerror(errno));
 		return -1;
 	}
-	
+
 	return fd;
 }
 
