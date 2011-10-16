@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([vzlogger], [0.2], [http://bugs.volkszaehler.org])
+AC_INIT([vzlogger], [0.3.1], [http://bugs.volkszaehler.org])
 AM_INIT_AUTOMAKE(vzlogger, 0.2)
 AC_CONFIG_SRCDIR([src/meter.c])
 AC_CONFIG_HEADERS([config.h])
