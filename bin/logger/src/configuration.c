@@ -159,7 +159,7 @@ assoc_t * parse_meter(struct json_object *jso) {
 		else if (strcmp(key, "channels") == 0 && check_type(key, value, json_type_array)) {
 			int len = json_object_array_length(value);
 			for (int i = 0; i < len; i++) {
-				list_push(&json_channels, value);
+				list_push(&json_channels, json_object_array_get_idx(value, i));
 			}
 		}
 		else if (strcmp(key, "channel") == 0 && check_type(key, value, json_type_object)) {
@@ -235,11 +235,15 @@ channel_t * parse_channel(struct json_object *jso) {
 		exit(EXIT_FAILURE);
 	}
 	else if (enabled == TRUE) {
+		// TODO other identifiers are not supported at the moment
 		reading_id_t id = { (identifier == NULL) ? obis_init(NULL) : obis_parse(identifier) };
+
+		char obis_str[10];
+		obis_unparse(id.obis, obis_str);
 
 		channel_t *ch = malloc(sizeof(channel_t));
 		channel_init(ch, uuid, middleware, id);
-		print(5, "New channel initialized (uuid=...%s middleware=%s identifier=%s)", ch, uuid+30, middleware, identifier);
+		print(5, "New channel initialized (uuid=...%s middleware=%s obis=%s)", ch, uuid+30, middleware, obis_str);
 
 		return ch;
 	}
