@@ -1,6 +1,20 @@
-vzlogger (0.2.1-1) stable; urgency=low
+vzlogger (0.3.1) stable; urgency=low
 
-  * A lot of rewrite
+  * fixed bug in parsing configuration for sml meters
+
+ -- Steffen Vogel <info@steffenvogel.de>  Sun, 16 Oct 2011 14:31:26 +0200
+
+vzlogger (0.3-2) stable; urgency=low
+
+  * fixed typo in description
+  * fixed static linking of libsml
+  * added dependency for libsml
+
+ -- Steffen Vogel <info@steffenvogel.de>  Sun, 16 Oct 2011 00:25:27 +0200
+
+vzlogger (0.3-1) stable; urgency=high
+
+  * Rewrite of meter & channel mapping
   * Added SML support
 
  -- Steffen Vogel <info@steffenvogel.de>  Thu, 15 Sep 2011 23:26:31 +0200
