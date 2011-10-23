@@ -46,7 +46,7 @@ void * reading_thread(void *arg) {
 	pthread_cleanup_push(&reading_thread_cleanup, rds);
 
 	do { /* start thread main loop */
-		/* fetch readings from meter */
+		/* fetch readings from meter and measure interval */
 		last = time(NULL);
 		n = meter_read(mtr, rds, mtr->type->max_readings);
 		delta = time(NULL) - last;
@@ -80,7 +80,7 @@ void * reading_thread(void *arg) {
 			}
 
 			/* update buffer length to interval */
-			if (options.local) {
+			if (options.local && assoc->interval != 0) {
 				ch->buffer.keep = ceil(options.buffer_length / assoc->interval);
 			}
 
@@ -107,8 +107,8 @@ void * reading_thread(void *arg) {
 		}
 
 		if ((options.daemon || options.local) && mtr->type->periodic) {
-			print(LOG_INFO, "Next reading in %i seconds", mtr, 5);
-			sleep(5); // TODO handle parsing
+			print(LOG_INFO, "Next reading in %i seconds", mtr, assoc->interval);
+			sleep(assoc->interval); // TODO handle parsing
 		}
 	} while (options.daemon || options.local);
 
