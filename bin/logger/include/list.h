@@ -34,7 +34,7 @@
 		(it) != NULL; \
 		(it) = (it)->next \
 	) \
-	
+
 typedef struct __list_item {
 	void *data;
 	struct __list_item *prev;
@@ -54,39 +54,40 @@ inline void list_init(list_t *list) {
 
 inline int list_push(list_t *list, void *data) {
 	__list_item_t *new = malloc(sizeof(__list_item_t));
-	
+
 	if (new == NULL) return -1; /* cannot allocate memory */
-	
+
 	new->data = data;
 	new->prev = list->tail;
 	new->next = NULL;
-	
+
 	if (list->tail == NULL) {
 		list->head = new;
 	}
 	else {
 		list->tail->next = new;
 	}
-	
+
 	list->tail = new;
 	list->size = list->size + 1;
-	
+
 	return list->size;
 }
 
 inline void * list_pop(list_t *list) {
 	__list_item_t *old = list->tail;
-	void *data = old->data;
 	
+	if (old == NULL) {
+		return NULL;
+	}
+
+	void *data = old->data;
+
 	list->tail = old->prev;
 	list->size--;
-	
-	if (list->head == old) {
-		list->head = NULL;
-	}
-	
+
 	free(old);
-	
+
 	return data;
 }
 
