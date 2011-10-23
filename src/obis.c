@@ -141,7 +141,7 @@ int obis_compare(obis_id_t a, obis_id_t b) {
 			return 1;
 		}
 	}
-	
+
 	return 0; /* equal */
 }
 

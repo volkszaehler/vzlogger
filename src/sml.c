@@ -134,14 +134,15 @@ int meter_sml_open_socket(const char *node, const char *service) {
 	struct addrinfo *ais;
 	int fd, res;
 
-	getaddrinfo(node, service, NULL, &ais);
-	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
-
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
 		fprintf(stderr, "error: socket(): %s\n", strerror(errno));
 		return -1;
 	}
+
+	getaddrinfo(node, service, NULL, &ais);
+	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
+	freeaddrinfo(ais);
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {

@@ -123,17 +123,15 @@ void parse_configuration(char *filename, list_t *assocs, options_t *options) {
 }
 
 assoc_t * parse_meter(struct json_object *jso) {
-	assoc_t *assoc = malloc(sizeof(assoc_t));
 	list_t json_channels;
 
 	const meter_type_t *type = NULL;
 	const char *connection = NULL;
 	const char *protocol = NULL;
 	int enabled = TRUE;
+	int interval = 0;
 
-	list_init(&assoc->channels);
 	list_init(&json_channels);
-	assoc->interval = 0;
 
 	json_object_object_foreach(jso, key, value) {
 		if (strcmp(key, "enabled") == 0 && check_type(key, value, json_type_boolean)) {
@@ -154,7 +152,7 @@ assoc_t * parse_meter(struct json_object *jso) {
 			connection = json_object_get_string(value);
 		}
 		else if (strcmp(key, "interval") == 0 && check_type(key, value, json_type_int)) {
-			assoc->interval = json_object_get_int(value);
+			interval = json_object_get_int(value);
 		}
 		else if (strcmp(key, "channels") == 0 && check_type(key, value, json_type_array)) {
 			int len = json_object_array_length(value);
@@ -181,12 +179,16 @@ assoc_t * parse_meter(struct json_object *jso) {
 	}
 	else if (enabled == TRUE) {
 		/* init meter */
+		assoc_t *assoc = malloc(sizeof(assoc_t));
+		assoc->interval = interval;
+
+		list_init(&assoc->channels);
 		meter_init(&assoc->meter, type, connection);
 		print(5, "New meter initialized (protocol=%s, connection=%s, interval=%d)", assoc, protocol, connection, assoc->interval);
 
 		/* init channels */
-		foreach(json_channels, it) {
-			struct json_object *jso = (struct json_object *) it->data;
+		struct json_object *jso;
+		while ((jso = list_pop(&json_channels)) != NULL) {
 			channel_t *ch = parse_channel(jso);
 
 			if (ch != NULL) {

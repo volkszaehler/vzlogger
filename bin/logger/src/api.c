@@ -141,6 +141,7 @@ void api_parse_exception(CURLresponse response, char *err, size_t n) {
 
 	json_tok = json_tokener_new();
 	json_obj = json_tokener_parse_ex(json_tok, response.data, response.size);
+
 	if (json_tok->err == json_tokener_success) {
 		json_obj = json_object_object_get(json_obj, "exception");
 
