@@ -12,7 +12,7 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC=smartmeter server for volkzaehler.org
+DESC="smartmeter server for volkzaehler.org"
 NAME=vzlogger
 DAEMON=/usr/bin/vzlogger
 DAEMON_ARGS="-d"          # Arguments to run the daemon with
