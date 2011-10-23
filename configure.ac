@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([vzlogger], [0.3.1], [http://bugs.volkszaehler.org])
-AM_INIT_AUTOMAKE(vzlogger, 0.2)
+AM_INIT_AUTOMAKE(vzlogger, 0.3.1)
 AC_CONFIG_SRCDIR([src/meter.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
