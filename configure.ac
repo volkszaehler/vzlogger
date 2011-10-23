@@ -2,16 +2,20 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([vzlogger], [0.3.1], [http://bugs.volkszaehler.org])
-AM_INIT_AUTOMAKE(vzlogger, 0.2)
+
+# update version here!
+AC_INIT([vzlogger], 0.3.1, [http://bugs.volkszaehler.org])
+AM_INIT_AUTOMAKE([vzlogger], 0.3.1)
+
 AC_CONFIG_SRCDIR([src/meter.c])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile
-		   docs/Makefile
-		   src/Makefile
-		   bin/reader/Makefile
-		   bin/logger/Makefile
-		])
+AC_CONFIG_FILES([
+	Makefile
+	docs/Makefile
+	src/Makefile
+	bin/reader/Makefile
+	bin/logger/Makefile
+])
 
 # Checks for programs.
 AC_PROG_CC
@@ -26,7 +30,7 @@ AC_PROG_RANLIB
 PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.19])
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h stddef.h stdint.h stdlib.h string.h sys/time.h termios.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h stddef.h stdint.h stdlib.h string.h sys/time.h termios.h unistd.h getopt.h signal.h pthread.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_MODE_T
