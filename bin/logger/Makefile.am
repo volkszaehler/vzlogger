@@ -20,10 +20,3 @@ if SML_SUPPORT
 vzlogger_LDADD += $(DEPS_SML_LIBS)
 AM_CFLAGS += $(DEPS_SML_CFLAGS)
 endif
-
-# D0 support
-####################################################################
-if D0_SUPPORT
-vzlogger_LDADD += $(DEPS_D0_LIBS)
-AM_CFLAGS += $(DEPS_D0_CFLAGS)
-endif

@@ -56,19 +56,6 @@ if test x"$sml" = x"yes"; then
     PKG_CHECK_MODULES([DEPS_SML], [sml >= 0.1])
 fi
 
-# D0 support
-AC_ARG_ENABLE(
-    [d0],
-    [AS_HELP_STRING([--enable-d0], [enable support for smart messaging language (def=yes)])],
-    [d0=$enableval],
-    [d0=yes]
-)
-
-AM_CONDITIONAL([D0_SUPPORT], [test x"$d0" = x"yes"])
-if test x"$d0" = x"yes"; then
-    AC_DEFINE([D0_SUPPORT], [], [D0, aka DIN EN 62056-21])
-fi
-
 # local interface support
 AC_ARG_ENABLE(
     [local], 
