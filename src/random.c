@@ -5,6 +5,8 @@
  * @copyright Copyright (c) 2011, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
+ * 
+ * "connection" sets the maximum value
  */
 /*
  * This file is part of volkzaehler.org
