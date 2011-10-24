@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* D0, aka DIN EN 62056-21 */
+#undef D0_SUPPORT
+
 /* Debug Mode */
 #undef DEBUG
 
