@@ -89,11 +89,7 @@ typedef union {
 typedef union {
 	unsigned char raw[6];
 	struct {
-		unsigned char media;
-		unsigned char channel;
-		unsigned char indicator;
-		unsigned char mode;
-		unsigned char quantities;
+		unsigned char media, channel, indicator, mode, quantities;
 		unsigned char storage;	/* not used in Germany */
 	} groups;
 } obis_id_t;
@@ -105,10 +101,10 @@ typedef struct {
 } obis_alias_t;
 
 /* Prototypes */
-obis_id_t obis_init(const unsigned char *raw);
-obis_id_t obis_parse(const char *str);
-obis_id_t obis_lookup_alias(const char *alias);
-int obis_unparse(obis_id_t id, char *buffer);
+obis_id_t * obis_init(obis_id_t *id, const unsigned char *raw);
+obis_id_t * obis_lookup_alias(const char *alias);
+int obis_parse(obis_id_t *id, const char *str, size_t n);
+int obis_unparse(obis_id_t id, char *buffer, size_t n);
 int obis_compare(obis_id_t a, obis_id_t b);
 int obis_is_manufacturer_specific(obis_id_t id);
 int obis_is_null(obis_id_t id);
