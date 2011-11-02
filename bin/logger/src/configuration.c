@@ -238,14 +238,19 @@ channel_t * parse_channel(struct json_object *jso) {
 	}
 	else if (enabled == TRUE) {
 		// TODO other identifiers are not supported at the moment
-		reading_id_t id = { (identifier == NULL) ? obis_init(NULL) : obis_parse(identifier) };
+		reading_id_t id;
 
-		char obis_str[10];
-		obis_unparse(id.obis, obis_str);
+		if (obis_parse(&id.obis, identifier, strlen(identifier)) != 0) {
+			print(-1, "Invalid identifier: %s", NULL, identifier);
+			exit(EXIT_FAILURE);
+		}
+
+		char obis_str[6*3+5+1];
+		obis_unparse(id.obis, obis_str, 6*3+5+1);
 
 		channel_t *ch = malloc(sizeof(channel_t));
 		channel_init(ch, uuid, middleware, id);
-		print(5, "New channel initialized (uuid=...%s middleware=%s obis=%s)", ch, uuid+30, middleware, obis_str);
+		print(5, "New channel initialized (uuid=...%s middleware=%s obis=%s (%s))", ch, uuid+30, middleware, obis_str, identifier);
 
 		return ch;
 	}
