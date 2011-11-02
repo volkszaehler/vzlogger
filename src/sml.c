@@ -116,7 +116,8 @@ void meter_sml_parse(sml_list *entry, reading_t *rd) {
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
 
 	rd->value = sml_value_to_double(entry->value) * pow(10, scaler);
-	rd->identifier.obis = obis_init(entry->obj_name->str);
+
+	obis_init(&rd->identifier.obis, entry->obj_name->str);
 
 	/* get time */
 	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
