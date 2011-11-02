@@ -35,8 +35,8 @@
 const meter_type_t meter_types[] = {
 	{ONEWIRE,	"onewire",	"Dallas 1-Wire sensors (via OWFS)",		1, 1},
 	{RANDOM,	"random",	"Random walk",					1, 1},
-	{S0,		"s0",		"S0 on RS232",					1, 0},
-//	{D0,		"d0",		"On-site plaintext protocol (DIN EN 62056-21)",	16, 0},
+	{S0,		"s0",		"S0 on RS232",					1, 1},
+	{D0,		"d0",		"On-site plaintext protocol (DIN EN 62056-21)",	16, 50},
 #ifdef SML_SUPPORT
 	{SML,		"sml",		"Smart Meter Language",				16, 0},
 #endif /* SML_SUPPORT */
@@ -70,7 +70,7 @@ int meter_open(meter_t *mtr) {
 #endif /* SML_SUPPORT */
 		default: fprintf(stderr, "error: unknown meter type: %i\n", mtr->type->id);
 	}
-	
+
 	return -1;
 }
 

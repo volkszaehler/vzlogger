@@ -34,33 +34,58 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <regex.h>
+#include <ctype.h>
+
+/* socket */ 
+#include <errno.h>
+#include <netdb.h>
+#include <sys/socket.h>
 
 #include "meter.h"
 #include "obis.h"
 #include "d0.h"
 
+int meter_d0_open_socket(const char *node, const char *service) {
+	struct sockaddr_in sin;
+	struct addrinfo *ais;
+	int fd, res;
+
+	fd = socket(PF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
+		fprintf(stderr, "error: socket(): %s\n", strerror(errno));
+		return -1;
+	}
+
+	getaddrinfo(node, service, NULL, &ais);
+	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
+	freeaddrinfo(ais);
+
+	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
+	if (res < 0) {
+		fprintf(stderr, "error: connect(%s, %s): %s\n", node, service, strerror(errno));
+		return -1;
+	}
+
+	return fd;
+}
+
+
 int meter_open_d0(meter_t *mtr) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
-	struct termios tio;
 
-	memset(&tio, 0, sizeof(tio));
+	char *addr = strdup(mtr->connection);
+	char *node = strsep(&addr, ":");
+	char *service = strsep(&addr, ":");
 
-	/* open serial port */
-	handle->fd = open(mtr->connection, O_RDWR);
+	printf("socket: %s %s\n", node, service);
 
-	if (handle->fd < 0) {
-        	return -1;
-        }
+	handle->fd = meter_d0_open_socket(node, service);
 
-	tio.c_iflag = 0;
-	tio.c_oflag = 0;
-	tio.c_cflag = B9600 | CS7 | CREAD | CLOCAL;
-	tio.c_lflag = 0;
-	tio.c_cc[VMIN] = 1;
-	tio.c_cc[VTIME] = 20;
+	free(addr);
 
-	return 0;
+	printf("socket opened: %s %s\n", node, service);
+
+	return (handle->fd < 0) ? -1 : 0;
 }
 
 void meter_close_d0(meter_t *mtr) {
@@ -72,53 +97,133 @@ void meter_close_d0(meter_t *mtr) {
 size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
-	struct timeval time;
-	enum { IDENTIFICATION, OBIS, VALUE, UNIT } context;
+	enum { START, VENDOR, BAUD, IDENT, START_LINE, OBIS, VALUE, UNIT, END_LINE, END } context;
 
-	char identification[20];	/* 3 vendor + 1 baudrate + 16 meter specific */
-	char line[78];			/* 16 obis + '(' + 32 value + '*' + 16 unit + ')' + '\r' + '\n' */
+	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
+	char identification[16+1];	/* 16 meter specific + '\0' termination */
+	char id[16+1];
+	char value[32+1];
+	char unit[16+1];
+
+	char baudrate;		/* 1 byte */
 	char byte;
+	int j, k, m;
+	
+	j = k = m = baudrate = 0;
 
-	int fd = handle->fd;
-	int i, j, m;
+	context = START;
 
-	/* wait for identification */
-	while (read(fd, &byte, 1)) {
-		if (byte == '/') { /* start of identification */
-			for (i = 0; i < 16 && byte != '\r'; i++) {
-				read(fd, &byte, 1);
-				identification[i] = byte;
-			}
-			identification[i] = '\0';
-			break;
+	while (read(handle->fd, &byte, 1)) {
+		if (byte == '/') context = START;
+		else if (byte == '!') context = END;
+
+		switch (context) {
+			case START:
+				if (byte == '/') {
+					j = k = m = 0;
+					context = VENDOR;
+					printf("reset!!!\n");
+				}
+				break;
+
+			case VENDOR:
+				if (!isalpha(byte)) goto error;
+				else vendor[j++] = byte;
+
+				if (j >= 3) {
+					vendor[j] = '\0'; /* termination */
+					j = k = 0;
+
+					context = BAUD;
+				}
+				break;
+
+			case BAUD:
+				baudrate = byte;
+				context = IDENT;
+				j = k = 0;
+				break;
+
+			case IDENT:
+				/* Data block starts after twice a '\r\n' sequence */
+				/* b= CR LF CR LF */
+				/* k=  1  2  3  4 */
+				if (byte == '\r' || byte == '\n') {
+					k++;
+					if  (k >= 4) {
+						identification[j] = '\0'; /* termination */
+						j = k = 0;
+
+						context = START_LINE;
+					}
+				}
+				else identification[j++] = byte;
+				break;
+
+			case START_LINE:
+			case OBIS:
+				if (byte == '(') {
+					id[j] = '\0';
+					j = k = 0;
+
+					context = VALUE;
+				}
+				else id[j++] = byte;
+				break;
+
+			case VALUE:
+				if (byte == '*' || byte == ')') {
+					value[j] = '\0';
+					j = k = 0;
+
+					if (byte == ')') {
+						unit[0] = '\0';
+						context =  END_LINE;
+					}
+					else {
+						context = UNIT;
+					}
+				}
+				else value[j++] = byte;
+				break;
+
+			case UNIT:
+				if (byte == ')') {
+					unit[j] = '\0';
+					j = k = 0;
+
+					context = END_LINE;
+				}
+				else unit[j++] = byte;
+				break;
+
+			case END_LINE:
+				if (byte == '\r' || byte == '\n') {
+					k++;
+					if  (k >= 2) {
+						if (m < n) { /* free slots available? */
+							printf("parsed reading (id=%s, value=%s, unit=%s)\n", id, value, unit);
+							rds[m].value = strtof(value, NULL);
+							obis_parse(&rds[m].identifier.obis, id, strlen(id));
+							gettimeofday(&rds[m].time, NULL);
+
+							j = k = 0;
+							m++;
+						}
+
+						context = START_LINE;
+					}
+				}
+				break;
+
+			case END:
+				printf("read package with %i tuples (vendor=%s, baudrate=%c, ident=%s)\n", m, vendor, baudrate, identification);
+				return m;
 		}
 	}
 
-	/* debug */
-	printf("got message from %s\n", identification);
-
-	/* take timestamp */
-	gettimeofday(&time, NULL);
-
-	/* read data lines: "obis(value*unit)" */
-	m = 0;
-	while (m < n && byte != '!') {
-
-		meter_d0_parse_line(&rds[m], line, j);
-		rds[m].time = time; /* use timestamp of data block arrival for all readings */
-	}
-
-	return 1;
-}
-
-int meter_d0_parse_line(reading_t *rd, char *line, size_t n) {
-	char id[16];
-	char value[32];
-	char unit[16];
-
-	rd->value = 123.123; // TODO
-	rd->identifier.obis = obis_init(NULL); // TODO
-	
+error:
+	printf("something unexpected happened: %s:%i!\n", __FUNCTION__, __LINE__);
 	return 0;
 }
 
