@@ -1,7 +1,7 @@
 /**
  * Plaintext protocol according to DIN EN 62056-21
  *
- * This protocol uses OBIS to identify the readout data
+ * This protocol uses OBIS codes to identify the readout data
  *
  * This is our example protocol. Use this skeleton to add your own
  * protocols and meters.
@@ -48,7 +48,8 @@
 int meter_d0_open_socket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
-	int fd, res;
+	int fd; // file descriptor
+	int res;
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
@@ -94,87 +95,101 @@ void meter_close_d0(meter_t *mtr) {
 	close(handle->fd);
 }
 
-size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
+size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t max_readings) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
-	enum { START, VENDOR, BAUD, IDENT, START_LINE, OBIS, VALUE, UNIT, END_LINE, END } context;
+	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
 	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
 	char identification[16+1];	/* 16 meter specific + '\0' termination */
-	char id[16+1];
-	char value[32+1];
-	char unit[16+1];
+	char obis_code[16+1];		/* A-B:C.D.E*F
+					   fields A, B, E, F are optional
+					   fields C & D are mandatory
+					   A: energy type; 1: energy
+					   B: channel number; 0: no channel specified
+					   C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
+						1:  Totel Active power+
+						21: L1 Active power+
+						31: L1 Current
+						32: L1 Voltage
+						41: L2 Active power+
+						51: L2 Current
+						52: L2 Voltage
+						61: L3 Active power+
+						71: L3 Current
+						72: L3 Voltage
+						96.1.255: Metering point ID 256 (electricity related) 
+						96.5.5: Meter started status flag
+					   D: types
+					   E: further processing or classification of quantities
+					   F: storage of data
+						see DIN-EN-62056-61 */
+	char value[32+1];		/* value, i.e. the actual reading */
+	char unit[16+1];		/* the unit of the value, e.g. kWh, V, ... */
 
-	char baudrate;		/* 1 byte */
-	char byte;
-	int j, k, m;
+	char baudrate;			/* 1 byte for */
+	char byte;			/* we parse our input byte wise */
+	int byte_iterator; 
+	int number_of_tuples;
 	
-	j = k = m = baudrate = 0;
+	byte_iterator =  number_of_tuples = baudrate = 0;
 
-	context = START;
+	context = START;				/* start with context START */
 
 	while (read(handle->fd, &byte, 1)) {
-		if (byte == '/') context = START;
-		else if (byte == '!') context = END;
-
+		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
+		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
-			case START:
-				if (byte == '/') {
-					j = k = m = 0;
-					context = VENDOR;
-					printf("reset!!!\n");
-				}
+			case START:			/* strip the initial "/" */
+				byte_iterator = number_of_tuples = 0;	/* start */
+				context = VENDOR;	/* set new context: START -> VENDOR */
 				break;
 
-			case VENDOR:
-				if (!isalpha(byte)) goto error;
-				else vendor[j++] = byte;
+			case VENDOR:			/* VENDOR has 3 Bytes */
+				if (!isalpha(byte)) goto error; /* Vendor ID needs to be alpha */
+				vendor[byte_iterator++] = byte;	/* read next byte */
+				if (byte_iterator >= 3) {	/* stop after 3rd byte */
+					vendor[byte_iterator] = '\0'; /* termination */
+					byte_iterator = 0;	/* reset byte counter */
 
-				if (j >= 3) {
-					vendor[j] = '\0'; /* termination */
-					j = k = 0;
-
-					context = BAUD;
-				}
+					context = BAUDRATE;	/* set new context: VENDOR -> BAUDRATE */
+				} 
 				break;
 
-			case BAUD:
-				baudrate = byte;
-				context = IDENT;
-				j = k = 0;
+			case BAUDRATE:			/* BAUDRATE consists of 1 char only */
+				baudrate = byte;	
+				context = IDENTIFICATION;	/* set new context: BAUDRATE -> IDENTIFICATION */
+				byte_iterator = 0;
 				break;
 
-			case IDENT:
-				/* Data block starts after twice a '\r\n' sequence */
-				/* b= CR LF CR LF */
-				/* k=  1  2  3  4 */
-				if (byte == '\r' || byte == '\n') {
-					k++;
-					if  (k >= 4) {
-						identification[j] = '\0'; /* termination */
-						j = k = 0;
-
-						context = START_LINE;
-					}
+			case IDENTIFICATION:		/* IDENTIFICATION has 16 bytes */
+				if (byte == '\r' || byte == '\n') { /* detect line end */
+					identification[byte_iterator] = '\0'; /* termination */
+					context = OBIS_CODE;	/* set new context: IDENTIFICATION -> OBIS_CODE */
+					byte_iterator = 0;
 				}
-				else identification[j++] = byte;
+				else identification[byte_iterator++] = byte;
 				break;
 
 			case START_LINE:
-			case OBIS:
-				if (byte == '(') {
-					id[j] = '\0';
-					j = k = 0;
+				break;
+			case OBIS_CODE:
+				if ((byte != '\n') && (byte != '\r')) 
+				{
+					if (byte == '(') {
+						obis_code[byte_iterator] = '\0';
+						byte_iterator = 0;
 
-					context = VALUE;
+						context = VALUE;
+					}
+					else obis_code[byte_iterator++] = byte;
 				}
-				else id[j++] = byte;
 				break;
 
 			case VALUE:
 				if (byte == '*' || byte == ')') {
-					value[j] = '\0';
-					j = k = 0;
+					value[byte_iterator] = '\0';
+					byte_iterator = 0;
 
 					if (byte == ')') {
 						unit[0] = '\0';
@@ -184,41 +199,38 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 						context = UNIT;
 					}
 				}
-				else value[j++] = byte;
+				else value[byte_iterator++] = byte;
 				break;
 
 			case UNIT:
 				if (byte == ')') {
-					unit[j] = '\0';
-					j = k = 0;
+					unit[byte_iterator] = '\0';
+					byte_iterator = 0;
 
 					context = END_LINE;
 				}
-				else unit[j++] = byte;
+				else unit[byte_iterator++] = byte;
 				break;
 
 			case END_LINE:
 				if (byte == '\r' || byte == '\n') {
-					k++;
-					if  (k >= 2) {
-						if (m < n) { /* free slots available? */
-							printf("parsed reading (id=%s, value=%s, unit=%s)\n", id, value, unit);
-							rds[m].value = strtof(value, NULL);
-							obis_parse(&rds[m].identifier.obis, id, strlen(id));
-							gettimeofday(&rds[m].time, NULL);
+					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) { /* free slots available and sain content? */
+						printf("parsed reading (OBIS code=%s, value=%s, unit=%s)\n", obis_code, value, unit);
+						rds[number_of_tuples].value = strtof(value, NULL);
+						obis_parse(&rds[number_of_tuples].identifier.obis, obis_code, strlen(obis_code));
+						gettimeofday(&rds[number_of_tuples].time, NULL);
 
-							j = k = 0;
-							m++;
-						}
+						byte_iterator = 0;
+						number_of_tuples++;
 
-						context = START_LINE;
+						context = OBIS_CODE;
 					}
 				}
 				break;
 
 			case END:
-				printf("read package with %i tuples (vendor=%s, baudrate=%c, ident=%s)\n", m, vendor, baudrate, identification);
-				return m;
+				printf("read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)\n", number_of_tuples, vendor, baudrate, identification);
+				return number_of_tuples;
 		}
 	}
 

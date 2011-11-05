@@ -103,11 +103,11 @@ obis_id_t * obis_init(obis_id_t *id, const unsigned char *raw) {
 int obis_parse(obis_id_t *id, const char *str, size_t n) {
 	enum { A = 0, B, C, D, E, F };
 
-	char b;
+	char byte; 	//currently processed Byte
 	int num;
 	int field;
 
-	num = b = 0;
+	num = byte = 0;
 	field = -1;
 	memset(&id->raw, 0xff, 6); /* initialize as wildcard */
 
@@ -115,22 +115,22 @@ int obis_parse(obis_id_t *id, const char *str, size_t n) {
 	/* fields A, B, E, F are optional */
 	/* fields C & D are mandatory */
 	for (int i = 0; i < n; i++) {
-		b = str[i];
+		byte = str[i];
 
-		if (isdigit(b)) {
-			num = (num * 10) + (b - '0'); /* parse digits */
+		if (isdigit(byte)) {
+			num = (num * 10) + (byte - '0'); /* parse digits */
 		}
 		else {
-			if (b == '-' && field < A) {		/* end of field A */
+			if (byte == '-' && field < A) {		/* end of field A */
 				field = A;
 			}
-			else if (b == ':' && field < B) {	/* end of field B */
+			else if (byte == ':' && field < B) {	/* end of field B */
 				field = B;
 			}
-			else if (b == '.' && field < D) {	/* end of field C & D*/
+			else if (byte == '.' && field < D) {	/* end of field C & D*/
 				field = (field < C) ? C : D;
 			}
-			else if ((b == '*' || b == '&') && field == D) { /* end of field E, start of field F */
+			else if ((byte == '*' || byte == '&') && field == D) { /* end of field E, start of field F */
 				field = E;
 			}
 			else goto error; // TODO lookup aliases
@@ -149,7 +149,7 @@ int obis_parse(obis_id_t *id, const char *str, size_t n) {
 	return 0;
 
 error:
-	printf("something unexpected happened (field=%i, b=%c, num=%i): %s:%i!\n", field, b, num, __FUNCTION__, __LINE__);
+	printf("something unexpected happened (field=%i, byte=%c, num=%i): %s:%i!\n", field, byte, num, __FUNCTION__, __LINE__);
 	return -1;
 }
 

@@ -239,7 +239,7 @@ channel_t * parse_channel(struct json_object *jso) {
 	else if (enabled == TRUE) {
 		// TODO other identifiers are not supported at the moment
 		reading_id_t id;
-
+		// TODO: at present (2011-11-05) aliases for identifiers don't work because "lookup aliases" is not (re-)implemented yet in src/obis.c; for now, only the obis identifiers (like "1.8.0") are allowed, so
 		if (obis_parse(&id.obis, identifier, strlen(identifier)) != 0) {
 			print(-1, "Invalid identifier: %s", NULL, identifier);
 			exit(EXIT_FAILURE);
