@@ -105,33 +105,35 @@ obis_id_t * obis_init(obis_id_t *id, unsigned char *raw) {
 int obis_parse(const char *str, obis_id_t *id) {
 	enum { A = 0, B, C, D, E, F };
 
-	char b = 0;
-	int num = 0;
-	int field = -1;
-	size_t n = strlen(str);
+	char byte; 	/* currently processed byte */
+	int num;
+	int field;
+	int len = strlen(str);
 
-	memset(&id->raw, DC, 6); /* initialize as wildcard */
+	num = byte = 0;
+	field = -1;
+	memset(&id->raw, 0xff, 6); /* initialize as wildcard */
 
 	/* format: "A-B:C.D.E[*&]F" */
 	/* fields A, B, E, F are optional */
 	/* fields C & D are mandatory */
-	for (int i = 0; i < n; i++) {
-		b = str[i];
+	for (int i = 0; i < len; i++) {
+		byte = str[i];
 
-		if (isdigit(b)) {
-			num = (num * 10) + (b - '0'); /* parse digits */
+		if (isdigit(byte)) {
+			num = (num * 10) + (byte - '0'); /* parse digits */
 		}
 		else {
-			if (b == '-' && field < A) {		/* end of field A */
+			if (byte == '-' && field < A) {		/* end of field A */
 				field = A;
 			}
-			else if (b == ':' && field < B) {	/* end of field B */
+			else if (byte == ':' && field < B) {	/* end of field B */
 				field = B;
 			}
-			else if (b == '.' && field < D) {	/* end of field C & D*/
+			else if (byte == '.' && field < D) {	/* end of field C & D*/
 				field = (field < C) ? C : D;
 			}
-			else if ((b == '*' || b == '&') && field == D) { /* end of field E, start of field F */
+			else if ((byte == '*' || byte == '&') && field == D) { /* end of field E, start of field F */
 				field = E;
 			}
 			else {
