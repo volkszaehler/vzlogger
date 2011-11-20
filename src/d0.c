@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <sys/time.h>
 
 /* socket */ 
 #include <errno.h>
@@ -42,8 +43,9 @@
 #include <sys/socket.h>
 
 #include "meter.h"
-#include "obis.h"
 #include "d0.h"
+#include "obis.h"
+#include "options.h"
 
 int meter_d0_open_socket(const char *node, const char *service) {
 	struct sockaddr_in sin;
@@ -52,8 +54,8 @@ int meter_d0_open_socket(const char *node, const char *service) {
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		fprintf(stderr, "error: socket(): %s\n", strerror(errno));
-		return -1;
+		print(log_error, "socket(): %s", NULL, strerror(errno));
+		return ERR;
 	}
 
 	getaddrinfo(node, service, NULL, &ais);
@@ -62,36 +64,56 @@ int meter_d0_open_socket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		fprintf(stderr, "error: connect(%s, %s): %s\n", node, service, strerror(errno));
-		return -1;
+		print(log_error, "connect(%s, %s): %s", NULL, node, service, strerror(errno));
+		return ERR;
 	}
 
 	return fd;
 }
 
+int meter_init_d0(meter_t *mtr, list_t options) {
+	meter_handle_d0_t *handle = &mtr->handle.d0;
+
+	/* connection */
+	handle->host = NULL;
+	handle->device = NULL;
+	if (options_lookup_string(options, "host", &handle->host) != SUCCESS && options_lookup_string(options, "device", &handle->device) != SUCCESS) {
+		print(log_error, "Missing host or port", mtr);
+		return ERR;
+	}
+
+	/* baudrate */
+	handle->baudrate = 9600;
+	if (options_lookup_int(options, "baudrate", &handle->baudrate) == ERR_INVALID_TYPE) {
+		print(log_error, "Invalid type for baudrate", mtr);
+		return ERR;
+	}
+
+	return SUCCESS;
+}
 
 int meter_open_d0(meter_t *mtr) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
-	char *addr = strdup(mtr->connection);
-	char *node = strsep(&addr, ":");
-	char *service = strsep(&addr, ":");
+	if (handle->device != NULL) {
+		print(log_error, "TODO: implement serial interface", mtr);
+		return ERR;
+	}
+	else if (handle->host != NULL) {
+		char *addr = strdup(handle->host);
+		char *node = strsep(&addr, ":");
+		char *service = strsep(&addr, ":");
 
-	printf("socket: %s %s\n", node, service);
+		handle->fd = meter_d0_open_socket(node, service);
+	}
 
-	handle->fd = meter_d0_open_socket(node, service);
-
-	free(addr);
-
-	printf("socket opened: %s %s\n", node, service);
-
-	return (handle->fd < 0) ? -1 : 0;
+	return (handle->fd < 0) ? ERR : SUCCESS;
 }
 
-void meter_close_d0(meter_t *mtr) {
+int meter_close_d0(meter_t *mtr) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
-	close(handle->fd);
+	return close(handle->fd);
 }
 
 size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
@@ -108,7 +130,7 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 	char baudrate;		/* 1 byte */
 	char byte;
 	int j, k, m;
-	
+
 	j = k = m = baudrate = 0;
 
 	context = START;
@@ -122,7 +144,6 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 				if (byte == '/') {
 					j = k = m = 0;
 					context = VENDOR;
-					printf("reset!!!\n");
 				}
 				break;
 
@@ -145,7 +166,7 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 				break;
 
 			case IDENT:
-				/* Data block starts after twice a '\r\n' sequence */
+				/* data block starts after twice a '\r\n' sequence */
 				/* b= CR LF CR LF */
 				/* k=  1  2  3  4 */
 				if (byte == '\r' || byte == '\n') {
@@ -202,9 +223,9 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 					k++;
 					if  (k >= 2) {
 						if (m < n) { /* free slots available? */
-							printf("parsed reading (id=%s, value=%s, unit=%s)\n", id, value, unit);
+							//printf("parsed reading (id=%s, value=%s, unit=%s)\n", id, value, unit);
 							rds[m].value = strtof(value, NULL);
-							obis_parse(&rds[m].identifier.obis, id, strlen(id));
+							obis_parse(id, &rds[m].identifier.obis);
 							gettimeofday(&rds[m].time, NULL);
 
 							j = k = 0;
@@ -217,13 +238,13 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t n) {
 				break;
 
 			case END:
-				printf("read package with %i tuples (vendor=%s, baudrate=%c, ident=%s)\n", m, vendor, baudrate, identification);
+				print(log_info, "Read package with %i tuples (vendor=%s, baudrate=%c, ident=%s)", mtr, m, vendor, baudrate, identification);
 				return m;
 		}
 	}
 
 error:
-	printf("something unexpected happened: %s:%i!\n", __FUNCTION__, __LINE__);
+	print(log_error, "Something unexpected happened: %s:%i!", mtr, __FUNCTION__, __LINE__);
 	return 0;
 }
 

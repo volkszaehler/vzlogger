@@ -30,58 +30,60 @@
 #include "api.h"
 #include "vzlogger.h"
 
-extern options_t options;
+extern config_options_t options;
 
 void reading_thread_cleanup(void *rds) {
 	free(rds);
 }
 
 void * reading_thread(void *arg) {
-	assoc_t *assoc = (assoc_t *) arg;
-	meter_t *mtr = &assoc->meter;
-	reading_t *rds = malloc(sizeof(reading_t) * mtr->type->max_readings);
+	reading_t *rds;
+	map_t *mapping;
+	meter_t *mtr;
 	time_t last, delta;
+	const meter_details_t *details;
 	size_t n = 0;
+
+	mapping = (map_t *) arg;
+	mtr = &mapping->meter;
+	details = meter_get_details(mtr->protocol);
+
+	/* allocate memory for readings */
+	size_t bytes = sizeof(reading_t) * details->max_readings;
+	rds = malloc(bytes);
+	memset(rds, 0, bytes);
 
 	pthread_cleanup_push(&reading_thread_cleanup, rds);
 
 	do { /* start thread main loop */
 		/* fetch readings from meter and measure interval */
 		last = time(NULL);
-		n = meter_read(mtr, rds, mtr->type->max_readings);
+		n = meter_read(mtr, rds, details->max_readings);
 		delta = time(NULL) - last;
 
-		/* update buffer length with current interval */
-		if (!mtr->type->periodic && delta != assoc->interval) {
-			print(15, "Updating interval to %i", mtr, delta);
-			assoc->interval = delta;
+		/* dumping meter output */
+		if (options.verbosity > log_debug) {
+			print(log_debug, "Got %i new readings from meter:", mtr, n);
+			char obis_str[OBIS_STR_LEN];
+			for (int i = 0; i < n; i++) {
+				obis_unparse(rds[i].identifier.obis, obis_str, OBIS_STR_LEN);
+				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr, obis_str, rds[i].value, tvtod(rds[i].time));
+			}
 		}
 
-		foreach(assoc->channels, it) {
-			channel_t *ch = (channel_t *) it->data;
+		/* update buffer length with current interval */
+		if (!details->periodic && mtr->interval != delta) {
+			print(log_debug, "Updating interval to %i", mtr, delta);
+			mtr->interval = delta;
+		}
+
+		foreach(mapping->channels, ch, channel_t) {
 			buffer_t *buf = &ch->buffer;
-			reading_t *added = NULL;
-
-			for (int i = 0; i < n; i++) {
-				switch (mtr->type->id) {
-					case SML:
-					case D0:
-						if (obis_compare(rds[i].identifier.obis, ch->identifier.obis) == 0) {
-							print(5, "New reading (value=%.2f ts=%f)", ch, ch->id, rds[i].value, tvtod(rds[i].time));
-							added = buffer_push(buf, &rds[i]);
-						}
-						break;
-
-					default:
-						/* no channel identifier, adding all readings to buffer */
-						print(LOG_INFO, "New reading (value=%.2f ts=%f)", ch, ch->id, rds[i].value, tvtod(rds[i].time));
-						added = buffer_push(buf, &rds[i]);
-				}
-			}
+			reading_t *added = channel_add_readings(ch, mtr->protocol, rds, n);
 
 			/* update buffer length to interval */
-			if (options.local && assoc->interval != 0) {
-				ch->buffer.keep = ceil(options.buffer_length / assoc->interval);
+			if (options.local) {
+				buf->keep = ceil(options.buffer_length / mtr->interval);
 			}
 
 			/* queue reading into sending buffer logging thread if
@@ -99,16 +101,16 @@ void * reading_thread(void *arg) {
 			pthread_mutex_unlock(&buf->mutex);
 
 			/* debugging */
-			if (options.verbosity >= 10) {
+			if (options.verbosity >= log_debug) {
 				char dump[1024];
 				buffer_dump(buf, dump, 1024);
-				print(LOG_DEBUG, "Buffer dump: %s (size=%i, keep=%i)", ch, dump, buf->size, buf->keep);
+				print(log_debug, "Buffer dump: %s (size=%i, keep=%i)", ch, dump, buf->size, buf->keep);
 			}
 		}
 
-		if ((options.daemon || options.local) && mtr->type->periodic) {
-			print(LOG_INFO, "Next reading in %i seconds", mtr, assoc->interval);
-			sleep(assoc->interval); // TODO handle parsing
+		if ((options.daemon || options.local) && details->periodic) {
+			print(log_info, "Next reading in %i seconds", mtr, mtr->interval);
+			sleep(mtr->interval);
 		}
 	} while (options.daemon || options.local);
 
@@ -124,13 +126,12 @@ void logging_thread_cleanup(void *arg) {
 void * logging_thread(void *arg) {
 	channel_t *ch = (channel_t *) arg; /* casting argument */
 	CURL *curl = api_curl_init(ch);
-
+	
 	pthread_cleanup_push(&logging_thread_cleanup, curl);
 
 	do { /* start thread mainloop */
 		CURLresponse response;
 		json_object *json_obj;
-		reading_t *last;
 
 		const char *json_str;
 		long int http_code, curl_code;
@@ -145,11 +146,12 @@ void * logging_thread(void *arg) {
 		}
 		pthread_mutex_unlock(&ch->buffer.mutex);
 
-		last = ch->buffer.tail;
-		json_obj = api_json_tuples(&ch->buffer, ch->buffer.sent, last);
+		reading_t *first = ch->buffer.sent;
+		reading_t *last = ch->buffer.tail;
+		json_obj = api_json_tuples(&ch->buffer, first, last);
 		json_str = json_object_to_json_string(json_obj);
 
-		print(10, "JSON request body: %s", ch, json_str);
+		print(log_debug, "JSON request body: %s", ch, json_str);
 
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_str);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
@@ -160,17 +162,17 @@ void * logging_thread(void *arg) {
 
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-			print(4, "Request succeeded with code: %i", ch, http_code);
+			print(log_debug, "Request succeeded with code: %i", ch, http_code);
 			ch->buffer.sent = last->next;
 		}
 		else { /* error */
 			if (curl_code != CURLE_OK) {
-				print(-1, "CURL: %s", ch, curl_easy_strerror(curl_code));
+				print(log_error, "CURL: %s", ch, curl_easy_strerror(curl_code));
 			}
 			else if (http_code != 200) {
 				char err[255];
 				api_parse_exception(response, err, 255);
-				print(-1, "Error from middleware: %s", ch, err);
+				print(log_error, "Error from middleware: %s", ch, err);
 			}
 		}
 
@@ -179,7 +181,7 @@ void * logging_thread(void *arg) {
 		json_object_put(json_obj);
 
 		if (options.daemon && (curl_code != CURLE_OK || http_code != 200)) {
-			print(1, "Waiting %i secs for next request due to previous failure", ch, options.retry_pause);
+			print(log_info, "Waiting %i secs for next request due to previous failure", ch, options.retry_pause);
 			sleep(options.retry_pause);
 		}
 	} while (options.daemon);

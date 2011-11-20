@@ -34,15 +34,21 @@
 #include <termios.h>
 
 typedef struct {
+	char *host;
+	char *device;
+	int baudrate;
+
 	int fd; /* file descriptor of port */
 	struct termios oldtio; /* required to reset port */
 } meter_handle_d0_t;
 
-struct meter;	/* forward declaration */
-struct reading;	/* forward declaration */
+/* forward declarations */
+struct meter;
+struct reading;
 
+int meter_init_d0(struct meter *mtr, list_t options);
 int meter_open_d0(struct meter *mtr);
-void meter_close_d0(struct meter *mtr);
+int meter_close_d0(struct meter *mtr);
 size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
 
 int meter_d0_parse_line(struct reading *rd, char *line, size_t n);

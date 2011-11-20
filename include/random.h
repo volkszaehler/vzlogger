@@ -27,15 +27,19 @@
 #define _RANDOM_H_
 
 typedef struct {
-	double min, max, last;
+	double min, max;
+
+	double last;
 } meter_handle_random_t;
 
-struct meter;			/* forward declaration */
-struct reading;			/* forward declaration */
-double ltqnorm(double p);	/* forward declaration */
+/* forward declarations */
+struct meter;
+struct reading;
+double ltqnorm(double p);
 
+int meter_init_random(struct meter *mtr, list_t options);
 int meter_open_random(struct meter *mtr);
-void meter_close_random(struct meter *mtr);
+int meter_close_random(struct meter *mtr);
 size_t meter_read_random(struct meter *mtr, struct reading *rds, size_t n);
 
 #endif /* _RANDOM_H_ */

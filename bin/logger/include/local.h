@@ -26,7 +26,9 @@
 #ifndef _LOCAL_H_
 #define _LOCAL_H_
 
-#include <stdarg.h> /* required for MHD */
+#include <stdarg.h> /* required for libMHD */
+#include <sys/socket.h> /* required for libMHD */
+
 #include <microhttpd.h>
 
 int handle_request(

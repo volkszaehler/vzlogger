@@ -57,16 +57,16 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__vzlogger_SOURCES_DIST = src/vzlogger.c src/channel.c src/api.c \
-	src/configuration.c src/threads.c src/buffer.c src/local.c
+	src/config.c src/threads.c src/buffer.c src/local.c
 @LOCAL_SUPPORT_TRUE@am__objects_1 = local.$(OBJEXT)
 am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
-	api.$(OBJEXT) configuration.$(OBJEXT) threads.$(OBJEXT) \
+	api.$(OBJEXT) config.$(OBJEXT) threads.$(OBJEXT) \
 	buffer.$(OBJEXT) $(am__objects_1)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @LOCAL_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
-vzlogger_DEPENDENCIES = $(top_srcdir)/src/libmeter.a \
+vzlogger_DEPENDENCIES = $(top_srcdir)/src/libmtr.a \
 	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
 vzlogger_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(vzlogger_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -182,9 +182,9 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_VZ_CFLAGS) \
 	$(am__append_3) $(am__append_5)
 AM_CPPFLAGS = -I$(top_srcdir)/include -Iinclude
-vzlogger_SOURCES = src/vzlogger.c src/channel.c src/api.c \
-	src/configuration.c src/threads.c src/buffer.c $(am__append_1)
-vzlogger_LDADD = $(top_srcdir)/src/libmeter.a $(am__append_2) \
+vzlogger_SOURCES = src/vzlogger.c src/channel.c src/api.c src/config.c \
+	src/threads.c src/buffer.c $(am__append_1)
+vzlogger_LDADD = $(top_srcdir)/src/libmtr.a $(am__append_2) \
 	$(am__append_4)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
@@ -271,7 +271,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/configuration.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/local.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vzlogger.Po@am__quote@
@@ -332,19 +332,19 @@ api.obj: src/api.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o api.obj `if test -f 'src/api.c'; then $(CYGPATH_W) 'src/api.c'; else $(CYGPATH_W) '$(srcdir)/src/api.c'; fi`
 
-configuration.o: src/configuration.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT configuration.o -MD -MP -MF $(DEPDIR)/configuration.Tpo -c -o configuration.o `test -f 'src/configuration.c' || echo '$(srcdir)/'`src/configuration.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/configuration.Tpo $(DEPDIR)/configuration.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/configuration.c' object='configuration.o' libtool=no @AMDEPBACKSLASH@
+config.o: src/config.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT config.o -MD -MP -MF $(DEPDIR)/config.Tpo -c -o config.o `test -f 'src/config.c' || echo '$(srcdir)/'`src/config.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/config.Tpo $(DEPDIR)/config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/config.c' object='config.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o configuration.o `test -f 'src/configuration.c' || echo '$(srcdir)/'`src/configuration.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o config.o `test -f 'src/config.c' || echo '$(srcdir)/'`src/config.c
 
-configuration.obj: src/configuration.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT configuration.obj -MD -MP -MF $(DEPDIR)/configuration.Tpo -c -o configuration.obj `if test -f 'src/configuration.c'; then $(CYGPATH_W) 'src/configuration.c'; else $(CYGPATH_W) '$(srcdir)/src/configuration.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/configuration.Tpo $(DEPDIR)/configuration.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/configuration.c' object='configuration.obj' libtool=no @AMDEPBACKSLASH@
+config.obj: src/config.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT config.obj -MD -MP -MF $(DEPDIR)/config.Tpo -c -o config.obj `if test -f 'src/config.c'; then $(CYGPATH_W) 'src/config.c'; else $(CYGPATH_W) '$(srcdir)/src/config.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/config.Tpo $(DEPDIR)/config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/config.c' object='config.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o configuration.obj `if test -f 'src/configuration.c'; then $(CYGPATH_W) 'src/configuration.c'; else $(CYGPATH_W) '$(srcdir)/src/configuration.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o config.obj `if test -f 'src/config.c'; then $(CYGPATH_W) 'src/config.c'; else $(CYGPATH_W) '$(srcdir)/src/config.c'; fi`
 
 threads.o: src/threads.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT threads.o -MD -MP -MF $(DEPDIR)/threads.Tpo -c -o threads.o `test -f 'src/threads.c' || echo '$(srcdir)/'`src/threads.c

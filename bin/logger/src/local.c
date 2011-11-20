@@ -33,7 +33,7 @@
 #include "local.h"
 #include "api.h"
 
-extern options_t options;
+extern config_options_t options;
 
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url, const char *method,
 			const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
@@ -41,12 +41,12 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 	int status;
 	int response_code = MHD_HTTP_NOT_FOUND;
 
-	list_t *assocs = (list_t *) cls;
+	list_t *mappings = (list_t *) cls;
 
 	struct MHD_Response *response;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
-	print(2, "Local request received: method=%s url=%s mode=%s", "http", method, url, mode);
+	print(log_info+1, "Local request received: method=%s url=%s mode=%s", "http", method, url, mode);
 
 	if (strcmp(method, "GET") == 0) {
 		struct timespec ts;
@@ -67,17 +67,13 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 			else {
 				json_exception = json_object_new_object();
 
-				json_object_object_add(json_exception, "message", json_object_new_string("channel indexing is disabled"));
+				json_object_object_add(json_exception, "message", json_object_new_string("channel index is disabled"));
 				json_object_object_add(json_exception, "code", json_object_new_int(0));
 			}
 		}
 
-		foreach(*assocs, it) {
-			assoc_t *assoc = (assoc_t *) it->data;
-
-			foreach(assoc->channels, it) {
-				channel_t *ch = (channel_t *) it->data;
-
+		foreach(*mappings, mapping, map_t) {
+			foreach(mapping->channels, ch, channel_t) {
 				if (strcmp(ch->uuid, uuid) == 0 || show_all) {
 					response_code = MHD_HTTP_OK;
 
@@ -97,8 +93,9 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
 					json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid));
 					json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware));
-					json_object_object_add(json_ch, "interval", json_object_new_int(assoc->interval));
-					json_object_object_add(json_ch, "protocol", json_object_new_string(assoc->meter.type->name));
+					json_object_object_add(json_ch, "last", json_object_new_double(ch->last));
+					json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter.interval));
+					json_object_object_add(json_ch, "protocol", json_object_new_string(meter_get_details(mapping->meter.protocol)->name));
 
 					struct json_object *json_tuples = api_json_tuples(&ch->buffer, ch->buffer.head, ch->buffer.tail);
 					json_object_object_add(json_ch, "tuples", json_tuples);

@@ -23,10 +23,9 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include <stdio.h> /* for print() */
+#include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
@@ -36,12 +35,15 @@
 #include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 
+#include <list.h>
+#include <meter.h>
+#include <obis.h>
+
 #include "vzlogger.h"
-#include "list.h"
 #include "channel.h"
-#include "configuration.h"
 #include "threads.h"
 
 #ifdef LOCAL_SUPPORT
@@ -49,10 +51,8 @@
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
 
-extern const meter_type_t meter_types[];
-
-list_t assocs;		/* mapping between meters and channels */
-options_t options;	/* global application options */
+list_t mappings;	/* mapping between meters and channels */
+config_options_t options;	/* global application options */
 
 /**
  * Command line options
@@ -91,79 +91,94 @@ const char *long_options_descs[] = {
 };
 
 /**
- * Print available options and some other usefull information
+ * Print error/debug/info messages to stdout and/or logfile
+ *
+ * @param id could be NULL for general messages
+ * @todo integrate into syslog
  */
-void usage(char *argv[]) {
+void print(int level, const char *format, void *id, ... ) {
+	va_list args;
+
+	if (level > options.verbosity) {
+		return; /* skip message if its under the verbosity level */
+	}
+
+	struct timeval now;
+	struct tm * timeinfo;
+	char buffer[1024];
+	char *pos = buffer;
+
+	gettimeofday(&now, NULL);
+	timeinfo = localtime(&now.tv_sec);
+
+	/* print timestamp to buffer */
+	pos += sprintf(pos, "[");
+	pos += strftime(pos, 16, "%b %d %H:%M:%S", timeinfo);
+
+	/* print logging 'section' */
+	pos += (id != NULL) ? sprintf(pos, "][%s]", (char *) id) : sprintf(pos, "]");
+
+	/* fill with whitespaces */
+	while(pos - buffer < 24) {
+		pos += sprintf(pos, " ");
+	}
+
+	/* print formatstring */
+	va_start(args, id);
+	pos += vsprintf(pos, format, args);
+	va_end(args);
+
+	/* print to stdout/stderr */
+	fprintf((level > 0) ? stdout : stderr, "%s\n", buffer);
+
+	/* append to logfile */
+	if (options.logfd) {
+		fprintf(options.logfd, "%s\n", buffer);
+			fflush(options.logfd);
+	}
+}
+
+/**
+ * Print available options, protocols and OBIS aliases
+ */
+void show_usage(char *argv[]) {
 	const char **desc = long_options_descs;
 	const struct option *op = long_options;
-	const meter_type_t *type = meter_types;
 
 	printf("Usage: %s [options]\n\n", argv[0]);
-	printf("  following options are available:\n");
 
+	/* command line options */
+	printf("  following options are available:\n");
 	while (op->name && desc) {
 		printf("\t-%c, --%-12s\t%s\n", op->val, op->name, *desc);
 		op++; desc++;
 	}
 
-	printf("\n");
-	printf("  following protocol types are supported:\n");
-
-	while (type->name) {
-		printf("\t%-12s\t%s\n", type->name, type->desc);
-		type++;
+	/* protocols */
+	printf("\n  following protocol types are supported:\n");
+	for (const meter_details_t *it = meter_get_protocols(); it->name != NULL; it++) {
+		printf("\t%-12s\t%s\n", it->name, it->desc);
 	}
 
+	/* obis aliases */
+	printf("\n  following OBIS aliases are available:\n");
+	char obis_str[OBIS_STR_LEN];
+	for (const obis_alias_t *it = obis_get_aliases(); it->name != NULL; it++) {
+		obis_unparse(it->id, obis_str, OBIS_STR_LEN);
+		printf("\t%-17s%-31s%-22s\n", it->name, it->desc, obis_str);
+	}
+
+	/* footer */
 	printf("\n%s - volkszaehler.org logging utility\n", PACKAGE_STRING);
 	printf("by Steffen Vogel <stv0g@0l.de>\n");
 	printf("send bugreports to %s\n", PACKAGE_BUGREPORT);
 }
 
 /**
- * Wrapper to log notices and errors
+ * Fork process to background
  *
- * @param ch could be NULL for general messages
- * @todo integrate into syslog
+ * @link http://www.enderunix.org/docs/eng/daemon.php
  */
-void print(int level, const char *format, void *id, ... ) {
-	va_list args;
-
-	struct timeval now;
-	struct tm * timeinfo;
-	char buffer[1024], *pos = buffer;
-
-	if (level <= options.verbosity) {
-		gettimeofday(&now, NULL);
-		timeinfo = localtime(&now.tv_sec);
-
-		pos += sprintf(pos, "[");
-		pos += strftime(pos, 16, "%b %d %H:%M:%S", timeinfo);
-
-		if (id != NULL) {
-			pos += sprintf(pos, "][%s]", (char *) id);
-		}
-		else {
-			pos += sprintf(pos, "]");
-		}
-
-		while(pos - buffer < 24) {
-			pos += sprintf(pos, " ");
-		}
-
-		va_start(args, id);
-		pos += vsprintf(pos, format, args);
-		va_end(args);
-
-		fprintf((level > 0) ? stdout : stderr, "%s\n", buffer);
-
-		if (options.logfd) {
-			fprintf(options.logfd, "%s\n", buffer);
-			fflush(options.logfd);
-		}
-	}
-}
-
-/* http://www.enderunix.org/docs/eng/daemon.php */
 void daemonize() {
 	if(getppid() == 1) {
 		return; /* already a daemon */
@@ -181,7 +196,7 @@ void daemonize() {
 
 	setsid(); /* obtain a new process group */
 
-	for (i=getdtablesize();i>=0;--i) {
+	for (i = getdtablesize(); i >= 0; --i) {
 		close(i); /* close all descriptors */
 	}
 
@@ -211,15 +226,12 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-	print(2, "Closing connections to terminate", NULL);
+	print(log_info, "Closing connections to terminate", NULL);
 
-	foreach(assocs, it) {
-		assoc_t *assoc = (assoc_t *) it->data;
+	foreach(mappings, mapping, map_t) {
+		pthread_cancel(mapping->thread);
 
-		pthread_cancel(assoc->thread);
-
-		foreach(assoc->channels, it) {
-			channel_t *ch = (channel_t *) it->data;
+		foreach(mapping->channels, ch, channel_t) {
 			pthread_cancel(ch->thread);
 		}
 	}
@@ -227,8 +239,11 @@ void quit(int sig) {
 
 /**
  * Parse options from command line
+ *
+ * @param options pointer to structure for options
+ * @return int 0 on succes, <0 on error
  */
-void parse_options(int argc, char * argv[], options_t * options) {
+int config_parse_cli(int argc, char * argv[], config_options_t * options) {
 	while (1) {
 		int c = getopt_long(argc, argv, "c:o:p:lhVdfv:", long_options, NULL);
 
@@ -274,10 +289,17 @@ void parse_options(int argc, char * argv[], options_t * options) {
 			case '?':
 			case 'h':
 			default:
-				usage(argv);
-				exit((c == '?') ? EXIT_FAILURE : EXIT_SUCCESS);
+				show_usage(argv);
+				if (c == '?') {
+					exit(EXIT_FAILURE);
+				}
+				else {
+					exit(EXIT_SUCCESS);
+				}
 		}
 	}
+
+	return SUCCESS;
 }
 
 /**
@@ -307,19 +329,24 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGHUP, &action, NULL);	/* catch hangup signal */
 	sigaction(SIGTERM, &action, NULL);	/* catch kill signal */
 
-	/* initialize adts and apis */
+	/* initialize ADTs and APIs */
 	curl_global_init(CURL_GLOBAL_ALL);
-	list_init(&assocs);
+	list_init(&mappings);
 
 	/* parse command line and file options */
 	// TODO command line should have a higher priority as file
-	parse_options(argc, argv, &options);
-	parse_configuration(options.config, &assocs, &options);
+	if (config_parse_cli(argc, argv, &options) != SUCCESS) {
+		return EXIT_FAILURE;
+	}
+
+	if (config_parse(options.config, &mappings, &options) != SUCCESS) {
+		return EXIT_FAILURE;
+	}
 
 	options.logging = (!options.local || options.daemon);
 
 	if (!options.foreground && (options.daemon || options.local)) {
-		print(1, "Daemonize process...", NULL);
+		print(log_info, "Daemonize process...", NULL);
 		daemonize();
 	}
 
@@ -327,46 +354,44 @@ int main(int argc, char *argv[]) {
 	if (options.log) {
 		FILE *logfd = fopen(options.log, "a");
 
-		if (logfd) {
-			options.logfd = logfd;
-			print(LOG_DEBUG, "Opened logfile %s", NULL, options.log);
+		if (logfd == NULL) {
+			print(log_error, "Cannot open logfile %s: %s", NULL, options.log, strerror(errno));
+			return EXIT_FAILURE;
 		}
-		else {
-			print(LOG_ERROR, "Cannot open logfile %s: %s", NULL, options.log, strerror(errno));
-			exit(EXIT_FAILURE);
-		}
+
+		options.logfd = logfd;
+		print(log_debug, "Opened logfile %s", NULL, options.log);
 	}
 
-	if (assocs.size == 0) {
-		print(6, "No meters found!", NULL);
-		exit(EXIT_FAILURE);
+	if (mappings.size <= 0) {
+		print(log_error, "No meters found!", NULL);
+		return EXIT_FAILURE;
 	}
 
 	/* open connection meters & start threads */
-	foreach(assocs, it) {
-		assoc_t *assoc = (assoc_t *) it->data;
-		meter_t *mtr = &assoc->meter;
+	foreach(mappings, mapping, map_t) {
+		meter_t *mtr = &mapping->meter;
 
-		int res = meter_open(mtr);
-		if (res < 0) {
-			print(LOG_ERROR, "Failed to open meter", mtr);
-			exit(EXIT_FAILURE);
+		if (meter_open(mtr) != SUCCESS) {
+			print(log_error, "Failed to open meter. Aborting.", mtr);
+			return EXIT_FAILURE;
 		}
-		print(5, "Meter connected", mtr);
-		pthread_create(&assoc->thread, NULL, &reading_thread, (void *) assoc);
-		print(5, "Meter thread started", mtr);
+		else {
+			print(log_info, "Meter connection established", mtr);
+		}
 
-		foreach(assoc->channels, it) {
-			channel_t *ch = (channel_t *) it->data;
+		pthread_create(&mapping->thread, NULL, &reading_thread, (void *) mapping);
+		print(log_debug, "Meter thread started", mtr);
 
+		foreach(mapping->channels, ch, channel_t) {
 			/* set buffer length for perriodic meters */
-			if (mtr->type->periodic && options.local) {
-				ch->buffer.keep = ceil(options.buffer_length / (double) assoc->interval);
+			if (meter_get_details(mtr->protocol)->periodic && options.local) {
+				ch->buffer.keep = ceil(options.buffer_length / (double) mapping->meter.interval);
 			}
 
-			if (ch->status != RUNNING && options.logging) {
+			if (ch->status != status_running && options.logging) {
 				pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
-				print(5, "Logging thread started", ch);
+				print(log_debug, "Logging thread started", ch);
 			}
 		}
 	}
@@ -375,49 +400,46 @@ int main(int argc, char *argv[]) {
 	 /* start webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
 	if (options.local) {
-		print(5, "Starting local interface HTTPd on port %i", "http", options.port);
+		print(log_info, "Starting local interface HTTPd on port %i", "http", options.port);
 		httpd_handle = MHD_start_daemon(
 			MHD_USE_THREAD_PER_CONNECTION,
 			options.port,
 			NULL, NULL,
-			&handle_request, &assocs,
+			&handle_request, &mappings,
 			MHD_OPTION_END
 		);
 	}
 #endif /* LOCAL_SUPPORT */
 
 	/* wait for all threads to terminate */
-	foreach(assocs, it) {
-		assoc_t *assoc = (assoc_t *) it->data;
-		meter_t *mtr = &assoc->meter;
+	foreach(mappings, mapping, map_t) {
+		meter_t *mtr = &mapping->meter;
 
-		pthread_join(assoc->thread, NULL);
+		pthread_join(mapping->thread, NULL);
 
-		foreach(assoc->channels, it) {
-			channel_t *ch = (channel_t *) it->data;
-
+		foreach(mapping->channels, ch, channel_t) {
 			pthread_join(ch->thread, NULL);
 
 			channel_free(ch);
 		}
 
-		list_free(&assoc->channels);
+		list_free(&mapping->channels);
 
 		meter_close(mtr); /* closing connection */
-		meter_free(mtr);
 	}
 
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */
 	if (httpd_handle) {
-		print(8, "Stopping local interface HTTPd", "http");
 		MHD_stop_daemon(httpd_handle);
 	}
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
-	list_free(&assocs);
+	list_free(&mappings);
 	curl_global_cleanup();
+
+	/* close logfile */
 	if (options.logfd) {
 		fclose(options.logfd);
 	}

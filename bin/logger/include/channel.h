@@ -32,21 +32,27 @@
 #include "vzlogger.h"
 #include "buffer.h"
 
-typedef struct {
+typedef struct channel {
 	char id[5];			/* only for internal usage & debugging */
-	char *middleware;		/* url to middleware */
-	char *uuid;			/* unique identifier for middleware */
-	
+
 	reading_id_t identifier;	/* channel identifier (OBIS, string) */
 	buffer_t buffer;		/* circular queue to buffer readings */
 
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
 	pthread_t thread;		/* pthread for asynchronus logging */
-	pthread_status_t status;
+	pthread_status_t status;	/* status of thread */
+
+	char *middleware;		/* url to middleware */
+	char *uuid;			/* unique identifier for middleware */
+
+	double last;			/* last counter value */
+	int counter:1;			/* TRUE if we want to send the diffrence between to values */
 } channel_t;
 
-/* Prototypes */
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier);
+/* prototypes */
+void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier, int counter);
 void channel_free(channel_t *ch);
+
+reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, reading_t *rds, size_t n);
 
 #endif /* _CHANNEL_H_ */

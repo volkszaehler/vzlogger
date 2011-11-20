@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Read data from files & fifos
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,45 +22,26 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _FILE_H_
+#define _FILE_H_
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#include <stdio.h>
 
-#include <pthread.h>
+typedef struct {
+	char *path;
+	char *regex;
 
-#include <meter.h>
-#include <common.h>
-#include <config.h>
+	FILE *fd;
+} meter_handle_file_t;
 
-#include "config.h"
-#include "list.h"
+/* forward declarations */
+struct meter;
+struct reading;
 
-/* enumerations */
-typedef enum {
-	status_unknown,
-	status_running,
-	status_terminated,
-	status__cancelled
-} pthread_status_t;
+int meter_init_file(struct meter *mtr, list_t options);
+int meter_open_file(struct meter *mtr);
+int meter_close_file(struct meter *mtr);
+size_t meter_read_file(struct meter *mtr, struct reading *rds, size_t n);
 
-/**
- * Type for mapping channels to meters
- */
-typedef struct map {
-	meter_t meter;
-	list_t channels;
-
-	pthread_t thread;
-	pthread_status_t status;
-} map_t;
-
-/* prototypes */
-void quit(int sig);
-void daemonize();
-
-void show_usage(char ** argv);
-void show_aliases();
-
-int options_parse(int argc, char *argv[], config_options_t *options);
-
-#endif /* _VZLOGGER_H_ */
+#endif /* _FILE_H_ */

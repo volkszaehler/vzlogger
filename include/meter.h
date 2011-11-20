@@ -36,64 +36,77 @@
  *		The 'interval' column in the configuration as no meaning.
  */
 
-#include <sys/socket.h>
-#include <sys/time.h>
+#include <config.h>
 
-#include "config.h"
+#include "common.h"
+#include "list.h"
 #include "obis.h"
 
 /* meter types */
+#include "file.h"
+#include "exec.h"
 #include "random.h"
 #include "s0.h"
 #include "d0.h"
-#include "onewire.h"
 #ifdef SML_SUPPORT
 #include "sml.h"
 #endif /* SML_SUPPORT */
 
 typedef union reading_id {
 	obis_id_t obis;
+	/* char *string; */
+	/* char *uuid; */
 } reading_id_t;
 
 typedef struct reading {
 	float value;
 	struct timeval time;
-	union reading_id identifier;
-	
+	reading_id_t identifier;
+
 	struct reading *next; /* pointer for linked list */
 } reading_t;
 
-typedef struct {
-	enum {
-		RANDOM,
-		S0,
-		D0,
-		ONEWIRE,
-		SML
-	} id;
-	const char *name;	/* short identifier for protocol */
-	const char *desc;	/* more detailed description */
-	size_t max_readings;	/* how many readings can be read with 1 call */
-	int periodic:1;		/* does this meter has be triggered periodically? */
-} meter_type_t;
+typedef enum {
+	meter_protocol_file = 1,
+	meter_protocol_exec,
+	meter_protocol_random,
+	meter_protocol_s0,
+	meter_protocol_d0,
+	meter_protocol_sml
+} meter_protocol_t;
 
 typedef struct meter {
-	char id[5];		/* only for internal usage & debugging */
-	char *connection;	/* args for connection, further configuration etc */
-	const meter_type_t *type;
-		
+	char id[5];
+	meter_protocol_t protocol;
+	int interval;
+
 	union {
+		meter_handle_file_t file;
+		meter_handle_exec_t exec;
+		meter_handle_random_t random;
 		meter_handle_s0_t s0;
 		meter_handle_d0_t d0;
-		meter_handle_onewire_t onewire;
-		meter_handle_random_t random;
 #ifdef SML_SUPPORT
 		meter_handle_sml_t sml;
 #endif /* SML_SUPPORT */
 	} handle;
 } meter_t;
 
-/* Prototypes */
+typedef struct {
+	meter_protocol_t id;
+	char *name;		/* short identifier for protocol */
+	char *desc;		/* more detailed description */
+	size_t max_readings;	/* how many readings can be read with 1 call */
+	int periodic:1;		/* does this meter has be triggered periodically? */
+
+	/* function pointers */
+	int (*init_func)(meter_t *mtr, list_t options);
+	int (*open_func)(meter_t *mtr);
+	int (*close_func)(meter_t *mtr);
+	size_t (*read_func)(meter_t *mtr, reading_t *rds, size_t n);
+} meter_details_t;
+
+/* prototypes */
 
 /**
  * Converts timeval structure to double
@@ -104,13 +117,22 @@ typedef struct meter {
 double tvtod(struct timeval tv);
 
 /**
+ * Get list of available meter types
+ */
+const meter_details_t * meter_get_protocols();
+
+const meter_details_t * meter_get_details(meter_protocol_t protocol);
+
+int meter_lookup_protocol(const char *name, meter_protocol_t *protocol);
+
+/**
  * Initialize meter
  *
  * @param mtr the meter structure to initialze
- * @param type the type it should be initialized with
- * @param connection type specific initialization arguments (connection settings, port, etc..)
+ * @param list of key, 	value pairs of options
+ * @return 0 on success, -1 on error
  */
-void meter_init(meter_t *mtr, const meter_type_t *type, const char *connection);
+int meter_init(meter_t *mtr, list_t options);
 
 /**
  * Freeing all memory which has been allocated during the initialization
@@ -137,6 +159,7 @@ size_t meter_read(meter_t *mtr, reading_t rds[], size_t n);
  * Establish connection, initialize meter etc.
  *
  * @param mtr the meter structure
+ * @return 0 on success, -1 on error
  */
 int meter_open(meter_t *mtr);
 
@@ -146,7 +169,8 @@ int meter_open(meter_t *mtr);
  * Reset ports, shutdown meter etc.
  *
  * @param mtr the meter structure
+ * @return 0 on success, -1 on error
  */
-void meter_close(meter_t *mtr);
+int meter_close(meter_t *mtr);
 
 #endif /* _METER_H_ */

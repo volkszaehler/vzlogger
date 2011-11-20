@@ -29,39 +29,55 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "meter.h"
 #include "random.h"
+#include "options.h"
+
+int meter_init_random(meter_t *mtr, list_t options) {
+	meter_handle_random_t *handle = &mtr->handle.random;
+
+	handle->min = 0;
+	handle->max = 40;
+	handle->last = (handle->max + handle->min) / 2; /* start in the middle */
+
+	if (options_lookup_double(options, "min", &handle->min) == ERR_INVALID_TYPE) {
+		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", mtr);
+		return ERR;
+	}
+
+	if (options_lookup_double(options, "max", &handle->max) == ERR_INVALID_TYPE) {
+		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", mtr);
+		return ERR;
+	}
+
+	return SUCCESS;
+}
 
 int meter_open_random(meter_t *mtr) {
-	meter_handle_random_t *handle = &mtr->handle.random;
+	//meter_handle_random_t *handle = &mtr->handle.random;
 
 	// TODO rewrite to use /dev/u?random
 	srand(time(NULL)); /* initialize PNRG */
 
-	handle->min = 0; // TODO parse from options
-	handle->max = strtof(mtr->connection, NULL);
-	handle->last = handle->max * ((float) rand() / RAND_MAX); /* start value */
-
-	return 0; /* always succeeds */
+	return SUCCESS; /* can't fail */
 }
 
-void meter_close_random(meter_t *mtr) {
+int meter_close_random(meter_t *mtr) {
 	//meter_handle_random_t *handle = &mtr->handle.random;
+
+	return SUCCESS;
 }
 
 size_t meter_read_random(meter_t *mtr, reading_t rds[], size_t n) {
-	meter_handle_random_t *handle = &mtr->handle.random;	
+	meter_handle_random_t *handle = &mtr->handle.random;
 
-	handle->last += ltqnorm((float) rand() / RAND_MAX);
+	double step = ltqnorm((float) rand() / RAND_MAX);
+	double new = handle->last + step;
 
-	/* check bounaries */
-	if (handle->last > handle->max) {
-		handle->last = handle->max;
-	}
-	else if (handle->last < handle->min) {
-		handle->last = handle->min;
-	}
+	/* check boundaries */
+	handle->last += (new > handle->max || new < handle->min) ? -step : step;
 
 	rds->value = handle->last;
 	gettimeofday(&rds->time, NULL);

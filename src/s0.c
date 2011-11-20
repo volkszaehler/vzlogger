@@ -27,10 +27,23 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <errno.h>
 
 #include "meter.h"
 #include "s0.h"
+#include "options.h"
+
+int meter_init_s0(meter_t *mtr, list_t options) {
+	meter_handle_s0_t *handle = &mtr->handle.s0;
+
+	if (options_lookup_string(options, "device", &handle->device) != SUCCESS) {
+		print(log_error, "Missing device or invalid type", mtr);
+		return ERR;
+	}
+
+	return SUCCESS;
+}
 
 /**
  * Setup serial port
@@ -39,11 +52,11 @@ int meter_open_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
 	/* open port */
-	int fd = open(mtr->connection, O_RDWR | O_NOCTTY); 
+	int fd = open(handle->device, O_RDWR | O_NOCTTY); 
 
         if (fd < 0) {
-		perror(mtr->connection);
-        	return -1;
+		print(log_error, "open(%s): %s", mtr, handle->device, strerror(errno));
+        	return ERR;
         }
 
 	/* save current port settings */
@@ -66,17 +79,17 @@ int meter_open_s0(meter_t *mtr) {
         tcsetattr(fd, TCSANOW, &tio);
 	handle->fd = fd;
 
-        return 0;
+        return SUCCESS;
 }
 
-void meter_close_s0(meter_t *mtr) {
+int meter_close_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
 	/* reset serial port */
 	tcsetattr(handle->fd, TCSANOW, &handle->oldtio);
 
 	/* close serial port */
-	close(handle->fd);
+	return close(handle->fd);
 }
 
 size_t meter_read_s0(meter_t *mtr, reading_t rds[], size_t n) {

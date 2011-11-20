@@ -19,7 +19,7 @@
 #include <math.h>
 #include <errno.h>
 
-/* Coefficients in rational approximations. */
+/* coefficients in rational approximations. */
 static const double a[] = {
 	-3.969683028665376e+01,
 	 2.209460984245205e+02,
@@ -74,17 +74,17 @@ double ltqnorm(double p) {
 		errno = ERANGE;
 		return HUGE_VAL /* "infinity" */;
 	}
-	else if (p < LOW) { /* Rational approximation for lower region */
+	else if (p < LOW) { /* rational approximation for lower region */
 		q = sqrt(-2*log(p));
 		return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
 			((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
 	}
-	else if (p > HIGH) { /* Rational approximation for upper region */
+	else if (p > HIGH) { /* rational approximation for upper region */
 		q  = sqrt(-2*log(1-p));
 		return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
 			((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
 	}
-	else { /* Rational approximation for central region */
+	else { /* rational approximation for central region */
     		q = p - 0.5;
     		r = q*q;
 		return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /

@@ -44,7 +44,7 @@ typedef struct {
 	pthread_mutex_t mutex;
 } buffer_t;
 
-/* Prototypes */
+/* prototypes */
 void buffer_init(buffer_t *buf);
 reading_t * buffer_push(buffer_t *buf, reading_t *rd);
 void buffer_free(buffer_t *buf);

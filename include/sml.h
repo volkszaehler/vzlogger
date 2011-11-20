@@ -38,13 +38,17 @@
 #include "obis.h"
 
 typedef struct {
+	char *host;
+	char *device;
+	int baudrate;
+
 	int fd;
-	//float counter;	/* Zählerstand */
 	//termios old_tio;
 } meter_handle_sml_t;
 
-struct meter;	/* forward declaration */
-struct reading;	/* forward declaration */
+/* forward declarations */
+struct meter;
+struct reading;
 
 /**
  * Cast arbitrary sized sml_value to double
@@ -55,10 +59,19 @@ struct reading;	/* forward declaration */
 double sml_value_todouble(sml_value *value);
 
 /**
+ * Initialize meter structure with a list of options
+ *
+ * @param mtr the meter structure
+ * @param options a list of options
+ * @return 0 on success, <0 on error
+ */
+int meter_init_sml(struct meter *mtr, list_t options);
+
+/**
  * Open connection via serial port or socket to meter
  *
  * @param mtr the meter structure
- * @return 0 on success, -1 on error
+ * @return 0 on success, <0 on error
  */
 int meter_open_sml(struct meter *mtr);
 
@@ -67,7 +80,7 @@ int meter_open_sml(struct meter *mtr);
  *
  * @param mtr the meter structure
  */
-void meter_close_sml(struct meter *mtr);
+int meter_close_sml(struct meter *mtr);
 
 /**
  * Blocking read on meter
@@ -94,7 +107,7 @@ void meter_sml_parse(sml_list *list, struct reading *rd);
  * Open serial port by device
  *
  * @param device the device path, usually /dev/ttyS*
- * @return file descriptor, -1 on error
+ * @return file descriptor, <0 on error
  */
 int meter_sml_open_port(const char *device);
 
@@ -103,7 +116,7 @@ int meter_sml_open_port(const char *device);
  *
  * @param node the hostname or ASCII encoded IP address
  * @param the ASCII encoded portnum or service as in /etc/services
- * @return file descriptor, -1 on error
+ * @return file descriptor, <0 on error
  */
 int meter_sml_open_socket(const char *node, const char *service);
 

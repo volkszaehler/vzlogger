@@ -29,67 +29,69 @@
 #include <ctype.h>
 
 #include "obis.h"
+#include "common.h"
 
 #define DC 0xff // wildcard, dont care
 
-obis_alias_t obis_aliases[] = {
-/**
- * 255 is considered as wildcard!
- *
- *   A    B    C    D    E    F    alias		description
- * ===================================================================================*/
+static const obis_alias_t aliases[] = {
+/*   A    B    C    D    E    F    alias		description
+====================================================================*/
 
-/* General */
-{{{  1,   0,  12,   7,  DC,  DC}}, "voltage",		""},
-{{{  1,   0,  32,   7,  DC,  DC}}, "voltage-l1",	""},
-{{{  1,   0,  52,   7,  DC,  DC}}, "voltage-l2",	""},
-{{{  1,   0,  72,   7,  DC,  DC}}, "voltage-l3",	""},
+/* general */
+{{{  1,   0,   1,   7,  DC,  DC}}, "power",		"Wirkleistung  (Summe)"},
+{{{  1,   0,  21,   7,  DC,  DC}}, "power-l1",		"Wirkleistung  (Phase 1)"},
+{{{  1,   0,  41,   7,  DC,  DC}}, "power-l2",		"Wirkleistung  (Phase 2)"},
+{{{  1,   0,  61,   7,  DC,  DC}}, "power-l3",		"Wirkleistung  (Phase 3)"},
 
-{{{  1,   0,  11,   7,  DC,  DC}}, "current",		""},
-{{{  1,   0,  31,   7,  DC,  DC}}, "current-l1",	""},
-{{{  1,   0,  51,   7,  DC,  DC}}, "current-l2",	""},
-{{{  1,   0,  71,   7,  DC,  DC}}, "current-l3",	""},
+{{{  1,   0,  12,   7,  DC,  DC}}, "voltage",		"Spannung      (Mittelwert)"},
+{{{  1,   0,  32,   7,  DC,  DC}}, "voltage-l1",	"Spannung      (Phase 1)"},
+{{{  1,   0,  52,   7,  DC,  DC}}, "voltage-l2",	"Spannung      (Phase 2)"},
+{{{  1,   0,  72,   7,  DC,  DC}}, "voltage-l3",	"Spannung      (Phase 3)"},
 
-{{{  1,   0,  14,   7,   0,  DC}}, "frequency",		""},
-{{{  1,   0,  12,   7,   0,  DC}}, "powerfactor",	""},
+{{{  1,   0,  11,   7,  DC,  DC}}, "current",		"Stromstaerke  (Summe)"},
+{{{  1,   0,  31,   7,  DC,  DC}}, "current-l1",	"Stromstaerke  (Phase 1)"},
+{{{  1,   0,  51,   7,  DC,  DC}}, "current-l2",	"Stromstaerke  (Phase 2)"},
+{{{  1,   0,  71,   7,  DC,  DC}}, "current-l3",	"Stromstaerke  (Phase 3)"},
 
-{{{  1,   0,   1,   7,  DC,  DC}}, "power",		"Active Power Instantaneous value Total"},
-{{{  1,   0,  21,   7,  DC,  DC}}, "power-l1",		"L1 Active Power Instantaneous value Total"},
-{{{  1,   0,  41,   7,  DC,  DC}}, "power-l2",		"L1 Active Power Instantaneous value Total"},
-{{{  1,   0,  61,   7,  DC,  DC}}, "power-l3",		"L3 Active Power Instantaneous value Total"},
+{{{  1,   0,  14,   7,   0,  DC}}, "frequency",		"Netzfrequenz"},
+{{{  1,   0,  12,   7,   0,  DC}}, "powerfactor",	"Leistungsfaktor"},
 
-{{{  0,   0,  96,   1,  DC,  DC}}, "device",		"Complete device ID"},
-{{{  1,   0,  96,   5,   5,  DC}}, "status",		"Meter status flag"},
+{{{  0,   0,  96,   1,  DC,  DC}}, "device",		"Zaehler Seriennr."},
+{{{  1,   0,  96,   5,   5,  DC}}, "status",		"Zaehler Status"},
 
-{{{  1,   0,   1,   8,	DC, DC}}, "counter",		"Active Power Counter Total"},
-{{{  1,   0,   2,   8,  DC, DC}}, "counter-out",	"Zählerstand Lieferg."},
+{{{  1,   0,   1,   8,	DC, DC}}, "counter",		"Zaehlerstand Wirkleistung"},
+{{{  1,   0,   2,   8,  DC, DC}}, "counter-out",	"Zaehlerstand Lieferg."},
 
 /* Easymeter */
 
 /* ESYQ3B (Easymeter Q3B) */
-{{{129, 129, 199, 130,   3,  DC}}, "esy-?",		""}, // ???
 {{{  1,   0,   1,   8,   1,  DC}}, "esy-counter-t1",	"Active Power Counter Tariff 1"},
 {{{  1,   0,   1,   8,   2,  DC}}, "esy-counter-t2",	"Active Power Counter Tariff 2"},
+//{{{129, 129, 199, 130,   3,  DC}}, "",		""}, // ???
 
 /* ESYQ3D (Easymeter Q3D) */
-
-{{{  0,   0,   0,   0,   0,  DC}}, "esy-?",		""}, // ???
+//{{{  0,   0,   0,   0,   0,  DC}}, "",		""}, // ???
 
 /* HAG eHZ010C_EHZ1WA02 (Hager eHz) */
 {{{  1,   0,   0,   0,   0,  DC}}, "hag-id",		"Eigentumsnr."},
-{{{  1,   0,  96,  50,   0,   0}}, "hag-status",	"Netzstatus bitcodiert: Drehfeld, Anlaufschwelle, Energierichtung"},
-{{{  1,   0,  96,  50,   0,   1}}, "hag-frequency",	"Netz-Periode, hexadezimal (Einheit 1/100 ms)"},
-{{{  1,   0,  96,  50,   0,   2}}, "hag-temp",		"aktuelle Chiptemperatur, hexadezimal, Einheit °C"},
+{{{  1,   0,  96,  50,   0,   0}}, "hag-status",	"Netz Status"},			/* bitcodiert: Drehfeld, Anlaufschwelle, Energierichtung */
+{{{  1,   0,  96,  50,   0,   1}}, "hag-frequency",	"Netz Periode"},		/* hexadezimal (Einheit 1/100 ms) */
+{{{  1,   0,  96,  50,   0,   2}}, "hag-temp",		"aktuelle Chiptemperatur"},	/* hexadezimal, Einheit °C */
 {{{  1,   0,  96,  50,   0,   3}}, "hag-temp-min",	"minimale Chiptemperatur"},
 {{{  1,   0,  96,  50,   0,   4}}, "hag-temp-avg",	"gemittelte Chiptemperatur"},
 {{{  1,   0,  96,  50,   0,   5}}, "hag-temp-max",	"maximale Chiptemperatur"},
-{{{  1,   0,  96,  50,   0,   6}}, "hag-check",		"Kontrollnummer"},
+{{{  1,   0,  96,  50,   0,   6}}, "hag-check",		"Kontrollnr."},
 {{{  1,   0,  96,  50,   0,   7}}, "hag-diag",		"Diagnose"},
 
 {} /* stop condition for iterator */
 };
 
-obis_id_t * obis_init(obis_id_t *id, const unsigned char *raw) {
+
+const obis_alias_t * obis_get_aliases() {
+	return aliases;
+}
+
+obis_id_t * obis_init(obis_id_t *id, unsigned char *raw) {
 	if (raw == NULL) {
 		memset(id->raw, 0, 6); /* initialize with zeros */
 	}
@@ -100,16 +102,15 @@ obis_id_t * obis_init(obis_id_t *id, const unsigned char *raw) {
 	return id;
 }
 
-int obis_parse(obis_id_t *id, const char *str, size_t n) {
+int obis_parse(const char *str, obis_id_t *id) {
 	enum { A = 0, B, C, D, E, F };
 
-	char b;
-	int num;
-	int field;
+	char b = 0;
+	int num = 0;
+	int field = -1;
+	size_t n = strlen(str);
 
-	num = b = 0;
-	field = -1;
-	memset(&id->raw, 0xff, 6); /* initialize as wildcard */
+	memset(&id->raw, DC, 6); /* initialize as wildcard */
 
 	/* format: "A-B:C.D.E[*&]F" */
 	/* fields A, B, E, F are optional */
@@ -133,7 +134,9 @@ int obis_parse(obis_id_t *id, const char *str, size_t n) {
 			else if ((b == '*' || b == '&') && field == D) { /* end of field E, start of field F */
 				field = E;
 			}
-			else goto error; // TODO lookup aliases
+			else {
+				return ERR;
+			}
 
 			id->raw[field] = num;
 			num = 0;
@@ -144,25 +147,17 @@ int obis_parse(obis_id_t *id, const char *str, size_t n) {
 	id->raw[++field] = num;
 
 	/* fields C & D are mandatory */
-	if (field < D) goto error;
-
-	return 0;
-
-error:
-	printf("something unexpected happened (field=%i, b=%c, num=%i): %s:%i!\n", field, b, num, __FUNCTION__, __LINE__);
-	return -1;
+	return (field < D) ? ERR : SUCCESS;
 }
 
-obis_id_t * obis_lookup_alias(const char *alias) {
-	obis_alias_t *it = obis_aliases;
-
-	do { /* linear search */
+int obis_lookup_alias(const char *alias, obis_id_t *id) {
+	for (const obis_alias_t *it = aliases; it != NULL; it++) {
 		if (strcmp(it->name, alias) == 0) {
-			return &it->id;
+			*id = it->id;
+			return SUCCESS;
 		}
-	} while ((++it)->name);
-
-	return NULL;
+	}
+	return ERR_NOT_FOUND;
 }
 
 int obis_unparse(obis_id_t id, char *buffer, size_t n) {

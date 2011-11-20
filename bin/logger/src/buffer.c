@@ -76,7 +76,7 @@ reading_t * buffer_push(buffer_t *buf, reading_t *rd) {
 	}
 
 	new->next = NULL;
-	
+
 	buf->tail = new;
 	buf->size++;
 	pthread_mutex_unlock(&buf->mutex);

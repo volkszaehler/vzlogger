@@ -33,7 +33,7 @@
 #include "api.h"
 #include "vzlogger.h"
 
-extern options_t options;
+extern config_options_t options;
 
 int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *arg) {
 	channel_t *ch = (channel_t *) arg;
@@ -45,17 +45,17 @@ int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_
 		case CURLINFO_TEXT:
 		case CURLINFO_END:
 			if (end) *end = '\0'; /* terminate without \n */
-			print(11, "CURL: %.*s", ch, (int) size, data);
+			print(log_debug+5, "CURL: %.*s", ch, (int) size, data);
 			break;
 
 		case CURLINFO_SSL_DATA_IN:
 		case CURLINFO_DATA_IN:
-			print(14, "CURL: Received %lu bytes", ch, (unsigned long) size);
+			print(log_debug+5, "CURL: Received %lu bytes", ch, (unsigned long) size);
 			break;
 
 		case CURLINFO_SSL_DATA_OUT:
 		case CURLINFO_DATA_OUT:
-			print(14, "CURL: Sent %lu bytes.. ", ch, (unsigned long) size);
+			print(log_debug+5, "CURL: Sent %lu bytes.. ", ch, (unsigned long) size);
 			break;
 
 		case CURLINFO_HEADER_IN:
@@ -72,7 +72,7 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
 
 	response->data = realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { /* out of memory! */
-		print(-1, "Not enough memory", NULL);
+		print(log_error, "Cannot allocate memory", NULL);
 		exit(EXIT_FAILURE);
 	}
 
@@ -122,7 +122,7 @@ CURL * api_curl_init(channel_t *ch) {
 
 	curl = curl_easy_init();
 	if (!curl) {
-		print(-1, "CURL: cannot create handle", ch);
+		print(log_error, "CURL: cannot create handle", ch);
 		exit(EXIT_FAILURE);
 	}
 

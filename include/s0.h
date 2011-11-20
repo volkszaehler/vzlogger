@@ -30,15 +30,19 @@
 #include <signal.h>
 
 typedef struct {
+	char *device;
+
 	int fd;			/* file descriptor of port */
 	struct termios oldtio;	/* required to reset port */
 } meter_handle_s0_t;
 
-struct meter;	/* forward declaration */
-struct reading;	/* forward declaration */
+/* forward declarations */
+struct meter;
+struct reading;
 
+int meter_init_s0(struct meter *mtr, list_t options);
 int meter_open_s0(struct meter *mtr);
-void meter_close_s0(struct meter *mtr);
+int meter_close_s0(struct meter *mtr);
 size_t meter_read_s0(struct meter *mtr, struct reading *rds, size_t n);
 
 #endif /* _S0_H_ */

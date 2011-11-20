@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <sys/time.h>
 
 /* serial port */
 #include <fcntl.h>
@@ -50,27 +51,52 @@
 #include "meter.h"
 #include "sml.h"
 #include "obis.h"
+#include "options.h"
+
+int meter_init_sml(meter_t *mtr, list_t options) {
+	meter_handle_sml_t *handle = &mtr->handle.sml;
+
+	/* connection */
+	handle->host = NULL;
+	handle->device = NULL;
+	if (options_lookup_string(options, "host", &handle->host) != SUCCESS && options_lookup_string(options, "device", &handle->device) != SUCCESS) {
+		print(log_error, "Missing host or port", mtr);
+		return ERR;
+	}
+
+	/* baudrate */
+	handle->baudrate = 9600;
+	if (options_lookup_int(options, "baudrate", &handle->baudrate) == ERR_INVALID_TYPE) {
+		print(log_error, "Invalid type for baudrate", mtr);
+		return ERR;
+	}
+
+	return SUCCESS;
+}
 
 int meter_open_sml(meter_t *mtr) {
 	meter_handle_sml_t *handle = &mtr->handle.sml;
 
-	char *addr = strdup(mtr->connection);
-	char *node = strsep(&addr, ":");
-	char *service = strsep(&addr, ":");
+	if (handle->device != NULL) {
+		print(log_error, "TODO: implement serial interface", mtr);
+		return ERR;
+	}
+	else if (handle->host != NULL) {
+		char *addr = strdup(handle->host);
+		char *node = strsep(&addr, ":");
+		char *service = strsep(&addr, ":");
 
-	handle->fd = meter_sml_open_socket(node, service);
-	//handle->fd = meter_sml_open_port(args);
+		handle->fd = meter_sml_open_socket(node, service);
+	}
 
-	free(addr);
-
-	return (handle->fd < 0) ? -1 : 0;
+	return (handle->fd < 0) ? ERR : SUCCESS;
 }
 
-void meter_close_sml(meter_t *meter) {
+int meter_close_sml(meter_t *meter) {
 	meter_handle_sml_t *handle = &meter->handle.sml;
 
 	// TODO reset serial port
-	close(handle->fd);
+	return close(handle->fd);
 }
 
 size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
@@ -137,8 +163,8 @@ int meter_sml_open_socket(const char *node, const char *service) {
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		fprintf(stderr, "error: socket(): %s\n", strerror(errno));
-		return -1;
+		print(log_error, "socket(): %s", NULL, strerror(errno));
+		return ERR;
 	}
 
 	getaddrinfo(node, service, NULL, &ais);
@@ -147,8 +173,8 @@ int meter_sml_open_socket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		fprintf(stderr, "error: connect(%s, %s): %s\n", node, service, strerror(errno));
-		return -1;
+		print(log_error, "connect(%s, %s): %s", NULL, node, service, strerror(errno));
+		return ERR;
 	}
 
 	return fd;
@@ -161,8 +187,8 @@ int meter_sml_open_port(const char *device) {
 
 	int fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd < 0) {
-		fprintf(stderr, "error: open(%s): %s\n", device, strerror(errno));
-		return -1;
+		print(log_error, "open(%s): %s", NULL, device, strerror(errno));
+		return ERR;
 	}
 
 	// set RTS
