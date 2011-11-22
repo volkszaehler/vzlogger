@@ -54,8 +54,8 @@
 
 typedef union reading_id {
 	obis_id_t obis;
-	/* char *string; */
-	/* char *uuid; */
+	char *string;
+	char *uuid;
 } reading_id_t;
 
 typedef struct reading {
