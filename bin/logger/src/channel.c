@@ -37,6 +37,7 @@ void channel_init(channel_t *ch, const char *uuid, const char *middleware, readi
 	ch->identifier = identifier;
 	ch->status = status_unknown;
 	ch->counter = counter;
+	ch->last = 0;
 
 	ch->uuid = strdup(uuid);
 	ch->middleware = strdup(middleware);
@@ -59,13 +60,11 @@ void channel_free(channel_t *ch) {
 reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, reading_t *rds, size_t n) {
 	reading_t *first = NULL; /* first unsent reading which has been added */
 
-	double last;
-	double value;
+	double delta;
 
 	for (int i = 0; i < n; i++) {
 		int add = FALSE;
-
-		if (protocol == meter_protocol_d0 || protocol == meter_protocol_sml) {
+		if (protocol == meter_protocol_d0 || protocol == meter_protocol_sml) { /* intelligent protocols require matching ids */
 			if (obis_compare(rds[i].identifier.obis, ch->identifier.obis) == 0) {
 				add = TRUE;
 			}
@@ -75,12 +74,13 @@ reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, readi
 		}
 
 		if (add) {
-			value = rds[i].value;
+			delta = (ch->last == 0) ? 0 : rds[i].value - ch->last; /* ignoring first reading when no preceeding reading is available (no consumption) */
+			ch->last = rds[i].value;
 
-			print(log_info, "Adding reading to queue (value=%.2f delta=%.2f ts=%.3f)", ch, value, value - last, tvtod(rds[i].time));
+			print(log_info, "Adding reading to queue (value=%.2f delta=%.2f ts=%.3f)", ch, rds[i].value, delta, tvtod(rds[i].time));
 
-			if (ch->counter) {
-				rds[i].value -= last;
+			if (ch->counter) { /* send relative consumption since last reading */
+				rds[i].value = delta;
 			}
 
 			reading_t *added = buffer_push(&ch->buffer, &rds[i]); /* remember last value to calculate relative consumption */
@@ -90,8 +90,6 @@ reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, readi
 			} 
 		}
 	}
-
-	ch->last = last;
 
 	return first;
 }
