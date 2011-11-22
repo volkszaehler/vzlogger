@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h> 
+#include <math.h>
 
 #include "meter.h"
 #include "options.h"
@@ -113,5 +114,12 @@ const meter_details_t * meter_get_details(meter_protocol_t protocol) {
 
 double tvtod(struct timeval tv) {
 	return tv.tv_sec + tv.tv_usec / 1e6;
+}
+
+struct timeval dtotv(double ts) {
+	struct timeval tv;
+	tv.tv_usec = modf(timestamp, &tv.tv_sec);
+
+	return tv;
 }
 
