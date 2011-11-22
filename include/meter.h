@@ -117,6 +117,14 @@ typedef struct {
 double tvtod(struct timeval tv);
 
 /**
+ * Converts double to timeval structure
+ *
+ * @param ts the double value
+ * @return the timeval strucure
+ */
+struct timeval dtotv(double ts);
+
+/**
  * Get list of available meter types
  */
 const meter_details_t * meter_get_protocols();
