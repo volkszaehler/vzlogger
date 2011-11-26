@@ -54,8 +54,8 @@
 
 typedef union reading_id {
 	obis_id_t obis;
-	/* char *string; */
-	/* char *uuid; */
+	char *string;
+	char *uuid;
 } reading_id_t;
 
 typedef struct reading {
@@ -115,6 +115,14 @@ typedef struct {
  * @return the double value
  */
 double tvtod(struct timeval tv);
+
+/**
+ * Converts double to timeval structure
+ *
+ * @param ts the double value
+ * @return the timeval strucure
+ */
+struct timeval dtotv(double ts);
 
 /**
  * Get list of available meter types
