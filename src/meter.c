@@ -118,7 +118,7 @@ double tvtod(struct timeval tv) {
 
 struct timeval dtotv(double ts) {
 	struct timeval tv;
-	tv.tv_usec = modf(timestamp, &tv.tv_sec);
+	tv.tv_usec = modf(ts, &tv.tv_sec);
 
 	return tv;
 }
