@@ -64,10 +64,26 @@ void * reading_thread(void *arg) {
 		/* dumping meter output */
 		if (options.verbosity > log_debug) {
 			print(log_debug, "Got %i new readings from meter:", mtr, n);
-			char obis_str[OBIS_STR_LEN];
+			char identifier[255]; // TODO choose correct length
 			for (int i = 0; i < n; i++) {
-				obis_unparse(rds[i].identifier.obis, obis_str, OBIS_STR_LEN);
-				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr, obis_str, rds[i].value, tvtod(rds[i].time));
+				switch (mtr->protocol) {
+					case meter_protocol_d0:
+					case meter_protocol_sml:
+						obis_unparse(rds[i].identifier.obis, identifier, 255);
+						break;
+
+					case meter_protocol_file:
+					case meter_protocol_exec:
+						if (rds[i].identifier.string != NULL) {
+							strncpy(identifier, rds[i].identifier.string, 255);
+							break;
+						}
+
+					default:
+						identifier[0] = '\0';
+				}
+
+				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr, identifier, rds[i].value, tvtod(rds[i].time));
 			}
 		}
 
