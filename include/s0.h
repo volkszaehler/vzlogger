@@ -27,13 +27,13 @@
 #define _S0_H_
 
 #include <termios.h>
-#include <signal.h>
 
 typedef struct {
 	char *device;
+	int resolution;
 
-	int fd;			/* file descriptor of port */
-	struct termios oldtio;	/* required to reset port */
+	int fd;	/* file descriptor of port */
+	struct termios old_tio;	/* required to reset port */
 } meter_handle_s0_t;
 
 /* forward declarations */

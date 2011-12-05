@@ -1,5 +1,5 @@
 /**
- * Get data by calling programs
+ * Get data by calling a program
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -33,16 +33,31 @@
 int meter_init_exec(meter_t *mtr, list_t options) {
 	meter_handle_exec_t *handle = &mtr->handle.exec;
 
-	if (options_lookup_string(options, "command", &handle->command) != SUCCESS) {
+	char *command;
+	if (options_lookup_string(options, "command", &command) == SUCCESS) {
+		handle->command = strdup(command);
+	}
+	else {
 		print(log_error, "Missing command or invalid type", mtr);
 		return ERR;
 	}
 
-	handle->regex = NULL;
-	if (options_lookup_string(options, "regex", &handle->regex) == ERR_INVALID_TYPE) {
-		print(log_error, "Regex has to be a string", mtr);
-		return ERR;
+	char *format;
+	switch (options_lookup_string(options, "format", &format)) {
+		case SUCCESS:
+			handle->format = strdup(format);
+			// TODO parse format (see file.c)
+			break;
+
+		case ERR_NOT_FOUND:
+			handle->format = NULL; /* use default format */
+			break;
+
+		default:
+			print(log_error, "Failed to parse format", mtr);
+			return ERR;
 	}
+
 
 	return SUCCESS;
 }

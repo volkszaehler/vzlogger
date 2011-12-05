@@ -30,7 +30,7 @@
 
 typedef struct {
 	char *command;
-	char *regex;
+	char *format;
 } meter_handle_exec_t;
 
 /* forward declarations */

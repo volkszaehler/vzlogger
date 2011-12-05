@@ -35,28 +35,22 @@
 #include <sml/sml_file.h>
 #include <sml/sml_value.h>
 
+#include <termios.h>
+
 #include "obis.h"
 
 typedef struct {
 	char *host;
 	char *device;
-	int baudrate;
+	speed_t baudrate;
 
-	int fd;
-	//termios old_tio;
+	int fd;	/* file descriptor of port */
+	struct termios old_tio;	/* required to reset port */
 } meter_handle_sml_t;
 
 /* forward declarations */
 struct meter;
 struct reading;
-
-/**
- * Cast arbitrary sized sml_value to double
- *
- * @param value the sml_value which should be casted
- * @return double value representation of sml_value, NAN if an error occured
- */
-double sml_value_todouble(sml_value *value);
 
 /**
  * Initialize meter structure with a list of options
@@ -107,9 +101,11 @@ void meter_sml_parse(sml_list *list, struct reading *rd);
  * Open serial port by device
  *
  * @param device the device path, usually /dev/ttyS*
+ * @param old_config pointer to termios structure, will be filled with old port configuration
+ * @param baudrate the baudrate
  * @return file descriptor, <0 on error
  */
-int meter_sml_open_port(const char *device);
+int meter_sml_open_device(const char *device, struct termios *old_config, speed_t baudrate);
 
 /**
  * Open socket
