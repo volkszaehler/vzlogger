@@ -38,7 +38,6 @@
 /* serial port */
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <termios.h>
 
 /* socket */ 
 #include <netdb.h>
@@ -57,18 +56,49 @@ int meter_init_sml(meter_t *mtr, list_t options) {
 	meter_handle_sml_t *handle = &mtr->handle.sml;
 
 	/* connection */
-	handle->host = NULL;
-	handle->device = NULL;
-	if (options_lookup_string(options, "host", &handle->host) != SUCCESS && options_lookup_string(options, "device", &handle->device) != SUCCESS) {
-		print(log_error, "Missing host or port", mtr);
+	char *host, *device;
+	if (options_lookup_string(options, "host", &host) == SUCCESS) {
+		handle->host = strdup(host);
+		handle->device = NULL;
+	}
+	else if (options_lookup_string(options, "device", &device) == SUCCESS) {
+		handle->device = strdup(device);
+		handle->host = NULL;
+	}
+	else {
+		print(log_error, "Missing host and port", mtr);
 		return ERR;
 	}
 
 	/* baudrate */
-	handle->baudrate = 9600;
-	if (options_lookup_int(options, "baudrate", &handle->baudrate) == ERR_INVALID_TYPE) {
-		print(log_error, "Invalid type for baudrate", mtr);
-		return ERR;
+	int baudrate;
+	switch (options_lookup_int(options, "baudrate", &baudrate)) {
+		case SUCCESS:
+			/* find constant for termios structure */
+			switch (baudrate) {
+				case 1200: handle->baudrate = B1200; break;
+				case 1800: handle->baudrate = B1800; break;
+				case 2400: handle->baudrate = B2400; break;
+				case 4800: handle->baudrate = B4800; break;
+				case 9600: handle->baudrate = B9600; break;
+				case 19200: handle->baudrate = B19200; break;
+				case 38400: handle->baudrate = B38400; break;
+				case 57600: handle->baudrate = B57600; break;
+				case 115200: handle->baudrate = B115200; break;
+				case 230400: handle->baudrate = B230400; break;
+				default:
+					print(log_error, "Invalid baudrate: %i", mtr, baudrate);
+					return ERR;
+			}
+			break;
+
+		case ERR_NOT_FOUND: /* using default value if not specified */
+			handle->baudrate = B9600;
+			break;
+
+		default:
+			print(log_error, "Failed to parse the baudrate", mtr);
+			return ERR;
 	}
 
 	return SUCCESS;
@@ -77,16 +107,17 @@ int meter_init_sml(meter_t *mtr, list_t options) {
 int meter_open_sml(meter_t *mtr) {
 	meter_handle_sml_t *handle = &mtr->handle.sml;
 
-	if (handle->device != NULL) {
-		print(log_error, "TODO: implement serial interface", mtr);
-		return ERR;
+	if (handle->device != NULL) { /* local connection */
+		handle->fd = meter_sml_open_device(handle->device, &handle->old_tio, handle->baudrate);
 	}
-	else if (handle->host != NULL) {
+	else if (handle->host != NULL) { /* remote connection */
 		char *addr = strdup(handle->host);
-		char *node = strsep(&addr, ":");
+		char *node = strsep(&addr, ":"); /* split port/service from hostname */
 		char *service = strsep(&addr, ":");
 
 		handle->fd = meter_sml_open_socket(node, service);
+
+		free(addr);
 	}
 
 	return (handle->fd < 0) ? ERR : SUCCESS;
@@ -95,7 +126,11 @@ int meter_open_sml(meter_t *mtr) {
 int meter_close_sml(meter_t *meter) {
 	meter_handle_sml_t *handle = &meter->handle.sml;
 
-	// TODO reset serial port
+	if (handle->device != NULL) {
+		/* reset serial port */
+		tcsetattr(handle->fd, TCSANOW, &handle->old_tio);
+	}
+
 	return close(handle->fd);
 }
 
@@ -109,7 +144,7 @@ size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
 	sml_get_list_response *body;
 	sml_list *entry;
 
-	/* blocking read from fd */
+	/* wait until a we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(handle->fd, buffer, SML_BUFFER_LEN);
 
 	/* parse SML file & stripping escape sequences */
@@ -145,14 +180,13 @@ void meter_sml_parse(sml_list *entry, reading_t *rd) {
 
 	obis_init(&rd->identifier.obis, entry->obj_name->str);
 
-	/* get time */
 	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
-	if (entry->val_time) {
+	if (entry->val_time) { /* use time from meter */
 		rd->time.tv_sec = *entry->val_time->data.timestamp;
 		rd->time.tv_usec = 0;
 	}
 	else {
-		gettimeofday(&rd->time, NULL);
+		gettimeofday(&rd->time, NULL); /* use local time */
 	}
 }
 
@@ -180,10 +214,10 @@ int meter_sml_open_socket(const char *node, const char *service) {
 	return fd;
 }
 
-int meter_sml_open_port(const char *device) {
+int meter_sml_open_device(const char *device, struct termios *old_tio, speed_t baudrate) {
 	int bits;
-	struct termios config;
-	memset(&config, 0, sizeof(config));
+	struct termios tio;
+	memset(&tio, 0, sizeof(struct termios));
 
 	int fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd < 0) {
@@ -191,24 +225,30 @@ int meter_sml_open_port(const char *device) {
 		return ERR;
 	}
 
-	// set RTS
+	/* enable RTS as supply for infrared adapters */
 	ioctl(fd, TIOCMGET, &bits);
 	bits |= TIOCM_RTS;
 	ioctl(fd, TIOCMSET, &bits);
 
-	tcgetattr(fd, &config) ;
+	/* get old configuration */
+	tcgetattr(fd, &tio) ;
 
-	// set 8-N-1
-	config.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-	config.c_oflag &= ~OPOST;
-	config.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-	config.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB);
-	config.c_cflag |= CS8;
+	/* backup old configuration to restore it when closing the meter connection */
+	memcpy(old_tio, &tio, sizeof(struct termios));
 
-	// set speed to 9600 baud
-	cfsetispeed( &config, B9600);
-	cfsetospeed( &config, B9600);
+	/*  set 8-N-1 */
+	tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+	tio.c_oflag &= ~OPOST;
+	tio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+	tio.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB);
+	tio.c_cflag |= CS8;
 
-	tcsetattr(fd, TCSANOW, &config);
+	/* set baudrate */
+	cfsetispeed(&tio, baudrate);
+	cfsetospeed(&tio, baudrate);
+
+	/* apply new configuration */
+	tcsetattr(fd, TCSANOW, &tio);
+
 	return fd;
 }

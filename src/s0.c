@@ -37,17 +37,28 @@
 int meter_init_s0(meter_t *mtr, list_t options) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
-	if (options_lookup_string(options, "device", &handle->device) != SUCCESS) {
+	char *device;
+	if (options_lookup_string(options, "device", &device) == SUCCESS) {
+		handle->device = strdup(device);
+	}
+	else {
 		print(log_error, "Missing device or invalid type", mtr);
 		return ERR;
+	}
+
+	switch (options_lookup_int(options, "resolution", &handle->resolution)) {
+		case ERR_NOT_FOUND:
+			handle->resolution = 1; /* 1 Wh per impulse */
+			break;
+
+		case ERR_INVALID_TYPE:
+			print(log_error, "Failed to parse resolution", mtr);
+			return ERR;
 	}
 
 	return SUCCESS;
 }
 
-/**
- * Setup serial port
- */
 int meter_open_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
@@ -60,7 +71,7 @@ int meter_open_s0(meter_t *mtr) {
         }
 
 	/* save current port settings */
-	tcgetattr(fd, &handle->oldtio);
+	tcgetattr(fd, &handle->old_tio);
 
 	/* configure port */
 	struct termios tio;
@@ -85,11 +96,9 @@ int meter_open_s0(meter_t *mtr) {
 int meter_close_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
-	/* reset serial port */
-	tcsetattr(handle->fd, TCSANOW, &handle->oldtio);
+	tcsetattr(handle->fd, TCSANOW, &handle->old_tio); /* reset serial port */
 
-	/* close serial port */
-	return close(handle->fd);
+	return close(handle->fd); /* close serial port */
 }
 
 size_t meter_read_s0(meter_t *mtr, reading_t rds[], size_t n) {

@@ -57,24 +57,33 @@ void channel_free(channel_t *ch) {
 	free(ch->middleware);
 }
 
+int channel_compare_identifier(meter_protocol_t protocol, reading_id_t a, reading_id_t b) {
+	switch (protocol) {
+		case meter_protocol_d0:
+		case meter_protocol_sml:
+			/* intelligent protocols require matching ids */
+			return obis_compare(a.obis, b.obis);
+
+		case meter_protocol_file:
+		case meter_protocol_exec:
+			return strcmp(a.string, b.string);
+			break;
+		default:
+			/* no channel identifier, adding all readings to buffer */
+			return 0; /* equal */
+	}
+}
+
 reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, reading_t *rds, size_t n) {
 	reading_t *first = NULL; /* first unsent reading which has been added */
 
 	double delta;
 
 	for (int i = 0; i < n; i++) {
-		int add = FALSE;
-		if (protocol == meter_protocol_d0 || protocol == meter_protocol_sml) { /* intelligent protocols require matching ids */
-			if (obis_compare(rds[i].identifier.obis, ch->identifier.obis) == 0) {
-				add = TRUE;
-			}
-		}
-		else { /* no channel identifier, adding all readings to buffer */
-			add = TRUE;
-		}
+		if (channel_compare_identifier(protocol, rds[i].identifier, ch->identifier) == 0) {
 
-		if (add) {
-			delta = (ch->last == 0) ? 0 : rds[i].value - ch->last; /* ignoring first reading when no preceeding reading is available (no consumption) */
+			/* ignoring first reading when no preceeding reading is available (no consumption) */
+			delta = (ch->last == 0) ? 0 : rds[i].value - ch->last;
 			ch->last = rds[i].value;
 
 			print(log_info, "Adding reading to queue (value=%.2f delta=%.2f ts=%.3f)", ch, rds[i].value, delta, tvtod(rds[i].time));

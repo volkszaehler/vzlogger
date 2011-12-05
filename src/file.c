@@ -34,6 +34,7 @@
 int meter_init_file(meter_t *mtr, list_t options) {
 	meter_handle_file_t *handle = &mtr->handle.file;
 
+	/* path to file which should be read */
 	char *path;
 	if (options_lookup_string(options, "path", &path) == SUCCESS) {
 		handle->path = strdup(path);
@@ -43,13 +44,83 @@ int meter_init_file(meter_t *mtr, list_t options) {
 		return ERR;
 	}
 
-	char *regex;
-	if (options_lookup_string(options, "regex", &regex) == SUCCESS) {
-		handle->regex = strdup(regex);
+	/* a optional format string for scanf() */
+	char *config_format;
+	switch (options_lookup_string(options, "format", &config_format)) {
+		case SUCCESS: {
+			/**
+			 * Compiling the provided format string in a format string for scanf
+			 * by replacing the following tokens
+			 *
+			 * "$v" => "%1$f" (value)
+			 * "$i" => "%2$ms" (identifier)		(memory gets allocated by sscanf())
+			 * "$t" => "%3$f" (timestamp)
+			 */
+
+			int config_len = strlen(config_format);
+			int scanf_len = config_len + 8; /* adding extra space for longer conversion specification in scanf_format */
+
+			char *scanf_format = malloc(scanf_len); /* the scanf format string */
+
+			int i = 0; /* index in config_format string */
+			int j = 0; /* index in scanf_format string */
+			while (i <= config_len && j <= scanf_len) {
+				switch (config_format[i]) {
+					case '$':
+						if (i+1 < config_len) { /* introducing a token */
+							switch (config_format[i+1]) {
+								case 'v': j += sprintf(scanf_format+j, "%%1$f"); break;
+								case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
+								case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
+							}
+							i++;
+						}
+						break;
+
+					case '%':
+						scanf_format[j++] = '%'; /* add double %% to escape a conversion identifier */
+
+					default:
+						scanf_format[j++] = config_format[i]; /* just copying */
+				}
+
+				i++;
+			}
+
+			print(log_debug, "Parsed format string \"%s\" => \"%s\"", mtr, config_format, scanf_format);
+			handle->format = scanf_format;
+
+			}
+			break;
+
+		case ERR_NOT_FOUND:
+			handle->format = NULL; /* disable format matching */
+			break;
+
+		default:
+			print(log_error, "Failed to parse 'format'", mtr);
+			return ERR;
 	}
-	else if (options_lookup_string(options, "regex", &regex) == ERR_INVALID_TYPE) { // TODO improve code
-		print(log_error, "Regex has to be a string", mtr);
-		return ERR;
+
+	/* should we start each time at the beginning of the file? */
+	/* or do we read from a logfile (append) */
+	int rewind;
+	switch (options_lookup_boolean(options, "rewind", &rewind)) {
+		case SUCCESS:
+			handle->rewind = rewind;
+			break;
+
+		case ERR_INVALID_TYPE:
+			print(log_error, "Invalid type for 'rewind'", mtr);
+			return ERR;
+
+		case ERR_NOT_FOUND:
+			handle->rewind = FALSE; /* do not rewind file by default */
+			break;
+
+		default:
+			print(log_error, "Failed to parse 'rewind'", mtr);
+			return ERR;
 	}
 
 	return SUCCESS;
@@ -77,19 +148,42 @@ int meter_close_file(meter_t *mtr) {
 size_t meter_read_file(meter_t *mtr, reading_t rds[], size_t n) {
 	meter_handle_file_t *handle = &mtr->handle.file;
 
-	char buffer[16];
-	int bytes;
+	// TODO use inotify to block eading until file changes
 
-	rewind(handle->fd);
-	bytes = fread(buffer, 1, 16, handle->fd);
-	buffer[bytes] = '\0'; /* zero terminated, required? */
+	char line[256], *endptr;
 
-	if (bytes) {
-		rds->value = strtof(buffer, NULL);
-		gettimeofday(&rds->time, NULL);
-
-		return 1;
+	/* reset file pointer to beginning of file */
+	if (handle->rewind) {
+		rewind(handle->fd);
 	}
 
-	return 0; /* empty file */
+	int i = 0;
+	while (fgets(line, 256, handle->fd) && i < n) {
+		char *nl;
+		if ((nl = strrchr(line, '\n'))) *nl = '\0'; /* remove trailing newline */
+		if ((nl = strrchr(line, '\r'))) *nl = '\0';
+
+		if (handle->format) {
+			double timestamp;
+
+			/* at least the value has to been read */
+			int found = sscanf(line, handle->format, &rds[i].value, &rds[i].identifier.string, &timestamp);
+			if (found >= 1) { // TODO free() space allocated for identifier string
+				rds[i].time = dtotv(timestamp); /* convert double to timeval */
+				i++; /* read successfully */
+			}
+		}
+		else { /* just reading a value per line */
+			rds[i].value = strtod(line, &endptr);
+			rds[i].identifier.string = NULL;
+
+			gettimeofday(&rds[i].time, NULL);
+
+			if (endptr != line) {
+				i++; /* read successfully */
+			}
+		}
+	}
+
+	return i;
 }
