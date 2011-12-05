@@ -36,8 +36,8 @@
 static const meter_details_t protocols[] = {
 /*	     alias	description						max_rds	periodic
 ===============================================================================================*/
-METER_DETAIL(file, 	"Read from file (ex. 1-Wire sensors via OWFS)",		1,	TRUE),
-METER_DETAIL(exec, 	"Read from program (ex. 1-Wire sensors via digitemp)",	1,	TRUE),
+METER_DETAIL(file, 	"Read from file (ex. 1-Wire sensors via OWFS)",		32,	TRUE),
+//METER_DETAIL(exec, 	"Read from program (ex. 1-Wire sensors via digitemp)",	32,	TRUE),
 METER_DETAIL(random,	"Random walk",						1,	TRUE),
 METER_DETAIL(s0,	"S0 on RS232",						1,	TRUE),
 METER_DETAIL(d0,	"Plaintext protocol (DIN EN 62056-21)",			32,	FALSE),
@@ -117,8 +117,13 @@ double tvtod(struct timeval tv) {
 }
 
 struct timeval dtotv(double ts) {
-	struct timeval tv;
-	tv.tv_usec = modf(ts, &tv.tv_sec);
+	double integral;
+	double fraction = modf(ts, &integral);
+
+	struct timeval tv = {
+		.tv_usec = (long int) (fraction * 1e6),
+		.tv_sec = (long int) integral
+	};
 
 	return tv;
 }

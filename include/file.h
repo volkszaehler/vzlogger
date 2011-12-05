@@ -30,7 +30,8 @@
 
 typedef struct {
 	char *path;
-	char *regex;
+	char *format;
+	int rewind;
 
 	FILE *fd;
 } meter_handle_file_t;
