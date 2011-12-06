@@ -1,11 +1,18 @@
-vzlogger (0.3.1-1) stable; urgency=low
+vzlogger (0.3.2-1) stable; urgency=low
+
+  * new release with improvments to various protocols and configuration parsing
+  * do not run with root privileges anymore
+
+ -- Steffen Vogel <info@steffenvogel.de>  Tue, 06 Dec 2011 02:37:26 +0100
+
+vzlogger (0.3.1-2) stable; urgency=low
 
   * updated version number
   * fixed forking behavior of init script
 
  -- Steffen Vogel <info@steffenvogel.de>  Sun, 16 Oct 2011 14:45:32 +0200
 
-vzlogger (0.3.1) stable; urgency=low
+vzlogger (0.3.1-1) stable; urgency=low
 
   * fixed bug in parsing configuration for sml meters
 

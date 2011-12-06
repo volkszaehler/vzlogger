@@ -1,0 +1,26 @@
+#!/bin/sh -e
+
+case "$1" in
+    configure)
+	if ! id vzlogger > /dev/null 2>&1 ; then
+	    adduser --system --home /usr/share/vzlogger --no-create-home \
+		--group --disabled-password --shell /bin/false \
+		vzlogger
+            usermod -a -G dialout vzlogger
+	fi
+
+	touch /var/log/vzlogger.log
+	chown vzlogger:adm /var/log/vzlogger.log
+	chown vzlogger:adm /etc/vzlogger.conf
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+	echo "$0 called with unknown argument \`$1'" >&2
+	exit 1
+    ;;
+esac
+
+#DEBHELPER#
