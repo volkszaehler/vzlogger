@@ -201,7 +201,12 @@ int meter_sml_open_socket(const char *node, const char *service) {
 		return ERR;
 	}
 
-	getaddrinfo(node, service, NULL, &ais);
+	int rc = getaddrinfo(node, service, NULL, &ais);
+	if (rc != 0) {
+		print(log_error, "getaddrinfo(%s, %s): %s", NULL, node, service, gai_strerror(rc));
+		return ERR;
+	}
+
 	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
 	freeaddrinfo(ais);
 

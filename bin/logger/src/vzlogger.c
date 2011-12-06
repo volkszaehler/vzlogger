@@ -129,7 +129,9 @@ void print(int level, const char *format, void *id, ... ) {
 	va_end(args);
 
 	/* print to stdout/stderr */
-	fprintf((level > 0) ? stdout : stderr, "%s\n", buffer);
+	if (getppid() != 1) {
+		fprintf((level > 0) ? stdout : stderr, "%s\n", buffer);
+	}
 
 	/* append to logfile */
 	if (options.logfd) {
@@ -180,7 +182,7 @@ void show_usage(char *argv[]) {
  * @link http://www.enderunix.org/docs/eng/daemon.php
  */
 void daemonize() {
-	if(getppid() == 1) {
+	if (getppid() == 1) {
 		return; /* already a daemon */
 	}
 
@@ -193,7 +195,6 @@ void daemonize() {
 	}
 
 	/* child (daemon) continues */
-
 	setsid(); /* obtain a new process group */
 
 	for (i = getdtablesize(); i >= 0; --i) {
