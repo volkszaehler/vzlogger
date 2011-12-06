@@ -66,7 +66,7 @@ int meter_init_sml(meter_t *mtr, list_t options) {
 		handle->host = NULL;
 	}
 	else {
-		print(log_error, "Missing host and port", mtr);
+		print(log_error, "Missing device or host", mtr);
 		return ERR;
 	}
 

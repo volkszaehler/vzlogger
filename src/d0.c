@@ -60,12 +60,32 @@ int meter_init_d0(meter_t *mtr, list_t options) {
 		handle->host = NULL;
 	}
 	else {
-		print(log_error, "Missing host and port", mtr);
+		print(log_error, "Missing device or host", mtr);
 		return ERR;
 	}
 
 	/* baudrate */
+	int baudrate;
 	switch (options_lookup_int(options, "baudrate", &handle->baudrate)) {
+		case SUCCESS:
+			/* find constant for termios structure */
+			switch (baudrate) {
+				case 1200: handle->baudrate = B1200; break;
+				case 1800: handle->baudrate = B1800; break;
+				case 2400: handle->baudrate = B2400; break;
+				case 4800: handle->baudrate = B4800; break;
+				case 9600: handle->baudrate = B9600; break;
+				case 19200: handle->baudrate = B19200; break;
+				case 38400: handle->baudrate = B38400; break;
+				case 57600: handle->baudrate = B57600; break;
+				case 115200: handle->baudrate = B115200; break;
+				case 230400: handle->baudrate = B230400; break;
+				default:
+					print(log_error, "Invalid baudrate: %i", mtr, baudrate);
+					return ERR;
+			}
+			break;
+
 		case ERR_NOT_FOUND: /* using default value if not specified */
 			handle->baudrate = 9600;
 			break;

@@ -51,6 +51,13 @@ int meter_open_d0(struct meter *mtr);
 int meter_close_d0(struct meter *mtr);
 size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
 
-int meter_d0_parse_line(struct reading *rd, char *line, size_t n);
+/**
+ * Open socket
+ *
+ * @param node the hostname or ASCII encoded IP address
+ * @param the ASCII encoded portnum or service as in /etc/services
+ * @return file descriptor, <0 on error
+ */
+int meter_d0_open_socket(const char *node, const char *service);
 
 #endif /* _D0_H_ */
