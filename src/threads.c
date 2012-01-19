@@ -26,11 +26,10 @@
 #include <math.h>
 #include <unistd.h>
 
-#include <reading.h>
-
-#include "threads.h"
+#include "reading.h"
 #include "api.h"
 #include "vzlogger.h"
+#include "threads.h"
 
 extern config_options_t options;
 

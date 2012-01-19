@@ -22,12 +22,13 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _LOCAL_H_
 #define _LOCAL_H_
 
-#include <stdarg.h> /* required for libMHD */
-#include <sys/socket.h> /* required for libMHD */
+#include <stdint.h>	/* required for libMHD */
+#include <stdarg.h>	/* required for libMHD */
+#include <sys/socket.h>	/* required for libMHD */
 
 #include <microhttpd.h>
 

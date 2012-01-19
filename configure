@@ -2770,7 +2770,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers config.h"
 
-ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile bin/reader/Makefile bin/logger/Makefile"
+ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile"
 
 
 # Checks for programs.
@@ -5860,8 +5860,6 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "bin/reader/Makefile") CONFIG_FILES="$CONFIG_FILES bin/reader/Makefile" ;;
-    "bin/logger/Makefile") CONFIG_FILES="$CONFIG_FILES bin/logger/Makefile" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5 ;;

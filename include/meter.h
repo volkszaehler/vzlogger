@@ -36,7 +36,7 @@
  *		The 'interval' column in the configuration as no meaning.
  */
 
-#include <config.h>
+#include "../config.h" /* GNU buildsystem config */
 
 #include "common.h"
 #include "list.h"

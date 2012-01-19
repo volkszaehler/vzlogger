@@ -23,13 +23,14 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONFIGURATION_H_
-#define _CONFIGURATION_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #include <json/json.h>
 
-#include <list.h>
-#include <options.h>
+#include "meter.h"
+#include "list.h"
+#include "options.h"
 
 /**
  * General options from CLI
@@ -89,6 +90,4 @@ int config_parse(const char *filename, list_t *mappings, config_options_t *optio
 struct channel * config_parse_channel(struct json_object *jso, meter_protocol_t protocol);
 struct map * config_parse_meter(struct json_object *jso);
 
-
-
-#endif /* _CONFIGURATION_H_ */
+#endif /* _CONFIG_H_ */

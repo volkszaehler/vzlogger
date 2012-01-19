@@ -93,6 +93,7 @@ const obis_alias_t * obis_get_aliases() {
 
 obis_id_t * obis_init(obis_id_t *id, unsigned char *raw) {
 	if (raw == NULL) {
+		// TODO why not initialize with DC fields to accept all readings?
 		memset(id->raw, 0, 6); /* initialize with zeros */
 	}
 	else {

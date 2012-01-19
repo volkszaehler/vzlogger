@@ -1,5 +1,5 @@
 /**
- * Channel handling
+ * Main header file
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,32 +23,44 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
+#ifndef _VZLOGGER_H_
+#define _VZLOGGER_H_
 
 #include <pthread.h>
-#include <meter.h>
 
-#include "vzlogger.h"
-#include "buffer.h"
+#include "../config.h" /* GNU buildsystem config */
 
-typedef struct channel {
-	char id[5];			/* only for internal usage & debugging */
+#include "config.h"
+#include "meter.h"
+#include "common.h"
+#include "list.h"
 
-	reading_id_t identifier;	/* channel identifier (OBIS, string) */
-	reading_t last;			/* most recent reading */
-	buffer_t buffer;		/* circular queue to buffer readings */
+/* enumerations */
+typedef enum {
+	status_unknown,
+	status_running,
+	status_terminated,
+	status__cancelled
+} pthread_status_t;
 
-	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
-	pthread_t thread;		/* pthread for asynchronus logging */
-	pthread_status_t status;	/* status of thread */
+/**
+ * Type for mapping channels to meters
+ */
+typedef struct map {
+	meter_t meter;
+	list_t channels;
 
-	char *middleware;		/* url to middleware */
-	char *uuid;			/* unique identifier for middleware */
-} channel_t;
+	pthread_t thread;
+	pthread_status_t status;
+} map_t;
 
 /* prototypes */
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier);
-void channel_free(channel_t *ch);
+void quit(int sig);
+void daemonize();
 
-#endif /* _CHANNEL_H_ */
+void show_usage(char ** argv);
+void show_aliases();
+
+int options_parse(int argc, char *argv[], config_options_t *options);
+
+#endif /* _VZLOGGER_H_ */

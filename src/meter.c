@@ -24,7 +24,7 @@
  */
 
 #include <string.h>
-#include <stdio.h> 
+#include <stdio.h>
 
 #include "meter.h"
 #include "options.h"

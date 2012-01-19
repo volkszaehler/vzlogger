@@ -13,8 +13,6 @@ AC_CONFIG_FILES([
 	Makefile
 	docs/Makefile
 	src/Makefile
-	bin/reader/Makefile
-	bin/logger/Makefile
 ])
 
 # Checks for programs.

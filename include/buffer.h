@@ -31,7 +31,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#include <meter.h>
+#include "meter.h"
 
 typedef struct {
 	reading_t *tail;

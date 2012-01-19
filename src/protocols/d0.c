@@ -65,7 +65,7 @@ int meter_init_d0(meter_t *mtr, list_t options) {
 	}
 
 	/* baudrate */
-	int baudrate;
+	int baudrate = 9600; /* default to avoid compiler warning */
 	switch (options_lookup_int(options, "baudrate", &handle->baudrate)) {
 		case SUCCESS:
 			/* find constant for termios structure */

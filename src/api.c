@@ -28,8 +28,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#include <meter.h>
 
+#include "meter.h"
 #include "api.h"
 #include "vzlogger.h"
 

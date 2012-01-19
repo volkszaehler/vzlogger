@@ -38,16 +38,14 @@
 #include <sys/time.h>
 #include <fcntl.h>
 
-#include <list.h>
-#include <meter.h>
-#include <obis.h>
-
+#include "list.h"
+#include "meter.h"
+#include "obis.h"
 #include "vzlogger.h"
 #include "channel.h"
 #include "threads.h"
 
 #ifdef LOCAL_SUPPORT
-#include <microhttpd.h>
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
 
