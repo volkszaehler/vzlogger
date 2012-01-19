@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "meter.h"
 #include "fluksov2.h"
@@ -39,7 +41,7 @@ int meter_init_fluksov2(meter_t *mtr, list_t options) {
 		handle->fifo = strdup(fifo);
 	}
 	else {
-		handle->fifo = "/var/run/spid/delta/out";
+		handle->fifo = "/var/run/spid/delta/out"; /* use default path */
 	}
 
 	return SUCCESS;
@@ -66,33 +68,23 @@ int meter_close_fluksov2(meter_t *mtr) {
 }
 
 size_t read_line(int fd, char  *buffer, size_t n) {
-	int r;		/* return code of read() */
-	int e = 0;	/* end of line? */
 	int i = 0;	/* iterator for buffer */
-	char c;		/* character read */
+	char c;		/* character buffer */
 
 	while (i < n) {
-		r = read(fd, &c, 1);	/* read byte-per-byte, to identify a line break */
+		int r = read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
 
-		if (r < 0) {		/* an error occured, pass through to caller */
-			return r;
-		}
-		else if (r == 1) {	/* successful read */
+		if (r == 1) { /* successful read */
 			switch (c) {
 				case '\n': /* line delimiter */
-				case '\r':
-					end++;
-					if (end == 2) {
-						return i; /* line end after "\n\r" */
-					}
-					else {
-						break; /* wait for second delimiter */
-					}
+					return i;
 
 				default: /* normal character */
-					buffer[i] = c;
-					i++;
+					buffer[i++] = c;
 			}
+		}
+		else if (r < 0) { /* an error occured, pass through to caller */
+			return r;
 		}
 	}
 
@@ -102,44 +94,42 @@ size_t read_line(int fd, char  *buffer, size_t n) {
 size_t meter_read_fluksov2(meter_t *mtr, reading_t rds[], size_t n) {
 	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
 
-	char line[64];
-	size_t i = 0; /* number of readings */
-	size_t h = 0; /* sensor numer */
+	size_t i = 0;		/* number of readings */
+	size_t bytes = 0;	/* read_line() return code */
+	char line[64];		/* stores each line read */
+	char *cursor = line;	/* moving cursor for strsep() */
 
-	int r = read_line(handle->fd, line, 64); /* blocking read of a complete line */
-	if (r <= 0) {
-		print(log_error, "read(%s): %s", mtr, handle->fifo, strerror(errno));
-		return 0;
-	}
+	do {
+		bytes = read_line(handle->fd, line, 64); /* blocking read of a complete line */
+		if (bytes < 0) {
+			print(log_error, "read_line(%s): %s", mtr, handle->fifo, strerror(errno));
+			return bytes; /* an error occured, pass through to caller */
+		}
+	} while (bytes == 0);
 
-	char *time_str = strtok(line, " \t"); /* first token is the timestamp */
+
+	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
 	struct timeval time = {
-		.tv_sec = strtoq(time_str, NULL, 10)
+		.tv_sec = strtol(time_str, NULL, 10),
 		.tv_usec = 0 /* no millisecond resolution available */
 	};
 
-	for (int j = 0; j < 3 && i < n; j++) {
-		char *tok = strtok(NULL, " \t");
-		if (tok == NULL) {
-			return i;
-		}
+	while (cursor) {
+		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 
-		switch (j) {
-			case 0: /* id (integer) */
-				break; /* just ignore */
+		/* consumption */
+		rds[i].time = time;
+		rds[i].identifier.channel = -channel; /* consumption gets negative channel id as identifier! */
+		rds[i].value = atoi(strsep(&cursor, " \t"));
+		i++;
 
-			case 1: /* consumption (Wh) */
-				rds[i].identifier.channel = i;
-				rds[i].time = time;
-				rds[i].value = strtod(tok, NULL);
-				i++;
-
-			case 2: /* power (W) */
-				j = 0;
-				i++;
-		}
+		/* power */
+		rds[i].time = time;
+		rds[i].identifier.channel = channel; /* power gets positive channel id as identifier! */
+		rds[i].value = atoi(strsep(&cursor, " \t"));
+		i++;
 	}
 
-	return 0;
+	return i;
 }
 
