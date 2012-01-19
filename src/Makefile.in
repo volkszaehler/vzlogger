@@ -75,12 +75,12 @@ ARFLAGS = cru
 libmtr_a_AR = $(AR) $(ARFLAGS)
 libmtr_a_LIBADD =
 am__libmtr_a_SOURCES_DIST = meter.c d0.c s0.c random.c file.c exec.c \
-	ltqnorm.c obis.c options.c sml.c
+	fluksov2.c ltqnorm.c obis.c options.c reading.c sml.c
 @SML_SUPPORT_TRUE@am__objects_1 = sml.$(OBJEXT)
 am_libmtr_a_OBJECTS = meter.$(OBJEXT) d0.$(OBJEXT) s0.$(OBJEXT) \
 	random.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
-	ltqnorm.$(OBJEXT) obis.$(OBJEXT) options.$(OBJEXT) \
-	$(am__objects_1)
+	fluksov2.$(OBJEXT) ltqnorm.$(OBJEXT) obis.$(OBJEXT) \
+	options.$(OBJEXT) reading.$(OBJEXT) $(am__objects_1)
 libmtr_a_OBJECTS = $(am_libmtr_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -195,8 +195,8 @@ AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(am__append_2)
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_LDFLAGS = 
 lib_LIBRARIES = libmtr.a
-libmtr_a_SOURCES = meter.c d0.c s0.c random.c file.c exec.c ltqnorm.c \
-	obis.c options.c $(am__append_1)
+libmtr_a_SOURCES = meter.c d0.c s0.c random.c file.c exec.c fluksov2.c \
+	ltqnorm.c obis.c options.c reading.c $(am__append_1)
 libmtr_a_LDFLAGS = -version-info $(VERSION)
 all: all-am
 
@@ -278,11 +278,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/d0.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fluksov2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltqnorm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/obis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/random.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reading.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s0.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sml.Po@am__quote@
 

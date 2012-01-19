@@ -40,45 +40,34 @@
 
 #include "common.h"
 #include "list.h"
-#include "obis.h"
+#include "reading.h"
 
-/* meter types */
+/* meter protocols */
 #include "file.h"
 #include "exec.h"
 #include "random.h"
 #include "s0.h"
 #include "d0.h"
+#include "fluksov2.h"
 #ifdef SML_SUPPORT
 #include "sml.h"
 #endif /* SML_SUPPORT */
 
-typedef union reading_id {
-	obis_id_t obis;
-	char *string;
-	char *uuid;
-} reading_id_t;
-
-typedef struct reading {
-	float value;
-	struct timeval time;
-	reading_id_t identifier;
-
-	struct reading *next; /* pointer for linked list */
-} reading_t;
-
-typedef enum {
+typedef enum meter_procotol {
 	meter_protocol_file = 1,
 	meter_protocol_exec,
 	meter_protocol_random,
 	meter_protocol_s0,
 	meter_protocol_d0,
-	meter_protocol_sml
+	meter_protocol_sml,
+	meter_protocol_fluksov2
 } meter_protocol_t;
 
 typedef struct meter {
 	char id[5];
-	meter_protocol_t protocol;
 	int interval;
+
+	meter_protocol_t protocol;
 
 	union {
 		meter_handle_file_t file;
@@ -86,6 +75,7 @@ typedef struct meter {
 		meter_handle_random_t random;
 		meter_handle_s0_t s0;
 		meter_handle_d0_t d0;
+		meter_handle_fluksov2_t fluksov2;
 #ifdef SML_SUPPORT
 		meter_handle_sml_t sml;
 #endif /* SML_SUPPORT */
@@ -109,29 +99,10 @@ typedef struct {
 /* prototypes */
 
 /**
- * Converts timeval structure to double
- *
- * @param tv the timeval structure
- * @return the double value
- */
-double tvtod(struct timeval tv);
-
-/**
- * Converts double to timeval structure
- *
- * @param ts the double value
- * @return the timeval strucure
- */
-struct timeval dtotv(double ts);
-
-/**
  * Get list of available meter types
  */
 const meter_details_t * meter_get_protocols();
-
 const meter_details_t * meter_get_details(meter_protocol_t protocol);
-
-int meter_lookup_protocol(const char *name, meter_protocol_t *protocol);
 
 /**
  * Initialize meter

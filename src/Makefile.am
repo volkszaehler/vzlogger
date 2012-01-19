@@ -6,7 +6,7 @@ VERSION = 1:0:0
 
 lib_LIBRARIES = libmtr.a
 
-libmtr_a_SOURCES = meter.c d0.c s0.c random.c file.c exec.c ltqnorm.c obis.c options.c
+libmtr_a_SOURCES = meter.c d0.c s0.c random.c file.c exec.c fluksov2.c ltqnorm.c obis.c options.c reading.c
 libmtr_a_LDFLAGS = -version-info $(VERSION)
 
 # SML support
