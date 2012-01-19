@@ -32,7 +32,7 @@
 #include <sys/time.h>
 
 #include "meter.h"
-#include "random.h"
+#include "protocols/random.h"
 #include "options.h"
 
 int meter_init_random(meter_t *mtr, list_t options) {

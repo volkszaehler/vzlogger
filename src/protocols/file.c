@@ -28,7 +28,7 @@
 #include <errno.h>
 
 #include "meter.h"
-#include "file.h"
+#include "protocols/file.h"
 #include "options.h"
 
 int meter_init_file(meter_t *mtr, list_t options) {

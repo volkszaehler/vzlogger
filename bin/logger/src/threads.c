@@ -26,6 +26,8 @@
 #include <math.h>
 #include <unistd.h>
 
+#include <reading.h>
+
 #include "threads.h"
 #include "api.h"
 #include "vzlogger.h"

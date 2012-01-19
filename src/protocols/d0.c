@@ -37,12 +37,12 @@
 #include <ctype.h>
 #include <sys/time.h>
 
-/* socket */ 
+/* socket */
 #include <netdb.h>
 #include <sys/socket.h>
 
 #include "meter.h"
-#include "d0.h"
+#include "protocols/d0.h"
 #include "obis.h"
 #include "options.h"
 

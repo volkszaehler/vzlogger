@@ -27,7 +27,7 @@
 #include <sys/time.h>
 
 #include "meter.h"
-#include "exec.h"
+#include "protocols/exec.h"
 #include "options.h"
 
 int meter_init_exec(meter_t *mtr, list_t options) {

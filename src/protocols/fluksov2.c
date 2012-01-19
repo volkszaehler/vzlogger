@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 #include "meter.h"
-#include "fluksov2.h"
+#include "protocols/fluksov2.h"
 #include "options.h"
 
 int meter_init_fluksov2(meter_t *mtr, list_t options) {

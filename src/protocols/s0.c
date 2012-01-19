@@ -31,7 +31,7 @@
 #include <errno.h>
 
 #include "meter.h"
-#include "s0.h"
+#include "protocols/s0.h"
 #include "options.h"
 
 int meter_init_s0(meter_t *mtr, list_t options) {

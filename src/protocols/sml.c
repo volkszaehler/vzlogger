@@ -39,7 +39,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-/* socket */ 
+/* socket */
 #include <netdb.h>
 #include <sys/socket.h>
 
@@ -48,7 +48,7 @@
 #include <sml/sml_transport.h>
 
 #include "meter.h"
-#include "sml.h"
+#include "protocols/sml.h"
 #include "obis.h"
 #include "options.h"
 

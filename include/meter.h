@@ -43,14 +43,14 @@
 #include "reading.h"
 
 /* meter protocols */
-#include "file.h"
-#include "exec.h"
-#include "random.h"
-#include "s0.h"
-#include "d0.h"
-#include "fluksov2.h"
+#include "protocols/file.h"
+#include "protocols/exec.h"
+#include "protocols/random.h"
+#include "protocols/s0.h"
+#include "protocols/d0.h"
+#include "protocols/fluksov2.h"
 #ifdef SML_SUPPORT
-#include "sml.h"
+#include "protocols/sml.h"
 #endif /* SML_SUPPORT */
 
 typedef enum meter_procotol {

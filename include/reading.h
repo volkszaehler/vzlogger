@@ -26,6 +26,8 @@
 #ifndef _READING_H_
 #define _READING_H_
 
+#include <sys/time.h>
+
 #include "obis.h"
 
 #define MAX_IDENTIFIER_LEN 255
