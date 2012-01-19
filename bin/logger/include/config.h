@@ -86,7 +86,7 @@ int config_validate_uuid(const char *uuid);
  */
 int config_parse(const char *filename, list_t *mappings, config_options_t *options);
 
-struct channel * config_parse_channel(struct json_object *jso);
+struct channel * config_parse_channel(struct json_object *jso, meter_protocol_t protocol);
 struct map * config_parse_meter(struct json_object *jso);
 
 

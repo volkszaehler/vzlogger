@@ -30,14 +30,12 @@
 
 #include "channel.h"
 
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier, int counter) {
+void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier) {
 	static int instances; /* static to generate channel ids */
 	snprintf(ch->id, 5, "ch%i", instances++);
 
 	ch->identifier = identifier;
 	ch->status = status_unknown;
-	ch->counter = counter;
-	ch->last = 0;
 
 	ch->uuid = strdup(uuid);
 	ch->middleware = strdup(middleware);
@@ -57,48 +55,3 @@ void channel_free(channel_t *ch) {
 	free(ch->middleware);
 }
 
-int channel_compare_identifier(meter_protocol_t protocol, reading_id_t a, reading_id_t b) {
-	switch (protocol) {
-		case meter_protocol_d0:
-		case meter_protocol_sml:
-			/* intelligent protocols require matching ids */
-			return obis_compare(a.obis, b.obis);
-
-		case meter_protocol_file:
-		case meter_protocol_exec:
-			return strcmp(a.string, b.string);
-			break;
-		default:
-			/* no channel identifier, adding all readings to buffer */
-			return 0; /* equal */
-	}
-}
-
-reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, reading_t *rds, size_t n) {
-	reading_t *first = NULL; /* first unsent reading which has been added */
-
-	double delta;
-
-	for (int i = 0; i < n; i++) {
-		if (channel_compare_identifier(protocol, rds[i].identifier, ch->identifier) == 0) {
-
-			/* ignoring first reading when no preceeding reading is available (no consumption) */
-			delta = (ch->last == 0) ? 0 : rds[i].value - ch->last;
-			ch->last = rds[i].value;
-
-			print(log_info, "Adding reading to queue (value=%.2f delta=%.2f ts=%.3f)", ch, rds[i].value, delta, tvtod(rds[i].time));
-
-			if (ch->counter) { /* send relative consumption since last reading */
-				rds[i].value = delta;
-			}
-
-			reading_t *added = buffer_push(&ch->buffer, &rds[i]); /* remember last value to calculate relative consumption */
-
-			if (first == NULL) {
-				first = added;
-			} 
-		}
-	}
-
-	return first;
-}

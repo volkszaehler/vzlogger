@@ -36,6 +36,7 @@ typedef struct channel {
 	char id[5];			/* only for internal usage & debugging */
 
 	reading_id_t identifier;	/* channel identifier (OBIS, string) */
+	reading_t last;			/* most recent reading */
 	buffer_t buffer;		/* circular queue to buffer readings */
 
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
@@ -44,15 +45,10 @@ typedef struct channel {
 
 	char *middleware;		/* url to middleware */
 	char *uuid;			/* unique identifier for middleware */
-
-	double last;			/* last counter value */
-	int counter:1;			/* TRUE if we want to send the diffrence between to values */
 } channel_t;
 
 /* prototypes */
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier, int counter);
+void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier);
 void channel_free(channel_t *ch);
-
-reading_t * channel_add_readings(channel_t *ch, meter_protocol_t protocol, reading_t *rds, size_t n);
 
 #endif /* _CHANNEL_H_ */

@@ -93,7 +93,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
 					json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid));
 					json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware));
-					json_object_object_add(json_ch, "last", json_object_new_double(ch->last));
+					json_object_object_add(json_ch, "last", json_object_new_double(ch->last.value));
 					json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter.interval));
 					json_object_object_add(json_ch, "protocol", json_object_new_string(meter_get_details(mapping->meter.protocol)->name));
 

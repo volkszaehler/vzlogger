@@ -56,7 +56,7 @@ void * reading_thread(void *arg) {
 	pthread_cleanup_push(&reading_thread_cleanup, rds);
 
 	do { /* start thread main loop */
-		/* fetch readings from meter and measure interval */
+		/* fetch readings from meter and calculate delta */
 		last = time(NULL);
 		n = meter_read(mtr, rds, details->max_readings);
 		delta = time(NULL) - last;
@@ -64,48 +64,49 @@ void * reading_thread(void *arg) {
 		/* dumping meter output */
 		if (options.verbosity > log_debug) {
 			print(log_debug, "Got %i new readings from meter:", mtr, n);
-			char identifier[255]; // TODO choose correct length
+
+			char identifier[MAX_IDENTIFIER_LEN];
 			for (int i = 0; i < n; i++) {
-				switch (mtr->protocol) {
-					case meter_protocol_d0:
-					case meter_protocol_sml:
-						obis_unparse(rds[i].identifier.obis, identifier, 255);
-						break;
-
-					case meter_protocol_file:
-					case meter_protocol_exec:
-						if (rds[i].identifier.string != NULL) {
-							strncpy(identifier, rds[i].identifier.string, 255);
-							break;
-						}
-
-					default:
-						identifier[0] = '\0';
-				}
-
+				reading_id_unparse(mtr->protocol, rds[i].identifier, identifier, MAX_IDENTIFIER_LEN);
 				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr, identifier, rds[i].value, tvtod(rds[i].time));
 			}
 		}
 
 		/* update buffer length with current interval */
-		if (!details->periodic && mtr->interval != delta) {
+		if (details->periodic == FALSE && delta > 0 && delta != mtr->interval) {
 			print(log_debug, "Updating interval to %i", mtr, delta);
 			mtr->interval = delta;
 		}
 
+		/* insert readings into channel queues */
 		foreach(mapping->channels, ch, channel_t) {
 			buffer_t *buf = &ch->buffer;
-			reading_t *added = channel_add_readings(ch, mtr->protocol, rds, n);
+			reading_t *add = NULL;
 
-			/* update buffer length to interval */
+			for (int i = 0; i < n; i++) {
+				if (reading_id_compare(mtr->protocol, rds[i].identifier, ch->identifier) == 0) {
+					if (tvtod(ch->last.time) < tvtod(rds[i].time)) {
+						ch->last = rds[i];
+					}
+
+					print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch, rds[i].value, tvtod(rds[i].time));
+					reading_t *rd = buffer_push(&ch->buffer, &rds[i]);
+
+					if (add == NULL) {
+						add = rd; /* remember first reading which has been added to the buffer */
+					}
+				}
+			}
+
+			/* update buffer length */
 			if (options.local) {
-				buf->keep = ceil(options.buffer_length / mtr->interval);
+				buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
 			}
 
 			/* queue reading into sending buffer logging thread if
 			   logging is enabled & sent queue is empty */
 			if (options.logging && buf->sent == NULL) {
-				buf->sent = added;
+				buf->sent = add;
 			}
 
 			/* shrink buffer */
