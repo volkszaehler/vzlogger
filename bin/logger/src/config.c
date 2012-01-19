@@ -104,7 +104,7 @@ int config_parse(const char *filename, list_t *mappings, config_options_t *optio
 					options->channel_index = json_object_get_boolean(local_value);
 				}
 				else {
-					print(log_error, "Ignoring invalid field or type (%s=%s (%s))",
+					print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
 						NULL, key, json_object_get_string(local_value), option_type_str[local_type]);
 				}
 			}
@@ -121,7 +121,7 @@ int config_parse(const char *filename, list_t *mappings, config_options_t *optio
 			}
 		}
 		else {
-			print(log_error, "Ignoring invalid field or type (%s=%s (%s))",
+			print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
 				NULL, key, json_object_get_string(value), option_type_str[type]);
 		}
 	}
@@ -153,7 +153,7 @@ map_t * config_parse_meter(struct json_object *jso) {
 			option_t *option = malloc(sizeof(option_t));
 
 			if (option_init(value, key, option) != SUCCESS) {
-				print(log_error, "Ignoring invalid type (%s=%s (%s))",
+				print(log_error, "Ignoring invalid type: %s=%s (%s)",
 					NULL, key, json_object_get_string(value), option_type_str[type]);
 			}
 
@@ -163,10 +163,11 @@ map_t * config_parse_meter(struct json_object *jso) {
 
 	/* init meter */
 	map_t *mapping = malloc(sizeof(map_t));
-
 	list_init(&mapping->channels);
+
 	if (meter_init(&mapping->meter, options) != SUCCESS) {
 		print(log_error, "Failed to initialize meter. Arborting.", mapping);
+		free(mapping);
 		return NULL;
 	}
 
@@ -175,8 +176,13 @@ map_t * config_parse_meter(struct json_object *jso) {
 	/* init channels */
 	struct json_object *json_channel;
 	while ((json_channel = list_pop(&json_channels)) != NULL) {
-		channel_t *ch = config_parse_channel(json_channel);
-		if (ch) list_push(&mapping->channels, ch);
+		channel_t *ch = config_parse_channel(json_channel, mapping->meter.protocol);
+		if (ch == NULL) {
+			free(mapping);
+			return NULL;
+		}
+
+		list_push(&mapping->channels, ch);
 	}
 
 	/* householding */
@@ -185,11 +191,10 @@ map_t * config_parse_meter(struct json_object *jso) {
 	return mapping;
 }
 
-channel_t * config_parse_channel(struct json_object *jso) {
+channel_t * config_parse_channel(struct json_object *jso, meter_protocol_t protocol) {
 	const char *uuid = NULL;
 	const char *middleware = NULL;
-	const char *identifier = NULL;
-	int counter = FALSE;
+	const char *id_str = NULL;
 
 	json_object_object_foreach(jso, key, value) {
 		enum json_type type = json_object_get_type(value);
@@ -201,51 +206,38 @@ channel_t * config_parse_channel(struct json_object *jso) {
 			middleware = json_object_get_string(value);
 		}
 		else if (strcmp(key, "identifier") == 0 && type == json_type_string) {
-			identifier = json_object_get_string(value);
-		}
-		else if (strcmp(key, "counter") == 0 && type == json_type_boolean) {
-			counter = json_object_get_boolean(value);
+			id_str = json_object_get_string(value);
 		}
 		else {
-			print(log_error, "Ignoring invalid field or type (%s=%s (%s))",
+			print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
 				NULL, key, json_object_get_string(value), option_type_str[type]);
 		}
 	}
 
+	/* check uuid and middleware */
 	if (uuid == NULL) {
 		print(log_error, "Missing UUID", NULL);
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 	else if (!config_validate_uuid(uuid)) {
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 	else if (middleware == NULL) {
 		print(log_error, "Missing middleware", NULL);
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 
-	// TODO other identifiers are not supported at the moment
+	/* parse identifier */
 	reading_id_t id;
-
-	if (identifier) {
-		if (obis_parse(identifier, &id.obis) != SUCCESS) {
-			if (obis_lookup_alias(identifier, &id.obis) != SUCCESS) {
-				print(log_error, "Invalid id: %s", NULL, identifier);
-				return NULL;
-			}
-		}
+	if (id_str != NULL && reading_id_parse(protocol, &id, id_str) != SUCCESS) {
+		print(log_error, "Invalid id: %s", NULL, id_str);
+		return NULL; /* error occured */
 	}
-	else {
-		obis_init(&id.obis, NULL);
-	}
-
-	char obis_str[OBIS_STR_LEN];
-	obis_unparse(id.obis, obis_str, 6*3+5+1);
 
 	channel_t *ch = malloc(sizeof(channel_t));
-	channel_init(ch, uuid, middleware, id, counter);
-	print(log_info, "New channel initialized (uuid=...%s middleware=%s id=%s counter=%s)", ch, uuid+30, middleware, obis_str, (counter) ? "yes" : "no");
+	channel_init(ch, uuid, middleware, id);
+	print(log_info, "New channel initialized (uuid=...%s middleware=%s id=%s)", ch, uuid+30, middleware, (id_str) ? id_str : "(none)");
 
 	return ch;
 }
