@@ -24,9 +24,7 @@
  */
 
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h> 
-#include <math.h>
 
 #include "meter.h"
 #include "options.h"
@@ -39,6 +37,7 @@ static const meter_details_t protocols[] = {
 METER_DETAIL(file, 	"Read from file (ex. 1-Wire sensors via OWFS)",		32,	TRUE),
 //METER_DETAIL(exec, 	"Read from program (ex. 1-Wire sensors via digitemp)",	32,	TRUE),
 METER_DETAIL(random,	"Random walk",						1,	TRUE),
+METER_DETAIL(fluksov2,	"Read from onboard SPI of a Flukso v2",			16,	FALSE),
 METER_DETAIL(s0,	"S0 on RS232",						1,	TRUE),
 METER_DETAIL(d0,	"Plaintext protocol (DIN EN 62056-21)",			32,	FALSE),
 #ifdef SML_SUPPORT
@@ -64,14 +63,28 @@ int meter_init(meter_t *mtr, list_t options) {
 	}
 
 	/* interval */
-	mtr->interval = 10;
+	mtr->interval = -1; /* indicates unknown interval */
 	if (options_lookup_int(options, "interval", &mtr->interval) == ERR_INVALID_TYPE) {
 		print(log_error, "Invalid type for interval", mtr);
 		return ERR;
 	}
 
 	const meter_details_t *details = meter_get_details(mtr->protocol);
+	if (details->periodic == TRUE && mtr->interval < 0) {
+		print(log_error, "Interval has to be positive!", mtr);
+	} 
+
 	return details->init_func(mtr, options);
+}
+
+int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
+	for (const meter_details_t *it = meter_get_protocols(); it != NULL; it++) {
+		if (strcmp(it->name, name) == 0) {
+			*protocol = it->id;
+			return SUCCESS;
+		}
+	}
+	return ERR_NOT_FOUND;
 }
 
 int meter_open(meter_t *mtr) {
@@ -93,16 +106,6 @@ const meter_details_t * meter_get_protocols() {
 	return protocols;
 }
 
-int meter_lookup_protocol(const char *name, meter_protocol_t *protocol) {
-	for (const meter_details_t *it = protocols; it != NULL; it++) {
-		if (strcmp(it->name, name) == 0) {
-			*protocol = it->id;
-			return SUCCESS;
-		}
-	}
-	return ERR_NOT_FOUND;
-}
-
 const meter_details_t * meter_get_details(meter_protocol_t protocol) {
 	for (const meter_details_t *it = protocols; it != NULL; it++) {
 		if (it->id == protocol) {
@@ -110,21 +113,5 @@ const meter_details_t * meter_get_details(meter_protocol_t protocol) {
 		}
 	}
 	return NULL;
-}
-
-double tvtod(struct timeval tv) {
-	return tv.tv_sec + tv.tv_usec / 1e6;
-}
-
-struct timeval dtotv(double ts) {
-	double integral;
-	double fraction = modf(ts, &integral);
-
-	struct timeval tv = {
-		.tv_usec = (long int) (fraction * 1e6),
-		.tv_sec = (long int) integral
-	};
-
-	return tv;
 }
 
