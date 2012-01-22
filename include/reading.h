@@ -56,7 +56,7 @@ enum meter_procotol; /* forward declaration */
  *
  * @return result like in strcmp()
  */
-int meter_id_compare(enum meter_procotol, reading_id_t a, reading_id_t b);
+int reading_id_compare(enum meter_procotol prot, reading_id_t a, reading_id_t b);
 
 /**
  * Parse identifier by a given string and protocol
