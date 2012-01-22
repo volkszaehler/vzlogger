@@ -1,3 +1,10 @@
+vzlogger (0.3.3-rc1) stable; urgency=low
+
+  * added support for new fluksometer
+  * some code refactoring & cleanup
+
+ -- Steffen Vogel <info@steffenvogel.de>  Thu, 19 Jan 2012 18:52:32 +0100
+
 vzlogger (0.3.2-1) stable; urgency=low
 
   * new release with improvments to various protocols and configuration parsing
