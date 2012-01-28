@@ -34,14 +34,14 @@
 static const meter_details_t protocols[] = {
 /*	     alias	description						max_rds	periodic
 ===============================================================================================*/
-METER_DETAIL(file, 	"Read from file (ex. 1-Wire sensors via OWFS)",		32,	TRUE),
-//METER_DETAIL(exec, 	"Read from program (ex. 1-Wire sensors via digitemp)",	32,	TRUE),
-METER_DETAIL(random,	"Random walk",						1,	TRUE),
-METER_DETAIL(fluksov2,	"Read from onboard SPI of a Flukso v2",			16,	FALSE),
-METER_DETAIL(s0,	"S0 on RS232",						1,	TRUE),
-METER_DETAIL(d0,	"Plaintext protocol (DIN EN 62056-21)",			32,	FALSE),
+METER_DETAIL(file, 	"Read from file or fifo",				32,	TRUE),
+//METER_DETAIL(exec, 	"Parse program output",					32,	TRUE),
+METER_DETAIL(random,	"Generate random values with a random walk",		1,	TRUE),
+METER_DETAIL(fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	FALSE),
+METER_DETAIL(s0,	"S0-meter directly connected to RS232",			1,	TRUE),
+METER_DETAIL(d0,	"DLMS/IEC 62056-21 plaintext protocol",			32,	FALSE),
 #ifdef SML_SUPPORT
-METER_DETAIL(sml,	"Smart Meter Language",					32,	FALSE),
+METER_DETAIL(sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,	FALSE),
 #endif /* SML_SUPPORT */
 {} /* stop condition for iterator */
 };
