@@ -62,6 +62,13 @@ struct reading;
 int meter_init_sml(struct meter *mtr, list_t options);
 
 /**
+ * Freeing allocated resources during initialization
+ *
+ * @param mtr the meter structure
+ */
+void meter_free_sml(struct meter *mtr);
+
+/**
  * Open connection via serial port or socket to meter
  *
  * @param mtr the meter structure

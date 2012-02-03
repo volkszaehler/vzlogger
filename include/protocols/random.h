@@ -38,6 +38,7 @@ struct reading;
 double ltqnorm(double p);
 
 int meter_init_random(struct meter *mtr, list_t options);
+void meter_free_random(struct meter *mtr);
 int meter_open_random(struct meter *mtr);
 int meter_close_random(struct meter *mtr);
 size_t meter_read_random(struct meter *mtr, struct reading *rds, size_t n);

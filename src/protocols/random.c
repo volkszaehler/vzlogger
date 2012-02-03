@@ -55,6 +55,10 @@ int meter_init_random(meter_t *mtr, list_t options) {
 	return SUCCESS;
 }
 
+void meter_free_random(meter_t *mtr) {
+	//meter_handle_random_t *handle = &mtr->handle.random;
+}
+
 int meter_open_random(meter_t *mtr) {
 	//meter_handle_random_t *handle = &mtr->handle.random;
 

@@ -41,10 +41,16 @@ int meter_init_fluksov2(meter_t *mtr, list_t options) {
 		handle->fifo = strdup(fifo);
 	}
 	else {
-		handle->fifo = "/var/run/spid/delta/out"; /* use default path */
+		handle->fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
 	}
 
 	return SUCCESS;
+}
+
+void meter_free_fluksov2(meter_t *mtr) {
+	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
+
+	free(handle->fifo);
 }
 
 int meter_open_fluksov2(meter_t *mtr) {

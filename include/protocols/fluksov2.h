@@ -26,6 +26,8 @@
 #ifndef _FLUKSOV2_H_
 #define _FLUKSOV2_H_
 
+#define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
+
 typedef struct {
 	char *fifo;
 
@@ -37,6 +39,7 @@ struct meter;
 struct reading;
 
 int meter_init_fluksov2(struct meter *mtr, list_t options);
+void meter_free_fluksov2(struct meter *mtr);
 int meter_open_fluksov2(struct meter *mtr);
 int meter_close_fluksov2(struct meter *mtr);
 size_t meter_read_fluksov2(struct meter *mtr, struct reading *rds, size_t n);

@@ -41,6 +41,7 @@ struct meter;
 struct reading;
 
 int meter_init_s0(struct meter *mtr, list_t options);
+void meter_free_s0(struct meter *mtr);
 int meter_open_s0(struct meter *mtr);
 int meter_close_s0(struct meter *mtr);
 size_t meter_read_s0(struct meter *mtr, struct reading *rds, size_t n);

@@ -62,6 +62,16 @@ int meter_init_exec(meter_t *mtr, list_t options) {
 	return SUCCESS;
 }
 
+void meter_free_exec(meter_t *mtr) {
+	meter_handle_exec_t *handle = &mtr->handle.exec;
+
+	free(handle->command);
+
+	if (handle->format != NULL) {
+		free(handle->format);
+	}
+}
+
 int meter_open_exec(meter_t *mtr) {
 	//meter_handle_exec_t *handle = &mtr->handle.exec;
 

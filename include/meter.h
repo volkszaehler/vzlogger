@@ -91,6 +91,7 @@ typedef struct {
 
 	/* function pointers */
 	int (*init_func)(meter_t *mtr, list_t options);
+	void (*free_func)(meter_t *mtr);
 	int (*open_func)(meter_t *mtr);
 	int (*close_func)(meter_t *mtr);
 	size_t (*read_func)(meter_t *mtr, reading_t *rds, size_t n);

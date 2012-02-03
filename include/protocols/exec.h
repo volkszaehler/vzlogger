@@ -38,6 +38,7 @@ struct meter;
 struct reading;
 
 int meter_init_exec(struct meter *mtr, list_t options);
+void meter_free_exec(struct meter *mtr);
 int meter_open_exec(struct meter *mtr);
 int meter_close_exec(struct meter *mtr);
 size_t meter_read_exec(struct meter *mtr, struct reading *rds, size_t n);

@@ -126,6 +126,16 @@ int meter_init_file(meter_t *mtr, list_t options) {
 	return SUCCESS;
 }
 
+void meter_free_file(meter_t *mtr) {
+	meter_handle_file_t *handle = &mtr->handle.file;
+
+	free(handle->path);
+
+	if (handle->format != NULL) {
+		free(handle->format);
+	}
+}
+
 int meter_open_file(meter_t *mtr) {
 	meter_handle_file_t *handle = &mtr->handle.file;
 

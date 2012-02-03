@@ -104,6 +104,18 @@ int meter_init_sml(meter_t *mtr, list_t options) {
 	return SUCCESS;
 }
 
+void meter_free_sml(meter_t *mtr) {
+	meter_handle_sml_t *handle = &mtr->handle.sml;
+
+	if (handle->device != NULL) {
+		free(handle->device);
+	}
+
+	if (handle->host != NULL) {
+		free(handle->host);
+	}
+}
+
 int meter_open_sml(meter_t *mtr) {
 	meter_handle_sml_t *handle = &mtr->handle.sml;
 

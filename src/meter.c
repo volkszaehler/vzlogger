@@ -29,7 +29,7 @@
 #include "meter.h"
 #include "options.h"
 
-#define METER_DETAIL(NAME, DESC, MAX_RDS, PERIODIC) { meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC, meter_init_##NAME, meter_open_##NAME, meter_close_##NAME, meter_read_##NAME }
+#define METER_DETAIL(NAME, DESC, MAX_RDS, PERIODIC) { meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC, meter_init_##NAME, meter_free_##NAME, meter_open_##NAME, meter_close_##NAME, meter_read_##NAME }
 
 static const meter_details_t protocols[] = {
 /*	     alias	description						max_rds	periodic
@@ -77,14 +77,9 @@ int meter_init(meter_t *mtr, list_t options) {
 	return details->init_func(mtr, options);
 }
 
-int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
-	for (const meter_details_t *it = meter_get_protocols(); it != NULL; it++) {
-		if (strcmp(it->name, name) == 0) {
-			*protocol = it->id;
-			return SUCCESS;
-		}
-	}
-	return ERR_NOT_FOUND;
+void meter_free(meter_t *mtr) {
+	const meter_details_t *details = meter_get_details(mtr->protocol);
+	return details->free_func(mtr);
 }
 
 int meter_open(meter_t *mtr) {
@@ -100,6 +95,16 @@ int meter_close(meter_t *mtr) {
 size_t meter_read(meter_t *mtr, reading_t rds[], size_t n) {
 	const meter_details_t *details = meter_get_details(mtr->protocol);
 	return details->read_func(mtr, rds, n);
+}
+
+int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
+	for (const meter_details_t *it = meter_get_protocols(); it != NULL; it++) {
+		if (strcmp(it->name, name) == 0) {
+			*protocol = it->id;
+			return SUCCESS;
+		}
+	}
+	return ERR_NOT_FOUND;
 }
 
 const meter_details_t * meter_get_protocols() {

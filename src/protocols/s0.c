@@ -59,6 +59,12 @@ int meter_init_s0(meter_t *mtr, list_t options) {
 	return SUCCESS;
 }
 
+void meter_free_s0(meter_t *mtr) {
+	meter_handle_s0_t *handle = &mtr->handle.s0;
+
+	free(handle->device);
+}
+
 int meter_open_s0(meter_t *mtr) {
 	meter_handle_s0_t *handle = &mtr->handle.s0;
 
