@@ -39,7 +39,13 @@ typedef struct {
 	size_t size;
 } CURLresponse;
 
-CURL * api_curl_init(channel_t *ch);
+typedef struct {
+	CURL *curl;
+	struct curl_slist *headers;
+} api_handle_t;
+
+int api_init(channel_t *ch, api_handle_t *api);
+void api_free(api_handle_t *api);
 
 /**
  * Reformat CURLs debugging output

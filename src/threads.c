@@ -129,8 +129,6 @@ void * reading_thread(void *arg) {
 
 				while (dump == NULL || buffer_dump(buf, dump, dump_len) == NULL) {
 					dump_len *= 1.5;
-					print(log_debug, "New dump_len: %i", ch ,dump_len);
-
 					free(dump);
 					dump = malloc(dump_len);
 				}
@@ -153,14 +151,21 @@ void * reading_thread(void *arg) {
 }
 
 void logging_thread_cleanup(void *arg) {
-	curl_easy_cleanup((CURL *) arg); /* always cleanup */
+	api_handle_t *api = (api_handle_t *) arg;
+
+	api_free(api);
 }
 
 void * logging_thread(void *arg) {
 	channel_t *ch = (channel_t *) arg; /* casting argument */
-	CURL *curl = api_curl_init(ch);
-	
-	pthread_cleanup_push(&logging_thread_cleanup, curl);
+	api_handle_t api;
+
+	if (api_init(ch, &api) != SUCCESS) {
+		print(log_error, "CURL: cannot create handle", ch);
+		exit(EXIT_FAILURE);
+	}
+
+	pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
 		CURLresponse response;
@@ -186,12 +191,12 @@ void * logging_thread(void *arg) {
 
 		print(log_debug, "JSON request body: %s", ch, json_str);
 
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_str);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) &response);
+		curl_easy_setopt(api.curl, CURLOPT_POSTFIELDS, json_str);
+		curl_easy_setopt(api.curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
+		curl_easy_setopt(api.curl, CURLOPT_WRITEDATA, (void *) &response);
 
-		curl_code = curl_easy_perform(curl);
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+		curl_code = curl_easy_perform(api.curl);
+		curl_easy_getinfo(api.curl, CURLINFO_RESPONSE_CODE, &http_code);
 
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */

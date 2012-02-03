@@ -107,32 +107,35 @@ json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last) 
 	return json_tuples;
 }
 
-CURL * api_curl_init(channel_t *ch) {
-	CURL *curl;
-	struct curl_slist *header = NULL;
+int api_init(channel_t *ch, api_handle_t *api) {
 	char url[255], agent[255];
 
 	/* prepare header, uuid & url */
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	/* build user agent */
 	sprintf(url, "%s/data/%s.json", ch->middleware, ch->uuid);			/* build url */
 
-	header = curl_slist_append(header, "Content-type: application/json");
-	header = curl_slist_append(header, "Accept: application/json");
-	header = curl_slist_append(header, agent);
+	api->headers = NULL;
+	api->headers = curl_slist_append(api->headers, "Content-type: application/json");
+	api->headers = curl_slist_append(api->headers, "Accept: application/json");
+	api->headers = curl_slist_append(api->headers, agent);
 
-	curl = curl_easy_init();
-	if (!curl) {
-		print(log_error, "CURL: cannot create handle", ch);
-		exit(EXIT_FAILURE);
+	api->curl = curl_easy_init();
+	if (!api->curl) {
+		return EXIT_FAILURE;
 	}
 
-	curl_easy_setopt(curl, CURLOPT_URL, url);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, options.verbosity);
-	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
-	curl_easy_setopt(curl, CURLOPT_DEBUGDATA, (void *) ch);
+	curl_easy_setopt(api->curl, CURLOPT_URL, url);
+	curl_easy_setopt(api->curl, CURLOPT_HTTPHEADER, api->headers);
+	curl_easy_setopt(api->curl, CURLOPT_VERBOSE, options.verbosity);
+	curl_easy_setopt(api->curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
+	curl_easy_setopt(api->curl, CURLOPT_DEBUGDATA, (void *) ch);
 
-	return curl;
+	return EXIT_SUCCESS;
+}
+
+void api_free(api_handle_t *api) {
+	curl_easy_cleanup(api->curl);
+	curl_slist_free_all(api->headers);
 }
 
 void api_parse_exception(CURLresponse response, char *err, size_t n) {
