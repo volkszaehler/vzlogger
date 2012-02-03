@@ -273,6 +273,7 @@ int config_parse_cli(int argc, char * argv[], config_options_t * options) {
 				break;
 
 			case 'c': /* config file */
+				free(options->config);
 				options->config = strdup(optarg);
 				break;
 
@@ -306,8 +307,8 @@ int config_parse_cli(int argc, char * argv[], config_options_t * options) {
  */
 int main(int argc, char *argv[]) {
 	/* default options */
-	options.config = "/etc/vzlogger.conf";
-	options.log = "/var/log/vzlogger.log";
+	options.config = strdup("/etc/vzlogger.conf");
+	options.log = NULL;
 	options.logfd = NULL;
 	options.port = 8080;
 	options.verbosity = 0;
@@ -388,7 +389,7 @@ int main(int argc, char *argv[]) {
 				ch->buffer.keep = ceil(options.buffer_length / (double) mapping->meter.interval);
 			}
 
-			if (ch->status != status_running && options.logging) {
+			if (options.logging) {
 				pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
 				print(log_debug, "Logging thread started", ch);
 			}
@@ -425,6 +426,7 @@ int main(int argc, char *argv[]) {
 		list_free(&mapping->channels);
 
 		meter_close(mtr); /* closing connection */
+		meter_free(mtr);
 	}
 
 #ifdef LOCAL_SUPPORT
@@ -438,8 +440,11 @@ int main(int argc, char *argv[]) {
 	list_free(&mappings);
 	curl_global_cleanup();
 
+	free(options.config);
+
 	/* close logfile */
 	if (options.logfd) {
+		free(options.log);
 		fclose(options.logfd);
 	}
 
