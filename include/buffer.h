@@ -50,7 +50,7 @@ reading_t * buffer_push(buffer_t *buf, reading_t *rd);
 void buffer_free(buffer_t *buf);
 void buffer_clean(buffer_t *buf);
 void buffer_clear(buffer_t *buf);
-char * buffer_dump(buffer_t *buf, char *dump, int len);
+char * buffer_dump(buffer_t *buf, char *dump, size_t len);
 
 
 #endif /* _BUFFER_H_ */

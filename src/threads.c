@@ -120,9 +120,24 @@ void * reading_thread(void *arg) {
 
 			/* debugging */
 			if (options.verbosity >= log_debug) {
-				char dump[1024];
-				buffer_dump(buf, dump, 1024);
-				print(log_debug, "Buffer dump: %s (size=%i, keep=%i)", ch, dump, buf->size, buf->keep);
+				size_t dump_len = 24;
+				char *dump = malloc(dump_len);
+
+				if (dump == NULL) {
+					print(log_error, "cannot allocate buffer", ch);
+				}
+
+				while (dump == NULL || buffer_dump(buf, dump, dump_len) == NULL) {
+					dump_len *= 1.5;
+					print(log_debug, "New dump_len: %i", ch ,dump_len);
+
+					free(dump);
+					dump = malloc(dump_len);
+				}
+
+				print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch, buf->size, buf->keep, dump);
+
+				free(dump);
 			}
 		}
 

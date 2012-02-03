@@ -94,48 +94,48 @@ const char *long_options_descs[] = {
  * @param id could be NULL for general messages
  * @todo integrate into syslog
  */
-void print(int level, const char *format, void *id, ... ) {
-	va_list args;
-
+void print(log_level_t level, const char *format, void *id, ... ) {
 	if (level > options.verbosity) {
 		return; /* skip message if its under the verbosity level */
 	}
 
 	struct timeval now;
 	struct tm * timeinfo;
-	char buffer[1024];
-	char *pos = buffer;
+	char prefix[24];
+	size_t pos = 0;
 
 	gettimeofday(&now, NULL);
 	timeinfo = localtime(&now.tv_sec);
 
-	/* print timestamp to buffer */
-	pos += sprintf(pos, "[");
-	pos += strftime(pos, 16, "%b %d %H:%M:%S", timeinfo);
+	/* format timestamp */
+	pos += strftime(prefix+pos, 18, "[%b %d %H:%M:%S]", timeinfo);
 
-	/* print logging 'section' */
-	pos += (id != NULL) ? sprintf(pos, "][%s]", (char *) id) : sprintf(pos, "]");
-
-	/* fill with whitespaces */
-	while(pos - buffer < 24) {
-		pos += sprintf(pos, " ");
+	/* format section */
+	if (id) {
+		snprintf(prefix+pos, 8, "[%s]", (char *) id);
 	}
 
-	/* print formatstring */
+	va_list args;
 	va_start(args, id);
-	pos += vsprintf(pos, format, args);
+	/* print to stdout/stderr */
+	if (getppid() != 1) { /* running as fork in background? */
+		FILE *stream = (level > 0) ? stdout : stderr;
+
+		fprintf(stream, "%-24s", prefix);
+		vfprintf(stream, format, args);
+		fprintf(stream, "\n");
+	}
 	va_end(args);
 
-	/* print to stdout/stderr */
-	if (getppid() != 1) {
-		fprintf((level > 0) ? stdout : stderr, "%s\n", buffer);
-	}
-
+	va_start(args, id);
 	/* append to logfile */
 	if (options.logfd) {
-		fprintf(options.logfd, "%s\n", buffer);
-			fflush(options.logfd);
+		fprintf(options.logfd, "%-24s", prefix);
+		vfprintf(options.logfd, format, args);
+		fprintf(options.logfd, "\n");
+		fflush(options.logfd);
 	}
+	va_end(args);
 }
 
 /**

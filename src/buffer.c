@@ -97,26 +97,32 @@ void buffer_clean(buffer_t *buf) {
 	pthread_mutex_unlock(&buf->mutex);
 }
 
-char * buffer_dump(buffer_t *buf, char *dump, int len) {
-	strcpy(dump, "|");
+char * buffer_dump(buffer_t *buf, char *dump, size_t len) {
+	size_t pos = 0;
+	dump[pos++] = '{';
 
 	for (reading_t *rd = buf->head; rd != NULL; rd = rd->next) {
-		char tmp[16];
-		sprintf(tmp, "%.2f|", rd->value);
-
-		if (strlen(dump)+strlen(tmp) < len) {
-			if (buf->sent == rd) { /* indicate last sent reading */
-				strcat(dump, "!");
-			}
-
-			strcat(dump, tmp);
+		if (pos < len) {
+			pos += snprintf(dump+pos, len-pos, "%.2f", rd->value);
 		}
-		else {
-			return NULL; /* dump buffer is full! */
+
+		/* indicate last sent reading */
+		if (pos < len && buf->sent == rd) {
+			dump[pos++] = '!';
+		}
+
+		/* add seperator between values */
+		if (pos < len && rd->next != NULL) {
+			dump[pos++] = ',';
 		}
 	}
 
-	return dump;
+	if (pos+1 < len) {
+		dump[pos++] = '}';
+		dump[pos] = '\0'; /* zero terminated string */
+	}
+
+	return (pos < len) ? dump : NULL; /* buffer full? */
 }
 
 void buffer_free(buffer_t *buf) {
