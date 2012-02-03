@@ -35,14 +35,6 @@
 #include "common.h"
 #include "list.h"
 
-/* enumerations */
-typedef enum {
-	status_unknown,
-	status_running,
-	status_terminated,
-	status__cancelled
-} pthread_status_t;
-
 /**
  * Type for mapping channels to meters
  */
@@ -51,7 +43,6 @@ typedef struct map {
 	list_t channels;
 
 	pthread_t thread;
-	pthread_status_t status;
 } map_t;
 
 /* prototypes */

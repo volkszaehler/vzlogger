@@ -35,7 +35,6 @@ void channel_init(channel_t *ch, const char *uuid, const char *middleware, readi
 	snprintf(ch->id, 5, "ch%i", instances++);
 
 	ch->identifier = identifier;
-	ch->status = status_unknown;
 
 	ch->uuid = strdup(uuid);
 	ch->middleware = strdup(middleware);

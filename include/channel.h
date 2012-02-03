@@ -41,7 +41,6 @@ typedef struct channel {
 
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
 	pthread_t thread;		/* pthread for asynchronus logging */
-	pthread_status_t status;	/* status of thread */
 
 	char *middleware;		/* url to middleware */
 	char *uuid;			/* unique identifier for middleware */
