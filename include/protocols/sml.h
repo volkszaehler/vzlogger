@@ -30,97 +30,63 @@
 #ifndef _SML_H_
 #define _SML_H_
 
-#define SML_BUFFER_LEN 8096
-
 #include <sml/sml_file.h>
 #include <sml/sml_value.h>
 
 #include <termios.h>
 
+#include "meter.h"
 #include "obis.h"
 
-typedef struct {
+using namespace std;
+
+class MeterSML : public Meter {
+
+public:
+	MeterSML(map<string, Option> options);
+	virtual ~MeterSML();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	char *host;
 	char *device;
 	speed_t baudrate;
 
 	int fd;	/* file descriptor of port */
 	struct termios old_tio;	/* required to reset port */
-} meter_handle_sml_t;
 
-/* forward declarations */
-struct meter;
-struct reading;
+	const int BUFFER_LEN = 8192;
 
-/**
- * Initialize meter structure with a list of options
- *
- * @param mtr the meter structure
- * @param options a list of options
- * @return 0 on success, <0 on error
- */
-int meter_init_sml(struct meter *mtr, list_t options);
+	/**
+	 * Parses SML list entry and stores it in reading pointed by rd
+	 *
+	 * @param list the list entry
+	 * @param rd the reading to store to
+	 */
+	void parse(sml_list *list, struct reading *rd);
 
-/**
- * Freeing allocated resources during initialization
- *
- * @param mtr the meter structure
- */
-void meter_free_sml(struct meter *mtr);
+	/**
+	 * Open serial port by device
+	 *
+	 * @param device the device path, usually /dev/ttyS*
+	 * @param old_config pointer to termios structure, will be filled with old port configuration
+	 * @param baudrate the baudrate
+	 * @return file descriptor, <0 on error
+	 */
+	int openDevice(const char *device, struct termios *old_config, speed_t baudrate);
 
-/**
- * Open connection via serial port or socket to meter
- *
- * @param mtr the meter structure
- * @return 0 on success, <0 on error
- */
-int meter_open_sml(struct meter *mtr);
+	/**
+	 * Open socket
+	 *
+	 * @param node the hostname or ASCII encoded IP address
+	 * @param the ASCII encoded portnum or service as in /etc/services
+	 * @return file descriptor, <0 on error
+	 */
+	int openSocket(const char *node, const char *service);
+};
 
-/**
- * Reset port/socket and freeing handle
- *
- * @param mtr the meter structure
- */
-int meter_close_sml(struct meter *mtr);
-
-/**
- * Blocking read on meter
- *
- * Most EDL conform meters periodically send data every
- * 3-4 seconds.
- *
- * @param mtr the meter structure
- * @param rds pointer to array of readings with size n
- * @param n size of the rds array
- * @return number of readings stored to rds
- */
-size_t meter_read_sml(struct meter *mtr, struct reading *rds, size_t n);
-
-/**
- * Parses SML list entry and stores it in reading pointed by rd
- *
- * @param list the list entry
- * @param rd the reading to store to
- */
-void meter_sml_parse(sml_list *list, struct reading *rd);
-
-/**
- * Open serial port by device
- *
- * @param device the device path, usually /dev/ttyS*
- * @param old_config pointer to termios structure, will be filled with old port configuration
- * @param baudrate the baudrate
- * @return file descriptor, <0 on error
- */
-int meter_sml_open_device(const char *device, struct termios *old_config, speed_t baudrate);
-
-/**
- * Open socket
- *
- * @param node the hostname or ASCII encoded IP address
- * @param the ASCII encoded portnum or service as in /etc/services
- * @return file descriptor, <0 on error
- */
-int meter_sml_open_socket(const char *node, const char *service);
 
 #endif /* _SML_H_ */

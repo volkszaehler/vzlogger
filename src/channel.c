@@ -30,27 +30,28 @@
 
 #include "channel.h"
 
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier) {
-	static int instances; /* static to generate channel ids */
-	snprintf(ch->id, 5, "ch%i", instances++);
+Channel::instances = 0;
 
-	ch->identifier = identifier;
+Channel::Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdentifier) {
+	id = instances++;
 
-	ch->uuid = strdup(uuid);
-	ch->middleware = strdup(middleware);
+	identifier = pIdentifier;
 
-	buffer_init(&ch->buffer); /* initialize buffer */
-	pthread_cond_init(&ch->condition, NULL); /* initialize thread syncronization helpers */
+	uuid = strdup(pUuid);
+	middleware = strdup(pMiddleware);
+
+	buffer_init(&buffer); /* initialize buffer */
+	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
 }
 
 /**
  * Free all allocated memory recursivly
  */
-void channel_free(channel_t *ch) {
-	buffer_free(&ch->buffer);
-	pthread_cond_destroy(&ch->condition);
+Channel::~Channel() {
+	buffer_free(&buffer);
+	pthread_cond_destroy(&condition);
 
-	free(ch->uuid);
-	free(ch->middleware);
+	free(uuid);
+	free(middleware);
 }
 

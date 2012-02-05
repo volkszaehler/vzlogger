@@ -27,23 +27,27 @@
 #define _VZLOGGER_H_
 
 #include <pthread.h>
-
-#include "../config.h" /* GNU buildsystem config */
+#include <vector>
 
 #include "config.h"
 #include "meter.h"
-#include "common.h"
-#include "list.h"
+#include "channel.h"
+
+using namespace std;
 
 /**
- * Type for mapping channels to meters
+ * Class for mapping channels to meters
  */
-typedef struct map {
-	meter_t meter;
-	list_t channels;
+class Mapping {
+
+public:
+
+protected:
+	Meter meter;
+	vector<Channel> channels;
 
 	pthread_t thread;
-} map_t;
+};
 
 /* prototypes */
 void quit(int sig);

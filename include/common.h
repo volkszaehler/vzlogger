@@ -3,6 +3,8 @@
 
 #include <stdarg.h>
 
+#include "../config.h" /* GNU buildsystem config */
+
 /* enumerations */
 typedef enum {
 	log_error = -1,
@@ -16,14 +18,6 @@ typedef enum {
 typedef unsigned char bool;
 
 /* constants */
-#ifndef TRUE
-# define TRUE 1
-#endif
-
-#ifndef FALSE
-# define FALSE 0
-#endif
-
 #define SUCCESS 0
 #define ERR -1
 #define ERR_NOT_FOUND -2

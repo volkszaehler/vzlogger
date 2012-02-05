@@ -33,32 +33,36 @@
 
 #include <termios.h>
 
-typedef struct {
+#include "meter.h"
+
+using namespace std;
+
+class MeterD0 : public Meter {
+
+public:
+	MeterD0(map<string, Option> options);
+	virtual ~MeterD0();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	char *host;
 	char *device;
 	int baudrate;
 
 	int fd; /* file descriptor of port */
 	struct termios oldtio; /* required to reset port */
-} meter_handle_d0_t;
 
-/* forward declarations */
-struct meter;
-struct reading;
-
-int meter_init_d0(struct meter *mtr, list_t options);
-void meter_free_d0(struct meter *mtr);
-int meter_open_d0(struct meter *mtr);
-int meter_close_d0(struct meter *mtr);
-size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
-
-/**
- * Open socket
- *
- * @param node the hostname or ASCII encoded IP address
- * @param the ASCII encoded portnum or service as in /etc/services
- * @return file descriptor, <0 on error
- */
-int meter_d0_open_socket(const char *node, const char *service);
+	/**
+	 * Open socket
+	 *
+	 * @param node the hostname or ASCII encoded IP address
+	 * @param the ASCII encoded portnum or service as in /etc/services
+	 * @return file descriptor, <0 on error
+	 */
+	int openSocket(const char *node, const char *service)
+};
 
 #endif /* _D0_H_ */

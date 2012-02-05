@@ -28,12 +28,18 @@
 
 #include <pthread.h>
 
-#include "meter.h"
-#include "vzlogger.h"
+#include "reading.h"
 #include "buffer.h"
 
-typedef struct channel {
-	char id[5];			/* only for internal usage & debugging */
+class Channel {
+
+public:
+	Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdentifier);
+	virtual ~Channel();
+
+protected:
+	static int instances;
+	int id;				/* only for internal usage & debugging */
 
 	reading_id_t identifier;	/* channel identifier (OBIS, string) */
 	reading_t last;			/* most recent reading */
@@ -44,10 +50,6 @@ typedef struct channel {
 
 	char *middleware;		/* url to middleware */
 	char *uuid;			/* unique identifier for middleware */
-} channel_t;
-
-/* prototypes */
-void channel_init(channel_t *ch, const char *uuid, const char *middleware, reading_id_t identifier);
-void channel_free(channel_t *ch);
+};
 
 #endif /* _CHANNEL_H_ */

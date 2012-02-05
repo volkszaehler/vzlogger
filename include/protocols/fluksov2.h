@@ -22,26 +22,29 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _FLUKSOV2_H_
 #define _FLUKSOV2_H_
 
-#define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
+#include "meter.h"
 
-typedef struct {
+using namespace std;
+
+class MeterFluksoV2 : public Meter {
+
+public:
+	MeterFluksoV2(map<string, Option> options);
+	virtual ~MeterFluksoV2();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	char *fifo;
-
 	int fd;	/* file descriptor of fifo */
-} meter_handle_fluksov2_t;
 
-/* forward declarations */
-struct meter;
-struct reading;
-
-int meter_init_fluksov2(struct meter *mtr, list_t options);
-void meter_free_fluksov2(struct meter *mtr);
-int meter_open_fluksov2(struct meter *mtr);
-int meter_close_fluksov2(struct meter *mtr);
-size_t meter_read_fluksov2(struct meter *mtr, struct reading *rds, size_t n);
+	const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
+};
 
 #endif /* _FLUKSOV2_H_ */

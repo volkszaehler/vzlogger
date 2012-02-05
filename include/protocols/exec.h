@@ -26,21 +26,23 @@
 #ifndef _EXEC_H_
 #define _EXEC_H_
 
-#include <stdio.h>
+#include "meter.h"
 
-typedef struct {
+using namespace std;
+
+class MeterExec : public Meter {
+
+public:
+	MeterExec(map<string, Option> options);
+	virtual MeterExec();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	char *command;
 	char *format;
-} meter_handle_exec_t;
-
-/* forward declarations */
-struct meter;
-struct reading;
-
-int meter_init_exec(struct meter *mtr, list_t options);
-void meter_free_exec(struct meter *mtr);
-int meter_open_exec(struct meter *mtr);
-int meter_close_exec(struct meter *mtr);
-size_t meter_read_exec(struct meter *mtr, struct reading *rds, size_t n);
+};
 
 #endif /* _EXEC_H_ */

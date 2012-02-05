@@ -41,14 +41,12 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
-#include "meter.h"
 #include "protocols/d0.h"
+
 #include "obis.h"
 #include "options.h"
 
-int meter_init_d0(meter_t *mtr, list_t options) {
-	meter_handle_d0_t *handle = &mtr->handle.d0;
-
+int MeterD0::MeterD0(map<string, Option> options) {
 	/* connection */
 	char *host, *device;
 	if (options_lookup_string(options, "host", &host) == SUCCESS) {
@@ -94,25 +92,19 @@ int meter_init_d0(meter_t *mtr, list_t options) {
 			print(log_error, "Failed to parse the baudrate", mtr);
 			return ERR;
 	}
-
-	return SUCCESS;
 }
 
-void meter_free_d0(meter_t *mtr) {
-	meter_handle_d0_t *handle = &mtr->handle.d0;
-
-	if (handle->device != NULL) {
-		free(handle->device);
+MeterD0::~MeterD0() {
+	if (device != NULL) {
+		free(device);
 	}
 
-	if (handle->host != NULL) {
-		free(handle->host);
+	if (host != NULL) {
+		free(host);
 	}
 }
 
-int meter_open_d0(meter_t *mtr) {
-	meter_handle_d0_t *handle = &mtr->handle.d0;
-
+int MeterD0::open() {
 	if (handle->device != NULL) {
 		print(log_error, "TODO: implement serial interface", mtr);
 		return ERR;
@@ -128,13 +120,11 @@ int meter_open_d0(meter_t *mtr) {
 	return (handle->fd < 0) ? ERR : SUCCESS;
 }
 
-int meter_close_d0(meter_t *mtr) {
-	meter_handle_d0_t *handle = &mtr->handle.d0;
-
+int MeterD0::close() {
 	return close(handle->fd);
 }
 
-size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t max_readings) {
+size_t MeterD0::read(reading_t rds[], size_t max_readings) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
@@ -280,7 +270,7 @@ error:
 	return 0;
 }
 
-int meter_d0_open_socket(const char *node, const char *service) {
+int MeterD0::openSocket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
 	int fd; /* file descriptor */

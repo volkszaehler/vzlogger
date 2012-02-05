@@ -29,12 +29,12 @@
 #include "meter.h"
 #include "options.h"
 
-#define METER_DETAIL(NAME, DESC, MAX_RDS, PERIODIC) { meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC, meter_init_##NAME, meter_free_##NAME, meter_open_##NAME, meter_close_##NAME, meter_read_##NAME }
+#define METER_DETAIL(NAME, DESC, MAX_RDS, PERIODIC) { meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC, meter_init_##NAME }
 
 static const meter_details_t protocols[] = {
 /*	     alias	description						max_rds	periodic
 ===============================================================================================*/
-METER_DETAIL(file, 	"Read from file or fifo",				32,	TRUE),
+METER_DETAIL( 	file, 	"Read from file or fifo",				32,	TRUE),
 //METER_DETAIL(exec, 	"Parse program output",					32,	TRUE),
 METER_DETAIL(random,	"Generate random values with a random walk",		1,	TRUE),
 METER_DETAIL(fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	FALSE),
@@ -46,9 +46,8 @@ METER_DETAIL(sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,
 {} /* stop condition for iterator */
 };
 
-int meter_init(meter_t *mtr, list_t options) {
-	static int instances; /* static to generate unique channel ids */
-	snprintf(mtr->id, 5, "mtr%i", instances++); /* set/increment id */
+Meter::Meter(list_t pOptions) {
+	id = instances++;
 
 	/* protocol */
 	char *protocol_str;
@@ -57,44 +56,26 @@ int meter_init(meter_t *mtr, list_t options) {
 		return ERR;
 	}
 
-	if (meter_lookup_protocol(protocol_str, &mtr->protocol) != SUCCESS) {
+	if (meter_lookup_protocol(protocol_str, &protocol) != SUCCESS) {
 		print(log_error, "Invalid protocol: %s", mtr, protocol_str);
 		return ERR; /* skipping this meter */
 	}
 
 	/* interval */
 	mtr->interval = -1; /* indicates unknown interval */
-	if (options_lookup_int(options, "interval", &mtr->interval) == ERR_INVALID_TYPE) {
+	if (options_lookup_int(options, "interval", &interval) == ERR_INVALID_TYPE) {
 		print(log_error, "Invalid type for interval", mtr);
 		return ERR;
 	}
 
-	const meter_details_t *details = meter_get_details(mtr->protocol);
+	const meter_details_t *details = meter_get_details(protocol);
 	if (details->periodic == TRUE && mtr->interval < 0) {
 		print(log_error, "Interval has to be positive!", mtr);
 	} 
-
-	return details->init_func(mtr, options);
 }
 
-void meter_free(meter_t *mtr) {
-	const meter_details_t *details = meter_get_details(mtr->protocol);
-	return details->free_func(mtr);
-}
+Meter::~Meter() {
 
-int meter_open(meter_t *mtr) {
-	const meter_details_t *details = meter_get_details(mtr->protocol);
-	return details->open_func(mtr);
-}
-
-int meter_close(meter_t *mtr) {
-	const meter_details_t *details = meter_get_details(mtr->protocol);
-	return details->close_func(mtr);
-}
-
-size_t meter_read(meter_t *mtr, reading_t rds[], size_t n) {
-	const meter_details_t *details = meter_get_details(mtr->protocol);
-	return details->read_func(mtr, rds, n);
 }
 
 int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {

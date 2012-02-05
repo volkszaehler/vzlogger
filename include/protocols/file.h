@@ -26,24 +26,26 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 
-#include <stdio.h>
+#include "meter.h"
 
-typedef struct {
+using namespace std;
+
+class MeterFile : public Meter {
+
+public:
+	MeterFile(map<string, Option> options);
+	virtual ~MeterFile();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	char *path;
 	char *format;
 	int rewind;
 
 	FILE *fd;
-} meter_handle_file_t;
-
-/* forward declarations */
-struct meter;
-struct reading;
-
-int meter_init_file(struct meter *mtr, list_t options);
-void meter_free_file(struct meter *mtr);
-int meter_open_file(struct meter *mtr);
-int meter_close_file(struct meter *mtr);
-size_t meter_read_file(struct meter *mtr, struct reading *rds, size_t n);
+};
 
 #endif /* _FILE_H_ */

@@ -26,21 +26,25 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-typedef struct {
+#include "meter.h"
+
+using namespace std;
+
+double ltqnorm(double p); /* forward declaration */
+
+class MeterRandom : public Meter {
+
+public:
+	Random(map<string, Option> options);
+	virtual ~Random();
+
+	int open();
+	int close();
+	int read(reading_t *rds, size_t n);
+
+protected:
 	double min, max;
-
 	double last;
-} meter_handle_random_t;
-
-/* forward declarations */
-struct meter;
-struct reading;
-double ltqnorm(double p);
-
-int meter_init_random(struct meter *mtr, list_t options);
-void meter_free_random(struct meter *mtr);
-int meter_open_random(struct meter *mtr);
-int meter_close_random(struct meter *mtr);
-size_t meter_read_random(struct meter *mtr, struct reading *rds, size_t n);
+};
 
 #endif /* _RANDOM_H_ */
