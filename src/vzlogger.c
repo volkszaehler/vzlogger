@@ -423,9 +423,9 @@ int main(int argc, char *argv[]) {
 			channel_free(ch);
 		}
 
-		list_free(&mapping->channels);
-
 		meter_close(mtr); /* closing connection */
+
+		list_free(&mapping->channels);
 		meter_free(mtr);
 	}
 
@@ -437,10 +437,9 @@ int main(int argc, char *argv[]) {
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
+	free(options.config);
 	list_free(&mappings);
 	curl_global_cleanup();
-
-	free(options.config);
 
 	/* close logfile */
 	if (options.logfd) {
