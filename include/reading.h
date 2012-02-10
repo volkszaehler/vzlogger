@@ -32,31 +32,56 @@
 
 #define MAX_IDENTIFIER_LEN 255
 
-typedef union reading_id {
-	obis_id_t obis;
-	char *string;
-	char *uuid;
-	int channel;
-} reading_id_t;
+/* Identifiers */
+class ReadingIdentifier {
+public:
+	virtual bool operator==(ReadingIdentifier &cmp) = 0;
+};
 
-typedef struct reading {
+class ObisIdentifier : public ReadingIdentifier {
+public:
+	bool operator==(ObisIdentifier &cmp);
+protected:
+	obis_id_t obis;
+};
+
+class StringIdentifier : public ReadingIdentifier {
+public:
+	bool operator==(StringIdentifier &cmp);
+protected:
+	char *string;
+};
+
+class UuidIdentifier : public ReadingIdentifier {
+public:
+	bool operator==(UuidIdentifier &cmp);
+protected:
+	char *uuid;
+};
+
+class ChannelIdentifier : public ReadingIdentifier {
+public:
+	bool operator==(ChannelIdentifier &cmp);
+protected:
+	int channel;
+};
+
+
+class Reading {
+
+public:
+	Reading(double pValue, struct timeval pTime, ReadingIdentifier pIndentifier);
+
+	static double tvtod(struct timeval tv);
+	static struct timeval dtotv(double ts);
+
+protected:
 	double value;
 	struct timeval time;
-	reading_id_t identifier;
-
-	struct reading *next; /* pointer for linked list */
-} reading_t;
-
-/* prototypes */
+	ReadingIdentifier identifier;
+};
 
 enum meter_procotol; /* forward declaration */
-
-/**
- * Parse two reading identifiers in a given protocol context
- *
- * @return result like in strcmp()
- */
-int reading_id_compare(enum meter_procotol prot, reading_id_t a, reading_id_t b);
 
 /**
  * Parse identifier by a given string and protocol
@@ -73,21 +98,5 @@ int reading_id_parse(enum meter_procotol protocol, reading_id_t *id, const char 
  * @return the amount of bytes used in buffer
  */
 size_t reading_id_unparse(enum meter_procotol protocol, reading_id_t identifier, char *buffer, size_t n);
-
-/**
- * Converts timeval structure to double
- *
- * @param tv the timeval structure
- * @return the double value
- */
-double tvtod(struct timeval tv);
-
-/**
- * Converts double to timeval structure
- *
- * @param ts the double value
- * @return the timeval strucure
- */
-struct timeval dtotv(double ts);
 
 #endif /* _READING_H_ */

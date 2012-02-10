@@ -1,5 +1,5 @@
 /**
- * Protocol interface
+ * Meter interface
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,8 +26,6 @@
 #ifndef _METER_H_
 #define _METER_H_
 
-#include <map>
-
 #include "list.h"
 #include "reading.h"
 
@@ -42,13 +40,19 @@ public:
 	virtual int close() = 0;
 	virtual size_t read(reading_t *rds, size_t n);
 
-protected:
-	Meter(map<string, Option> options);
+	int getInterval();
 
-	static int instances
+protected:
+	Meter(OptionList options);
+
+	static int instances;
 	int id;
 
 	int interval;
+
+	List<Channel> channels;
+
+	pthread_t thread;
 };
 
 typedef struct {
@@ -58,8 +62,6 @@ typedef struct {
 	size_t max_readings;	/* how many readings can be read with 1 call */
 	int periodic:1;		/* does this meter has be triggered periodically? */
 } meter_details_t;
-
-/* prototypes */
 
 /**
  * Get list of available meter types

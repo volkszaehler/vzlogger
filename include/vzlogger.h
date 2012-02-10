@@ -35,20 +35,6 @@
 
 using namespace std;
 
-/**
- * Class for mapping channels to meters
- */
-class Mapping {
-
-public:
-
-protected:
-	Meter meter;
-	vector<Channel> channels;
-
-	pthread_t thread;
-};
-
 /* prototypes */
 void quit(int sig);
 void daemonize();

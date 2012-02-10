@@ -26,35 +26,32 @@
 #ifndef _OBIS_H_
 #define _OBIS_H_
 
-#include <string.h>
-
 #define OBIS_STR_LEN (6*3+5+1)
 
 /* regex: A-BB:CC.DD.EE([*&]FF)? */
-typedef union {
+class Obis {
+
+public:
+	Obis(unsigned char *pRaw);
+
+	static Obis getByAlias(const char *alias);
+
+	void parse(const char *str);
+	void unparse(char *buffer, size_t n);
+
+	bool operator==(Obis &cmp);
+
+	bool isManufacturerSpecific() const;
+	bool isNull() const;
+
+protected:
 	unsigned char raw[6];
-	struct {
-		unsigned char media, channel, indicator, mode, quantities;
-		unsigned char storage;	/* not used in Germany */
-	} groups;
-} obis_id_t;
+}
 
 typedef struct {
 	obis_id_t id;
 	char *name;
 	char *desc;
 } obis_alias_t;
-
-/* prototypes */
-obis_id_t * obis_init(obis_id_t *id, unsigned char *raw);
-
-const obis_alias_t * obis_get_aliases();
-int obis_parse(const char *str, obis_id_t *id);
-int obis_lookup_alias(const char *alias, obis_id_t *id);
-int obis_unparse(obis_id_t id, char *buffer, size_t n);
-int obis_compare(obis_id_t a, obis_id_t b);
-
-int obis_is_manufacturer_specific(obis_id_t id);
-int obis_is_null(obis_id_t id);
 
 #endif /* _OBIS_H_ */

@@ -32,26 +32,24 @@
 #include <sys/time.h>
 
 #include "meter.h"
+#include "list.h"
 
-typedef struct {
-	reading_t *tail;
-	reading_t *head;
-	reading_t *sent;
+class Buffer : List<Reading> {
 
-	int size;	/* number of readings currently in the buffer */
-	int keep;	/* number of readings to cache for local interface */
+public:
+	Buffer(size_t keep);
+	virtual ~Buffer();
+
+	shrink(size_t keep = 0);
+	dump(char *dump, size_t len);
+
+protected:
+	ListIterator<Reading> *sent;
+
+	size_t keep;	/* number of readings to cache for local interface */
 
 	pthread_mutex_t mutex;
-} buffer_t;
-
-/* prototypes */
-void buffer_init(buffer_t *buf);
-reading_t * buffer_push(buffer_t *buf, reading_t *rd);
-void buffer_free(buffer_t *buf);
-void buffer_clean(buffer_t *buf);
-void buffer_clear(buffer_t *buf);
-char * buffer_dump(buffer_t *buf, char *dump, size_t len);
-
+};
 
 #endif /* _BUFFER_H_ */
 

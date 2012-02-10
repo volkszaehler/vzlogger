@@ -1,5 +1,5 @@
 /**
- * Generic linked list
+ * Double-linked list
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,91 +26,155 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-#include <stdlib.h>
+/* forward declarations */
+template<class T> class List;
+template<class T> class ListNode;
+template<class T> class ListIterator;
 
-#define CONCAT2(a, b) a ## b
-#define CONCAT(a, b) CONCAT2(a, b)
-#define UNIQUE(prefix) CONCAT(__ ## prefix ## _, __LINE__ )
+template<class T>
+class ListNode {
+	friend class List;
 
-#define foreach(list, value, type) \
-	__list_item_t *UNIQUE(it) = (list).head; \
-	for( \
-		type * (value) = UNIQUE(it)->data; \
-		({ \
-			if (UNIQUE(it)) { \
-				(value) = UNIQUE(it)->data; \
-			} \
-			; UNIQUE(it) != NULL; \
-		}); \
-		UNIQUE(it) = UNIQUE(it)->next \
-	) \
+public:
 
-typedef struct __list_item {
-	void *data;
-	struct __list_item *prev;
-	struct __list_item *next;
-} __list_item_t;
+protected:
+	T data;
+	ListNode<T> *prev;
+	ListNode<T> *next;
+};
 
-typedef struct {
+template<class T>
+class ListIterator {
+	friend class ListNode;
+
+public:
+	bool operator==(ListIterator<T>& i) const {
+		return (cur == i.cur);
+	};
+
+	bool operator!=(ListIterator<T>& i) const {
+		return (cur != i.cur);
+	};
+
+	T& operator*() {
+		if (!list || *this == list->end()) {
+			throw invalid_argument("Iter::operator*()");
+		}
+
+		return cur->data;
+	};
+
+	/* Prefix increment */
+	ListIterator& operator++() {
+		if (!list || *this == list->end()) {
+			throw Exception("Iter::operator++()");
+		}
+
+		cur = cur->next;
+		return *this;
+
+	};
+
+	/* Postfix increment */
+	ListIterator operator++(int) {
+		ListIterator<T> temp = *this;
+		++(*this);
+		return temp;
+	};
+
+	/* Prefix decrement */
+	ListIterator& operator--() {
+		if (!list || *this == list->begin())
+			throw Exception("Iterator:: operator--()");
+
+		cur = cur->pre;
+		return *this;
+	};
+
+	/* Postfix decrement */
+	ListIterator operator--(int) {
+		ListIterator<T> temp = *this;
+		--(*this);
+		return temp;
+	};
+
+private:
+	friend class List<T>;
+	ListNode<T> *cur;
+	List<T> *list;
+
+	ListIterator( List<T> *l,ListNode<T> *n):the_list(l),  cur( n ) {};
+};
+
+template<class T>
+class List {
+
+public:
+	List() : size(0), head(NULL), tail(NULL) { };
+
+	virtual ~List() {
+		while (head != NULL) {
+			ListNode *oldNode = head;
+			head = oldNode->next;
+
+			delete oldNode;
+		}
+	}
+
+	ListIterator<T> push(T data) {
+		ListNode<T> *newNode = new ListNode;
+
+		if (newNode == NULL) {
+			throw Exception("Cannot  allocate memory");
+		}
+
+		newNode->data = data;
+		newNode->prev = list->tail;
+		newNode->next = NULL;
+
+		if (tail == NULL) {
+			head = newNode;
+		}
+		else {
+			tail->next = newNode;
+		}
+
+		tail = newNode;
+		size++;
+
+		return size;
+	};
+
+	T pop() {
+		ListNode *oldNode = list->tail;
+
+		if (oldNode == NULL) { /* list is empty */
+			throw Exception("List is empty");
+		}
+
+		T data = oldNode->data;
+
+		tail = oldNode->prev;
+		size--;
+
+		delete oldNode;
+
+		return data;
+	}
+
+	/* Iterators */
+	ListIterator<T> begin() {
+		return ListIterator<T>(this, head);
+	};
+
+	ListIterator<T> end() {
+		return ListIterator<T>(this, tail);
+	};
+
+protected:
 	size_t size;
-	__list_item_t *head;
-	__list_item_t *tail;
-} list_t;
-
-inline void list_init(list_t *list) {
-	list->size = 0;
-	list->head = list->tail = NULL;
-}
-
-inline size_t list_push(list_t *list, void *data) {
-	__list_item_t *new = malloc(sizeof(__list_item_t));
-
-	if (new == NULL) return -1; /* cannot allocate memory */
-
-	new->data = data;
-	new->prev = list->tail;
-	new->next = NULL;
-
-	if (list->tail == NULL) {
-		list->head = new;
-	}
-	else {
-		list->tail->next = new;
-	}
-
-	list->tail = new;
-	list->size = list->size + 1;
-
-	return list->size;
-}
-
-inline void * list_pop(list_t *list) {
-	__list_item_t *old = list->tail;
-
-	if (old == NULL) {
-		return NULL;
-	}
-
-	void *data = old->data;
-
-	list->tail = old->prev;
-	list->size--;
-
-	free(old);
-
-	return data;
-}
-
-inline void list_free(list_t *list) {
-	while (list->head != NULL) {
-		__list_item_t *old = list->head;
-		list->head = old->next;
-
-		free(old->data);
-		free(old);
-	}
-
-	list_init(list);
+	ListNode *head;
+	ListNode *tail;
 }
 
 #endif /* _LIST_H_ */

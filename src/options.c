@@ -26,10 +26,67 @@
 #include <string.h>
 
 #include "options.h"
-#include "common.h"
 
-int options_lookup(list_t options, char *key, void *value, option_type_t type) {
-	option_t * option = NULL;
+Option::Option(char *pKey, char *pValue) { Option(pKey);
+	value.string = strdup(pValue);
+	type = type_string;
+}
+
+Option::Option(char *pKey, int pValue) { Option(pKey);
+	value.integer = pValue;
+	type = type_int;
+}
+
+Option::Option(char *pKey, double pValue) { Option(pKey);
+	value.floating = pValue;
+	type = type_double;
+}
+
+Option::Option(char *pKey, bool pValue) { Option(pKey);
+	value.boolean = pValue;
+	type = type_boolean;
+}
+
+Option::Option(char *pKey) {
+	key = strdup(pKey);
+}
+
+Option::~Option() {
+	if (key != NULL) {
+		free(key);
+	}
+
+	if (value.string != NULL && type == type_string) {
+		free(value.string);
+	}
+}
+
+Option::operator (char *)() {
+	if (type != type_string) throw Exception("Invalid type");
+
+	return value.string;
+}
+
+Option::operator int() {
+	if (type != type_int) throw Exception("Invalid type");
+
+	return value.integer;
+}
+
+Option::operator double() {
+	if (type != type_double) throw Exception("Invalid type");
+
+	return value.floating;
+}
+
+Option::operator bool() {
+	if (type != type_boolean) throw Exception("Invalid type");
+
+	return value.boolean;
+}
+
+Option& OptionList::lookup(List<Option> options, char *key) {
+	Option &option;
 
 	/* linear search */
 	foreach(options, val, option_t) {
@@ -38,27 +95,10 @@ int options_lookup(list_t options, char *key, void *value, option_type_t type) {
 		}
 	}
 
-	/* checks */
-	if (option == NULL) {
-		return ERR_NOT_FOUND;
+	if (option == options.end()) {
+		throw Exception("Option not found");
 	}
-	else if (option->type == type) {
-		size_t n = 0;
-		switch (option->type) {
-			case option_type_boolean:	n = sizeof(option->value.integer); break; /* boolean is a bitfield: int boolean:1; */
-			case option_type_double:	n = sizeof(option->value.floating); break;
-			case option_type_int:	n = sizeof(option->value.integer); break;
-			case option_type_string:	n = sizeof(option->value.string); break;
-		}
-		memcpy(value, &option->value, n);
-		return SUCCESS;
-	}
-	else {
-		return ERR_INVALID_TYPE;
-	}
+
+	return option;
 }
 
-int options_lookup_boolean(list_t o, char *k, int *v)   { return options_lookup(o, k, v, option_type_boolean); }
-int options_lookup_int(list_t o, char *k, int *v)       { return options_lookup(o, k, v, option_type_int); }
-int options_lookup_string(list_t o, char *k, char **v)  { return options_lookup(o, k, v, option_type_string); }
-int options_lookup_double(list_t o, char *k, double *v) { return options_lookup(o, k, v, option_type_double); }
