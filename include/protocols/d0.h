@@ -61,4 +61,6 @@ size_t meter_read_d0(struct meter *mtr, struct reading *rds, size_t n);
  */
 int meter_d0_open_socket(const char *node, const char *service);
 
+int meter_d0_open_device(const char *device, struct termios *old_tio, speed_t baudrate);
+
 #endif /* _D0_H_ */

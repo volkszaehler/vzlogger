@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 
 /* socket */
 #include <netdb.h>
@@ -114,8 +115,7 @@ int meter_open_d0(meter_t *mtr) {
 	meter_handle_d0_t *handle = &mtr->handle.d0;
 
 	if (handle->device != NULL) {
-		print(log_error, "TODO: implement serial interface", mtr);
-		return ERR;
+		handle->fd = meter_d0_open_device(handle->device, &handle->oldtio, handle->baudrate);
 	}
 	else if (handle->host != NULL) {
 		char *addr = strdup(handle->host);
@@ -301,6 +301,39 @@ int meter_d0_open_socket(const char *node, const char *service) {
 		print(log_error, "connect(%s, %s): %s", NULL, node, service, strerror(errno));
 		return ERR;
 	}
+
+	return fd;
+}
+
+int meter_d0_open_device(const char *device, struct termios *old_tio, speed_t baudrate) {
+	int bits;
+	struct termios tio;
+	memset(&tio, 0, sizeof(struct termios));
+
+	int fd = open(device, O_RDWR);
+	if (fd < 0) {
+		  print(log_error, "open(%s): %s", NULL, device, strerror(errno));
+		  return ERR;
+	}
+
+	/* get old configuration */
+	tcgetattr(fd, &tio) ;
+
+	/* backup old configuration to restore it when closing the meter connection */
+	memcpy(old_tio, &tio, sizeof(struct termios));
+
+	/*  set 7-N-1 */
+	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL);
+	tio.c_oflag &= ~(OPOST | ONLCR);
+	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
+	tio.c_cflag |= (CS7 | PARENB);
+
+	/* set baudrate */
+	cfsetispeed(&tio, baudrate);
+	cfsetospeed(&tio, baudrate);
+
+	/* apply new configuration */
+	tcsetattr(fd, TCSANOW, &tio);
 
 	return fd;
 }
