@@ -306,7 +306,6 @@ int meter_d0_open_socket(const char *node, const char *service) {
 }
 
 int meter_d0_open_device(const char *device, struct termios *old_tio, speed_t baudrate) {
-	int bits;
 	struct termios tio;
 	memset(&tio, 0, sizeof(struct termios));
 
