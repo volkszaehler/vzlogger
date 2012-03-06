@@ -24,69 +24,84 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "options.h"
+#include <VZException.hpp>
 
-Option::Option(char *pKey, char *pValue) { Option(pKey);
+
+Option::Option(const char *pKey) {
+	_key = strdup(pKey);
+}
+
+Option::Option(char *pKey, char *pValue) {
+  _key = strdup(pKey);
 	value.string = strdup(pValue);
 	type = type_string;
 }
 
-Option::Option(char *pKey, int pValue) { Option(pKey);
+Option::Option(char *pKey, int pValue) {
+  _key = strdup(pKey);
 	value.integer = pValue;
 	type = type_int;
 }
 
-Option::Option(char *pKey, double pValue) { Option(pKey);
+Option::Option(char *pKey, double pValue) {
+  _key = strdup(pKey);
 	value.floating = pValue;
 	type = type_double;
 }
 
-Option::Option(char *pKey, bool pValue) { Option(pKey);
+Option::Option(char *pKey, bool pValue) {
+  _key = strdup(pKey);
 	value.boolean = pValue;
 	type = type_boolean;
 }
 
-Option::Option(char *pKey) {
-	key = strdup(pKey);
-}
-
 Option::~Option() {
-	if (key != NULL) {
-		free(key);
+	if (_key != NULL) {
+		free(_key);
 	}
 
 	if (value.string != NULL && type == type_string) {
-		free(value.string);
+		free((void*)(value.string));
 	}
 }
 
-Option::operator (char *)() {
-	if (type != type_string) throw Exception("Invalid type");
+Option::operator const char *() {
+	if (type != type_string) throw vz::InvalidTypeException("not a string");
 
 	return value.string;
 }
 
 Option::operator int() {
-	if (type != type_int) throw Exception("Invalid type");
+	if (type != type_int) throw vz::InvalidTypeException("Invalid type");
 
 	return value.integer;
 }
 
 Option::operator double() {
-	if (type != type_double) throw Exception("Invalid type");
+	if (type != type_double) throw vz::InvalidTypeException("Invalid type");
 
 	return value.floating;
 }
 
 Option::operator bool() {
-	if (type != type_boolean) throw Exception("Invalid type");
+	if (type != type_boolean) throw vz::InvalidTypeException("Invalid type");
 
 	return value.boolean;
 }
 
-Option& OptionList::lookup(List<Option> options, char *key) {
-	Option &option;
+//Option& OptionList::lookup(List<Option> options, char *key) {
+const Option &OptionList::lookup(std::list<Option> options, char *key) {
+  for(const_iterator it = options.begin(); it != options.end(); it++) {
+		if (strcmp(it->key(), key) == 0) {
+			return (*it);
+		}
+  }
+
+#if 0  
+	//Option &option;
 
 	/* linear search */
 	foreach(options, val, option_t) {
@@ -100,5 +115,7 @@ Option& OptionList::lookup(List<Option> options, char *key) {
 	}
 
 	return option;
+#endif
+  throw vz::VZException("Option not found");
 }
 

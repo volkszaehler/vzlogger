@@ -1,11 +1,22 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
-#include "list.h"
+#include <list>
+
+//#include "list.h"
 
 class Option {
 
 public:
+	/* subset of json_type's */
+	enum {
+		type_boolean = 1,
+		type_double,
+		type_int,
+		type_string = 6
+	} type;
+
+  //Option(const vz::Option &v);
 	Option(char *key, char *value);
 	Option(char *key, int value);
 	Option(char *key, double value);
@@ -13,15 +24,16 @@ public:
 
 	virtual ~Option();
 
-	operator (char *)();
+  const char *key() const { return _key; }
+	operator const char *();
 	operator int();
 	operator double();
 	operator bool();
 
 protected:
-	Option(char *key);
+	Option(const char *key);
 
-	char *key;
+	char *_key;
 
 	union {
 		const char *string;
@@ -30,23 +42,21 @@ protected:
 		int boolean:1;
 	} value;
 
-	/* subset of json_type's */
-	enum {
-		type_boolean = 1,
-		type_double,
-		type_int,
-		type_string = 6
-	} type;
-}
+};
 
-class OptionList : public List<Option> {
 
+class OptionList { //: public List<Option> {
+  
 public:
-	Option& lookup(char *key);
+  typedef std::list<Option>::iterator iterator;
+  typedef std::list<Option>::const_iterator const_iterator;
+
+  const Option& lookup(std::list<Option> options, char *key);
 	void parse();
 
 protected:
 
-}
+};
+
 
 #endif /* _OPTIONS_H_ */
