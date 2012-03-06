@@ -26,32 +26,51 @@
 #ifndef _OBIS_H_
 #define _OBIS_H_
 
-#define OBIS_STR_LEN (6*3+5+1)
+#include <string>
+
+//#define OBIS_STR_LEN (6*3+5+1)
 
 /* regex: A-BB:CC.DD.EE([*&]FF)? */
 class Obis {
-
-public:
+  public:
+	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
 	Obis(unsigned char *pRaw);
+	Obis();
 
-	static Obis getByAlias(const char *alias);
+	//static Obis getByAlias(const char *alias);
 
-	void parse(const char *str);
-	void unparse(char *buffer, size_t n);
+	int parse(const char *str);
+	int unparse(char *buffer, size_t n);
 
-	bool operator==(Obis &cmp);
+	const bool operator==(const Obis &rhs);
 
-	bool isManufacturerSpecific() const;
-	bool isNull() const;
+	const bool isManufacturerSpecific() const;
+  const bool isNull() const;
 
-protected:
-	unsigned char raw[6];
-}
+  protected:
+	unsigned char _raw[6];
+	struct {
+		unsigned char media, channel, indicator, mode, quantities;
+		unsigned char storage;	/* not used in Germany */
+	} groups;
+};
+
+/*
+class Obis_Alias {
+public:
+  Obis_Alias(){}
+
+private:
+	//Obis _id;
+	char *_name;
+	char *_desc;
+};
+*/
 
 typedef struct {
-	obis_id_t id;
-	char *name;
-	char *desc;
+	Obis id;
+	const char *name;
+	const char *desc;
 } obis_alias_t;
 
 #endif /* _OBIS_H_ */
