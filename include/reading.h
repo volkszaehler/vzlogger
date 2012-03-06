@@ -27,61 +27,101 @@
 #define _READING_H_
 
 #include <sys/time.h>
+#include <string.h>
 
 #include "obis.h"
+#include <shared_ptr.hpp>
+#include <meter_protocol.hpp>
 
 #define MAX_IDENTIFIER_LEN 255
 
 /* Identifiers */
 class ReadingIdentifier {
 public:
-	virtual bool operator==(ReadingIdentifier &cmp) = 0;
+	typedef vz::shared_ptr<ReadingIdentifier> Ptr;
+
+	virtual size_t unparse(char *buffer, size_t n) = 0;
+  int operator==( ReadingIdentifier &cmp);
+    int compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
+
+  protected:
+  explicit ReadingIdentifier() {};
+
+  private:
+  ReadingIdentifier (const ReadingIdentifier& original);
+  ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
 };
 
 class ObisIdentifier : public ReadingIdentifier {
-public:
-	bool operator==(ObisIdentifier &cmp);
-protected:
-	obis_id_t obis;
+
+  public:
+	typedef vz::shared_ptr<ObisIdentifier> Ptr;
+
+  ObisIdentifier(Obis obis) : _obis(obis) {}
+    size_t unparse(char *buffer, size_t n);
+    int operator==(ObisIdentifier &cmp);
+    
+    const Obis &obis() const { return _obis; }
+    
+  private:
+  ObisIdentifier (const ObisIdentifier& original);
+  ObisIdentifier& operator= (const ObisIdentifier& rhs);
+
+  protected:
+	Obis _obis;
 };
 
 class StringIdentifier : public ReadingIdentifier {
 public:
-	bool operator==(StringIdentifier &cmp);
+	StringIdentifier(std::string s) : _string(s) {}
+    size_t unparse(char *buffer, size_t n);
+    bool operator==(StringIdentifier &cmp);
 protected:
-	char *string;
+	std::string _string;
 };
 
 class UuidIdentifier : public ReadingIdentifier {
 public:
+  size_t unparse(char *buffer, size_t n);
 	bool operator==(UuidIdentifier &cmp);
 protected:
-	char *uuid;
+	std::string _uuid;
 };
 
 class ChannelIdentifier : public ReadingIdentifier {
 public:
-	bool operator==(ChannelIdentifier &cmp);
+	ChannelIdentifier(int channel) : _channel(channel) {}
+    size_t unparse(char *buffer, size_t n);
+    bool operator==(ChannelIdentifier &cmp);
 protected:
-	int channel;
+	int _channel;
 };
 
 
 class Reading {
 
 public:
-	Reading(double pValue, struct timeval pTime, ReadingIdentifier pIndentifier);
+	Reading(ReadingIdentifier::Ptr pIndentifier);
+	Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier);
 
-	static double tvtod(struct timeval tv);
-	static struct timeval dtotv(double ts);
+  // copy-operator!
+  double tvtod(struct timeval tv);
+  struct timeval dtotv(double ts);
 
-protected:
-	double value;
+  const double value() const { return _value; }
+  
+  /**
+   * Print identifier to buffer for debugging/dump
+   *
+   * @return the amount of bytes used in buffer
+   */
+  size_t unparse(meter_protocol_t protocol, char *buffer, size_t n);
+
+  protected:
+	double _value;
 	struct timeval time;
-	ReadingIdentifier identifier;
+	ReadingIdentifier::Ptr identifier;
 };
-
-enum meter_procotol; /* forward declaration */
 
 /**
  * Parse identifier by a given string and protocol
@@ -90,13 +130,7 @@ enum meter_procotol; /* forward declaration */
  * @param string the string-encoded identifier
  * @return 0 on success, < 0 on error
  */
-int reading_id_parse(enum meter_procotol protocol, reading_id_t *id, const char *string);
+int reading_id_parse(meter_protocol_t protocol, ReadingIdentifier *id, const char *string);
 
-/**
- * Print identifier to buffer for debugging/dump
- *
- * @return the amount of bytes used in buffer
- */
-size_t reading_id_unparse(enum meter_procotol protocol, reading_id_t identifier, char *buffer, size_t n);
 
 #endif /* _READING_H_ */

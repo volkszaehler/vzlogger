@@ -40,7 +40,7 @@ class Obis {
 	//static Obis getByAlias(const char *alias);
 
 	int parse(const char *str);
-	int unparse(char *buffer, size_t n);
+	size_t unparse(char *buffer, size_t n);
 
 	const bool operator==(const Obis &rhs);
 
