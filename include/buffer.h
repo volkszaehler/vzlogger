@@ -30,25 +30,33 @@
 
 #include <pthread.h>
 #include <sys/time.h>
+#include <list>
 
-#include "meter.h"
-#include "list.h"
+#include <reading.h>
 
-class Buffer : List<Reading> {
+class Buffer { //: List<Reading> {
 
 public:
+    typedef vz::shared_ptr<Buffer> Ptr;
+    typedef std::list<Reading>::iterator iterator;
+    typedef std::list<Reading>::const_iterator const_iterator;
+
+    Buffer();
 	Buffer(size_t keep);
 	virtual ~Buffer();
 
-	shrink(size_t keep = 0);
-	dump(char *dump, size_t len);
+  void push(const Reading &rd);
+  void clean();
+	void shrink(size_t keep = 0);
+	char *dump(char *dump, size_t len);
 
-protected:
-	ListIterator<Reading> *sent;
+  private:
+  std::list<Reading> _sent;
+  
+	size_t _keep;	/* number of readings to cache for local interface */
 
-	size_t keep;	/* number of readings to cache for local interface */
-
-	pthread_mutex_t mutex;
+  private:
+	pthread_mutex_t _mutex;
 };
 
 #endif /* _BUFFER_H_ */

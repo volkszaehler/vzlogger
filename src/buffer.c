@@ -31,19 +31,24 @@
 
 #include "buffer.h"
 
-void buffer_init(buffer_t *buf) {
-	pthread_mutex_init(&buf->mutex, NULL);
+Buffer::Buffer() {
+	pthread_mutex_init(&_mutex, NULL);
 
-	pthread_mutex_lock(&buf->mutex);
-	buf->head = NULL;
-	buf->tail = NULL;
-	buf->sent = NULL;
-	buf->size = 0;
-	buf->keep = 0;
-	pthread_mutex_unlock(&buf->mutex);
+	pthread_mutex_lock(&_mutex);
+	//buf->head = NULL;
+	//buf->tail = NULL;
+	//buf->sent = NULL;
+	//buf->size = 0;
+	_keep = 0;
+	pthread_mutex_unlock(&_mutex);
 }
 
-reading_t * buffer_push(buffer_t *buf, reading_t *rd) {
+void Buffer::push(const Reading &rd) {
+		pthread_mutex_lock(&_mutex);
+	  _sent.push_back(rd);
+		pthread_mutex_unlock(&_mutex);
+	  
+#if 0
 	reading_t *new;
 
 	/* allocate memory for new reading */
@@ -82,10 +87,14 @@ reading_t * buffer_push(buffer_t *buf, reading_t *rd) {
 	pthread_mutex_unlock(&buf->mutex);
 
 	return new;
+#endif
 }
 
-void buffer_clean(buffer_t *buf) {
-	pthread_mutex_lock(&buf->mutex);
+void Buffer::clean() {
+
+	pthread_mutex_lock(&_mutex);
+  _sent.clear();
+#if 0
 	while(buf->size > buf->keep && buf->head != buf->sent) {
 		reading_t *pop = buf->head;
 
@@ -94,25 +103,27 @@ void buffer_clean(buffer_t *buf) {
 
 		free(pop);
 	}
-	pthread_mutex_unlock(&buf->mutex);
+#endif
+	pthread_mutex_unlock(&_mutex);
 }
 
-char * buffer_dump(buffer_t *buf, char *dump, size_t len) {
+char * Buffer::dump(char *dump, size_t len) {
 	size_t pos = 0;
 	dump[pos++] = '{';
 
-	for (reading_t *rd = buf->head; rd != NULL; rd = rd->next) {
-		if (pos < len) {
-			pos += snprintf(dump+pos, len-pos, "%.2f", rd->value);
+	//for (Reading *rd = buf->head; rd != NULL; rd = rd->next) {
+  for(const_iterator it = _sent.begin(); it!= _sent.end(); it++) {
+    if (pos < len) {
+			pos += snprintf(dump+pos, len-pos, "%.2f", it->value());
 		}
 
 		/* indicate last sent reading */
-		if (pos < len && buf->sent == rd) {
+		if (pos < len && _sent.end() == it) {
 			dump[pos++] = '!';
 		}
 
 		/* add seperator between values */
-		if (pos < len && rd->next != NULL) {
+		if (pos < len && it != _sent.end()) {
 			dump[pos++] = ',';
 		}
 	}
@@ -125,9 +136,10 @@ char * buffer_dump(buffer_t *buf, char *dump, size_t len) {
 	return (pos < len) ? dump : NULL; /* buffer full? */
 }
 
-void buffer_free(buffer_t *buf) {
-	pthread_mutex_destroy(&buf->mutex);
+Buffer::~Buffer() {
+	pthread_mutex_destroy(&_mutex);
 
+#if 0
 	reading_t *rd = buf->head;
 	if (rd)	do {
 		reading_t *tmp = rd;
@@ -135,9 +147,10 @@ void buffer_free(buffer_t *buf) {
 		free(tmp);
 	} while (rd);
 
-	buf->head = NULL;
-	buf->tail = NULL;
+	//buf->head = NULL;
+	//buf->tail = NULL;
 	buf->sent = NULL;
-	buf->size = 0;
-	buf->keep = 0;
+#endif
+	//buf->size = 0;
+	_keep = 0;
 }
