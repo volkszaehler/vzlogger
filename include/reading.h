@@ -26,6 +26,8 @@
 #ifndef _READING_H_
 #define _READING_H_
 
+#include <string>
+
 #include <sys/time.h>
 #include <string.h>
 

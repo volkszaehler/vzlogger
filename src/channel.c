@@ -30,9 +30,15 @@
 
 #include "channel.h"
 
-Channel::instances = 0;
+int Channel::instances = 0;
 
-Channel::Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdentifier) {
+Channel::Channel(
+  const char *pUuid,
+  const char *pMiddleware,
+  ReadingIdentifier::Ptr pIdentifier
+  )
+    : last(pIdentifier)
+{
 	id = instances++;
 
 	identifier = pIdentifier;
@@ -40,7 +46,7 @@ Channel::Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdent
 	uuid = strdup(pUuid);
 	middleware = strdup(pMiddleware);
 
-	buffer_init(&buffer); /* initialize buffer */
+	//buffer_init(&buffer); /* initialize buffer */
 	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
 }
 
@@ -48,7 +54,7 @@ Channel::Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdent
  * Free all allocated memory recursivly
  */
 Channel::~Channel() {
-	buffer_free(&buffer);
+	//buffer_free(&buffer);
 	pthread_cond_destroy(&condition);
 
 	free(uuid);
