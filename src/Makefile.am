@@ -1,4 +1,5 @@
-AM_CFLAGS = -Wall -D_REENTRANT -std=gnu99 $(DEPS_VZ_CFLAGS)
+AM_CFLAGS = -Wall -D_REENTRANT  $(DEPS_VZ_CFLAGS) -std=gnu++0x
+
 AM_CPPFLAGS = -I $(top_srcdir)/include
 AM_LDFLAGS =
 
