@@ -1,5 +1,5 @@
 /**
- * Circular buffer (double linked, threadsafe)
+ * Exceptions
  *
  * Used to store recent readings and buffer in case of net inconnectivity
  *
@@ -25,31 +25,10 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _BUFFER_H_
-#define _BUFFER_H_
+#include <cstdio>
 
-#include <pthread.h>
-#include <sys/time.h>
+#include "exception.h"
 
-#include "reading.h"
-#include "list.h"
-
-class Buffer : public List<Reading> {
-
-public:
-	Buffer();
-	virtual ~Buffer();
-
-	Iterator push(Reading data);
-	Reading pop();
-
-	void shrink(size_t keep);
-	char * dump(char *dump, size_t len);
-
-protected:
-	Iterator sent;
-	pthread_mutex_t mutex;
-};
-
-#endif /* _BUFFER_H_ */
-
+Exception::Exception(const char *msg) {
+	printf("Exception: %s", msg);
+}

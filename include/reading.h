@@ -28,75 +28,50 @@
 
 #include <sys/time.h>
 
-#include "obis.h"
-
 #define MAX_IDENTIFIER_LEN 255
 
 /* Identifiers */
 class ReadingIdentifier {
+
 public:
 	virtual bool operator==(ReadingIdentifier &cmp) = 0;
-};
-
-class ObisIdentifier : public ReadingIdentifier {
-public:
-	bool operator==(ObisIdentifier &cmp);
-protected:
-	obis_id_t obis;
+	virtual void parse(const char *string) = 0;
+	virtual size_t unparse(char *buffer, size_t n) = 0;
 };
 
 class StringIdentifier : public ReadingIdentifier {
+
 public:
-	bool operator==(StringIdentifier &cmp);
+	bool operator==(ReadingIdentifier &cmp);
+	void parse(const char *string);
+	size_t unparse(char *buffer, size_t n);
+
+	~StringIdentifier();
+
 protected:
 	char *string;
 };
 
-class UuidIdentifier : public ReadingIdentifier {
-public:
-	bool operator==(UuidIdentifier &cmp);
-protected:
-	char *uuid;
-};
-
 class ChannelIdentifier : public ReadingIdentifier {
+
 public:
-	bool operator==(ChannelIdentifier &cmp);
+	bool operator==(ReadingIdentifier &cmp);
+	void parse(const char *string);
+	size_t unparse(char *buffer, size_t n);
+
 protected:
 	int channel;
 };
 
-
 class Reading {
 
 public:
-	Reading(double pValue, struct timeval pTime, ReadingIdentifier pIndentifier);
-
 	static double tvtod(struct timeval tv);
 	static struct timeval dtotv(double ts);
 
-protected:
 	double value;
 	struct timeval time;
-	ReadingIdentifier identifier;
+	ReadingIdentifier *identifier;
 };
-
-enum meter_procotol; /* forward declaration */
-
-/**
- * Parse identifier by a given string and protocol
- *
- * @param protocol the given protocol context in which the string should be parsed
- * @param string the string-encoded identifier
- * @return 0 on success, < 0 on error
- */
-int reading_id_parse(enum meter_procotol protocol, reading_id_t *id, const char *string);
-
-/**
- * Print identifier to buffer for debugging/dump
- *
- * @return the amount of bytes used in buffer
- */
-size_t reading_id_unparse(enum meter_procotol protocol, reading_id_t identifier, char *buffer, size_t n);
 
 #endif /* _READING_H_ */

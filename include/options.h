@@ -13,7 +13,7 @@ public:
 
 	virtual ~Option();
 
-	operator (char *)();
+	operator char *();
 	operator int();
 	operator double();
 	operator bool();
@@ -37,7 +37,7 @@ protected:
 		type_int,
 		type_string = 6
 	} type;
-}
+};
 
 class OptionList : public List<Option> {
 
@@ -47,6 +47,6 @@ public:
 
 protected:
 
-}
+};
 
 #endif /* _OPTIONS_H_ */

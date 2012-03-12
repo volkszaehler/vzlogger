@@ -26,32 +26,44 @@
 #ifndef _OBIS_H_
 #define _OBIS_H_
 
+#include "reading.h"
+
 #define OBIS_STR_LEN (6*3+5+1)
 
-/* regex: A-BB:CC.DD.EE([*&]FF)? */
 class Obis {
 
 public:
-	Obis(unsigned char *pRaw);
+	Obis(unsigned char *pRaw = NULL);
 
-	static Obis getByAlias(const char *alias);
+	static Obis lookup(const char *alias);
 
+	/* regex: A-BB:CC.DD.EE([*&]FF)? */
 	void parse(const char *str);
-	void unparse(char *buffer, size_t n);
+	void unparse(char *buffer, size_t n) const;
 
-	bool operator==(Obis &cmp);
+	bool operator==(Obis const &cmp) const;
 
 	bool isManufacturerSpecific() const;
 	bool isNull() const;
 
 protected:
 	unsigned char raw[6];
-}
 
-typedef struct {
-	obis_id_t id;
-	char *name;
-	char *desc;
-} obis_alias_t;
+	typedef struct {
+		unsigned char raw[6];
+		char *name;
+		char *desc;
+	} ObisAlias;
+
+	static ObisAlias aliases[];
+};
+
+class ObisIdentifier : public ReadingIdentifier, public Obis {
+
+public:
+	bool operator==(ObisIdentifier &cmp);
+	void parse(const char *string);
+	size_t unparse(char *buffer, size_t n);
+};
 
 #endif /* _OBIS_H_ */

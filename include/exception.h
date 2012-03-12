@@ -1,12 +1,10 @@
 /**
- * Circular buffer (double linked, threadsafe)
+ * Exceptions
  *
- * Used to store recent readings and buffer in case of net inconnectivity
- *
- * @author Steffen Vogel <info@steffenvogel.de>
- * @copyright Copyright (c) 2011, The volkszaehler.org project
  * @package vzlogger
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
+ * @author Steffen Vogel <info@steffenvogel.de>
  */
 /*
  * This file is part of volkzaehler.org
@@ -24,32 +22,15 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _EXCEPTION_H_
+#define _EXCEPTION_H_
 
-#ifndef _BUFFER_H_
-#define _BUFFER_H_
-
-#include <pthread.h>
-#include <sys/time.h>
-
-#include "reading.h"
-#include "list.h"
-
-class Buffer : public List<Reading> {
+class Exception {
 
 public:
-	Buffer();
-	virtual ~Buffer();
+	Exception(const char * msg);
 
-	Iterator push(Reading data);
-	Reading pop();
-
-	void shrink(size_t keep);
-	char * dump(char *dump, size_t len);
-
-protected:
-	Iterator sent;
-	pthread_mutex_t mutex;
 };
 
-#endif /* _BUFFER_H_ */
-
+#endif /* _EXCEPTION_H_ */

@@ -33,7 +33,7 @@
 
 #define DC 0xff // wildcard, dont care
 
-static const obis_alias_t aliases[] = {
+const Obis::aliases[] = {
 /*   A    B    C    D    E    F    alias		description
 ====================================================================*/
 
@@ -91,19 +91,17 @@ const obis_alias_t * obis_get_aliases() {
 	return aliases;
 }
 
-obis_id_t * obis_init(obis_id_t *id, unsigned char *raw) {
-	if (raw == NULL) {
+Obis(unsigned char *pRaw) {
+	if (pRaw == NULL) {
 		// TODO why not initialize with DC fields to accept all readings?
-		memset(id->raw, 0, 6); /* initialize with zeros */
+		memset(raw, 0, 6); /* initialize with zeros */
 	}
 	else {
-		memcpy(id->raw, raw, 6);
+		memcpy(raw, pRaw, 6);
 	}
-
-	return id;
 }
 
-int obis_parse(const char *str, obis_id_t *id) {
+int Obis::parse(const char *str) {
 	enum { A = 0, B, C, D, E, F };
 
 	char byte; 	/* currently processed byte */
@@ -153,7 +151,7 @@ int obis_parse(const char *str, obis_id_t *id) {
 	return (field < D) ? ERR : SUCCESS;
 }
 
-int obis_lookup_alias(const char *alias, obis_id_t *id) {
+static Obis Obis::lookupAlias(const char *alias) {
 	for (const obis_alias_t *it = aliases; it != NULL; it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*id = it->id;
@@ -163,7 +161,7 @@ int obis_lookup_alias(const char *alias, obis_id_t *id) {
 	return ERR_NOT_FOUND;
 }
 
-int obis_unparse(obis_id_t id, char *buffer, size_t n) {
+size_t Obis::unparse(char *buffer, size_t n) {
 	return snprintf(buffer, n, "%i-%i:%i.%i.%i*%i",
 		id.groups.media,
 		id.groups.channel,
@@ -174,7 +172,7 @@ int obis_unparse(obis_id_t id, char *buffer, size_t n) {
 	);
 }
 
-int obis_compare(obis_id_t a, obis_id_t b) {
+bool Obis::operator==(Obis &cmp) {
 	for (int i = 0; i < 6; i++) {
 		if (a.raw[i] == b.raw[i] || a.raw[i] == 0xff || b.raw[i] == 0xff ) {
 			continue; /* skip on wildcard or equal */
@@ -190,7 +188,7 @@ int obis_compare(obis_id_t a, obis_id_t b) {
 	return 0; /* equal */
 }
 
-int obis_is_null(obis_id_t id) {
+int Obis::isNull() {
 	return !(
 		id.raw[0] ||
 		id.raw[1] ||
@@ -201,7 +199,7 @@ int obis_is_null(obis_id_t id) {
 	);
 }
 
-int obis_is_manufacturer_specific(obis_id_t id) {
+int Obis::isManufacturerSpecific() {
 	return (
 		(id.groups.channel >= 128 && id.groups.channel <= 199) ||
 		(id.groups.indicator >= 128 && id.groups.indicator <= 199) ||
@@ -211,4 +209,22 @@ int obis_is_manufacturer_specific(obis_id_t id) {
 		(id.groups.storage >= 128 && id.groups.storage <= 254)
 	);
 }
+
+/*
+bool ObisIdentifier::operator==(ReadingIdentifier &cmp) {
+	return (obis_compare(a.obis, b.obis) == 0);
+}
+
+void ObisIdentifier::parse(const char *string) {
+	if (obis_parse(string, &id->obis) != SUCCESS) {
+		if (obis_lookup_alias(string, &id->obis) != SUCCESS) {
+			throw new Exception("Failed to parse OBIS id");
+		}
+	}
+}
+
+size_t ObisIdentifier::unparse(char *buffer, size_t n) {
+	return obis_unparse(id.obis, buffer, n);
+}
+*/
 

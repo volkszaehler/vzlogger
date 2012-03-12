@@ -34,16 +34,16 @@
 class Channel {
 
 public:
-	Channel(const char *pUuid, const char *pMiddleware, reading_id_t pIdentifier);
+	Channel(const char *pUuid, const char *pMiddleware, ReadingIdentifier *pIdentifier);
 	virtual ~Channel();
 
 protected:
 	static int instances;
 	int id;				/* only for internal usage & debugging */
 
-	reading_id_t identifier;	/* channel identifier (OBIS, string) */
-	reading_t last;			/* most recent reading */
-	buffer_t buffer;		/* circular queue to buffer readings */
+	ReadingIdentifier *identifier;	/* channel identifier (OBIS, string) */
+	Reading last;			/* most recent reading */
+	Buffer buffer;			/* circular queue to buffer readings */
 
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
 	pthread_t thread;		/* pthread for asynchronus logging */

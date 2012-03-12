@@ -28,6 +28,8 @@
 
 #include "list.h"
 #include "reading.h"
+#include "options.h"
+#include "channel.h"
 
 using namespace std;
 
@@ -38,7 +40,7 @@ public:
 
 	virtual int open() = 0;
 	virtual int close() = 0;
-	virtual size_t read(reading_t *rds, size_t n);
+	virtual size_t read(Reading *rds, size_t n);
 
 	int getInterval();
 
@@ -54,6 +56,10 @@ protected:
 
 	pthread_t thread;
 };
+
+typedef enum {
+	sml, d0
+} meter_protocol_t;
 
 typedef struct {
 	meter_protocol_t id;
