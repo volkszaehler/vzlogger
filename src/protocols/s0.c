@@ -30,54 +30,48 @@
 #include <sys/time.h>
 #include <errno.h>
 
-#include "meter.h"
 #include "protocols/s0.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_s0(meter_t *mtr, list_t options) {
-	meter_handle_s0_t *handle = &mtr->handle.s0;
+MeterS0::MeterS0(std::list<Option> options)
+    : Protocol(options)
+{
+  OptionList optlist;
 
-	char *device;
-	if (options_lookup_string(options, "device", &device) == SUCCESS) {
-		handle->device = strdup(device);
-	}
-	else {
-		print(log_error, "Missing device or invalid type", mtr);
-		return ERR;
-	}
-
-	switch (options_lookup_int(options, "resolution", &handle->resolution)) {
-		case ERR_NOT_FOUND:
-			handle->resolution = 1; /* 1 Wh per impulse */
-			break;
-
-		case ERR_INVALID_TYPE:
-			print(log_error, "Failed to parse resolution", mtr);
-			return ERR;
+  try {
+    _device = optlist.lookup_string(options, "device");
+  } catch( vz::VZException &e ) {
+		print(log_error, "Missing device or invalid type", "");
+		throw;
 	}
 
-	return SUCCESS;
+	try {
+    _resolution = optlist.lookup_int(options, "resolution");
+  } catch( vz::OptionNotFoundException &e ) {
+    _resolution = 1;
+  } catch( vz::VZException &e ) {
+			print(log_error, "Failed to parse resolution", "");
+		throw;
+  }
 }
 
-void meter_free_s0(meter_t *mtr) {
-	meter_handle_s0_t *handle = &mtr->handle.s0;
-
-	free(handle->device);
+MeterS0::~MeterS0() {
+	//free((void*)_device);
 }
 
-int meter_open_s0(meter_t *mtr) {
-	meter_handle_s0_t *handle = &mtr->handle.s0;
+int MeterS0::open() {
 
 	/* open port */
-	int fd = open(handle->device, O_RDWR | O_NOCTTY); 
+	int fd = ::open(_device, O_RDWR | O_NOCTTY); 
 
-        if (fd < 0) {
-		print(log_error, "open(%s): %s", mtr, handle->device, strerror(errno));
-        	return ERR;
-        }
+  if (fd < 0) {
+		print(log_error, "open(%s): %s", "", _device, strerror(errno));
+    return ERR;
+  }
 
 	/* save current port settings */
-	tcgetattr(fd, &handle->old_tio);
+	tcgetattr(fd, &_old_tio);
 
 	/* configure port */
 	struct termios tio;
@@ -94,32 +88,31 @@ int meter_open_s0(meter_t *mtr) {
 
         /* apply configuration */
         tcsetattr(fd, TCSANOW, &tio);
-	handle->fd = fd;
+	_fd = fd;
 
         return SUCCESS;
 }
 
-int meter_close_s0(meter_t *mtr) {
-	meter_handle_s0_t *handle = &mtr->handle.s0;
+int MeterS0::close() {
 
-	tcsetattr(handle->fd, TCSANOW, &handle->old_tio); /* reset serial port */
+	tcsetattr(_fd, TCSANOW, &_old_tio); /* reset serial port */
 
-	return close(handle->fd); /* close serial port */
+	return ::close(_fd); /* close serial port */
 }
 
-size_t meter_read_s0(meter_t *mtr, reading_t rds[], size_t n) {
-	meter_handle_s0_t *handle = &mtr->handle.s0;
+size_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
+
 	char buf[8];
 
 	/* clear input buffer */
-        tcflush(handle->fd, TCIOFLUSH);
+  tcflush(_fd, TCIOFLUSH);
 
 	/* blocking until one character/pulse is read */
-	read(handle->fd, buf, 8);
-
+  if( ::read(_fd, buf, 8) < 1) return 0;
+  
 	/* store current timestamp */
-	gettimeofday(&rds->time, NULL);
-	rds->value = 1;
+	//gettimeofday(&rds->time, NULL);
+	//rds->value = 1;
 
 	/* wait some ms for debouncing */
 	usleep(30000);

@@ -47,107 +47,122 @@
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#include "meter.h"
 #include "protocols/sml.h"
 #include "obis.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_sml(meter_t *mtr, list_t options) {
-	meter_handle_sml_t *handle = &mtr->handle.sml;
+#define SML_BUFFER_LEN 8096
+
+MeterSML::MeterSML(std::list<Option> options) 
+    : Protocol("sml", options)
+    , _host("")
+    , _device("")
+    , BUFFER_LEN(SML_BUFFER_LEN)
+{
+  OptionList optlist;
 
 	/* connection */
-	char *host, *device;
-	if (options_lookup_string(options, "host", &host) == SUCCESS) {
-		handle->host = strdup(host);
-		handle->device = NULL;
-	}
-	else if (options_lookup_string(options, "device", &device) == SUCCESS) {
-		handle->device = strdup(device);
-		handle->host = NULL;
-	}
-	else {
-		print(log_error, "Missing device or host", mtr);
-		return ERR;
-	}
+  try {
+    _host = optlist.lookup_string(options, "host");
+    //_device = NULL;
+  } catch ( vz::OptionNotFoundException &e ) {
+    try {
+      _device = optlist.lookup_string(options, "device");
+      //_host = NULL;
+    } catch ( vz::VZException &e ){
+      print(log_error, "Missing device or host", name().c_str());
+      throw ;
+    }
+  } catch( vz::VZException &e ) {
+		print(log_error, "Missing device or host", name().c_str());
+		throw;
+  }
 
 	/* baudrate */
-	int baudrate;
-	switch (options_lookup_int(options, "baudrate", &baudrate)) {
-		case SUCCESS:
-			/* find constant for termios structure */
-			switch (baudrate) {
-				case 1200: handle->baudrate = B1200; break;
-				case 1800: handle->baudrate = B1800; break;
-				case 2400: handle->baudrate = B2400; break;
-				case 4800: handle->baudrate = B4800; break;
-				case 9600: handle->baudrate = B9600; break;
-				case 19200: handle->baudrate = B19200; break;
-				case 38400: handle->baudrate = B38400; break;
-				case 57600: handle->baudrate = B57600; break;
-				case 115200: handle->baudrate = B115200; break;
-				case 230400: handle->baudrate = B230400; break;
+	int baudrate = 9600; /* default to avoid compiler warning */
+	try {
+    baudrate = optlist.lookup_int(options, "baudrate");
+    /* find constant for termios structure */
+    switch (baudrate) {
+				case 1200: _baudrate = B1200; break;
+				case 1800: _baudrate = B1800; break;
+				case 2400: _baudrate = B2400; break;
+				case 4800: _baudrate = B4800; break;
+				case 9600: _baudrate = B9600; break;
+				case 19200: _baudrate = B19200; break;
+				case 38400: _baudrate = B38400; break;
+				case 57600: _baudrate = B57600; break;
+				case 115200: _baudrate = B115200; break;
+				case 230400: _baudrate = B230400; break;
 				default:
-					print(log_error, "Invalid baudrate: %i", mtr, baudrate);
-					return ERR;
-			}
-			break;
-
-		case ERR_NOT_FOUND: /* using default value if not specified */
-			handle->baudrate = B9600;
-			break;
-
-		default:
-			print(log_error, "Failed to parse the baudrate", mtr);
-			return ERR;
+					print(log_error, "Invalid baudrate: %i", name().c_str(), baudrate);
+					throw vz::VZException("Invalid baudrate");
+    }
+  } catch( vz::OptionNotFoundException &e ) {
+    /* using default value if not specified */
+    _baudrate = 9600;
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse the baudrate", name().c_str());
+    throw;
 	}
-
-	return SUCCESS;
+    print(log_debug, "MeterSML::open(host=%s)", name().c_str(), host());
 }
 
-void meter_free_sml(meter_t *mtr) {
-	meter_handle_sml_t *handle = &mtr->handle.sml;
-
-	if (handle->device != NULL) {
-		free(handle->device);
-	}
-
-	if (handle->host != NULL) {
-		free(handle->host);
-	}
+MeterSML::MeterSML(const MeterSML &proto)
+    : Protocol(proto)
+    , BUFFER_LEN(SML_BUFFER_LEN)
+{
+  std::cout<<"====>MeterSML - copy!" << std::endl;
+  //if(proto.host() != NULL) _host = strdup(proto.host());
+  //if(proto.device() != NULL) _device = strdup(proto.device());
 }
 
-int meter_open_sml(meter_t *mtr) {
-	meter_handle_sml_t *handle = &mtr->handle.sml;
-
-	if (handle->device != NULL) { /* local connection */
-		handle->fd = meter_sml_open_device(handle->device, &handle->old_tio, handle->baudrate);
+MeterSML::~MeterSML() {
+  std::cout<<"MeterSML::~MeterSML()\n";
+/*
+	if (_device != NULL) {
+		free((void *)_device);
 	}
-	else if (handle->host != NULL) { /* remote connection */
-		char *addr = strdup(handle->host);
-		char *node = strsep(&addr, ":"); /* split port/service from hostname */
-		char *service = strsep(&addr, ":");
+  _device = NULL;
 
-		handle->fd = meter_sml_open_socket(node, service);
+	if (_host != NULL) {
+		free((void *)_host);
+	}
+  _host = NULL;
+*/
+}
 
+int MeterSML::open() {
+  print(log_debug, "MeterSML - open", name().c_str());
+  
+	if (_device != "") {
+		_fd = _openDevice(&_old_tio, _baudrate);
+	}
+	else if (_host != "") {
+		char *addr = strdup(host());
+		const char *node = strsep(&addr, ":");
+		const char *service = strsep(&addr, ":");
+    if(node == NULL && service == NULL) return -1;
+    print(log_debug, "MeterSML::open(host=%s)", name().c_str(), host());
+    print(log_debug, "MeterSML::open(%s, %s)", name().c_str(), node, service);
+		_fd = _openSocket(node, service);
 		free(addr);
 	}
-
-	return (handle->fd < 0) ? ERR : SUCCESS;
+  return _fd;
 }
 
-int meter_close_sml(meter_t *meter) {
-	meter_handle_sml_t *handle = &meter->handle.sml;
+int MeterSML::close() {
 
-	if (handle->device != NULL) {
+	if (_device != "") {
 		/* reset serial port */
-		tcsetattr(handle->fd, TCSANOW, &handle->old_tio);
+		tcsetattr(_fd, TCSANOW, &_old_tio);
 	}
 
-	return close(handle->fd);
+	return ::close(_fd);
 }
 
-size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
-	meter_handle_sml_t *handle = &meter->handle.sml;
+size_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
  	unsigned char buffer[SML_BUFFER_LEN];
 	size_t bytes, m = 0;
@@ -157,7 +172,7 @@ size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
 	sml_list *entry;
 
 	/* wait until a we receive a new datagram from the meter (blocking read) */
-	bytes = sml_transport_read(handle->fd, buffer, SML_BUFFER_LEN);
+	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
 
 	/* parse SML file & stripping escape sequences */
 	file = sml_file_parse(buffer + 8, bytes - 16);
@@ -172,7 +187,7 @@ size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
 
 			/* iterating through linked list */
 			for (m = 0; m < n && entry != NULL; m++) {
-				meter_sml_parse(entry, &rds[m]);
+				_parse(entry, &rds[m]);
 				entry = entry->next;
 			}
 		}
@@ -184,38 +199,40 @@ size_t meter_read_sml(meter_t *meter, reading_t rds[], size_t n) {
 	return m+1;
 }
 
-void meter_sml_parse(sml_list *entry, reading_t *rd) {
+void MeterSML::_parse(sml_list *entry, Reading *rd) {
 	//int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
 
-	rd->value = sml_value_to_double(entry->value) * pow(10, scaler);
+	rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
 
-	obis_init(&rd->identifier.obis, entry->obj_name->str);
-
+	//obis_init(&rd->identifier.obis, entry->obj_name->str);
+  
 	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
-	if (entry->val_time) { /* use time from meter */
-		rd->time.tv_sec = *entry->val_time->data.timestamp;
-		rd->time.tv_usec = 0;
+	struct timeval tv;
+  if (entry->val_time) { /* use time from meter */
+		tv.tv_sec = *entry->val_time->data.timestamp;
+		tv.tv_usec = 0;
 	}
 	else {
-		gettimeofday(&rd->time, NULL); /* use local time */
+		gettimeofday(&tv, NULL); /* use local time */
 	}
+  rd->time(tv);
 }
 
-int meter_sml_open_socket(const char *node, const char *service) {
+int MeterSML::_openSocket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
 	int fd, res;
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		print(log_error, "socket(): %s", NULL, strerror(errno));
+		print(log_error, "socket(): %s", name().c_str(), strerror(errno));
 		return ERR;
 	}
 
 	int rc = getaddrinfo(node, service, NULL, &ais);
 	if (rc != 0) {
-		print(log_error, "getaddrinfo(%s, %s): %s", NULL, node, service, gai_strerror(rc));
+		print(log_error, "getaddrinfo(%s, %s): %s", name().c_str(), node, service, gai_strerror(rc));
 		return ERR;
 	}
 
@@ -224,21 +241,21 @@ int meter_sml_open_socket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		print(log_error, "connect(%s, %s): %s", NULL, node, service, strerror(errno));
+		print(log_error, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
 		return ERR;
 	}
 
 	return fd;
 }
 
-int meter_sml_open_device(const char *device, struct termios *old_tio, speed_t baudrate) {
+int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	int bits;
 	struct termios tio;
 	memset(&tio, 0, sizeof(struct termios));
 
-	int fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
+	int fd = ::open(device(), O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", NULL, device, strerror(errno));
+		print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
 		return ERR;
 	}
 

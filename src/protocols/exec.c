@@ -26,67 +26,54 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "meter.h"
 #include "protocols/exec.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_exec(meter_t *mtr, list_t options) {
-	meter_handle_exec_t *handle = &mtr->handle.exec;
+MeterExec::MeterExec(std::list<Option> options) 
+    : Protocol(options)
+{
+  OptionList optlist;
 
-	char *command;
-	if (options_lookup_string(options, "command", &command) == SUCCESS) {
-		handle->command = strdup(command);
-	}
-	else {
-		print(log_error, "Missing command or invalid type", mtr);
-		return ERR;
-	}
-
-	char *format;
-	switch (options_lookup_string(options, "format", &format)) {
-		case SUCCESS:
-			handle->format = strdup(format);
-			// TODO parse format (see file.c)
-			break;
-
-		case ERR_NOT_FOUND:
-			handle->format = NULL; /* use default format */
-			break;
-
-		default:
-			print(log_error, "Failed to parse format", mtr);
-			return ERR;
+  try {
+    _command = optlist.lookup_string(options, "command");
+  } catch( vz::VZException &e ) {
+		print(log_error, "Missing command or invalid type", "");
+		throw;
 	}
 
-
-	return SUCCESS;
-}
-
-void meter_free_exec(meter_t *mtr) {
-	meter_handle_exec_t *handle = &mtr->handle.exec;
-
-	free(handle->command);
-
-	if (handle->format != NULL) {
-		free(handle->format);
+	try {
+    _format = optlist.lookup_string(options, "format");
+  } catch( vz::OptionNotFoundException &e ) {
+    _format = NULL; /* use default format */
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse format", "");
+    throw;
 	}
 }
 
-int meter_open_exec(meter_t *mtr) {
-	//meter_handle_exec_t *handle = &mtr->handle.exec;
+MeterExec::~MeterExec() {
+
+	free((void*)_command);
+
+	if (_format != NULL) {
+		free((void*)_format);
+	}
+}
+
+int MeterExec::open() {
 
 	// TODO implement
 	return ERR;
 }
 
-int meter_close_exec(meter_t *mtr) {
-	//meter_handle_exec_t *handle = &mtr->handle.exec;
+int MeterExec::close() {
 
 	// TODO implement
 	return ERR;
 }
 
-size_t meter_read_exec(meter_t *mtr, reading_t rds[], size_t n) {
+size_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 	//meter_handle_exec_t *handle = &mtr->handle.exec;
 
 	// TODO implement

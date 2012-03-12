@@ -29,56 +29,98 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "meter.h"
 #include "protocols/fluksov2.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_fluksov2(meter_t *mtr, list_t options) {
-	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
+#define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
 
-	char *fifo;
-	if (options_lookup_string(options, "fifo", &fifo) == SUCCESS) {
-		handle->fifo = strdup(fifo);
+MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
+    : Protocol(options)
+{
+  OptionList optlist;
+
+  try {
+    _fifo = optlist.lookup_string(options, "fifo");
+  } catch( vz::OptionNotFoundException &e ) {
+		_fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse fifo", name().c_str());
+    throw;
 	}
-	else {
-		handle->fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
-	}
-
-	return SUCCESS;
 }
 
-void meter_free_fluksov2(meter_t *mtr) {
-	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
+MeterFluksoV2::~MeterFluksoV2() {
 
-	free(handle->fifo);
+	//free((void *)_fifo);
 }
 
-int meter_open_fluksov2(meter_t *mtr) {
-	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
+int MeterFluksoV2::open() {
 
 	/* open port */
-	handle->fd = open(handle->fifo, O_RDONLY); 
+	_fd = ::open(_fifo, O_RDONLY); 
 
-        if (handle->fd < 0) {
-		print(log_error, "open(%s): %s", mtr, handle->fifo, strerror(errno));
-        	return ERR;
-        }
+  if (_fd < 0) {
+		print(log_error, "open(%s): %s", name().c_str(), _fifo, strerror(errno));
+    return ERR;
+  }
 
-        return SUCCESS;
+  return SUCCESS;
 }
 
-int meter_close_fluksov2(meter_t *mtr) {
-	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
+int MeterFluksoV2::close() {
 
-	return close(handle->fd); /* close fifo */
+	return ::close(_fd); /* close fifo */
 }
 
-size_t read_line(int fd, char  *buffer, size_t n) {
-	int i = 0;	/* iterator for buffer */
+
+size_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) { 
+
+	size_t i = 0;		/* number of readings */
+	size_t bytes = 0;	/* read_line() return code */
+	char line[64];		/* stores each line read */
+	char *cursor = line;	/* moving cursor for strsep() */
+
+	do {
+		bytes = _read_line(_fd, line, 64); /* blocking read of a complete line */
+		if (bytes < 0) {
+			print(log_error, "read_line(%s): %s", name().c_str(), _fifo, strerror(errno));
+			return bytes; /* an error occured, pass through to caller */
+		}
+	} while (bytes == 0);
+
+
+	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
+	struct timeval time;
+  time.tv_sec = strtol(time_str, NULL, 10);
+  time.tv_usec = 0; /* no millisecond resolution available */
+
+	while (cursor) {
+		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
+
+		/* consumption */
+		//rds[i].time = time;
+		//rds[i].identifier.channel = -channel; /* consumption gets negative channel id as identifier! */
+		//rds[i].value = atoi(strsep(&cursor, " \t"));
+		i++;
+
+		/* power */
+		//rds[i].time = time;
+		//rds[i].identifier.channel = channel; /* power gets positive channel id as identifier! */
+		//rds[i].value = atoi(strsep(&cursor, " \t"));
+		i++;
+	}
+
+	return i;
+}
+
+
+size_t MeterFluksoV2::_read_line(int fd, char  *buffer, size_t n) {
+	size_t i = 0;	/* iterator for buffer */
 	char c;		/* character buffer */
 
 	while (i < n) {
-		int r = read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
+		size_t r = ::read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
 
 		if (r == 1) { /* successful read */
 			switch (c) {
@@ -96,46 +138,3 @@ size_t read_line(int fd, char  *buffer, size_t n) {
 
 	return i;
 }
-
-size_t meter_read_fluksov2(meter_t *mtr, reading_t rds[], size_t n) {
-	meter_handle_fluksov2_t *handle = &mtr->handle.fluksov2;
-
-	size_t i = 0;		/* number of readings */
-	size_t bytes = 0;	/* read_line() return code */
-	char line[64];		/* stores each line read */
-	char *cursor = line;	/* moving cursor for strsep() */
-
-	do {
-		bytes = read_line(handle->fd, line, 64); /* blocking read of a complete line */
-		if (bytes < 0) {
-			print(log_error, "read_line(%s): %s", mtr, handle->fifo, strerror(errno));
-			return bytes; /* an error occured, pass through to caller */
-		}
-	} while (bytes == 0);
-
-
-	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
-	struct timeval time = {
-		.tv_sec = strtol(time_str, NULL, 10),
-		.tv_usec = 0 /* no millisecond resolution available */
-	};
-
-	while (cursor) {
-		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
-
-		/* consumption */
-		rds[i].time = time;
-		rds[i].identifier.channel = -channel; /* consumption gets negative channel id as identifier! */
-		rds[i].value = atoi(strsep(&cursor, " \t"));
-		i++;
-
-		/* power */
-		rds[i].time = time;
-		rds[i].identifier.channel = channel; /* power gets positive channel id as identifier! */
-		rds[i].value = atoi(strsep(&cursor, " \t"));
-		i++;
-	}
-
-	return i;
-}
-

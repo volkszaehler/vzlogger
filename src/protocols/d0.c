@@ -42,90 +42,94 @@
 #include <sys/socket.h>
 
 #include "protocols/d0.h"
+#include <VZException.hpp>
 
 #include "obis.h"
-#include "options.h"
 
-int MeterD0::MeterD0(map<string, Option> options) {
+MeterD0::MeterD0(std::list<Option> options) 
+    : Protocol(options)
+    , _host("")
+    , _device("")
+{
+  OptionList optlist;
+
 	/* connection */
-	char *host, *device;
-	if (options_lookup_string(options, "host", &host) == SUCCESS) {
-		handle->host = strdup(host);
-		handle->device = NULL;
-	}
-	else if (options_lookup_string(options, "device", &device) == SUCCESS) {
-		handle->device = strdup(device);
-		handle->host = NULL;
-	}
-	else {
-		print(log_error, "Missing device or host", mtr);
-		return ERR;
-	}
+  try {
+    _host = optlist.lookup_string(options, "host");
+  } catch ( vz::OptionNotFoundException &e ) {
+    try {
+      _device = optlist.lookup_string(options, "device");
+    } catch ( vz::VZException &e ){
+      print(log_error, "Missing device or host", name().c_str());
+      throw ;
+    }
+  } catch( vz::VZException &e ) {
+		print(log_error, "Missing device or host", name().c_str());
+		throw;
+  }
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
-	switch (options_lookup_int(options, "baudrate", &handle->baudrate)) {
-		case SUCCESS:
-			/* find constant for termios structure */
-			switch (baudrate) {
-				case 1200: handle->baudrate = B1200; break;
-				case 1800: handle->baudrate = B1800; break;
-				case 2400: handle->baudrate = B2400; break;
-				case 4800: handle->baudrate = B4800; break;
-				case 9600: handle->baudrate = B9600; break;
-				case 19200: handle->baudrate = B19200; break;
-				case 38400: handle->baudrate = B38400; break;
-				case 57600: handle->baudrate = B57600; break;
-				case 115200: handle->baudrate = B115200; break;
-				case 230400: handle->baudrate = B230400; break;
+	try {
+    baudrate = optlist.lookup_int(options, "baudrate");
+    /* find constant for termios structure */
+    switch (baudrate) {
+				case 1200: _baudrate = B1200; break;
+				case 1800: _baudrate = B1800; break;
+				case 2400: _baudrate = B2400; break;
+				case 4800: _baudrate = B4800; break;
+				case 9600: _baudrate = B9600; break;
+				case 19200: _baudrate = B19200; break;
+				case 38400: _baudrate = B38400; break;
+				case 57600: _baudrate = B57600; break;
+				case 115200: _baudrate = B115200; break;
+				case 230400: _baudrate = B230400; break;
 				default:
-					print(log_error, "Invalid baudrate: %i", mtr, baudrate);
-					return ERR;
-			}
-			break;
-
-		case ERR_NOT_FOUND: /* using default value if not specified */
-			handle->baudrate = 9600;
-			break;
-
-		default:
-			print(log_error, "Failed to parse the baudrate", mtr);
-			return ERR;
+					print(log_error, "Invalid baudrate: %i", name().c_str(), baudrate);
+					throw vz::VZException("Invalid baudrate");
+    }
+  } catch( vz::OptionNotFoundException &e ) {
+    /* using default value if not specified */
+    _baudrate = 9600;
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse the baudrate", name().c_str());
+    throw;
 	}
 }
 
 MeterD0::~MeterD0() {
-	if (device != NULL) {
-		free(device);
+/*	if (_device != NULL) {
+		free((void *)_device);
 	}
-
-	if (host != NULL) {
-		free(host);
+  _device = NULL;
+  
+	if (_host != NULL) {
+		free((void *)_host);
 	}
+  _host = NULL;
+*/
 }
 
 int MeterD0::open() {
-	if (handle->device != NULL) {
-		print(log_error, "TODO: implement serial interface", mtr);
-		return ERR;
+	if (_device != "") {
+		_fd = _openDevice(&_oldtio, _baudrate);
 	}
-	else if (handle->host != NULL) {
-		char *addr = strdup(handle->host);
-		char *node = strsep(&addr, ":");
-		char *service = strsep(&addr, ":");
+	else if (_host != "") {
+		char *addr = strdup(host());
+		const char *node = strsep(&addr, ":");
+		const char *service = strsep(&addr, ":");
 
-		handle->fd = meter_d0_open_socket(node, service);
+		_fd = _openSocket(node, service);
 	}
 
-	return (handle->fd < 0) ? ERR : SUCCESS;
+	return (_fd < 0) ? ERR : SUCCESS;
 }
 
 int MeterD0::close() {
-	return close(handle->fd);
+	return ::close(_fd);
 }
 
-size_t MeterD0::read(reading_t rds[], size_t max_readings) {
-	meter_handle_d0_t *handle = &mtr->handle.d0;
+size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
@@ -159,13 +163,13 @@ size_t MeterD0::read(reading_t rds[], size_t max_readings) {
 	char baudrate;			/* 1 byte for */
 	char byte;			/* we parse our input byte wise */
 	int byte_iterator; 
-	int number_of_tuples;
+	size_t number_of_tuples;
 
 	byte_iterator =  number_of_tuples = baudrate = 0;
 
 	context = START;				/* start with context START */
 
-	while (read(handle->fd, &byte, 1)) {
+	while (::read(_fd, &byte, 1)) {
 		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
 		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
@@ -244,11 +248,12 @@ size_t MeterD0::read(reading_t rds[], size_t max_readings) {
 			case END_LINE:
 				if (byte == '\r' || byte == '\n') {
 					/* free slots available and sain content? */
-					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) {
-						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", mtr, obis_code, value, unit);
-						rds[number_of_tuples].value = strtof(value, NULL);
-						obis_parse(obis_code, &rds[number_of_tuples].identifier.obis);
-						gettimeofday(&rds[number_of_tuples].time, NULL);
+					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && 
+              (strlen(value) > 0)) {
+						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
+						//rds[number_of_tuples].value = strtof(value, NULL);
+						//obis_parse(obis_code, &rds[number_of_tuples].identifier.obis);
+						//gettimeofday(&rds[number_of_tuples].time, NULL);
 
 						byte_iterator = 0;
 						number_of_tuples++;
@@ -260,17 +265,17 @@ size_t MeterD0::read(reading_t rds[], size_t max_readings) {
 
 			case END:
 				print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-					mtr, number_of_tuples, vendor, baudrate, identification);
+					name().c_str(), number_of_tuples, vendor, baudrate, identification);
 				return number_of_tuples;
 		}
 	}
 
 error:
-	print(log_error, "Something unexpected happened: %s:%i!", mtr, __FUNCTION__, __LINE__);
+	print(log_error, "Something unexpected happened: %s:%i!", name().c_str(), __FUNCTION__, __LINE__);
 	return 0;
 }
 
-int MeterD0::openSocket(const char *node, const char *service) {
+int MeterD0::_openSocket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
 	int fd; /* file descriptor */
@@ -278,7 +283,7 @@ int MeterD0::openSocket(const char *node, const char *service) {
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		print(log_error, "socket(): %s", NULL, strerror(errno));
+		print(log_error, "socket(): %s", name().c_str(), strerror(errno));
 		return ERR;
 	}
 
@@ -288,9 +293,41 @@ int MeterD0::openSocket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		print(log_error, "connect(%s, %s): %s", NULL, node, service, strerror(errno));
+		print(log_error, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
 		return ERR;
 	}
+
+	return fd;
+}
+
+int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
+	struct termios tio;
+	memset(&tio, 0, sizeof(struct termios));
+
+	int fd = ::open(device(), O_RDWR);
+	if (fd < 0) {
+    print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
+		  return ERR;
+	}
+
+	/* get old configuration */
+	tcgetattr(fd, &tio) ;
+
+	/* backup old configuration to restore it when closing the meter connection */
+	memcpy(old_tio, &tio, sizeof(struct termios));
+
+	/*  set 7-N-1 */
+	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL);
+	tio.c_oflag &= ~(OPOST | ONLCR);
+	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
+	tio.c_cflag |= (CS7 | PARENB);
+
+	/* set baudrate */
+	cfsetispeed(&tio, baudrate);
+	cfsetospeed(&tio, baudrate);
+
+	/* apply new configuration */
+	tcsetattr(fd, TCSANOW, &tio);
 
 	return fd;
 }

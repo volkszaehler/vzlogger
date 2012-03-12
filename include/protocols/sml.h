@@ -35,30 +35,37 @@
 
 #include <termios.h>
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 #include "obis.h"
 
-using namespace std;
-
-class MeterSML : public Meter {
+class MeterSML : public vz::protocol::Protocol {
 
 public:
-	MeterSML(map<string, Option> options);
+	MeterSML(std::list<Option> options);
+	MeterSML(const MeterSML &mtr);
 	virtual ~MeterSML();
+
+  MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" << std::endl; return (*this); }
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
+  const char *host() const { return _host.c_str(); }
+  const char *device() const { return _device.c_str(); }
+  
 protected:
-	char *host;
-	char *device;
-	speed_t baudrate;
+	std::string _host;
+	std::string _device;
+  //const char *_host;
+  //const char *_device;
+	speed_t _baudrate;
 
-	int fd;	/* file descriptor of port */
-	struct termios old_tio;	/* required to reset port */
+	int _fd;	/* file descriptor of port */
+	struct termios _old_tio;	/* required to reset port */
 
-	const int BUFFER_LEN = 8192;
+	//const int BUFFER_LEN = 8192;
+	const int BUFFER_LEN;
 
 	/**
 	 * Parses SML list entry and stores it in reading pointed by rd
@@ -66,7 +73,7 @@ protected:
 	 * @param list the list entry
 	 * @param rd the reading to store to
 	 */
-	void parse(sml_list *list, struct reading *rd);
+	void _parse(sml_list *list, Reading *rd);
 
 	/**
 	 * Open serial port by device
@@ -76,7 +83,7 @@ protected:
 	 * @param baudrate the baudrate
 	 * @return file descriptor, <0 on error
 	 */
-	int openDevice(const char *device, struct termios *old_config, speed_t baudrate);
+	int _openDevice(struct termios *old_config, speed_t baudrate);
 
 	/**
 	 * Open socket
@@ -85,7 +92,7 @@ protected:
 	 * @param the ASCII encoded portnum or service as in /etc/services
 	 * @return file descriptor, <0 on error
 	 */
-	int openSocket(const char *node, const char *service);
+	int _openSocket(const char *node, const char *service);
 };
 
 

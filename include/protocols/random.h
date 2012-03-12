@@ -26,25 +26,24 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-#include "meter.h"
-
-using namespace std;
+#include <protocols/protocol.hpp>
 
 double ltqnorm(double p); /* forward declaration */
 
-class MeterRandom : public Meter {
+class MeterRandom : public vz::protocol::Protocol {
 
 public:
-	Random(map<string, Option> options);
-	virtual ~Random();
+	MeterRandom(std::list<Option> options);
+	virtual ~MeterRandom();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
 protected:
-	double min, max;
-	double last;
+	double _min;
+  double _max;
+	double _last;
 };
 
 #endif /* _RANDOM_H_ */

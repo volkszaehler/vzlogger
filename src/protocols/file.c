@@ -27,51 +27,50 @@
 #include <sys/time.h>
 #include <errno.h>
 
-#include "meter.h"
 #include "protocols/file.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_file(meter_t *mtr, list_t options) {
-	meter_handle_file_t *handle = &mtr->handle.file;
+MeterFile::MeterFile(std::list<Option> options)
+    : Protocol(options)
+{
+  OptionList optlist;
 
-	/* path to file which should be read */
-	char *path;
-	if (options_lookup_string(options, "path", &path) == SUCCESS) {
-		handle->path = strdup(path);
-	}
-	else {
-		print(log_error, "Missing path or invalid type", mtr);
-		return ERR;
+  try {
+    _path = optlist.lookup_string(options, "path");
+  } catch( vz::VZException &e ) {
+		print(log_error, "Missing path or invalid type", name().c_str());
+		throw;
 	}
 
 	/* a optional format string for scanf() */
-	char *config_format;
-	switch (options_lookup_string(options, "format", &config_format)) {
-		case SUCCESS: {
-			/**
-			 * Compiling the provided format string in a format string for scanf
-			 * by replacing the following tokens
-			 *
-			 * "$v" => "%1$f" (value)
-			 * "$i" => "%2$ms" (identifier)		(memory gets allocated by sscanf())
-			 * "$t" => "%3$f" (timestamp)
-			 */
+	try {
+    const char *config_format = optlist.lookup_string(options, "format");
 
-			int config_len = strlen(config_format);
-			int scanf_len = config_len + 8; /* adding extra space for longer conversion specification in scanf_format */
+    /**
+     * Compiling the provided format string in a format string for scanf
+     * by replacing the following tokens
+     *
+     * "$v" => "%1$f" (value)
+     * "$i" => "%2$ms" (identifier)		(memory gets allocated by sscanf())
+     * "$t" => "%3$f" (timestamp)
+     */
 
-			char *scanf_format = malloc(scanf_len); /* the scanf format string */
+    int config_len = strlen(config_format);
+    int scanf_len = config_len + 8; /* adding extra space for longer conversion specification in scanf_format */
 
-			int i = 0; /* index in config_format string */
-			int j = 0; /* index in scanf_format string */
-			while (i <= config_len && j <= scanf_len) {
-				switch (config_format[i]) {
+    char *scanf_format = (char *)malloc(scanf_len); /* the scanf format string */
+
+    int i = 0; /* index in config_format string */
+    int j = 0; /* index in scanf_format string */
+    while (i <= config_len && j <= scanf_len) {
+      switch (config_format[i]) {
 					case '$':
 						if (i+1 < config_len) { /* introducing a token */
 							switch (config_format[i+1]) {
-								case 'v': j += sprintf(scanf_format+j, "%%1$f"); break;
-								case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
-								case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
+                  case 'v': j += sprintf(scanf_format+j, "%%1$f"); break;
+                  case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
+                  case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
 							}
 							i++;
 						}
@@ -82,112 +81,99 @@ int meter_init_file(meter_t *mtr, list_t options) {
 
 					default:
 						scanf_format[j++] = config_format[i]; /* just copying */
-				}
+      }
 
-				i++;
-			}
+      i++;
+    }
 
-			print(log_debug, "Parsed format string \"%s\" => \"%s\"", mtr, config_format, scanf_format);
-			handle->format = scanf_format;
-
-			}
-			break;
-
-		case ERR_NOT_FOUND:
-			handle->format = NULL; /* disable format matching */
-			break;
-
-		default:
-			print(log_error, "Failed to parse 'format'", mtr);
-			return ERR;
+    print(log_debug, "Parsed format string \"%s\" => \"%s\"", name().c_str(), config_format, scanf_format);
+    _format = scanf_format;
+  } catch( vz::OptionNotFoundException &e ) {
+    _format = ""; /* use default format */
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse format", name().c_str());
+    throw;
 	}
 
 	/* should we start each time at the beginning of the file? */
 	/* or do we read from a logfile (append) */
-	int rewind;
-	switch (options_lookup_boolean(options, "rewind", &rewind)) {
-		case SUCCESS:
-			handle->rewind = rewind;
-			break;
-
-		case ERR_INVALID_TYPE:
-			print(log_error, "Invalid type for 'rewind'", mtr);
-			return ERR;
-
-		case ERR_NOT_FOUND:
-			handle->rewind = FALSE; /* do not rewind file by default */
-			break;
-
-		default:
-			print(log_error, "Failed to parse 'rewind'", mtr);
-			return ERR;
-	}
-
-	return SUCCESS;
-}
-
-void meter_free_file(meter_t *mtr) {
-	meter_handle_file_t *handle = &mtr->handle.file;
-
-	free(handle->path);
-
-	if (handle->format != NULL) {
-		free(handle->format);
+	try {
+    _rewind = optlist.lookup_bool(options, "rewind");
+  } catch( vz::OptionNotFoundException &e ) {
+    _rewind = FALSE; /* do not rewind file by default */
+  } catch( vz::InvalidTypeException &e ) {
+    print(log_error, "Invalid type for 'rewind'", name().c_str());
+		throw;
+  } catch( vz::VZException &e ) {
+    print(log_error, "Failed to parse 'rewind'", name().c_str());
+		throw;
 	}
 }
 
-int meter_open_file(meter_t *mtr) {
-	meter_handle_file_t *handle = &mtr->handle.file;
+MeterFile::~MeterFile() {
+}
 
-	handle->fd = fopen(handle->path, "r");
+int MeterFile::open() {
 
-	if (handle->fd == NULL) {
-		print(log_error, "fopen(%s): %s", mtr, handle->path, strerror(errno));
+	_fd = fopen(path(), "r");
+
+	if (_fd == NULL) {
+		print(log_error, "fopen(%s): %s", name().c_str(), path(), strerror(errno));
 		return ERR;
 	}
 
 	return SUCCESS;
 }
 
-int meter_close_file(meter_t *mtr) {
-	meter_handle_file_t *handle = &mtr->handle.file;
+int MeterFile::close() {
 
-	return fclose(handle->fd);
+	return fclose(_fd);
 }
 
-size_t meter_read_file(meter_t *mtr, reading_t rds[], size_t n) {
-	meter_handle_file_t *handle = &mtr->handle.file;
-
+size_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
+  
 	// TODO use inotify to block eading until file changes
 
 	char line[256], *endptr;
-
+  char string[256];
+  
 	/* reset file pointer to beginning of file */
-	if (handle->rewind) {
-		rewind(handle->fd);
+	if (_rewind) {
+		rewind(_fd);
 	}
 
-	int i = 0;
-	while (fgets(line, 256, handle->fd) && i < n) {
+	unsigned int i = 0;
+  print(log_debug, "MeterFile::read: %d, %d", "", rds.size(), n);
+  
+	while (fgets(line, 256, _fd) && i < n) {
 		char *nl;
 		if ((nl = strrchr(line, '\n'))) *nl = '\0'; /* remove trailing newline */
 		if ((nl = strrchr(line, '\r'))) *nl = '\0';
 
-		if (handle->format) {
+		if (_format != "") {
 			double timestamp;
 
 			/* at least the value has to been read */
-			int found = sscanf(line, handle->format, &rds[i].value, &rds[i].identifier.string, &timestamp);
-			if (found >= 1) { // TODO free() space allocated for identifier string
-				rds[i].time = dtotv(timestamp); /* convert double to timeval */
+      double value;
+      
+      print(log_debug, "MeterFile::read: '%s'", "", line);
+			int found = sscanf(line, format(), &value, string, &timestamp);
+      print(log_debug, "MeterFile::read: %f, %s, %ld", "", value, string, timestamp);
+      
+
+      rds[i].value(value);
+      ReadingIdentifier *rid(new StringIdentifier(string));
+      rds[i].identifier(rid);
+      if (found >= 1) { // TODO free() space allocated for identifier string
+				rds[i].dtotv(timestamp); /* convert double to timeval */
 				i++; /* read successfully */
 			}
 		}
 		else { /* just reading a value per line */
-			rds[i].value = strtod(line, &endptr);
-			rds[i].identifier.string = NULL;
-
-			gettimeofday(&rds[i].time, NULL);
+			rds[i].value(strtod(line, &endptr));
+      rds[i].time();
+      ReadingIdentifier* rid(new StringIdentifier(""));
+      rds[i].identifier(rid);
 
 			if (endptr != line) {
 				i++; /* read successfully */

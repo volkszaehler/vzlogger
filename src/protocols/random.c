@@ -31,36 +31,42 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "meter.h"
 #include "protocols/random.h"
 #include "options.h"
+#include <VZException.hpp>
 
-int meter_init_random(meter_t *mtr, list_t options) {
-	meter_handle_random_t *handle = &mtr->handle.random;
+MeterRandom::MeterRandom(std::list<Option> options)
+    : Protocol(options)
+{
+  OptionList optlist;
 
-	handle->min = 0;
-	handle->max = 40;
-	handle->last = (handle->max + handle->min) / 2; /* start in the middle */
+	_min = 0;
+	_max = 40;
+  _last = (_max + _min) / 2; /* start in the middle */
 
-	if (options_lookup_double(options, "min", &handle->min) == ERR_INVALID_TYPE) {
-		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", mtr);
-		return ERR;
+  try {
+    _min = optlist.lookup_double(options, "min");
+  } catch( vz::OptionNotFoundException &e ) {
+    _min = 0;
+  } catch( vz::VZException &e ) {
+		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
+    throw;
 	}
 
-	if (options_lookup_double(options, "max", &handle->max) == ERR_INVALID_TYPE) {
-		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", mtr);
-		return ERR;
+  try {
+    _max = optlist.lookup_double(options, "max");
+  } catch( vz::OptionNotFoundException &e ) {
+    _max = 0;
+  } catch( vz::VZException &e ) {
+		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
+    throw;
 	}
-
-	return SUCCESS;
 }
 
-void meter_free_random(meter_t *mtr) {
-	//meter_handle_random_t *handle = &mtr->handle.random;
+MeterRandom::~MeterRandom() {
 }
 
-int meter_open_random(meter_t *mtr) {
-	//meter_handle_random_t *handle = &mtr->handle.random;
+int MeterRandom::open() {
 
 	// TODO rewrite to use /dev/u?random
 	srand(time(NULL)); /* initialize PNRG */
@@ -68,23 +74,22 @@ int meter_open_random(meter_t *mtr) {
 	return SUCCESS; /* can't fail */
 }
 
-int meter_close_random(meter_t *mtr) {
-	//meter_handle_random_t *handle = &mtr->handle.random;
+int MeterRandom::close() {
 
 	return SUCCESS;
 }
 
-size_t meter_read_random(meter_t *mtr, reading_t rds[], size_t n) {
-	meter_handle_random_t *handle = &mtr->handle.random;
+size_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
+	if(rds.size() < 1) return -1;
 
 	double step = ltqnorm((float) rand() / RAND_MAX);
-	double new = handle->last + step;
+	double newval = _last + step;
 
 	/* check boundaries */
-	handle->last += (new > handle->max || new < handle->min) ? -step : step;
+	_last += (newval > _max || newval < _min) ? -step : step;
 
-	rds->value = handle->last;
-	gettimeofday(&rds->time, NULL);
+  rds[0].value(_last);
+	rds[0].time();
 
 	return 1;
 }

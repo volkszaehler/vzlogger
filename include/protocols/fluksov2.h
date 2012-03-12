@@ -26,25 +26,27 @@
 #ifndef _FLUKSOV2_H_
 #define _FLUKSOV2_H_
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 
-using namespace std;
-
-class MeterFluksoV2 : public Meter {
+class MeterFluksoV2 : public vz::protocol::Protocol {
 
 public:
-	MeterFluksoV2(map<string, Option> options);
+	MeterFluksoV2(std::list<Option> options);
 	virtual ~MeterFluksoV2();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	char *fifo;
-	int fd;	/* file descriptor of fifo */
+  private:
+  size_t _read_line(int fd, char  *buffer, size_t n);
+  
+  private:
+	const char *_fifo;
+	int _fd;	/* file descriptor of fifo */
 
-	const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
+	//const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
+	const char *_DEFAULT_FIFO;
 };
 
 #endif /* _FLUKSOV2_H_ */

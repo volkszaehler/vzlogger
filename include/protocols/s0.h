@@ -28,26 +28,28 @@
 
 #include <termios.h>
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 
-using namespace std;
-
-class MeterS0 : public Meter {
+class MeterS0 : public vz::protocol::Protocol {
 
 public:
-	MeterS0(map<string, Option> options);
+	MeterS0(std::list<Option> options);
 	virtual ~MeterS0();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	char *device;
-	int resolution;
+  private:
+  int _open_socket(const char *node, const char *service);
+  int _open_device(struct termios *old_tio, speed_t baudrate);
 
-	int fd;	/* file descriptor of port */
-	struct termios old_tio;	/* required to reset port */
+  protected:
+	const char *_device;
+	int _resolution;
+
+	int _fd;	/* file descriptor of port */
+	struct termios _old_tio;	/* required to reset port */
 };
 
 #endif /* _S0_H_ */

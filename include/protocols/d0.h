@@ -33,27 +33,30 @@
 
 #include <termios.h>
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 
-using namespace std;
-
-class MeterD0 : public Meter {
+class MeterD0 : public vz::protocol::Protocol {
 
 public:
-	MeterD0(map<string, Option> options);
+	MeterD0(std::list<Option> options);
 	virtual ~MeterD0();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	char *host;
-	char *device;
-	int baudrate;
+  const char *host() const { return _host.c_str(); }
+  const char *device() const { return _device.c_str(); }
 
-	int fd; /* file descriptor of port */
-	struct termios oldtio; /* required to reset port */
+  private:
+	std::string _host;
+	std::string _device;
+	//const char *_host;
+	//const char *_device;
+	int _baudrate;
+
+	int _fd; /* file descriptor of port */
+	struct termios _oldtio; /* required to reset port */
 
 	/**
 	 * Open socket
@@ -62,7 +65,8 @@ protected:
 	 * @param the ASCII encoded portnum or service as in /etc/services
 	 * @return file descriptor, <0 on error
 	 */
-	int openSocket(const char *node, const char *service)
+	int _openSocket(const char *node, const char *service);
+  int _openDevice(struct termios *old_tio, speed_t baudrate);
 };
 
 #endif /* _D0_H_ */

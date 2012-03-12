@@ -26,23 +26,21 @@
 #ifndef _EXEC_H_
 #define _EXEC_H_
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 
-using namespace std;
-
-class MeterExec : public Meter {
+class MeterExec : public vz::protocol::Protocol {
 
 public:
-	MeterExec(map<string, Option> options);
-	virtual MeterExec();
+	MeterExec(std::list<Option> options);
+	virtual ~MeterExec();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	char *command;
-	char *format;
+  private:
+	const char *_command;
+	const char *_format;
 };
 
 #endif /* _EXEC_H_ */

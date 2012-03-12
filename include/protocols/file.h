@@ -26,26 +26,27 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 
-#include "meter.h"
+#include <protocols/protocol.hpp>
 
-using namespace std;
-
-class MeterFile : public Meter {
+class MeterFile : public vz::protocol::Protocol {
 
 public:
-	MeterFile(map<string, Option> options);
+	MeterFile(std::list<Option> options);
 	virtual ~MeterFile();
 
 	int open();
 	int close();
-	int read(reading_t *rds, size_t n);
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	char *path;
-	char *format;
-	int rewind;
+  const char *path() { return _path.c_str(); }
+  const char *format() { return _format.c_str(); }
+  
+  private:
+	std::string _path;
+	std::string _format;
+	int _rewind;
 
-	FILE *fd;
+	FILE *_fd;
 };
 
 #endif /* _FILE_H_ */
