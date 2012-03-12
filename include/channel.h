@@ -26,30 +26,70 @@
 #ifndef _CHANNEL_H_
 #define _CHANNEL_H_
 
+#include <iostream>
 #include <pthread.h>
 
 #include "reading.h"
 #include "buffer.h"
+#include <threads.h>
 
 class Channel {
 
 public:
+	typedef vz::shared_ptr<Channel> Ptr;
+
 	Channel(const char *pUuid, const char *pMiddleware, ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
+  void start() {
+    std::cout<< "channel '"<< name() << "' starting.\n";
+    pthread_create(&_thread, NULL, &logging_thread, (void *) this);
+  }
+  
+  void cancel() { pthread_cancel(_thread); }
+
+  const char* name()                  { return _name.c_str(); }
+  ReadingIdentifier::Ptr identifier() { return _identifier; }
+  const double tvtod() const          { return _last->tvtod(); }
+  
+  const char* middleware() { return _middleware; }
+  const char* uuid()       { return _uuid; }
+
+  void last(Reading *rd) { _last = rd;}
+  void push(const Reading &rd) { _buffer->push(rd); }
+	char *dump(char *dump, size_t len) { return _buffer->dump(dump, len); }
+  Buffer::Ptr buffer() { return _buffer; }
+  
+  const size_t size() { return _buffer->size(); }  
+  const size_t keep() { return _buffer->keep(); }  
+
+  void notify() {
+    _buffer->lock();
+    pthread_cond_broadcast(&condition);
+    _buffer->unlock();
+  }
+  void wait() {
+    _buffer->lock();
+    while(_buffer->size()==0) {
+			_buffer->wait(&condition); /* sleep until new data has been read */
+    }
+    _buffer->unlock();
+  }
+  
 protected:
 	static int instances;
 	int id;				/* only for internal usage & debugging */
-
-	ReadingIdentifier::Ptr identifier;	/* channel identifier (OBIS, string) */
-	Reading last;			/* most recent reading */
-	Buffer buffer;		/* circular queue to buffer readings */
+  std::string _name;
+	Buffer::Ptr _buffer;		/* circular queue to buffer readings */
+  
+	ReadingIdentifier::Ptr _identifier;	/* channel identifier (OBIS, string) */
+	Reading *_last;			/* most recent reading */
 
 	pthread_cond_t condition;	/* pthread syncronization to notify logging thread and local webserver */
-	pthread_t thread;		/* pthread for asynchronus logging */
+	pthread_t _thread;		/* pthread for asynchronus logging */
 
-	char *middleware;		/* url to middleware */
-	char *uuid;			/* unique identifier for middleware */
+	char *_middleware;		/* url to middleware */
+	char *_uuid;			/* unique identifier for middleware */
 };
 
 #endif /* _CHANNEL_H_ */

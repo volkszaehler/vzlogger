@@ -30,7 +30,7 @@
 
 #include <pthread.h>
 #include <sys/time.h>
-#include <list>
+#include <vector>
 
 #include <reading.h>
 
@@ -38,8 +38,8 @@ class Buffer { //: List<Reading> {
 
 public:
     typedef vz::shared_ptr<Buffer> Ptr;
-    typedef std::list<Reading>::iterator iterator;
-    typedef std::list<Reading>::const_iterator const_iterator;
+    typedef std::vector<Reading>::iterator iterator;
+    typedef std::vector<Reading>::const_iterator const_iterator;
 
     Buffer();
 	Buffer(size_t keep);
@@ -50,8 +50,19 @@ public:
 	void shrink(size_t keep = 0);
 	char *dump(char *dump, size_t len);
 
+  iterator begin() { return _sent.begin(); }
+  iterator end()   { return _sent.end(); }
+  size_t size() { return _sent.size(); }
+  size_t keep() { return _keep; }
+  
+  void lock()   { pthread_mutex_lock(&_mutex); }
+  void unlock() { pthread_mutex_unlock(&_mutex); }
+  void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
+  
+  
+  
   private:
-  std::list<Reading> _sent;
+  std::vector<Reading> _sent;
   
 	size_t _keep;	/* number of readings to cache for local interface */
 

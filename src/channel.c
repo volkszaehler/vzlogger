@@ -23,6 +23,8 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sstream>
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -37,14 +39,19 @@ Channel::Channel(
   const char *pMiddleware,
   ReadingIdentifier::Ptr pIdentifier
   )
-    : last(pIdentifier)
+    : _buffer(new Buffer())
+    , _identifier(pIdentifier)
+                //, _last(_identifier)
 {
 	id = instances++;
 
-	identifier = pIdentifier;
+  // set channel name
+  std::stringstream oss;
+  oss<<"chn"<< id;
+  _name=oss.str();
 
-	uuid = strdup(pUuid);
-	middleware = strdup(pMiddleware);
+	_uuid = strdup(pUuid);
+	_middleware = strdup(pMiddleware);
 
 	//buffer_init(&buffer); /* initialize buffer */
 	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
@@ -57,7 +64,7 @@ Channel::~Channel() {
 	//buffer_free(&buffer);
 	pthread_cond_destroy(&condition);
 
-	free(uuid);
-	free(middleware);
+	//free(_uuid);
+	//free(_middleware);
 }
 

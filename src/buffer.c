@@ -92,7 +92,11 @@ void Buffer::push(const Reading &rd) {
 
 void Buffer::clean() {
 
-	pthread_mutex_lock(&_mutex);
+	lock();
+  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+    if(it->deleted()) _sent.erase(it);
+  }
+  
   _sent.clear();
 #if 0
 	while(buf->size > buf->keep && buf->head != buf->sent) {
@@ -104,7 +108,7 @@ void Buffer::clean() {
 		free(pop);
 	}
 #endif
-	pthread_mutex_unlock(&_mutex);
+  unlock();
 }
 
 char * Buffer::dump(char *dump, size_t len) {
