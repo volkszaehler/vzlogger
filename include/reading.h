@@ -43,8 +43,8 @@ public:
 	typedef vz::shared_ptr<ReadingIdentifier> Ptr;
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-  int operator==( ReadingIdentifier &cmp);
-    int compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
+  bool operator==( ReadingIdentifier &cmp);
+  bool compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
 
   protected:
   explicit ReadingIdentifier() {};
@@ -59,9 +59,10 @@ class ObisIdentifier : public ReadingIdentifier {
   public:
 	typedef vz::shared_ptr<ObisIdentifier> Ptr;
 
+  ObisIdentifier() {}
   ObisIdentifier(Obis obis) : _obis(obis) {}
     size_t unparse(char *buffer, size_t n);
-    int operator==(ObisIdentifier &cmp);
+    bool operator==(ObisIdentifier &cmp);
     
     const Obis &obis() const { return _obis; }
     
@@ -75,6 +76,7 @@ class ObisIdentifier : public ReadingIdentifier {
 
 class StringIdentifier : public ReadingIdentifier {
 public:
+	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
     size_t unparse(char *buffer, size_t n);
     bool operator==(StringIdentifier &cmp);
@@ -92,6 +94,7 @@ protected:
 
 class ChannelIdentifier : public ReadingIdentifier {
 public:
+	ChannelIdentifier() {}
 	ChannelIdentifier(int channel) : _channel(channel) {}
     size_t unparse(char *buffer, size_t n);
     bool operator==(ChannelIdentifier &cmp);
@@ -99,6 +102,13 @@ protected:
 	int _channel;
 };
 
+class NilIdentifier : public ReadingIdentifier {
+public:
+	NilIdentifier() {}
+    size_t unparse(char *buffer, size_t n);
+    bool operator==(NilIdentifier &cmp);
+  private:
+};
 
 class Reading {
 
@@ -106,11 +116,20 @@ public:
 	Reading(ReadingIdentifier::Ptr pIndentifier);
 	Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier);
 
-  // copy-operator!
+  const bool deleted() const { return _deleted; }
+  void  reset() { _deleted = false; }
+  
+  void value(const double &v) { _value = v; }
+  const double value() const  { return _value; }
+
+  const  double tvtod() const;
   double tvtod(struct timeval tv);
+  void time() { gettimeofday(&_time, NULL); }
+  void time(struct timeval &v) { _time = v; }
   struct timeval dtotv(double ts);
 
-  const double value() const { return _value; }
+  void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
+  const ReadingIdentifier::Ptr identifier() { return _identifier; }
   
   /**
    * Print identifier to buffer for debugging/dump
@@ -120,9 +139,10 @@ public:
   size_t unparse(meter_protocol_t protocol, char *buffer, size_t n);
 
   protected:
+  bool   _deleted;
 	double _value;
-	struct timeval time;
-	ReadingIdentifier::Ptr identifier;
+	struct timeval _time;
+	ReadingIdentifier::Ptr _identifier;
 };
 
 /**
@@ -132,7 +152,7 @@ public:
  * @param string the string-encoded identifier
  * @return 0 on success, < 0 on error
  */
-int reading_id_parse(meter_protocol_t protocol, ReadingIdentifier *id, const char *string);
+ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string);
 
 
 #endif /* _READING_H_ */

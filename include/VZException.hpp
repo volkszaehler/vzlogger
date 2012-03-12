@@ -49,12 +49,22 @@ namespace vz {
     std::string _reason;
   };
 
-  // Connection failed
+  // Option invalid type
   class InvalidTypeException : public vz::VZException{
     public:
     InvalidTypeException(const std::string& reason) :
         vz::VZException(reason) {}
       virtual ~InvalidTypeException() throw() {}
+
+    protected:
+  };
+
+  // Option item not found
+  class OptionNotFoundException : public vz::VZException{
+    public:
+    OptionNotFoundException(const std::string& reason) :
+        vz::VZException(reason) {}
+      virtual ~OptionNotFoundException() throw() {}
 
     protected:
   };

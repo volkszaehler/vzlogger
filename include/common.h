@@ -2,6 +2,9 @@
 #define _COMMON_H_
 
 #include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 #include "../config.h" /* GNU buildsystem config */
 
@@ -15,7 +18,7 @@ typedef enum {
 } log_level_t;
 
 /* types */
-typedef unsigned char bool;
+//typedef unsigned char bool;
 
 /* constants */
 #define SUCCESS 0
@@ -24,6 +27,6 @@ typedef unsigned char bool;
 #define ERR_INVALID_TYPE -3
 
 /* prototypes */
-void print(log_level_t lvl, const char *format, void *id, ... );
+void print(log_level_t lvl, const char *format, const char *id, ... );
 
 #endif /* _COMMON_H_ */

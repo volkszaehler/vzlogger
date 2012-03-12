@@ -38,8 +38,11 @@
 #include <sys/time.h>
 #include <fcntl.h>
 
-#include "list.h"
-#include "meter.h"
+#include <list>
+
+//#include "list.h"
+#include <include/config.h>
+#include <meter.h>
 #include "obis.h"
 #include "vzlogger.h"
 #include "channel.h"
@@ -49,8 +52,9 @@
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
 
-list_t mappings;	/* mapping between meters and channels */
-config_options_t options;	/* global application options */
+
+MapContainer::Ptr mappings;	/* mapping between meters and channels */
+Config_Options options;	/* global application options */
 
 /**
  * Command line options
@@ -94,8 +98,8 @@ const char *long_options_descs[] = {
  * @param id could be NULL for general messages
  * @todo integrate into syslog
  */
-void print(log_level_t level, const char *format, void *id, ... ) {
-	if (level > options.verbosity) {
+void print(log_level_t level, const char *format, const char *id, ... ) {
+	if (level > options.verbosity()) {
 		return; /* skip message if its under the verbosity level */
 	}
 
@@ -129,11 +133,11 @@ void print(log_level_t level, const char *format, void *id, ... ) {
 
 	va_start(args, id);
 	/* append to logfile */
-	if (options.logfd) {
-		fprintf(options.logfd, "%-24s", prefix);
-		vfprintf(options.logfd, format, args);
-		fprintf(options.logfd, "\n");
-		fflush(options.logfd);
+	if (options.logfd()) {
+		fprintf(options.logfd(), "%-24s", prefix);
+		vfprintf(options.logfd(), format, args);
+		fprintf(options.logfd(), "\n");
+		fflush(options.logfd());
 	}
 	va_end(args);
 }
@@ -163,8 +167,8 @@ void show_usage(char *argv[]) {
 	/* obis aliases */
 	printf("\n  following OBIS aliases are available:\n");
 	char obis_str[OBIS_STR_LEN];
-	for (const obis_alias_t *it = obis_get_aliases(); it->name != NULL; it++) {
-		obis_unparse(it->id, obis_str, OBIS_STR_LEN);
+	for (obis_alias_t *it = obis_get_aliases(); it->name != NULL; it++) {
+    it->id.unparse(obis_str, OBIS_STR_LEN);
 		printf("\t%-17s%-31s%-22s\n", it->name, it->desc, obis_str);
 	}
 
@@ -201,10 +205,10 @@ void daemonize() {
 
 	/* handle standart I/O */
 	i = open("/dev/null", O_RDWR);
-	dup(i);
-	dup(i);
+	if(dup(i)<0) {}
+	if(dup(i)<0) {}
 
-	chdir("/"); /* change working directory */
+	if(chdir("/")<0) {} /* change working directory */
 	umask(0022);
 
 	/* ignore signals from parent tty */
@@ -225,15 +229,7 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-	print(log_info, "Closing connections to terminate", NULL);
-
-	foreach(mappings, mapping, map_t) {
-		pthread_cancel(mapping->thread);
-
-		foreach(mapping->channels, ch, channel_t) {
-			pthread_cancel(ch->thread);
-		}
-	}
+  mappings->quit(sig);
 }
 
 /**
@@ -242,7 +238,8 @@ void quit(int sig) {
  * @param options pointer to structure for options
  * @return int 0 on succes, <0 on error
  */
-int config_parse_cli(int argc, char * argv[], config_options_t * options) {
+int config_parse_cli(int argc, char * argv[], Config_Options * options) {
+				options->local(1);
 	while (1) {
 		int c = getopt_long(argc, argv, "c:o:p:lhVdfv:", long_options, NULL);
 
@@ -251,34 +248,33 @@ int config_parse_cli(int argc, char * argv[], config_options_t * options) {
 
 		switch (c) {
 			case 'v':
-				options->verbosity = atoi(optarg);
+				options->verbosity(atoi(optarg));
 				break;
 
 #ifdef LOCAL_SUPPORT
 			case 'l':
-				options->local = 1;
+				options->local(1);
 				break;
 
 			case 'p': /* port for local interface */
-				options->port = atoi(optarg);
+				options->port(atoi(optarg));
 				break;
 #endif /* LOCAL_SUPPORT */
 
 			case 'd':
-				options->daemon = 1;
+				options->daemon(1);
 				break;
 
 			case 'f':
-				options->foreground = 1;
+				options->foreground(1);
 				break;
 
 			case 'c': /* config file */
-				free(options->config);
-				options->config = strdup(optarg);
+				options->config(optarg);
 				break;
 
 			case 'o': /* log file */
-				options->log = strdup(optarg);
+				options->log(optarg);
 				break;
 
 			case 'V':
@@ -306,18 +302,6 @@ int config_parse_cli(int argc, char * argv[], config_options_t * options) {
  * The application entrypoint
  */
 int main(int argc, char *argv[]) {
-	/* default options */
-	options.config = strdup("/etc/vzlogger.conf");
-	options.log = NULL;
-	options.logfd = NULL;
-	options.port = 8080;
-	options.verbosity = 0;
-	options.comet_timeout = 30;
-	options.buffer_length = 600;
-	options.retry_pause = 15;
-	options.daemon = FALSE;
-	options.local = FALSE;
-	options.logging = TRUE;
 
 	/* bind signal handler */
 	struct sigaction action;
@@ -331,7 +315,6 @@ int main(int argc, char *argv[]) {
 
 	/* initialize ADTs and APIs */
 	curl_global_init(CURL_GLOBAL_ALL);
-	list_init(&mappings);
 
 	/* parse command line and file options */
 	// TODO command line should have a higher priority as file
@@ -339,37 +322,46 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (config_parse(options.config, &mappings, &options) != SUCCESS) {
-		return EXIT_FAILURE;
-	}
+	mappings = (MapContainer::Ptr)(new MapContainer());
+  try {
+    options.config_parse(mappings);
+  } catch ( std::exception &e) {
+    std::cout<<"Failed: "<< e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+	options.logging((!options.local() || options.daemon()));
 
-	options.logging = (!options.local || options.daemon);
-
-	if (!options.foreground && (options.daemon || options.local)) {
-		print(log_info, "Daemonize process...", NULL);
+	if (!options.foreground() && (options.daemon() || options.local())) {
+		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
 
 	/* open logfile */
-	if (options.log) {
-		FILE *logfd = fopen(options.log, "a");
+	if (options.log() != "") {
+		FILE *logfd = fopen(options.log().c_str(), "a");
 
 		if (logfd == NULL) {
-			print(log_error, "Cannot open logfile %s: %s", NULL, options.log, strerror(errno));
+			print(log_error, "Cannot open logfile %s: %s", (char*)0, options.log().c_str(), strerror(errno));
 			return EXIT_FAILURE;
 		}
 
-		options.logfd = logfd;
-		print(log_debug, "Opened logfile %s", NULL, options.log);
+		options.logfd(logfd);
+		print(log_debug, "Opened logfile %s", (char*)0, options.log().c_str());
 	}
 
-	if (mappings.size <= 0) {
-		print(log_error, "No meters found!", NULL);
+	if (mappings->size() <= 0) {
+		print(log_error, "No meters found!", (char*)0);
 		return EXIT_FAILURE;
 	}
 
+  print(log_debug, "===> Start meters.", "");
+  try {
 	/* open connection meters & start threads */
-	foreach(mappings, mapping, map_t) {
+  for(MapContainer::iterator it = mappings->begin(); it!=mappings->end(); it++) {
+    it->start();
+    
+#if 0
 		meter_t *mtr = &mapping->meter;
 
 		if (meter_open(mtr) != SUCCESS) {
@@ -379,7 +371,7 @@ int main(int argc, char *argv[]) {
 		else {
 			print(log_info, "Meter connection established", mtr);
 		}
-
+    
 		pthread_create(&mapping->thread, NULL, &reading_thread, (void *) mapping);
 		print(log_debug, "Meter thread started", mtr);
 
@@ -394,25 +386,34 @@ int main(int argc, char *argv[]) {
 				print(log_debug, "Logging thread started", ch);
 			}
 		}
+#endif
 	}
 
 #ifdef LOCAL_SUPPORT
 	 /* start webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
-	if (options.local) {
-		print(log_info, "Starting local interface HTTPd on port %i", "http", options.port);
+	if (options.local()) {
+		//print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
 		httpd_handle = MHD_start_daemon(
 			MHD_USE_THREAD_PER_CONNECTION,
-			options.port,
+			options.port(),
 			NULL, NULL,
-			&handle_request, &mappings,
+			&handle_request, (void*)&mappings,
 			MHD_OPTION_END
-		);
+      );
 	}
 #endif /* LOCAL_SUPPORT */
-
+  } catch ( std::exception &e) {
+    print(log_error, "Startup failed for %s", "", e.what());
+  }
+  print(log_debug, "Startup done.", "");
+  sleep(120);
+  
 	/* wait for all threads to terminate */
-	foreach(mappings, mapping, map_t) {
+  for(MapContainer::iterator it = mappings->begin(); it!=mappings->end(); it++) {
+    it->stop();
+    
+#if 0
 		meter_t *mtr = &mapping->meter;
 
 		pthread_join(mapping->thread, NULL);
@@ -427,6 +428,7 @@ int main(int argc, char *argv[]) {
 
 		list_free(&mapping->channels);
 		meter_free(mtr);
+#endif
 	}
 
 #ifdef LOCAL_SUPPORT
@@ -437,14 +439,11 @@ int main(int argc, char *argv[]) {
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
-	free(options.config);
-	list_free(&mappings);
 	curl_global_cleanup();
 
 	/* close logfile */
-	if (options.logfd) {
-		free(options.log);
-		fclose(options.logfd);
+	if (options.logfd()) {
+		fclose(options.logfd());
 	}
 
 	return EXIT_SUCCESS;

@@ -32,11 +32,18 @@
 #include "meter.h"
 #include "api.h"
 #include "vzlogger.h"
+#include <VZException.hpp>
 
-extern config_options_t options;
+extern Config_Options options;
 
-int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *arg) {
-	channel_t *ch = (channel_t *) arg;
+int curl_custom_debug_callback(
+  CURL *curl
+  , curl_infotype type
+  , char *data
+  , size_t size
+  , void *arg
+  ) {
+	Channel *ch = static_cast<Channel *> (arg);
 	char *end = strchr(data, '\n');
 
 	if (data == end) return 0; /* skip empty line */
@@ -45,17 +52,17 @@ int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_
 		case CURLINFO_TEXT:
 		case CURLINFO_END:
 			if (end) *end = '\0'; /* terminate without \n */
-			print(log_debug+5, "CURL: %.*s", ch, (int) size, data);
+			print((log_level_t)(log_debug+5), "CURL: %.*s", ch->name(), (int) size, data);
 			break;
 
 		case CURLINFO_SSL_DATA_IN:
 		case CURLINFO_DATA_IN:
-			print(log_debug+5, "CURL: Received %lu bytes", ch, (unsigned long) size);
+			print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
 			break;
 
 		case CURLINFO_SSL_DATA_OUT:
 		case CURLINFO_DATA_OUT:
-			print(log_debug+5, "CURL: Sent %lu bytes.. ", ch, (unsigned long) size);
+			print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
 			break;
 
 		case CURLINFO_HEADER_IN:
@@ -68,9 +75,9 @@ int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_
 
 size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data) {
 	size_t realsize = size * nmemb;
-	CURLresponse *response = (CURLresponse *) data;
+	CURLresponse *response = static_cast<CURLresponse *>(data);
 
-	response->data = realloc(response->data, response->size + realsize + 1);
+	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { /* out of memory! */
 		print(log_error, "Cannot allocate memory", NULL);
 		exit(EXIT_FAILURE);
@@ -83,21 +90,24 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
 	return realsize;
 }
 
-json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last) {
-	json_object *json_tuples = json_object_new_array();
-	reading_t *it;
+json_object * api_json_tuples(Buffer::Ptr buf) {
 
-	for (it = first; it != NULL && it != last->next; it = it->next) {
+	json_object *json_tuples = json_object_new_array();
+	Buffer::iterator it;
+
+  print(log_debug, "==> number of tuples: %d", "api", buf->size());
+  
+	for (it = buf->begin(); it != buf->end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
 
-		pthread_mutex_lock(&buf->mutex);
+		buf->lock();
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		double timestamp = tvtod(it->time) * 1000; 
-		double value = it->value;
-		pthread_mutex_unlock(&buf->mutex);
-
+		double timestamp = it->tvtod() * 1000; 
+		double value = it->value();
+		buf->unlock();
+    
 		json_object_array_add(json_tuple, json_object_new_double(timestamp));
 		json_object_array_add(json_tuple, json_object_new_double(value));
 
@@ -107,35 +117,38 @@ json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last) 
 	return json_tuples;
 }
 
-int api_init(channel_t *ch, api_handle_t *api) {
+vz::Api::Api(Channel::Ptr ch)
+    : _ch(ch)
+            //    , _api(api)
+{
 	char url[255], agent[255];
 
 	/* prepare header, uuid & url */
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	/* build user agent */
-	sprintf(url, "%s/data/%s.json", ch->middleware, ch->uuid);			/* build url */
+	sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid());			/* build url */
 
-	api->headers = NULL;
-	api->headers = curl_slist_append(api->headers, "Content-type: application/json");
-	api->headers = curl_slist_append(api->headers, "Accept: application/json");
-	api->headers = curl_slist_append(api->headers, agent);
+	_api.headers = NULL;
+	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
+	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
+	_api.headers = curl_slist_append(_api.headers, agent);
 
-	api->curl = curl_easy_init();
-	if (!api->curl) {
-		return EXIT_FAILURE;
+	_api.curl = curl_easy_init();
+	if (!_api.curl) {
+		throw vz::VZException("CURL: cannot create handle.");
 	}
 
-	curl_easy_setopt(api->curl, CURLOPT_URL, url);
-	curl_easy_setopt(api->curl, CURLOPT_HTTPHEADER, api->headers);
-	curl_easy_setopt(api->curl, CURLOPT_VERBOSE, options.verbosity);
-	curl_easy_setopt(api->curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
-	curl_easy_setopt(api->curl, CURLOPT_DEBUGDATA, (void *) ch);
+	curl_easy_setopt(_api.curl, CURLOPT_URL, url);
+	curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
+	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, _ch.get());
 
-	return EXIT_SUCCESS;
 }
 
-void api_free(api_handle_t *api) {
-	curl_easy_cleanup(api->curl);
-	curl_slist_free_all(api->headers);
+vz::Api::~Api()
+{
+	curl_easy_cleanup(_api.curl);
+	curl_slist_free_all(_api.headers);
 }
 
 void api_parse_exception(CURLresponse response, char *err, size_t n) {

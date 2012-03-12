@@ -31,141 +31,152 @@
 #include "vzlogger.h"
 #include "threads.h"
 
-extern config_options_t options;
+extern Config_Options options;
 
 void reading_thread_cleanup(void *rds) {
 	free(rds);
 }
 
 void * reading_thread(void *arg) {
-	reading_t *rds;
-	map_t *mapping;
-	meter_t *mtr;
+	std::vector<Reading> rds;
+	Map *mapping = static_cast<Map *>(arg);
+	Meter::Ptr  mtr = mapping->meter();
 	time_t last, delta;
 	const meter_details_t *details;
 	size_t n = 0;
 
-	mapping = (map_t *) arg;
-	mtr = &mapping->meter;
-	details = meter_get_details(mtr->protocol);
+	details = meter_get_details(mtr->protocolId());
 
 	/* allocate memory for readings */
-	size_t bytes = sizeof(reading_t) * details->max_readings;
-	rds = malloc(bytes);
-	memset(rds, 0, bytes);
+	//size_t bytes = sizeof(reading_t) * details->max_readings;
+	//rds = malloc(bytes);
+	//memset(rds, 0, bytes);
+  for(size_t i=0; i< details->max_readings; i++) {
+    Reading rd(mtr->identifier());
+    rds.push_back(rd);
+  }
+  
+	//pthread_cleanup_push(&reading_thread_cleanup, rds);
 
-	pthread_cleanup_push(&reading_thread_cleanup, rds);
+  print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
+  print(log_debug, "Config.daemon: %d", "", options.daemon());
+  print(log_debug, "Config.local: %d", "", options.local());
 
-	do { /* start thread main loop */
+
+  do { /* start thread main loop */
 		/* fetch readings from meter and calculate delta */
 		last = time(NULL);
-		n = meter_read(mtr, rds, details->max_readings);
+		n = mtr->read(rds, details->max_readings);
 		delta = time(NULL) - last;
 
 		/* dumping meter output */
-		if (options.verbosity > log_debug) {
-			print(log_debug, "Got %i new readings from meter:", mtr, n);
+		if (options.verbosity() > log_debug) {
+			print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
 
 			char identifier[MAX_IDENTIFIER_LEN];
-			for (int i = 0; i < n; i++) {
-				reading_id_unparse(mtr->protocol, rds[i].identifier, identifier, MAX_IDENTIFIER_LEN);
-				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr, identifier, rds[i].value, tvtod(rds[i].time));
+			for (size_t i = 0; i < n; i++) {
+				rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
+				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr->name(),
+              identifier, rds[i].value(), rds[i].tvtod());
 			}
 		}
 
 		/* update buffer length with current interval */
-		if (details->periodic == FALSE && delta > 0 && delta != mtr->interval) {
-			print(log_debug, "Updating interval to %i", mtr, delta);
-			mtr->interval = delta;
+		if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
+			print(log_debug, "Updating interval to %i", mtr->name(), delta);
+			mtr->interval(delta);
 		}
 
 		/* insert readings into channel queues */
-		foreach(mapping->channels, ch, channel_t) {
-			buffer_t *buf = &ch->buffer;
-			reading_t *add = NULL;
+    for(Map::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+			Reading *add = NULL;
 
-			for (int i = 0; i < n; i++) {
-				if (reading_id_compare(mtr->protocol, rds[i].identifier, ch->identifier) == 0) {
-					if (tvtod(ch->last.time) < tvtod(rds[i].time)) {
-						ch->last = rds[i];
+      print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
+      
+			for (size_t i = 0; i < n; i++) {
+				//if (reading_id_compare(mtr->protocol, rds[i].identifier, ch->identifier) == 0) {
+        print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
+				if ( *rds[i].identifier().get() == *ch->identifier().get()) {
+          print(log_debug, "found channel", mtr->name());
+					if (ch->tvtod() < rds[i].tvtod()) {
+						ch->last(&rds[i]);
 					}
 
-					print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch, rds[i].value, tvtod(rds[i].time));
-					reading_t *rd = buffer_push(&ch->buffer, &rds[i]);
+					print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch->name(),
+                rds[i].value(), rds[i].tvtod());
+					ch->push(rds[i]);
 
 					if (add == NULL) {
-						add = rd; /* remember first reading which has been added to the buffer */
+						add = &rds[i]; /* remember first reading which has been added to the buffer */
 					}
 				}
 			}
 
 			/* update buffer length */
-			if (options.local) {
-				buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
+			if (options.local()) {
+				//buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
 			}
 
 			/* queue reading into sending buffer logging thread if
 			   logging is enabled & sent queue is empty */
-			if (options.logging && buf->sent == NULL) {
-				buf->sent = add;
+			if (options.logging()) {
+				//ch->push(buf->sent = add);
 			}
 
 			/* shrink buffer */
-			buffer_clean(buf);
+			//buffer_clean(buf);
 
 			/* notify webserver and logging thread */
-			pthread_mutex_lock(&buf->mutex);
-			pthread_cond_broadcast(&ch->condition);
-			pthread_mutex_unlock(&buf->mutex);
+			ch->notify();
 
 			/* debugging */
-			if (options.verbosity >= log_debug) {
+			if (options.verbosity() >= log_debug) {
 				size_t dump_len = 24;
-				char *dump = malloc(dump_len);
+				char *dump = (char*)malloc(dump_len);
 
 				if (dump == NULL) {
-					print(log_error, "cannot allocate buffer", ch);
+					print(log_error, "cannot allocate buffer", ch->name());
 				}
 
-				while (dump == NULL || buffer_dump(buf, dump, dump_len) == NULL) {
+				while (dump == NULL || ch->dump(dump, dump_len) == NULL) {
 					dump_len *= 1.5;
 					free(dump);
-					dump = malloc(dump_len);
+					dump = (char*)malloc(dump_len);
 				}
 
-				print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch, buf->size, buf->keep, dump);
+				print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch->name(),
+              ch->size(), ch->keep(), dump);
 
 				free(dump);
 			}
 		}
 
-		if ((options.daemon || options.local) && details->periodic) {
-			print(log_info, "Next reading in %i seconds", mtr, mtr->interval);
-			sleep(mtr->interval);
+		if ((options.daemon() || options.local()) && details->periodic) {
+			print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
+			sleep(mtr->interval());
 		}
-	} while (options.daemon || options.local);
+  } while (options.daemon() || options.local());
 
-	pthread_cleanup_pop(1);
+  print(log_debug, "Stop reading.! ", mtr->name());
+	//pthread_cleanup_pop(1);
 
 	return NULL;
 }
 
 void logging_thread_cleanup(void *arg) {
-	api_handle_t *api = (api_handle_t *) arg;
+//	api_handle_t *api = (api_handle_t *) arg;
 
-	api_free(api);
+//	api_free(api);
 }
 
 void * logging_thread(void *arg) {
-	channel_t *ch = (channel_t *) arg; /* casting argument */
-	api_handle_t api;
+	Channel::Ptr ch;
+  ch.reset(static_cast<Channel *>(arg)); /* casting argument */
+  vz::Api api(ch);
 
-	if (api_init(ch, &api) != SUCCESS) {
-		print(log_error, "CURL: cannot create handle", ch);
-		exit(EXIT_FAILURE);
-	}
-
-	pthread_cleanup_push(&logging_thread_cleanup, &api);
+  print(log_debug, "===> Loggingsthread....", "");
+  
+	//pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
 		CURLresponse response;
@@ -178,39 +189,36 @@ void * logging_thread(void *arg) {
 		response.data = NULL;
 		response.size = 0;
 
-		pthread_mutex_lock(&ch->buffer.mutex);
-		while (ch->buffer.sent == NULL) { /* detect spurious wakeups */
-			pthread_cond_wait(&ch->condition, &ch->buffer.mutex); /* sleep until new data has been read */
-		}
-		pthread_mutex_unlock(&ch->buffer.mutex);
+		ch->wait();
 
-		reading_t *first = ch->buffer.sent;
-		reading_t *last = ch->buffer.tail;
-		json_obj = api_json_tuples(&ch->buffer, first, last);
+		json_obj = api_json_tuples(ch->buffer());
 		json_str = json_object_to_json_string(json_obj);
 
-		print(log_debug, "JSON request body: %s", ch, json_str);
+		print(log_debug, "JSON request body: %s", ch->name(), json_str);
 
-		curl_easy_setopt(api.curl, CURLOPT_POSTFIELDS, json_str);
-		curl_easy_setopt(api.curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
-		curl_easy_setopt(api.curl, CURLOPT_WRITEDATA, (void *) &response);
+		curl_easy_setopt(api.curl(), CURLOPT_POSTFIELDS, json_str);
+		curl_easy_setopt(api.curl(), CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
+		curl_easy_setopt(api.curl(), CURLOPT_WRITEDATA, (void *) &response);
 
-		curl_code = curl_easy_perform(api.curl);
-		curl_easy_getinfo(api.curl, CURLINFO_RESPONSE_CODE, &http_code);
+		curl_code = curl_easy_perform(api.curl());
+		curl_easy_getinfo(api.curl(), CURLINFO_RESPONSE_CODE, &http_code);
 
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-			print(log_debug, "Request succeeded with code: %i", ch, http_code);
-			ch->buffer.sent = last->next;
+			print(log_debug, "Request succeeded with code: %i", ch->name(), http_code);
+      //clear buffer-readings
+			//ch->buffer.sent = last->next;
 		}
 		else { /* error */
 			if (curl_code != CURLE_OK) {
-				print(log_error, "CURL: %s", ch, curl_easy_strerror(curl_code));
+				print(log_error, "CURL: %s",
+              ch->name(),
+              curl_easy_strerror((CURLcode)curl_code));
 			}
 			else if (http_code != 200) {
 				char err[255];
 				api_parse_exception(response, err, 255);
-				print(log_error, "Error from middleware: %s", ch, err);
+				print(log_error, "Error from middleware: %s", ch->name(), err);
 			}
 		}
 
@@ -218,13 +226,15 @@ void * logging_thread(void *arg) {
 		free(response.data);
 		json_object_put(json_obj);
 
-		if (options.daemon && (curl_code != CURLE_OK || http_code != 200)) {
-			print(log_info, "Waiting %i secs for next request due to previous failure", ch, options.retry_pause);
-			sleep(options.retry_pause);
+		if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
+			print(log_info, "Waiting %i secs for next request due to previous failure",
+            ch->name(), options.retry_pause());
+			sleep(options.retry_pause());
 		}
-	} while (options.daemon);
+	} while (options.daemon() || 1);
 
-	pthread_cleanup_pop(1);
+  print(log_debug, "Stop logging.! ", ch->name());
+	//pthread_cleanup_pop(1);
 
 	return NULL;
 }

@@ -23,16 +23,18 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+
 #include <stdlib.h>
 #include <math.h>
 
 #include "reading.h"
-//#include "meter_protocol.h"
 
 Reading::Reading(ReadingIdentifier::Ptr pIndentifier)
-    : _value(0)
+    : _deleted(false)
+    , _value(0)
                 //    , time(0)
-    , identifier(pIndentifier)
+    , _identifier(pIndentifier)
 {
   
 }
@@ -41,10 +43,15 @@ Reading::Reading(
   , struct timeval pTime
   , ReadingIdentifier::Ptr pIndentifier
   )
-    : _value(pValue)
-    , time(pTime)
-    , identifier(pIndentifier)
+    : _deleted(false)
+    , _value(pValue)
+    , _time(pTime)
+    , _identifier(pIndentifier)
 {
+}
+
+const double Reading::tvtod() const {
+	return _time.tv_sec + _time.tv_usec / 1e6;
 }
 
 double Reading::tvtod(struct timeval tv) {
@@ -123,7 +130,8 @@ size_t Reading::unparse(
   meter_protocol_t protocol,
   char *buffer, size_t n
   ) {
-  return identifier->unparse(buffer, n);
+  
+  return _identifier->unparse(buffer, n);
   
 #if 0
 	switch (protocol) {
@@ -151,11 +159,12 @@ size_t Reading::unparse(
 #endif
 }
 
-int ReadingIdentifier::operator==( ReadingIdentifier &cmp) {
+bool ReadingIdentifier::operator==( ReadingIdentifier &cmp) {
   return this->compare(this, &cmp);
 }
 
-int ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs) {
+bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs) {
+
   if(ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
     if(ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
       return lhsx == rhsx;
@@ -182,14 +191,17 @@ int ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs)
 size_t ObisIdentifier::unparse(char *buffer, size_t n) {
   return _obis.unparse(buffer, n);
 }
-int ObisIdentifier::operator==(ObisIdentifier &cmp) {
+bool ObisIdentifier::operator==(ObisIdentifier &cmp) {
   return (_obis == cmp.obis());
 }
 
 size_t StringIdentifier::unparse(char *buffer, size_t n) {
   if (_string != "") {
     strncpy(buffer, _string.c_str(), n);
+  } else {
+    strncpy(buffer, "", n);
   }
+  
 	return strlen(buffer);
 }
 
@@ -202,5 +214,10 @@ size_t UuidIdentifier::unparse(char *buffer, size_t n) {
 
 size_t ChannelIdentifier::unparse(char *buffer, size_t n) {
   snprintf(buffer, n, "sensor%u/%s", abs(_channel) - 1, (_channel > 0) ? "power" : "consumption");
+	return strlen(buffer);
+}
+
+size_t NilIdentifier::unparse(char *buffer, size_t n) {
+  buffer[0] = '\0';
 	return strlen(buffer);
 }

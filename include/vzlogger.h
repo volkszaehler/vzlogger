@@ -42,6 +42,6 @@ void daemonize();
 void show_usage(char ** argv);
 void show_aliases();
 
-int options_parse(int argc, char *argv[], config_options_t *options);
+int options_parse(int argc, char *argv[], Config_Options *options);
 
 #endif /* _VZLOGGER_H_ */
