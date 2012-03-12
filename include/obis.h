@@ -28,14 +28,14 @@
 
 #include <string>
 
-//#define OBIS_STR_LEN (6*3+5+1)
+#define OBIS_STR_LEN (6*3+5+1)
 
 /* regex: A-BB:CC.DD.EE([*&]FF)? */
 class Obis {
   public:
 	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
 	Obis(unsigned char *pRaw);
-	Obis();
+	Obis(){};
 
 	//static Obis getByAlias(const char *alias);
 
@@ -48,11 +48,13 @@ class Obis {
   const bool isNull() const;
 
   protected:
-	unsigned char _raw[6];
-	struct {
-		unsigned char media, channel, indicator, mode, quantities;
-		unsigned char storage;	/* not used in Germany */
-	} groups;
+  union {
+    unsigned char _raw[6];
+    struct {
+      unsigned char media, channel, indicator, mode, quantities;
+      unsigned char storage;	/* not used in Germany */
+    } groups;
+  } _obisId;
 };
 
 /*
@@ -68,9 +70,14 @@ private:
 */
 
 typedef struct {
-	Obis id;
+//  public:
+//	Obis &id() { return &_id; }
+
+  Obis id;
 	const char *name;
 	const char *desc;
 } obis_alias_t;
+
+obis_alias_t * obis_get_aliases();
 
 #endif /* _OBIS_H_ */

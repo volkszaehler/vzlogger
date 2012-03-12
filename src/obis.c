@@ -33,7 +33,7 @@
 
 #define DC 0xff // wildcard, dont care
 
-static const obis_alias_t aliases[] = {
+static obis_alias_t aliases[] = {
 /*   A    B    C    D    E    F    alias		description
 ====================================================================*/
 
@@ -86,7 +86,7 @@ static const obis_alias_t aliases[] = {
 };
 
 
-const obis_alias_t * obis_get_aliases() {
+obis_alias_t * obis_get_aliases() {
 	return aliases;
 }
 
@@ -98,22 +98,22 @@ Obis::Obis(
   unsigned char e,
   unsigned char f
   ) {
-  _raw[0]=a;
-  _raw[1]=b;
-  _raw[2]=c;
-  _raw[3]=d;
-  _raw[4]=e;
-  _raw[5]=f;
+  _obisId._raw[0]=a;
+  _obisId._raw[1]=b;
+  _obisId._raw[2]=c;
+  _obisId._raw[3]=d;
+  _obisId._raw[4]=e;
+  _obisId._raw[5]=f;
   
 }
 
 Obis::Obis(unsigned char *raw) {
 	if (raw == NULL) {
 		// TODO why not initialize with DC fields to accept all readings?
-		memset(_raw, 0, 6); /* initialize with zeros */
+		memset(_obisId._raw, 0, 6); /* initialize with zeros */
 	}
 	else {
-		memcpy(_raw, raw, 6);
+		memcpy(_obisId._raw, raw, 6);
 	}
 }
 
@@ -127,7 +127,7 @@ int Obis::parse(const char *str) {
 
 	num = byte = 0;
 	field = -1;
-	memset(&_raw, 0xff, 6); /* initialize as wildcard */
+	memset(&_obisId._raw, 0xff, 6); /* initialize as wildcard */
 
 	/* format: "A-B:C.D.E[*&]F" */
 	/* fields A, B, E, F are optional */
@@ -155,13 +155,13 @@ int Obis::parse(const char *str) {
 				return ERR;
 			}
 
-			_raw[field] = num;
+			_obisId._raw[field] = num;
 			num = 0;
 		}
 	}
 
 	/* set last field */
-	_raw[++field] = num;
+	_obisId._raw[++field] = num;
 
 	/* fields C & D are mandatory */
 	return (field < D) ? ERR : SUCCESS;
@@ -179,24 +179,24 @@ int obis_lookup_alias(const char *alias, Obis *id) {
 
 size_t Obis::unparse(char *buffer, size_t n) {
 	return snprintf(buffer, n, "%i-%i:%i.%i.%i*%i",
-                  groups.media,
-                  groups.channel,
-                  groups.indicator,
-                  groups.mode,
-                  groups.quantities,
-                  groups.storage
+                  _obisId.groups.media,
+                  _obisId.groups.channel,
+                  _obisId.groups.indicator,
+                  _obisId.groups.mode,
+                  _obisId.groups.quantities,
+                  _obisId.groups.storage
                   );
 }
 
 const bool Obis::operator==(const Obis &rhs) {
 	for (int i = 0; i < 6; i++) {
-		if (_raw[i] == rhs._raw[i] || _raw[i] == 0xff || rhs._raw[i] == 0xff ) {
+		if (_obisId._raw[i] == rhs._obisId._raw[i] || _obisId._raw[i] == 0xff || rhs._obisId._raw[i] == 0xff ) {
 			continue; /* skip on wildcard or equal */
 		}
-		else if (_raw[i] < rhs._raw[i]) {
+		else if (_obisId._raw[i] < rhs._obisId._raw[i]) {
 			return -1;
 		}
-		else if (_raw[i] > rhs._raw[i]) {
+		else if (_obisId._raw[i] > rhs._obisId._raw[i]) {
 			return 1;
 		}
 	}
@@ -206,23 +206,23 @@ const bool Obis::operator==(const Obis &rhs) {
 
 const bool Obis::isNull() const {
 	return !(
-		_raw[0] ||
-		_raw[1] ||
-		_raw[2] ||
-		_raw[3] ||
-		_raw[4] ||
-		_raw[5]
+		_obisId._raw[0] ||
+		_obisId._raw[1] ||
+		_obisId._raw[2] ||
+		_obisId._raw[3] ||
+		_obisId._raw[4] ||
+		_obisId._raw[5]
 	);
 }
 
 const bool Obis::isManufacturerSpecific() const {
-	return (false
-//		(id.groups.channel >= 128 && id.groups.channel <= 199) ||
-//		(id.groups.indicator >= 128 && id.groups.indicator <= 199) ||
-//		(id.groups.indicator == 240) ||
-//		(id.groups.mode >= 128 && id.groups.mode <= 254) ||
-//		(id.groups.quantities >= 128 && id.groups.quantities <= 254) ||
-//		(id.groups.storage >= 128 && id.groups.storage <= 254)
+	return (
+		(_obisId.groups.channel >= 128 && _obisId.groups.channel <= 199) ||
+		(_obisId.groups.indicator >= 128 && _obisId.groups.indicator <= 199) ||
+		(_obisId.groups.indicator == 240) ||
+		(_obisId.groups.mode >= 128 && _obisId.groups.mode <= 254) ||
+		(_obisId.groups.quantities >= 128 && _obisId.groups.quantities <= 254) ||
+		(_obisId.groups.storage >= 128 && _obisId.groups.storage <= 254)
 	);
 }
 
