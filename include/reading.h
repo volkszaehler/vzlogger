@@ -52,6 +52,14 @@ typedef struct reading {
 enum meter_procotol; /* forward declaration */
 
 /**
+ * Manages memory for string identifiers
+ *
+ * @param str string to lookup in the registry
+ * @return pointer to string in the regstry
+ */
+char * reading_id_registry(const char *str);
+
+/**
  * Parse two reading identifiers in a given protocol context
  *
  * @return result like in strcmp()

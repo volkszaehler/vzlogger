@@ -25,9 +25,31 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "reading.h"
 #include "meter.h"
+
+char * reading_id_registry(const char *str) {
+	static list_t strings;
+
+	char *found = NULL;
+
+	/* linear search in string list */
+	foreach(strings, it, char *) {
+		if (strcmp(it, str) == 0) {
+			found = it;
+			break;
+			}
+	}
+
+	if (!found) {
+		found = strdup(str);
+		list_push(strings, found);
+	}
+
+	return found;
+}
 
 int reading_id_compare(meter_protocol_t protocol, reading_id_t a, reading_id_t b) {
 	switch (protocol) {
@@ -40,7 +62,10 @@ int reading_id_compare(meter_protocol_t protocol, reading_id_t a, reading_id_t b
 
 		case meter_protocol_file:
 		case meter_protocol_exec:
-			return strcmp(a.string, b.string);
+			/* we only need to compare the base pointers here,
+			   because each identifer exists only once in the registry
+			   and has therefore a unique pointer */
+			return !(a.string == b.string);
 
 		default:
 			/* no channel id, adding all readings to buffer */
@@ -81,7 +106,7 @@ int reading_id_parse(meter_protocol_t protocol, reading_id_t *id, const char *st
 
 		case meter_protocol_file:
 		case meter_protocol_exec:
-			id->string = strdup(string); // TODO free() elsewhere
+			id->string = reading_id_registry(string);
 			break;
 
 		default: /* ignore other protocols which do not provide id's */
