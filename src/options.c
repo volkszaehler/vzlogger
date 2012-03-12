@@ -30,70 +30,101 @@
 #include <VZException.hpp>
 
 
-Option::Option(const char *pKey) {
-	_key = strdup(pKey);
+Option::Option(const char *pKey)
+    : _key(pKey)
+{
+	//_key = strdup(pKey);
 }
 
-Option::Option(char *pKey, char *pValue) {
-  _key = strdup(pKey);
-	value.string = strdup(pValue);
-	type = type_string;
+Option::Option(const char *pKey, struct json_object *jso)
+    : _key(pKey)
+{
+  std::cout<< "New option...."<< pKey << std::endl;
+  
+  //_key = strdup(pKey);
+  std::cout<< "New option...."<< _key << std::endl;
+
+	switch (json_object_get_type(jso)) {
+      case json_type_string:	_value_string = json_object_get_string(jso);   break;
+      case json_type_int:	    value.integer = json_object_get_int(jso);     break;
+      case json_type_boolean:	value.boolean = json_object_get_boolean(jso); break;
+      case json_type_double:	value.floating = json_object_get_double(jso); break;
+      default:		throw vz::VZException("Not a valid Type");
+	}
+
+	_type = (type_t)json_object_get_type(jso);
 }
 
-Option::Option(char *pKey, int pValue) {
-  _key = strdup(pKey);
+Option::Option(const char *pKey, char *pValue)
+    : _key(pKey)
+    , _type(type_string)
+    , _value_string(pValue)
+{
+  //_key = strdup(pKey);
+	//value.string = strdup(pValue);
+}
+
+Option::Option(const char *pKey, int pValue)
+    : _key(pKey)
+{
+  //_key = strdup(pKey);
 	value.integer = pValue;
-	type = type_int;
+	_type = type_int;
 }
 
-Option::Option(char *pKey, double pValue) {
-  _key = strdup(pKey);
+Option::Option(const char *pKey, double pValue)
+    : _key(pKey)
+{
+  //_key = strdup(pKey);
 	value.floating = pValue;
-	type = type_double;
+	_type = type_double;
 }
 
-Option::Option(char *pKey, bool pValue) {
-  _key = strdup(pKey);
+Option::Option(const char *pKey, bool pValue)
+    : _key(pKey)
+{
+  //_key = strdup(pKey);
 	value.boolean = pValue;
-	type = type_boolean;
+	_type = type_boolean;
 }
 
 Option::~Option() {
-	if (_key != NULL) {
-		free(_key);
-	}
+//	if (_key != NULL) {
+//		free(_key);
+//	}
 
-	if (value.string != NULL && type == type_string) {
-		free((void*)(value.string));
-	}
+	//if (value.string != NULL && _type == type_string) {
+	//	free((void*)(value.string));
+	//}
 }
 
-Option::operator const char *() {
-	if (type != type_string) throw vz::InvalidTypeException("not a string");
+Option::operator const char *() const {
+	if (_type != type_string) throw vz::InvalidTypeException("not a string");
 
-	return value.string;
+	return _value_string.c_str();
 }
 
-Option::operator int() {
-	if (type != type_int) throw vz::InvalidTypeException("Invalid type");
+Option::operator int() const {
+	if (_type != type_int) throw vz::InvalidTypeException("Invalid type");
 
 	return value.integer;
 }
 
-Option::operator double() {
-	if (type != type_double) throw vz::InvalidTypeException("Invalid type");
+Option::operator double() const {
+	if (_type != type_double) throw vz::InvalidTypeException("Invalid type");
 
 	return value.floating;
 }
 
-Option::operator bool() {
-	if (type != type_boolean) throw vz::InvalidTypeException("Invalid type");
+Option::operator bool() const {
+	if (_type != type_boolean) throw vz::InvalidTypeException("Invalid type");
 
 	return value.boolean;
 }
 
 //Option& OptionList::lookup(List<Option> options, char *key) {
-const Option &OptionList::lookup(std::list<Option> options, char *key) {
+const Option &OptionList::lookup(std::list<Option> options, const char *key) {
+  printf("Search %s \n", key);
   for(const_iterator it = options.begin(); it != options.end(); it++) {
 		if (strcmp(it->key(), key) == 0) {
 			return (*it);
@@ -116,6 +147,41 @@ const Option &OptionList::lookup(std::list<Option> options, char *key) {
 
 	return option;
 #endif
-  throw vz::VZException("Option not found");
+  throw vz::OptionNotFoundException("Option not found");
 }
 
+const char *OptionList::lookup_string(std::list<Option> options, const char *key)
+{
+  Option opt = lookup(options, key);
+  printf("Found %s (%d)\n", key, opt.type());
+  return (const char*)opt;
+}
+
+const int OptionList::lookup_int(std::list<Option> options, const char *key)
+{
+  Option opt = lookup(options, key);
+  printf("Found %s (%d)\n", key, opt.type());
+  return (int)opt;
+}
+
+const bool OptionList::lookup_bool(std::list<Option> options, const char *key)
+{
+  Option opt = lookup(options, key);
+  printf("Found %s (%d)\n", key, opt.type());
+  return (bool)opt;
+}
+
+const double OptionList::lookup_double(std::list<Option> options, const char *key)
+{
+  Option opt = lookup(options, key);
+  printf("Found %s (%d)\n", key, opt.type());
+  return (double)opt;
+}
+
+void OptionList::dump(std::list<Option> options) {
+  std::cout<< "OptionList dump\n" ;
+  
+  for(const_iterator it = options.begin(); it != options.end(); it++) {
+    std::cout << (*it) << std::endl;
+  }
+}
