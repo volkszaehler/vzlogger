@@ -67,6 +67,6 @@ json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last);
 /**
  * Parses JSON encoded exception and stores describtion in err
  */
-void api_parse_exception(CURLresponse response, char *err, size_t n);
+int api_parse_exception(CURLresponse response, char *err, size_t n);
 
 #endif /* _API_H_ */

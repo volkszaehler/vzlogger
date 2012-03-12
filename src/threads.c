@@ -199,19 +199,21 @@ void * logging_thread(void *arg) {
 		curl_easy_getinfo(api.curl, CURLINFO_RESPONSE_CODE, &http_code);
 
 		/* check response */
-		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-			print(log_debug, "Request succeeded with code: %i", ch, http_code);
-			ch->buffer.sent = last->next;
+		if (curl_code != CURLE_OK) {
+			print(log_error, "CURL: %s", ch, curl_easy_strerror(curl_code));
 		}
-		else { /* error */
-			if (curl_code != CURLE_OK) {
-				print(log_error, "CURL: %s", ch, curl_easy_strerror(curl_code));
+		else if (http_code != 200) {
+			char exception[255];
+			if (api_parse_exception(response, exception, 255) == SUCCESS) {
+				print(log_error, "Request failed: [%i] %s", ch, http_code, exception);
 			}
-			else if (http_code != 200) {
-				char err[255];
-				api_parse_exception(response, err, 255);
-				print(log_error, "Error from middleware: %s", ch, err);
+			else {
+				print(log_error, "Request failed: %i", ch, http_code);
 			}
+		}
+		else {
+			print(log_debug, "Request succeeded: %i", ch, http_code);
+			ch->buffer.sent = last->next;
 		}
 
 		/* householding */

@@ -36,16 +36,16 @@ char * reading_id_registry(const char *str) {
 	char *found = NULL;
 
 	/* linear search in string list */
-	foreach(strings, it, char *) {
-		if (strcmp(it, str) == 0) {
-			found = it;
+	foreach(strings, it, const char *) {
+		if (strcmp(*it, str) == 0) {
+			found = *it;
 			break;
-			}
+		}
 	}
 
 	if (!found) {
 		found = strdup(str);
-		list_push(strings, found);
+		list_push(&strings, found);
 	}
 
 	return found;
