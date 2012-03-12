@@ -25,47 +25,76 @@
 
 #ifndef _METER_H_
 #define _METER_H_
+#include <list>
+#include <vector>
 
-#include "list.h"
-#include "reading.h"
-
-using namespace std;
+//#include "list.h"
+#include <reading.h>
+#include <options.h>
+#include <channel.h>
+#include <shared_ptr.hpp>
+#include <meter_protocol.hpp>
+#include <protocols/protocol.hpp>
 
 class Meter {
 
 public:
+  typedef vz::shared_ptr<Meter> Ptr;
+  
+	Meter(std::list<Option> options);
+	Meter(const Meter *mtr);
 	virtual ~Meter();
 
-	virtual int open() = 0;
-	virtual int close() = 0;
-	virtual size_t read(reading_t *rds, size_t n);
+  void init(std::list<Option> options);
+  void open();
+  int close();
+  size_t read(std::vector<Reading> &rds, size_t n);
 
-	int getInterval();
+  void interval(const int i) { _interval = i; }
+
+  vz::protocol::Protocol::Ptr protocol() { return _protocol; }
+  ReadingIdentifier::Ptr identifier() { return _identifier; }
+  const meter_protocol_t protocolId() const { return _protocol_id; } 
+  const bool isEnabled() const { return _enable; }
+  const char *name() const { return _name.c_str(); }
+  const int  interval() const { return _interval; }
 
 protected:
-	Meter(OptionList options);
+	//Meter(std::list<Option> options);
 
-	static int instances;
+  private:
+  vz::protocol::Protocol::Ptr _protocol;
+  ReadingIdentifier::Ptr _identifier;
+  meter_protocol_t _protocol_id;
 	int id;
+  std::string _name;
+  bool _enable;
+  
+	static int instances;
 
-	int interval;
+	int _interval;
 
-	List<Channel> channels;
+	std::vector<Channel> channels;
 
 	pthread_t thread;
 };
 
 typedef struct {
-	meter_protocol_t id;
-	char *name;		/* short identifier for protocol */
-	char *desc;		/* more detailed description */
-	size_t max_readings;	/* how many readings can be read with 1 call */
-	int periodic:1;		/* does this meter has be triggered periodically? */
+	const meter_protocol_t id;
+	const char *name;		/* short identifier for protocol */
+	const char *desc;		/* more detailed description */
+	const size_t max_readings;	/* how many readings can be read with 1 call */
+	const int periodic:1;		/* does this meter has be triggered periodically? */
+
+  //const Meter _meter;
+  
 } meter_details_t;
 
 /**
  * Get list of available meter types
  */
+
+int meter_lookup_protocol(const char* name, meter_protocol_t *protocol);
 const meter_details_t * meter_get_protocols();
 const meter_details_t * meter_get_details(meter_protocol_t protocol);
 

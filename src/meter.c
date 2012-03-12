@@ -28,54 +28,158 @@
 
 #include "meter.h"
 #include "options.h"
+#include <common.h>
+#include <VZException.hpp>
+#include <protocols/d0.h>
+#include <protocols/exec.h>
+#include <protocols/file.h>
+#include <protocols/fluksov2.h>
+#include <protocols/random.h>
+#include <protocols/s0.h>
+#include <protocols/sml.h>
+//#include <protocols/.h>
 
-#define METER_DETAIL(NAME, DESC, MAX_RDS, PERIODIC) { meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC, meter_init_##NAME }
+#define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC) {                  \
+    meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC/*, Meter##CLASSNAME */}
+
+int Meter::instances=0;
 
 static const meter_details_t protocols[] = {
 /*	     alias	description						max_rds	periodic
 ===============================================================================================*/
-METER_DETAIL( 	file, 	"Read from file or fifo",				32,	TRUE),
-//METER_DETAIL(exec, 	"Parse program output",					32,	TRUE),
-METER_DETAIL(random,	"Generate random values with a random walk",		1,	TRUE),
-METER_DETAIL(fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	FALSE),
-METER_DETAIL(s0,	"S0-meter directly connected to RS232",			1,	TRUE),
-METER_DETAIL(d0,	"DLMS/IEC 62056-21 plaintext protocol",			32,	FALSE),
+  METER_DETAIL( 	file, File,	"Read from file or fifo",				32,	true),
+//METER_DETAIL(exec, 	"Parse program output",					32,	true),
+  METER_DETAIL(random, Random, 	"Generate random values with a random walk",		1,	true),
+  METER_DETAIL(fluksov2, Fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	false),
+  METER_DETAIL(s0, S0,	"S0-meter directly connected to RS232",			1,	true),
+  METER_DETAIL(d0, D0,	"DLMS/IEC 62056-21 plaintext protocol",			32,	false),
 #ifdef SML_SUPPORT
-METER_DETAIL(sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,	FALSE),
+  METER_DETAIL(sml, Sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,	false),
 #endif /* SML_SUPPORT */
-{} /* stop condition for iterator */
+//{} /* stop condition for iterator */
 };
 
-Meter::Meter(list_t pOptions) {
+Meter::Meter(std::list<Option> pOptions) :
+    _name("meter")
+{
 	id = instances++;
+  OptionList optlist;
 
-	/* protocol */
-	char *protocol_str;
-	if (options_lookup_string(options, "protocol", &protocol_str) != SUCCESS) {
-		print(log_error, "Missing protocol or invalid type", mtr);
-		return ERR;
+  // set meter name
+  std::stringstream oss;
+  oss<<"mtr"<< id;
+  _name=oss.str();
+  
+  optlist.dump(pOptions);
+  
+  try {
+    /* protocol */
+    const char *protocol_str = optlist.lookup_string(pOptions, "protocol");
+    print(log_debug, "Creating new meter with protocol %s.", name(), protocol_str);
+
+    if (meter_lookup_protocol(protocol_str, &_protocol_id) != SUCCESS) {
+      //print(log_error, "Invalid protocol: %s", mtr, protocol_str);
+      //return ERR; /* skipping this meter */
+      throw vz::VZException("Protocol not found.");
+    }
+  } catch( vz::VZException &e ) {
+    std::cout<< "Failed: "<< e.what() << std::endl;
+    print(log_error, "Missing protocol or invalid type", name());
+    throw;
+  }
+
+  try {
+    /* interval */
+    Option interval_opt = optlist.lookup(pOptions, "interval");
+    _interval = (int)(interval_opt);
+  } catch( vz::OptionNotFoundException &e ) {
+    _interval = -1; /* indicates unknown interval */
+  } catch( vz::VZException &e ) {
+    print(log_error, "Invalid type for interval", name());
+    throw;
 	}
 
-	if (meter_lookup_protocol(protocol_str, &protocol) != SUCCESS) {
-		print(log_error, "Invalid protocol: %s", mtr, protocol_str);
-		return ERR; /* skipping this meter */
+  try{
+    const meter_details_t *details = meter_get_details(_protocol_id);
+    if (details->periodic == true && _interval < 0) {
+      //print(log_error, "Interval has to be positive!", mtr);
+    } 
+  } catch( vz::VZException &e ) {
+    std::cout<< "Failed: "<< e.what() << std::endl;
+    print(log_error, "Missing protocol or invalid type", name());
+    throw;
+  }
+  switch(_protocol_id) {
+      case meter_protocol_file:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterFile(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+        break;
+      case meter_protocol_exec:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterExec(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+         break;
+      case meter_protocol_random:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterRandom(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new NilIdentifier());
+         break;
+      case meter_protocol_s0:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterS0(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new NilIdentifier());
+         break;
+      case meter_protocol_d0:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterD0(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+         break;
+      case  meter_protocol_sml:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterSML(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+         break;
+      case meter_protocol_fluksov2:
+        _protocol = vz::protocol::Protocol::Ptr(new MeterFluksoV2(pOptions));
+        _identifier = ReadingIdentifier::Ptr(new ChannelIdentifier());
+         break;
+      default:
+        break;
+  }
+  
+  try {
+    /* interval */
+    _enable = optlist.lookup_bool(pOptions, "enabled");
+  } catch( vz::OptionNotFoundException &e ) {
+    _enable=false; /* indicates unknown interval */
+  } catch( vz::VZException &e ) {
+    print(log_error, "Invalid type for enable", name());
+    throw;
 	}
+  
+  print(log_debug, "Meter configured.", name());
+}
 
-	/* interval */
-	mtr->interval = -1; /* indicates unknown interval */
-	if (options_lookup_int(options, "interval", &interval) == ERR_INVALID_TYPE) {
-		print(log_error, "Invalid type for interval", mtr);
-		return ERR;
-	}
-
-	const meter_details_t *details = meter_get_details(protocol);
-	if (details->periodic == TRUE && mtr->interval < 0) {
-		print(log_error, "Interval has to be positive!", mtr);
-	} 
+Meter::Meter(const Meter *mtr) {
+  std::cout<<"======> Meter Copy\n";
+  
 }
 
 Meter::~Meter() {
+}
 
+void Meter::init(std::list<Option> options) {
+}
+
+void Meter::open() {
+  if( _protocol->open() < 0) {
+    print(log_error, "Cannot open meter", name());
+    throw vz::ConnectionException("Meteropen failed.");
+  }
+  
+}
+
+int Meter::close() {
+  return _protocol->close();
+}
+
+size_t Meter::read(std::vector<Reading> &rds, size_t n) {
+  return _protocol->read(rds, n);
 }
 
 int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
