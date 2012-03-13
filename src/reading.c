@@ -70,13 +70,12 @@ struct timeval Reading::dtotv(double ts) {
 }
 
 ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string) {
-//int reading_id_parse(meter_protocol_t protocol, ReadingIdentifier::Ptr, const char *string) {
   ReadingIdentifier::Ptr rid;
   
 	switch (protocol) {
 		case meter_protocol_d0:
 		case meter_protocol_sml:
-      rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis((unsigned char*)string)));
+      rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis(string)));
 /*			if (obis_parse(string, &id->obis) != SUCCESS) {
 				if (obis_lookup_alias(string, &id->obis) != SUCCESS) {
 					throw std::exception("");
@@ -164,10 +163,9 @@ bool ReadingIdentifier::operator==( ReadingIdentifier &cmp) {
 }
 
 bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs) {
-
   if(ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
     if(ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
-      return lhsx == rhsx;
+      return *lhsx == *rhsx;
     } else { return -1; }
   } else 
     if( StringIdentifier* lhsx = dynamic_cast<StringIdentifier*>(rhs)) {
