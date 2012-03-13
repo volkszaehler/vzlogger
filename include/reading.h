@@ -27,6 +27,7 @@
 #define _READING_H_
 
 #include <string>
+#include <sstream>
 
 #include <sys/time.h>
 #include <string.h>
@@ -46,6 +47,8 @@ public:
   bool operator==( ReadingIdentifier &cmp);
   bool compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
 
+  virtual const std::string toString()  = 0;
+  
   protected:
   explicit ReadingIdentifier() {};
 
@@ -61,8 +64,13 @@ class ObisIdentifier : public ReadingIdentifier {
 
   ObisIdentifier() {}
   ObisIdentifier(Obis obis) : _obis(obis) {}
-    size_t unparse(char *buffer, size_t n);
-    bool operator==(ObisIdentifier &cmp);
+  size_t unparse(char *buffer, size_t n);
+  bool operator==(ObisIdentifier &cmp);
+  const std::string toString() {
+    std::ostringstream oss;
+    oss << "ObisItentifier:" << _obis.toString();
+    return oss.str();
+  };
     
     const Obis &obis() const { return _obis; }
     
@@ -80,6 +88,11 @@ public:
 	StringIdentifier(std::string s) : _string(s) {}
     size_t unparse(char *buffer, size_t n);
     bool operator==(StringIdentifier &cmp);
+  const std::string toString()  {
+    std::ostringstream oss;
+    oss << "StringItentifier:";
+    return oss.str();
+  };
 protected:
 	std::string _string;
 };
@@ -88,6 +101,11 @@ class UuidIdentifier : public ReadingIdentifier {
 public:
   size_t unparse(char *buffer, size_t n);
 	bool operator==(UuidIdentifier &cmp);
+  const std::string toString()  {
+    std::ostringstream oss;
+    oss << "UUidItentifier:";
+    return oss.str();
+  };
 protected:
 	std::string _uuid;
 };
@@ -98,6 +116,11 @@ public:
 	ChannelIdentifier(int channel) : _channel(channel) {}
     size_t unparse(char *buffer, size_t n);
     bool operator==(ChannelIdentifier &cmp);
+  const std::string toString()  {
+    std::ostringstream oss;
+    oss << "ChannelItentifier:";
+    return oss.str();
+  };
 protected:
 	int _channel;
 };
@@ -107,6 +130,11 @@ public:
 	NilIdentifier() {}
     size_t unparse(char *buffer, size_t n);
     bool operator==(NilIdentifier &cmp);
+  const std::string toString()  {
+    std::ostringstream oss;
+    oss << "NilItentifier:";
+    return oss.str();
+  };
   private:
 };
 
