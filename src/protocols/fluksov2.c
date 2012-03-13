@@ -36,7 +36,7 @@
 #define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
 
 MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
-    : Protocol(options)
+    : Protocol("fluksov2", options)
 {
   OptionList optlist;
 
@@ -101,13 +101,13 @@ size_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 		/* consumption */
 		//rds[i].time = time;
 		//rds[i].identifier.channel = -channel; /* consumption gets negative channel id as identifier! */
-		//rds[i].value = atoi(strsep(&cursor, " \t"));
+		//rds[i].value(atoi(strsep(&cursor, " \t")));
 		i++;
 
 		/* power */
 		//rds[i].time = time;
 		//rds[i].identifier.channel = channel; /* power gets positive channel id as identifier! */
-		//rds[i].value = atoi(strsep(&cursor, " \t"));
+		//rds[i].value(atoi(strsep(&cursor, " \t")));
 		i++;
 	}
 

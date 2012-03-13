@@ -35,7 +35,7 @@
 #include <VZException.hpp>
 
 MeterS0::MeterS0(std::list<Option> options)
-    : Protocol(options)
+    : Protocol("s0", options)
 {
   OptionList optlist;
 
@@ -111,8 +111,8 @@ size_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
   if( ::read(_fd, buf, 8) < 1) return 0;
   
 	/* store current timestamp */
-	//gettimeofday(&rds->time, NULL);
-	//rds->value = 1;
+	rds->time();
+	rds->value(1);
 
 	/* wait some ms for debouncing */
 	usleep(30000);

@@ -47,7 +47,7 @@
 #include "obis.h"
 
 MeterD0::MeterD0(std::list<Option> options) 
-    : Protocol(options)
+    : Protocol("d0", options)
     , _host("")
     , _device("")
 {
@@ -98,16 +98,6 @@ MeterD0::MeterD0(std::list<Option> options)
 }
 
 MeterD0::~MeterD0() {
-/*	if (_device != NULL) {
-		free((void *)_device);
-	}
-  _device = NULL;
-  
-	if (_host != NULL) {
-		free((void *)_host);
-	}
-  _host = NULL;
-*/
 }
 
 int MeterD0::open() {
@@ -251,9 +241,11 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && 
               (strlen(value) > 0)) {
 						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
-						//rds[number_of_tuples].value = strtof(value, NULL);
-						//obis_parse(obis_code, &rds[number_of_tuples].identifier.obis);
-						//gettimeofday(&rds[number_of_tuples].time, NULL);
+						rds[number_of_tuples].value(strtof(value, NULL));
+            Obis obis(obis_code);
+            ReadingIdentifier *rid(new ObisIdentifier(obis));
+            rds[number_of_tuples].identifier(rid);
+						rds[number_of_tuples].time();
 
 						byte_iterator = 0;
 						number_of_tuples++;

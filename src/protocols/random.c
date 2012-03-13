@@ -36,7 +36,7 @@
 #include <VZException.hpp>
 
 MeterRandom::MeterRandom(std::list<Option> options)
-    : Protocol(options)
+    : Protocol("random", options)
 {
   OptionList optlist;
 
