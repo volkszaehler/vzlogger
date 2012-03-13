@@ -76,8 +76,9 @@ void * reading_thread(void *arg) {
 			char identifier[MAX_IDENTIFIER_LEN];
 			for (size_t i = 0; i < n; i++) {
 				rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
-				print(log_debug, "Reading: id=%s value=%.2f ts=%.3f", mtr->name(),
-              identifier, rds[i].value(), rds[i].tvtod());
+				print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
+              identifier, rds[i].identifier()->toString().c_str(),
+              rds[i].value(), rds[i].tvtod());
 			}
 		}
 
@@ -91,13 +92,17 @@ void * reading_thread(void *arg) {
     for(Map::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 			Reading *add = NULL;
 
-      print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
+      //print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
       
 			for (size_t i = 0; i < n; i++) {
 				//if (reading_id_compare(mtr->protocol, rds[i].identifier, ch->identifier) == 0) {
-        print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
+        //print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
+        //print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
+        //      rds[i].identifier()->toString().c_str(),
+        //      ch->identifier()->toString().c_str());
+        
 				if ( *rds[i].identifier().get() == *ch->identifier().get()) {
-          print(log_debug, "found channel", mtr->name());
+          //print(log_debug, "found channel", mtr->name());
 					if (ch->tvtod() < rds[i].tvtod()) {
 						ch->last(&rds[i]);
 					}
@@ -206,14 +211,12 @@ void * logging_thread(void *arg) {
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
 			print(log_debug, "Request succeeded with code: %i", ch->name(), http_code);
-      //clear buffer-readings
-			//ch->buffer.sent = last->next;
+			//clear buffer-readings
+      //ch->buffer.sent = last->next;
 		}
 		else { /* error */
 			if (curl_code != CURLE_OK) {
-				print(log_error, "CURL: %s",
-              ch->name(),
-              curl_easy_strerror((CURLcode)curl_code));
+				print(log_error, "CURL: %s", ch->name(), curl_easy_strerror(curl_code));
 			}
 			else if (http_code != 200) {
 				char err[255];
@@ -231,7 +234,8 @@ void * logging_thread(void *arg) {
             ch->name(), options.retry_pause());
 			sleep(options.retry_pause());
 		}
-	} while (options.daemon() || 1);
+    
+	} while (options.daemon());
 
   print(log_debug, "Stop logging.! ", ch->name());
 	//pthread_cleanup_pop(1);
