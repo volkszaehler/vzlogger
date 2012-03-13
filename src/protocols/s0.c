@@ -111,8 +111,8 @@ size_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
   if( ::read(_fd, buf, 8) < 1) return 0;
   
 	/* store current timestamp */
-	rds->time();
-	rds->value(1);
+	rds[0].time();
+	rds[0].value(1);
 
 	/* wait some ms for debouncing */
 	usleep(30000);

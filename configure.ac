@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 AC_INIT([vzlogger], [0.3.3], [http://bugs.volkszaehler.org])
 AM_INIT_AUTOMAKE([vzlogger], [0.3.3])
 
-AC_CONFIG_SRCDIR([src/meter.c])
+AC_CONFIG_SRCDIR([src/meter.cpp])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
@@ -16,7 +16,6 @@ AC_CONFIG_FILES([
 ])
 
 # Checks for programs.
-AC_PROG_CC
 AC_PROG_CXX
 
 # We use per target compiler flags

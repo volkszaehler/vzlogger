@@ -50,7 +50,7 @@ public:
 
   const char* name()                  { return _name.c_str(); }
   ReadingIdentifier::Ptr identifier() { return _identifier; }
-  const double tvtod() const          { return _last->tvtod(); }
+  const double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
   
   const char* middleware() { return _middleware; }
   const char* uuid()       { return _uuid; }
@@ -79,6 +79,7 @@ public:
 protected:
 	static int instances;
 	int id;				/* only for internal usage & debugging */
+
   std::string _name;
 	Buffer::Ptr _buffer;		/* circular queue to buffer readings */
   

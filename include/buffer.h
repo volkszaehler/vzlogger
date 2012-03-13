@@ -33,8 +33,9 @@
 #include <vector>
 
 #include <reading.h>
+#include "list.h"
 
-class Buffer { //: List<Reading> {
+class Buffer {
 
 public:
     typedef vz::shared_ptr<Buffer> Ptr;
@@ -44,6 +45,9 @@ public:
     Buffer();
 	Buffer(size_t keep);
 	virtual ~Buffer();
+
+	//Iterator push(Reading data);
+  //Reading pop();
 
   void push(const Reading &rd);
   void clean();

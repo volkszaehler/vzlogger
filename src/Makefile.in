@@ -36,15 +36,15 @@ bin_PROGRAMS = vzlogger$(EXEEXT)
 
 # SML support
 ####################################################################
-@SML_SUPPORT_TRUE@am__append_1 = protocols/sml.c
-@SML_SUPPORT_TRUE@am__append_2 = $(DEPS_SML_LIBS)
-@SML_SUPPORT_TRUE@am__append_3 = $(DEPS_SML_CFLAGS)
+#vzlogger_SOURCES += protocols/sml.c
+@SML_SUPPORT_TRUE@am__append_1 = $(DEPS_SML_LIBS)
+@SML_SUPPORT_TRUE@am__append_2 = $(DEPS_SML_CFLAGS)
 
 # local interface support
 ####################################################################
-@LOCAL_SUPPORT_TRUE@am__append_4 = local.c
-@LOCAL_SUPPORT_TRUE@am__append_5 = $(DEPS_LOCAL_LIBS)
-@LOCAL_SUPPORT_TRUE@am__append_6 = $(DEPS_LOCAL_CFLAGS)
+#vzlogger_SOURCES += local.c
+@LOCAL_SUPPORT_TRUE@am__append_3 = $(DEPS_LOCAL_LIBS)
+@LOCAL_SUPPORT_TRUE@am__append_4 = $(DEPS_LOCAL_CFLAGS)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -57,27 +57,20 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__vzlogger_SOURCES_DIST = vzlogger.c channel.c api.c config.c \
-	threads.c buffer.c meter.c ltqnorm.c obis.c options.c \
-	reading.c protocols/s0.c protocols/d0.c protocols/fluksov2.c \
-	protocols/file.c protocols/exec.c protocols/random.c \
-	protocols/sml.c local.c
-@SML_SUPPORT_TRUE@am__objects_1 = sml.$(OBJEXT)
-@LOCAL_SUPPORT_TRUE@am__objects_2 = local.$(OBJEXT)
 am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
 	api.$(OBJEXT) config.$(OBJEXT) threads.$(OBJEXT) \
 	buffer.$(OBJEXT) meter.$(OBJEXT) ltqnorm.$(OBJEXT) \
 	obis.$(OBJEXT) options.$(OBJEXT) reading.$(OBJEXT) \
-	s0.$(OBJEXT) d0.$(OBJEXT) fluksov2.$(OBJEXT) file.$(OBJEXT) \
-	exec.$(OBJEXT) random.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2)
+	exception.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) sml.$(OBJEXT) \
+	fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
+	random.$(OBJEXT)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 @LOCAL_SUPPORT_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
 vzlogger_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
-vzlogger_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(vzlogger_LDFLAGS) \
-	$(LDFLAGS) -o $@
+vzlogger_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(vzlogger_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -86,8 +79,13 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 SOURCES = $(vzlogger_SOURCES)
-DIST_SOURCES = $(am__vzlogger_SOURCES_DIST)
+DIST_SOURCES = $(vzlogger_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -190,22 +188,24 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall -D_REENTRANT $(DEPS_VZ_CFLAGS) -std=gnu++0x \
-	$(am__append_3) $(am__append_6)
+	$(am__append_2) $(am__append_4)
 AM_CPPFLAGS = -I $(top_srcdir)/include
 AM_LDFLAGS = 
 
+#vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
+
 # Protocols (add your own here)
-vzlogger_SOURCES = vzlogger.c channel.c api.c config.c threads.c \
-	buffer.c meter.c ltqnorm.c obis.c options.c reading.c \
-	protocols/s0.c protocols/d0.c protocols/fluksov2.c \
-	protocols/file.c protocols/exec.c protocols/random.c \
-	$(am__append_1) $(am__append_4)
-vzlogger_LDADD = $(am__append_2) $(am__append_5)
+vzlogger_SOURCES = vzlogger.c channel.cpp api.c config.c threads.c \
+	buffer.cpp meter.c ltqnorm.c obis.cpp options.c reading.cpp \
+	exception.cpp protocols/s0.c protocols/d0.c protocols/sml.c \
+	protocols/fluksov2.c protocols/file.c protocols/exec.c \
+	protocols/random.c
+vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .cpp .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -288,10 +288,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/d0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exception.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fluksov2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/local.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltqnorm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/obis.Po@am__quote@
@@ -344,6 +344,20 @@ d0.obj: protocols/d0.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/d0.c' object='d0.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o d0.obj `if test -f 'protocols/d0.c'; then $(CYGPATH_W) 'protocols/d0.c'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.c'; fi`
+
+sml.o: protocols/sml.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.o -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
+
+sml.obj: protocols/sml.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.obj -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
 
 fluksov2.o: protocols/fluksov2.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fluksov2.o -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.o `test -f 'protocols/fluksov2.c' || echo '$(srcdir)/'`protocols/fluksov2.c
@@ -401,19 +415,19 @@ random.obj: protocols/random.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o random.obj `if test -f 'protocols/random.c'; then $(CYGPATH_W) 'protocols/random.c'; else $(CYGPATH_W) '$(srcdir)/protocols/random.c'; fi`
 
-sml.o: protocols/sml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.o -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
-sml.obj: protocols/sml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.obj -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

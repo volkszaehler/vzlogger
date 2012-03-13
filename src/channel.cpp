@@ -50,11 +50,11 @@ Channel::Channel(
   oss<<"chn"<< id;
   _name=oss.str();
 
-	_uuid = strdup(pUuid);
-	_middleware = strdup(pMiddleware);
+  _uuid = strdup(pUuid);
+  _middleware = strdup(pMiddleware);
 
-	//buffer_init(&buffer); /* initialize buffer */
-	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
+  //buffer_init(&buffer); /* initialize buffer */
+  pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
 }
 
 /**
@@ -64,7 +64,7 @@ Channel::~Channel() {
 	//buffer_free(&buffer);
 	pthread_cond_destroy(&condition);
 
-	//free(_uuid);
-	//free(_middleware);
+	//free(uuid);
+	//free(middleware);
 }
 

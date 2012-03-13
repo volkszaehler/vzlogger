@@ -86,8 +86,9 @@ class StringIdentifier : public ReadingIdentifier {
 public:
 	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
-    size_t unparse(char *buffer, size_t n);
-    bool operator==(StringIdentifier &cmp);
+
+  size_t unparse(char *buffer, size_t n);
+  bool operator==(StringIdentifier &cmp);
   const std::string toString()  {
     std::ostringstream oss;
     oss << "StringItentifier:";
@@ -97,20 +98,9 @@ protected:
 	std::string _string;
 };
 
-class UuidIdentifier : public ReadingIdentifier {
-public:
-  size_t unparse(char *buffer, size_t n);
-	bool operator==(UuidIdentifier &cmp);
-  const std::string toString()  {
-    std::ostringstream oss;
-    oss << "UUidItentifier:";
-    return oss.str();
-  };
-protected:
-	std::string _uuid;
-};
 
 class ChannelIdentifier : public ReadingIdentifier {
+
 public:
 	ChannelIdentifier() {}
 	ChannelIdentifier(int channel) : _channel(channel) {}
@@ -121,7 +111,8 @@ public:
     oss << "ChannelItentifier:";
     return oss.str();
   };
-protected:
+
+  protected:
 	int _channel;
 };
 
@@ -180,7 +171,7 @@ public:
  * @param string the string-encoded identifier
  * @return 0 on success, < 0 on error
  */
- ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string);
+ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string);
 
 
 #endif /* _READING_H_ */

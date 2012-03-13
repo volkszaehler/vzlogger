@@ -49,7 +49,6 @@ namespace vz {
   class Api {
     public:
     Api(Channel::Ptr ch);
-    //Api(Channel *ch);
     ~Api();
     CURL *curl() { return _api.curl; }
     

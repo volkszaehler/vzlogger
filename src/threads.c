@@ -92,17 +92,16 @@ void * reading_thread(void *arg) {
     for(Map::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 			Reading *add = NULL;
 
-      //print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
+      print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
       
 			for (size_t i = 0; i < n; i++) {
-				//if (reading_id_compare(mtr->protocol, rds[i].identifier, ch->identifier) == 0) {
-        //print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
-        //print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
-        //      rds[i].identifier()->toString().c_str(),
-        //      ch->identifier()->toString().c_str());
+        print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
+        print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
+              rds[i].identifier()->toString().c_str(),
+              ch->identifier()->toString().c_str());
         
 				if ( *rds[i].identifier().get() == *ch->identifier().get()) {
-          //print(log_debug, "found channel", mtr->name());
+          print(log_debug, "found channel", mtr->name());
 					if (ch->tvtod() < rds[i].tvtod()) {
 						ch->last(&rds[i]);
 					}
@@ -188,7 +187,8 @@ void * logging_thread(void *arg) {
 		json_object *json_obj;
 
 		const char *json_str;
-		long int http_code, curl_code;
+		long int http_code;
+    CURLcode curl_code;
 
 		/* initialize response */
 		response.data = NULL;

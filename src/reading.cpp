@@ -26,8 +26,11 @@
 #include <iostream>
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <math.h>
 
+#include "exception.h"
 #include "reading.h"
 
 Reading::Reading(ReadingIdentifier::Ptr pIndentifier)
@@ -173,6 +176,11 @@ bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs
         return lhsx == rhsx;
     } else { return -1; }
   } else 
+  if(UuidIdentifier* lhsx = dynamic_cast<UuidIdentifier*>(lhs)) {
+    if(UuidIdentifier* rhsx = dynamic_cast<UuidIdentifier*>(rhs)) {
+        return lhsx == rhsx;
+    } else { return -1; }
+  } else 
   if(ChannelIdentifier* lhsx = dynamic_cast<ChannelIdentifier*>(lhs)) {
     if(ChannelIdentifier* rhsx = dynamic_cast<ChannelIdentifier*>(rhs)) {
         return lhsx == rhsx;
@@ -181,11 +189,13 @@ bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs
   return -1;
 }
 
-size_t ObisIdentifier::unparse(char *buffer, size_t n) {
-  return _obis.unparse(buffer, n);
+/* StringIdentifier */
+bool StringIdentifier::operator==(ReadingIdentifier &cmp) {
+	return (strcmp(string, cmp.string) == 0);
 }
-bool ObisIdentifier::operator==(ObisIdentifier &cmp) {
-  return (_obis == cmp.obis());
+
+void StringIdentifier::parse(const char *string) {
+	string = strdup(string);
 }
 
 size_t StringIdentifier::unparse(char *buffer, size_t n) {
@@ -198,9 +208,36 @@ size_t StringIdentifier::unparse(char *buffer, size_t n) {
 	return strlen(buffer);
 }
 
+StringIdentifier::~StringIdentifier() {
+	free(string);
+}
+
+/* ChannelIdentifier */
+bool ChannelIdentifier::operator==(ReadingIdentifier &cmp) {
+	return (channel == cmp.channel);
+}
+
+void ChannelIdentifier::parse(const char *string) {
+	char type[13];
+	int channel;
+	int ret = sscanf(string, "sensor%u/%12s", &channel, type);
+
+	if (ret != 2) {
+		throw new Exception("Failed to parse channel identifier");
+	}
+
+	id->channel = channel + 1; /* increment by 1 to distinguish between +0 and -0 */
+
+	if (strcmp(type, "consumption") == 0) {
+		id->channel *= -1;
+	}
+	else if (strcmp(type, "power") != 0) {
+		throw new Exception("Invalid channel type");
+	}
+}
+
 size_t ChannelIdentifier::unparse(char *buffer, size_t n) {
-  snprintf(buffer, n, "sensor%u/%s", abs(_channel) - 1, (_channel > 0) ? "power" : "consumption");
-	return strlen(buffer);
+	return snprintf(buffer, n, "sensor%u/%s", abs(id.channel) - 1, (id.channel > 0) ? "power" : "consumption");
 }
 
 size_t NilIdentifier::unparse(char *buffer, size_t n) {

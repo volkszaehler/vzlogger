@@ -31,8 +31,6 @@
 
 #include <json.hpp>
 
-//#include <json/json.h>
-
 #include <common.h>
 
 //namespace vz {

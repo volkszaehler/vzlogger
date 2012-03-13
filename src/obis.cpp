@@ -37,6 +37,7 @@
 
 #define DC 0xff // wildcard, dont care
 
+//const Obis::aliases[] = {
 static obis_alias_t aliases[] = {
 /*   A    B    C    D    E    F    alias		description
 ====================================================================*/
@@ -194,6 +195,7 @@ const std::string  Obis::toString()  {
       << (int)_obisId.groups.storage;
   return oss.str();
 }
+
 size_t Obis::unparse(char *buffer, size_t n) {
 	return snprintf(buffer, n, "%i-%i:%i.%i.%i*%i",
                   _obisId.groups.media,
@@ -242,4 +244,22 @@ const bool Obis::isManufacturerSpecific() const {
 		(_obisId.groups.storage >= 128 && _obisId.groups.storage <= 254)
 	);
 }
+
+/*
+bool ObisIdentifier::operator==(ReadingIdentifier &cmp) {
+	return (obis_compare(a.obis, b.obis) == 0);
+}
+
+void ObisIdentifier::parse(const char *string) {
+	if (obis_parse(string, &id->obis) != SUCCESS) {
+		if (obis_lookup_alias(string, &id->obis) != SUCCESS) {
+			throw new Exception("Failed to parse OBIS id");
+		}
+	}
+}
+
+size_t ObisIdentifier::unparse(char *buffer, size_t n) {
+	return obis_unparse(id.obis, buffer, n);
+}
+*/
 

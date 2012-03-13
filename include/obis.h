@@ -30,15 +30,16 @@
 
 #define OBIS_STR_LEN (6*3+5+1)
 
-/* regex: A-BB:CC.DD.EE([*&]FF)? */
 class Obis {
   public:
 	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
 	Obis(const char *strClear);
 	Obis(){};
 
-	//static Obis getByAlias(const char *alias);
+  //static Obis lookup(const char *alias);
 
+
+  /* regex: A-BB:CC.DD.EE([*&]FF)? */
 	size_t unparse(char *buffer, size_t n);
   const std::string toString()  ;
 
@@ -59,18 +60,6 @@ class Obis {
     } groups;
   } _obisId;
 };
-
-/*
-class Obis_Alias {
-public:
-  Obis_Alias(){}
-
-private:
-	//Obis _id;
-	char *_name;
-	char *_desc;
-};
-*/
 
 typedef struct {
 //  public:

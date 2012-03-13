@@ -28,7 +28,6 @@
 #include <list>
 #include <vector>
 
-//#include "list.h"
 #include <reading.h>
 #include <options.h>
 #include <channel.h>

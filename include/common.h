@@ -18,7 +18,6 @@ typedef enum {
 } log_level_t;
 
 /* types */
-//typedef unsigned char bool;
 
 /* constants */
 #define SUCCESS 0
