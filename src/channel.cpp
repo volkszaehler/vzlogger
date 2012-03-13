@@ -41,6 +41,7 @@ Channel::Channel(
   )
     : _buffer(new Buffer())
     , _identifier(pIdentifier)
+    , _last(0)
                 //, _last(_identifier)
 {
 	id = instances++;
