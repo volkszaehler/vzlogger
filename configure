@@ -5538,7 +5538,7 @@ if test x"$debug" = x"yes"; then
 
 $as_echo "#define DEBUG /**/" >>confdefs.h
 
-    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
+    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0 -fno-omit-frame-pointer -Woverloaded-virtual -Wno-system-headers"
 else
     AM_CXXFLAGS="$AM_CXXFLAGS -O3"
 fi

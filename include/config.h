@@ -33,98 +33,9 @@
 
 #include <common.h>
 
-//namespace vz {
-//  using std::list;
-//  using boost::enable_shared_from_this;
-//}
-
-
-#include <meter.h>
-#include <channel.h>
+#include <MeterMap.hpp>
 #include <options.h>
 #include <meter_protocol.hpp>
-
-/* forward declarartions */
-class Map {
-  public:
-  typedef vz::shared_ptr<Map> Ptr;
-  typedef std::vector<Channel>::iterator iterator;
-  typedef std::vector<Channel>::const_iterator const_iterator;
-
-  Map(std::list<Option> options) : _meter(new Meter(options)){}
-    ~Map() {};
-/*
-  Map(const Map &map) {
-      std::cout << "=====> copy\n";
-      _meter.reset(new Meter(map._meter.get()));
-    }
-*/  
-    Meter::Ptr meter() { return _meter; }
-
-  void stop() {}
-  
-  void start() {
-    if(_meter->isEnabled()) {
-      
-      _meter->open();
-      print(log_debug, "meter is opened. Start reader.", _meter->name());
-      pthread_create(&_thread, NULL, &reading_thread, (void *) this);
-      print(log_debug, "meter is opened. Start channels.", _meter->name());
-      for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-        it->start();
-      }
-    } else {
-      print(log_debug, "Skipping disabled meter.", _meter->name());
-    }
-    
-  }
-  
-  void cancel() {
-    pthread_cancel(_thread);
-    for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-      it->cancel();
-    }
-  }
-  
-  void push_back(Channel channel) { _channels.push_back(channel); }
-
-  iterator begin()  { return _channels.begin(); }
-  iterator end()    { return _channels.end(); }
-  size_t size()     { return _channels.size(); }
-
-  private:
-  Meter::Ptr _meter;
-	std::vector<Channel> _channels;
-
-	pthread_t _thread;
-};
-
-class MapContainer {
-  public:
-  typedef vz::shared_ptr<MapContainer> Ptr;
-  typedef std::vector<Map>::iterator iterator;
-  typedef std::vector<Map>::const_iterator const_iterator;
-
-  MapContainer() {};
-  ~MapContainer() {};
-
-  void quit(int sig) {
-    print(log_info, "Closing connections to terminate", (char*)0);
-
-    for(iterator it = _mappings.begin(); it!=_mappings.end(); it++) {
-      it->cancel();
-    }
-  }
-  const size_t size() const { return _mappings.size(); }
-  iterator begin()  { return _mappings.begin(); }
-  iterator end()    { return _mappings.end(); }
-  void push_back(const Map &map) { _mappings.push_back(map); } 
-  
-  private:
-  std::vector<Map> _mappings;
-  
-};
-
 
 /**
  * General options from CLI
@@ -143,11 +54,11 @@ class Config_Options {
    * @param config_options_t *options a pointer to a structure of global configuration options
    * @return int non-zero on success
    */
-  void config_parse(MapContainer::Ptr mappings);
+  void config_parse(MapContainer &mappings);
   //Map::Ptr config_parse_meter(struct json_object *jso);
   //void config_parse_channel(struct json_object *jso, Map::Ptr mapping);
-  Map::Ptr config_parse_meter(Json::Ptr jso);
-  void config_parse_channel(Json& jso, Map::Ptr mapping);
+  void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
+  void config_parse_channel(Json& jso, MeterMap &metermap);
 
   // getter
   const std::string &config() const { return _config; }

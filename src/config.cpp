@@ -68,7 +68,7 @@ Config_Options::Config_Options(
 }
 
 void Config_Options::config_parse(
-  MapContainer::Ptr mappings
+  MapContainer &mappings
   ) {
 	struct json_object *json_cfg = NULL;
 	struct json_tokener *json_tok = json_tokener_new();
@@ -152,11 +152,7 @@ void Config_Options::config_parse(
 			int len = json_object_array_length(value);
 			for (int i = 0; i < len; i++) {
         Json::Ptr  jso(new Json(json_object_array_get_idx(value, i)));
-				Map::Ptr mapping = config_parse_meter(jso);
-				//if (mapping == NULL) {
-				//	return ERR;
-				//}
-				mappings->push_back(*mapping.get());
+				config_parse_meter(mappings, jso);
 			}
 		}
 		else {
@@ -171,17 +167,13 @@ void Config_Options::config_parse(
     throw;
   }
   
-	print(log_debug, "Have %d meters.", NULL, mappings->size());
+	print(log_debug, "Have %d meters.", NULL, mappings.size());
   
   
 	//json_object_put(json_cfg); /* free allocated memory */
 }
 
-//Map::Ptr Config_Options::config_parse_meter(struct json_object *jso) {
-Map::Ptr Config_Options::config_parse_meter(Json::Ptr jso) {
-	//list_t json_channels;
-	//list_init(&json_channels);
-  //std::list<struct json_object> json_channels;
+void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
   std::list<Json> json_channels;
 	std::list<Option> options;
 
@@ -211,31 +203,23 @@ Map::Ptr Config_Options::config_parse_meter(Json::Ptr jso) {
 	}
 
 	/* init meter */
-	Map::Ptr  mapping(new Map(options));
-  //list_init(&mapping->channels);
-
-  //if (meter_init(&mapping->meter, options) != SUCCESS) {
-		//print(log_error, "Failed to initialize meter. Arborting.", mapping);
-		//free(mapping);
-		//return NULL;
-	//}
+	MeterMap  metermap(options);
 
 	print(log_info, "New meter initialized (protocol=%s)", NULL/*(mapping*/,
-        meter_get_details(mapping->meter()->protocolId())->name);
+        meter_get_details(metermap.meter()->protocolId())->name);
 
 	/* init channels */
   for(std::list<Json>::iterator it=json_channels.begin();
       it!= json_channels.end(); it++) {
-    config_parse_channel(*it, mapping);
+    config_parse_channel(*it, metermap);
 	}
 
 	/* householding */
-	//list_free(&options);
   std::cout<< "Return mapping...\n";
-	return mapping;
+  mappings.push_back(metermap);
 }
 
-void Config_Options::config_parse_channel(Json &jso, Map::Ptr mapping)
+void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 {
 	const char *uuid = NULL;
 	const char *middleware = NULL;
@@ -278,7 +262,7 @@ void Config_Options::config_parse_channel(Json &jso, Map::Ptr mapping)
 	ReadingIdentifier::Ptr id;
   try {
     if( id_str != NULL ) {
-      id = reading_id_parse(mapping->meter()->protocolId(), (const char *)id_str);
+      id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
     }
   } catch ( vz::VZException &e ) {
 		print(log_error, "Invalid id: %s", NULL, id_str);
@@ -288,7 +272,7 @@ void Config_Options::config_parse_channel(Json &jso, Map::Ptr mapping)
 	Channel ch(uuid, middleware, id);
 	print(log_info, "New channel initialized (uuid=...%s middleware=%s id=%s)", NULL/*ch*/,
         uuid+30, middleware, (id_str) ? id_str : "(none)");
-  mapping->push_back(ch);
+  mapping.push_back(ch);
   std::cout<<"pushed new channel....\n";
   
 }

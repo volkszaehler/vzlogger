@@ -88,7 +88,7 @@ AC_ARG_ENABLE(
 
 if test x"$debug" = x"yes"; then
     AC_DEFINE([DEBUG], [], [Debug Mode])
-    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
+    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0 -fno-omit-frame-pointer -Woverloaded-virtual -Wno-system-headers"
 else
     AM_CXXFLAGS="$AM_CXXFLAGS -O3"
 fi

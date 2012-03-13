@@ -39,7 +39,7 @@ void reading_thread_cleanup(void *rds) {
 
 void * reading_thread(void *arg) {
 	std::vector<Reading> rds;
-	Map *mapping = static_cast<Map *>(arg);
+	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr  mtr = mapping->meter();
 	time_t last, delta;
 	const meter_details_t *details;
@@ -89,7 +89,7 @@ void * reading_thread(void *arg) {
 		}
 
 		/* insert readings into channel queues */
-    for(Map::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+    for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 			Reading *add = NULL;
 
       print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);

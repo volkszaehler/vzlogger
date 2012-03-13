@@ -8,6 +8,10 @@
 
 #include "../config.h" /* GNU buildsystem config */
 
+#include <VZException.hpp>
+#include <shared_ptr.hpp>
+
+
 /* enumerations */
 typedef enum {
 	log_error = -1,

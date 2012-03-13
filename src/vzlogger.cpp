@@ -53,7 +53,7 @@
 #endif /* LOCAL_SUPPORT */
 
 
-MapContainer::Ptr mappings;	/* mapping between meters and channels */
+MapContainer mappings;	/* mapping between meters and channels */
 Config_Options options;	/* global application options */
 
 /**
@@ -229,7 +229,7 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-  mappings->quit(sig);
+  mappings.quit(sig);
 }
 
 /**
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	mappings = (MapContainer::Ptr)(new MapContainer());
+	//mappings = (MapContainer::Ptr)(new MapContainer());
   try {
     options.config_parse(mappings);
   } catch ( std::exception &e) {
@@ -350,7 +350,7 @@ int main(int argc, char *argv[]) {
 		print(log_debug, "Opened logfile %s", (char*)0, options.log().c_str());
 	}
 
-	if (mappings->size() <= 0) {
+	if (mappings.size() <= 0) {
 		print(log_error, "No meters found!", (char*)0);
 		return EXIT_FAILURE;
 	}
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
   print(log_debug, "===> Start meters.", "");
   try {
 	/* open connection meters & start threads */
-  for(MapContainer::iterator it = mappings->begin(); it!=mappings->end(); it++) {
+  for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
     it->start();
     
 #if 0
@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
   sleep(120);
   
 	/* wait for all threads to terminate */
-  for(MapContainer::iterator it = mappings->begin(); it!=mappings->end(); it++) {
+  for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
     it->stop();
     
 #if 0
