@@ -23,6 +23,9 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sstream>
+#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +33,7 @@
 
 #include "obis.h"
 #include "common.h"
+#include <VZException.hpp>
 
 #define DC 0xff // wildcard, dont care
 
@@ -107,14 +111,17 @@ Obis::Obis(
   
 }
 
-Obis::Obis(unsigned char *raw) {
-	if (raw == NULL) {
+Obis::Obis(const char *strClear) {
+	//if (raw == NULL) {
 		// TODO why not initialize with DC fields to accept all readings?
-		memset(_obisId._raw, 0, 6); /* initialize with zeros */
-	}
-	else {
-		memcpy(_obisId._raw, raw, 6);
-	}
+  //memset(_obisId._raw, 0, 6); /* initialize with zeros */
+	//}
+	//else {
+	//	memcpy(_obisId._raw, raw, 6);
+	//}
+  if(parse(strClear) != SUCCESS) {
+    throw vz::VZException("");
+  }
 }
 
 int Obis::parse(const char *str) {
@@ -177,6 +184,16 @@ int obis_lookup_alias(const char *alias, Obis *id) {
 	return ERR_NOT_FOUND;
 }
 
+const std::string  Obis::toString()  {
+  std::ostringstream oss;
+  oss << (int)_obisId.groups.media << "-"
+      << (int)_obisId.groups.channel << ":"
+      << (int)_obisId.groups.indicator << "."
+      << (int)_obisId.groups.mode << "."
+      << (int)_obisId.groups.quantities << "*"
+      << (int)_obisId.groups.storage;
+  return oss.str();
+}
 size_t Obis::unparse(char *buffer, size_t n) {
 	return snprintf(buffer, n, "%i-%i:%i.%i.%i*%i",
                   _obisId.groups.media,
@@ -194,14 +211,14 @@ const bool Obis::operator==(const Obis &rhs) {
 			continue; /* skip on wildcard or equal */
 		}
 		else if (_obisId._raw[i] < rhs._obisId._raw[i]) {
-			return -1;
+			return 0;
 		}
 		else if (_obisId._raw[i] > rhs._obisId._raw[i]) {
-			return 1;
+			return 0;
 		}
 	}
 
-	return 0; /* equal */
+	return 1; /* equal */
 }
 
 const bool Obis::isNull() const {

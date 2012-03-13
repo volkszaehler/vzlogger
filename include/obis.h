@@ -34,20 +34,23 @@
 class Obis {
   public:
 	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
-	Obis(unsigned char *pRaw);
+	Obis(const char *strClear);
 	Obis(){};
 
 	//static Obis getByAlias(const char *alias);
 
-	int parse(const char *str);
 	size_t unparse(char *buffer, size_t n);
+  const std::string toString()  ;
 
 	const bool operator==(const Obis &rhs);
 
 	const bool isManufacturerSpecific() const;
   const bool isNull() const;
 
-  protected:
+  private:
+  int parse(const char *str);
+
+  private:
   union {
     unsigned char _raw[6];
     struct {
