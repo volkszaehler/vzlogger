@@ -7,20 +7,20 @@ bin_PROGRAMS = vzlogger
 
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
 
-vzlogger_SOURCES = vzlogger.c channel.cpp api.c config.c threads.c buffer.cpp
-vzlogger_SOURCES += meter.c ltqnorm.c obis.cpp options.c reading.cpp
+vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp threads.cpp buffer.cpp
+vzlogger_SOURCES += meter.cpp ltqnorm.cpp obis.cpp options.cpp reading.cpp
 vzlogger_SOURCES += exception.cpp
 
 
 # Protocols (add your own here)
 vzlogger_SOURCES += \
-	protocols/s0.c \
-	protocols/d0.c \
-	protocols/sml.c \
-	protocols/fluksov2.c \
-	protocols/file.c \
-	protocols/exec.c \
-	protocols/random.c
+	protocols/s0.cpp \
+	protocols/d0.cpp \
+	protocols/sml.cpp \
+	protocols/fluksov2.cpp \
+	protocols/file.cpp \
+	protocols/exec.cpp \
+	protocols/random.cpp
 
 vzlogger_LDADD =
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)

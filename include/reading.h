@@ -87,6 +87,7 @@ public:
 	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
 
+    void parse(const char *buffer);
   size_t unparse(char *buffer, size_t n);
   bool operator==(StringIdentifier &cmp);
   const std::string toString()  {
@@ -104,6 +105,8 @@ class ChannelIdentifier : public ReadingIdentifier {
 public:
 	ChannelIdentifier() {}
 	ChannelIdentifier(int channel) : _channel(channel) {}
+
+    void parse(const char *string);
     size_t unparse(char *buffer, size_t n);
     bool operator==(ChannelIdentifier &cmp);
   const std::string toString()  {

@@ -75,10 +75,6 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -195,17 +191,17 @@ AM_LDFLAGS =
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
 
 # Protocols (add your own here)
-vzlogger_SOURCES = vzlogger.c channel.cpp api.c config.c threads.c \
-	buffer.cpp meter.c ltqnorm.c obis.cpp options.c reading.cpp \
-	exception.cpp protocols/s0.c protocols/d0.c protocols/sml.c \
-	protocols/fluksov2.c protocols/file.c protocols/exec.c \
-	protocols/random.c
+vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp \
+	threads.cpp buffer.cpp meter.cpp ltqnorm.cpp obis.cpp \
+	options.cpp reading.cpp exception.cpp protocols/s0.cpp \
+	protocols/d0.cpp protocols/sml.cpp protocols/fluksov2.cpp \
+	protocols/file.cpp protocols/exec.cpp protocols/random.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .cpp .o .obj
+.SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -303,118 +299,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vzlogger.Po@am__quote@
 
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-s0.o: protocols/s0.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT s0.o -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.o `test -f 'protocols/s0.c' || echo '$(srcdir)/'`protocols/s0.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/s0.c' object='s0.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o s0.o `test -f 'protocols/s0.c' || echo '$(srcdir)/'`protocols/s0.c
-
-s0.obj: protocols/s0.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT s0.obj -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.obj `if test -f 'protocols/s0.c'; then $(CYGPATH_W) 'protocols/s0.c'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/s0.c' object='s0.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o s0.obj `if test -f 'protocols/s0.c'; then $(CYGPATH_W) 'protocols/s0.c'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.c'; fi`
-
-d0.o: protocols/d0.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT d0.o -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.o `test -f 'protocols/d0.c' || echo '$(srcdir)/'`protocols/d0.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/d0.c' object='d0.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o d0.o `test -f 'protocols/d0.c' || echo '$(srcdir)/'`protocols/d0.c
-
-d0.obj: protocols/d0.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT d0.obj -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.obj `if test -f 'protocols/d0.c'; then $(CYGPATH_W) 'protocols/d0.c'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/d0.c' object='d0.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o d0.obj `if test -f 'protocols/d0.c'; then $(CYGPATH_W) 'protocols/d0.c'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.c'; fi`
-
-sml.o: protocols/sml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.o -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.o `test -f 'protocols/sml.c' || echo '$(srcdir)/'`protocols/sml.c
-
-sml.obj: protocols/sml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sml.obj -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/sml.c' object='sml.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sml.obj `if test -f 'protocols/sml.c'; then $(CYGPATH_W) 'protocols/sml.c'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.c'; fi`
-
-fluksov2.o: protocols/fluksov2.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fluksov2.o -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.o `test -f 'protocols/fluksov2.c' || echo '$(srcdir)/'`protocols/fluksov2.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/fluksov2.c' object='fluksov2.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fluksov2.o `test -f 'protocols/fluksov2.c' || echo '$(srcdir)/'`protocols/fluksov2.c
-
-fluksov2.obj: protocols/fluksov2.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fluksov2.obj -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.obj `if test -f 'protocols/fluksov2.c'; then $(CYGPATH_W) 'protocols/fluksov2.c'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/fluksov2.c' object='fluksov2.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fluksov2.obj `if test -f 'protocols/fluksov2.c'; then $(CYGPATH_W) 'protocols/fluksov2.c'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.c'; fi`
-
-file.o: protocols/file.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT file.o -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.o `test -f 'protocols/file.c' || echo '$(srcdir)/'`protocols/file.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/file.c' object='file.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o file.o `test -f 'protocols/file.c' || echo '$(srcdir)/'`protocols/file.c
-
-file.obj: protocols/file.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT file.obj -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.obj `if test -f 'protocols/file.c'; then $(CYGPATH_W) 'protocols/file.c'; else $(CYGPATH_W) '$(srcdir)/protocols/file.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/file.c' object='file.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o file.obj `if test -f 'protocols/file.c'; then $(CYGPATH_W) 'protocols/file.c'; else $(CYGPATH_W) '$(srcdir)/protocols/file.c'; fi`
-
-exec.o: protocols/exec.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exec.o -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.o `test -f 'protocols/exec.c' || echo '$(srcdir)/'`protocols/exec.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/exec.c' object='exec.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exec.o `test -f 'protocols/exec.c' || echo '$(srcdir)/'`protocols/exec.c
-
-exec.obj: protocols/exec.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exec.obj -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.obj `if test -f 'protocols/exec.c'; then $(CYGPATH_W) 'protocols/exec.c'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/exec.c' object='exec.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exec.obj `if test -f 'protocols/exec.c'; then $(CYGPATH_W) 'protocols/exec.c'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.c'; fi`
-
-random.o: protocols/random.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT random.o -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.o `test -f 'protocols/random.c' || echo '$(srcdir)/'`protocols/random.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/random.c' object='random.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o random.o `test -f 'protocols/random.c' || echo '$(srcdir)/'`protocols/random.c
-
-random.obj: protocols/random.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT random.obj -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.obj `if test -f 'protocols/random.c'; then $(CYGPATH_W) 'protocols/random.c'; else $(CYGPATH_W) '$(srcdir)/protocols/random.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='protocols/random.c' object='random.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o random.obj `if test -f 'protocols/random.c'; then $(CYGPATH_W) 'protocols/random.c'; else $(CYGPATH_W) '$(srcdir)/protocols/random.c'; fi`
-
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
@@ -428,6 +312,104 @@ random.obj: protocols/random.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+s0.o: protocols/s0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT s0.o -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.o `test -f 'protocols/s0.cpp' || echo '$(srcdir)/'`protocols/s0.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/s0.cpp' object='s0.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o s0.o `test -f 'protocols/s0.cpp' || echo '$(srcdir)/'`protocols/s0.cpp
+
+s0.obj: protocols/s0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT s0.obj -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.obj `if test -f 'protocols/s0.cpp'; then $(CYGPATH_W) 'protocols/s0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/s0.cpp' object='s0.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o s0.obj `if test -f 'protocols/s0.cpp'; then $(CYGPATH_W) 'protocols/s0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.cpp'; fi`
+
+d0.o: protocols/d0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT d0.o -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.o `test -f 'protocols/d0.cpp' || echo '$(srcdir)/'`protocols/d0.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/d0.cpp' object='d0.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o d0.o `test -f 'protocols/d0.cpp' || echo '$(srcdir)/'`protocols/d0.cpp
+
+d0.obj: protocols/d0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT d0.obj -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.obj `if test -f 'protocols/d0.cpp'; then $(CYGPATH_W) 'protocols/d0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/d0.cpp' object='d0.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o d0.obj `if test -f 'protocols/d0.cpp'; then $(CYGPATH_W) 'protocols/d0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.cpp'; fi`
+
+sml.o: protocols/sml.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sml.o -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.o `test -f 'protocols/sml.cpp' || echo '$(srcdir)/'`protocols/sml.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/sml.cpp' object='sml.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sml.o `test -f 'protocols/sml.cpp' || echo '$(srcdir)/'`protocols/sml.cpp
+
+sml.obj: protocols/sml.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sml.obj -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.obj `if test -f 'protocols/sml.cpp'; then $(CYGPATH_W) 'protocols/sml.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/sml.cpp' object='sml.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sml.obj `if test -f 'protocols/sml.cpp'; then $(CYGPATH_W) 'protocols/sml.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.cpp'; fi`
+
+fluksov2.o: protocols/fluksov2.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fluksov2.o -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.o `test -f 'protocols/fluksov2.cpp' || echo '$(srcdir)/'`protocols/fluksov2.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/fluksov2.cpp' object='fluksov2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fluksov2.o `test -f 'protocols/fluksov2.cpp' || echo '$(srcdir)/'`protocols/fluksov2.cpp
+
+fluksov2.obj: protocols/fluksov2.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fluksov2.obj -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.obj `if test -f 'protocols/fluksov2.cpp'; then $(CYGPATH_W) 'protocols/fluksov2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/fluksov2.cpp' object='fluksov2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fluksov2.obj `if test -f 'protocols/fluksov2.cpp'; then $(CYGPATH_W) 'protocols/fluksov2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.cpp'; fi`
+
+file.o: protocols/file.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT file.o -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.o `test -f 'protocols/file.cpp' || echo '$(srcdir)/'`protocols/file.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/file.cpp' object='file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o file.o `test -f 'protocols/file.cpp' || echo '$(srcdir)/'`protocols/file.cpp
+
+file.obj: protocols/file.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT file.obj -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.obj `if test -f 'protocols/file.cpp'; then $(CYGPATH_W) 'protocols/file.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/file.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/file.cpp' object='file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o file.obj `if test -f 'protocols/file.cpp'; then $(CYGPATH_W) 'protocols/file.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/file.cpp'; fi`
+
+exec.o: protocols/exec.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT exec.o -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.o `test -f 'protocols/exec.cpp' || echo '$(srcdir)/'`protocols/exec.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/exec.cpp' object='exec.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o exec.o `test -f 'protocols/exec.cpp' || echo '$(srcdir)/'`protocols/exec.cpp
+
+exec.obj: protocols/exec.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT exec.obj -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.obj `if test -f 'protocols/exec.cpp'; then $(CYGPATH_W) 'protocols/exec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/exec.cpp' object='exec.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o exec.obj `if test -f 'protocols/exec.cpp'; then $(CYGPATH_W) 'protocols/exec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.cpp'; fi`
+
+random.o: protocols/random.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT random.o -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.o `test -f 'protocols/random.cpp' || echo '$(srcdir)/'`protocols/random.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/random.cpp' object='random.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o random.o `test -f 'protocols/random.cpp' || echo '$(srcdir)/'`protocols/random.cpp
+
+random.obj: protocols/random.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT random.obj -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.obj `if test -f 'protocols/random.cpp'; then $(CYGPATH_W) 'protocols/random.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/random.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/random.cpp' object='random.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o random.obj `if test -f 'protocols/random.cpp'; then $(CYGPATH_W) 'protocols/random.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/random.cpp'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

@@ -35,7 +35,7 @@ Buffer::Buffer() {
 	pthread_mutex_init(&_mutex, NULL);
 }
 
-Buffer::Iterator Buffer::push(Reading data) {
+/*Buffer::Iterator Buffer::push(Reading data) {
 	Iterator it;
 
 	lock();
@@ -44,6 +44,7 @@ Buffer::Iterator Buffer::push(Reading data) {
 
 	return it;
 }
+*/
 
 void Buffer::push(const Reading &rd) {
   pthread_mutex_lock(&_mutex);
