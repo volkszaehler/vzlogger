@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.65])
 
 # update version here!
 AC_INIT([vzlogger], [0.3.3], [http://bugs.volkszaehler.org])
@@ -17,6 +17,7 @@ AC_CONFIG_FILES([
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 
 # We use per target compiler flags
 AM_PROG_CC_C_O
