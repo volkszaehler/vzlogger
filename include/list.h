@@ -56,7 +56,7 @@ public:
 		return (cur != i.cur);
 	};
 
-	T& operator*() {
+  T& operator*() {
 		if (!list || *this == list->end()) {
 			throw invalid_argument("Iter::operator*()");
 		}

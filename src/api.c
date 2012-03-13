@@ -121,27 +121,27 @@ vz::Api::Api(Channel::Ptr ch)
     : _ch(ch)
             //    , _api(api)
 {
-	char url[255], agent[255];
+  char url[255], agent[255];
 
-	/* prepare header, uuid & url */
-	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	/* build user agent */
-	sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid());			/* build url */
+  /* prepare header, uuid & url */
+  sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());     /* build user agent */
+  sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid());                        /* build url */
 
-	_api.headers = NULL;
-	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
-	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
-	_api.headers = curl_slist_append(_api.headers, agent);
+  _api.headers = NULL;
+  _api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
+  _api.headers = curl_slist_append(_api.headers, "Accept: application/json");
+  _api.headers = curl_slist_append(_api.headers, agent);
 
-	_api.curl = curl_easy_init();
-	if (!_api.curl) {
-		throw vz::VZException("CURL: cannot create handle.");
-	}
+  _api.curl = curl_easy_init();
+  if (!_api.curl) {
+    throw vz::VZException("CURL: cannot create handle.");
+  }
 
-	curl_easy_setopt(_api.curl, CURLOPT_URL, url);
-	curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
-	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
-	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
-	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, _ch.get());
+  curl_easy_setopt(_api.curl, CURLOPT_URL, url);
+  curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
+  curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
+  curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
+  curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, _ch.get());
 
 }
 

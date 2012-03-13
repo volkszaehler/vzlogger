@@ -33,7 +33,7 @@
 #include "local.h"
 #include "api.h"
 
-extern config_options_t options;
+extern Config_Options options;
 
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url, const char *method,
 			const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
@@ -41,7 +41,8 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 	int status;
 	int response_code = MHD_HTTP_NOT_FOUND;
 
-	list_t *mappings = (list_t *) cls;
+	/* mapping between meters and channels */
+  std::list<Map> *mappings = static_cast<std::list<Map>*>(cls);
 
 	struct MHD_Response *response;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
