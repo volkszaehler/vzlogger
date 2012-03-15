@@ -25,7 +25,10 @@ vzlogger_SOURCES += \
 # logger API (add your own here)
 vzlogger_SOURCES += \
 	api/Volkszaehler.cpp \
-	api/MySmartGrid.cpp
+	api/MySmartGrid.cpp \
+	api/CurlIF.cpp \
+	api/CurlCallback.cpp \
+	api/CurlResponse.cpp
 
 vzlogger_LDADD =
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)

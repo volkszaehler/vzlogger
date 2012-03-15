@@ -63,7 +63,8 @@ am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
 	obis.$(OBJEXT) options.$(OBJEXT) reading.$(OBJEXT) \
 	exception.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) sml.$(OBJEXT) \
 	fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
-	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT)
+	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT) \
+	CurlIF.$(OBJEXT) CurlCallback.$(OBJEXT) CurlResponse.$(OBJEXT)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
@@ -198,7 +199,8 @@ vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp \
 	options.cpp reading.cpp exception.cpp protocols/s0.cpp \
 	protocols/d0.cpp protocols/sml.cpp protocols/fluksov2.cpp \
 	protocols/file.cpp protocols/exec.cpp protocols/random.cpp \
-	api/Volkszaehler.cpp api/MySmartGrid.cpp
+	api/Volkszaehler.cpp api/MySmartGrid.cpp api/CurlIF.cpp \
+	api/CurlCallback.cpp api/CurlResponse.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
@@ -282,6 +284,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlCallback.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlIF.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlResponse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MySmartGrid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Volkszaehler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/api.Po@am__quote@
@@ -443,6 +448,48 @@ MySmartGrid.obj: api/MySmartGrid.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/MySmartGrid.cpp' object='MySmartGrid.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MySmartGrid.obj `if test -f 'api/MySmartGrid.cpp'; then $(CYGPATH_W) 'api/MySmartGrid.cpp'; else $(CYGPATH_W) '$(srcdir)/api/MySmartGrid.cpp'; fi`
+
+CurlIF.o: api/CurlIF.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlIF.o -MD -MP -MF $(DEPDIR)/CurlIF.Tpo -c -o CurlIF.o `test -f 'api/CurlIF.cpp' || echo '$(srcdir)/'`api/CurlIF.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlIF.Tpo $(DEPDIR)/CurlIF.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlIF.cpp' object='CurlIF.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlIF.o `test -f 'api/CurlIF.cpp' || echo '$(srcdir)/'`api/CurlIF.cpp
+
+CurlIF.obj: api/CurlIF.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlIF.obj -MD -MP -MF $(DEPDIR)/CurlIF.Tpo -c -o CurlIF.obj `if test -f 'api/CurlIF.cpp'; then $(CYGPATH_W) 'api/CurlIF.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlIF.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlIF.Tpo $(DEPDIR)/CurlIF.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlIF.cpp' object='CurlIF.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlIF.obj `if test -f 'api/CurlIF.cpp'; then $(CYGPATH_W) 'api/CurlIF.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlIF.cpp'; fi`
+
+CurlCallback.o: api/CurlCallback.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlCallback.o -MD -MP -MF $(DEPDIR)/CurlCallback.Tpo -c -o CurlCallback.o `test -f 'api/CurlCallback.cpp' || echo '$(srcdir)/'`api/CurlCallback.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlCallback.Tpo $(DEPDIR)/CurlCallback.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlCallback.cpp' object='CurlCallback.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlCallback.o `test -f 'api/CurlCallback.cpp' || echo '$(srcdir)/'`api/CurlCallback.cpp
+
+CurlCallback.obj: api/CurlCallback.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlCallback.obj -MD -MP -MF $(DEPDIR)/CurlCallback.Tpo -c -o CurlCallback.obj `if test -f 'api/CurlCallback.cpp'; then $(CYGPATH_W) 'api/CurlCallback.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlCallback.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlCallback.Tpo $(DEPDIR)/CurlCallback.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlCallback.cpp' object='CurlCallback.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlCallback.obj `if test -f 'api/CurlCallback.cpp'; then $(CYGPATH_W) 'api/CurlCallback.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlCallback.cpp'; fi`
+
+CurlResponse.o: api/CurlResponse.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlResponse.o -MD -MP -MF $(DEPDIR)/CurlResponse.Tpo -c -o CurlResponse.o `test -f 'api/CurlResponse.cpp' || echo '$(srcdir)/'`api/CurlResponse.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlResponse.Tpo $(DEPDIR)/CurlResponse.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlResponse.cpp' object='CurlResponse.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlResponse.o `test -f 'api/CurlResponse.cpp' || echo '$(srcdir)/'`api/CurlResponse.cpp
+
+CurlResponse.obj: api/CurlResponse.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT CurlResponse.obj -MD -MP -MF $(DEPDIR)/CurlResponse.Tpo -c -o CurlResponse.obj `if test -f 'api/CurlResponse.cpp'; then $(CYGPATH_W) 'api/CurlResponse.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlResponse.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/CurlResponse.Tpo $(DEPDIR)/CurlResponse.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/CurlResponse.cpp' object='CurlResponse.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o CurlResponse.obj `if test -f 'api/CurlResponse.cpp'; then $(CYGPATH_W) 'api/CurlResponse.cpp'; else $(CYGPATH_W) '$(srcdir)/api/CurlResponse.cpp'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

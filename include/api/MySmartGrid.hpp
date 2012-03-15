@@ -34,6 +34,8 @@
 #define _MySmartGrid_hpp_
 
 #include <ApiIF.hpp>
+#include <api/CurlIF.hpp>
+#include <api/CurlResponse.hpp>
 
 namespace vz {
   namespace api {
@@ -47,6 +49,28 @@ namespace vz {
       void send();
 
     private:
+      /**
+       * Parses JSON encoded exception and stores describtion in err
+       */
+      void api_parse_exception(char *err, size_t n);
+
+
+      json_object * _json_object_registration(Buffer::Ptr buf);
+      json_object * _json_object_heartbeat(Buffer::Ptr buf);
+      json_object * _json_object_event(Buffer::Ptr buf);
+      json_object * _json_object_sensor(Buffer::Ptr buf);
+      json_object * _json_object_measurements(Buffer::Ptr buf);
+
+      void _api_header();
+
+      void hmac_sha1(char *digest, char *secretKey, const unsigned char *data,size_t dataLen);
+
+      CurlResponse *response()   { return _response.get(); }
+
+    private:
+      CurlIF _curlIF;
+      CurlResponse::Ptr _response;
+      
     }; //class MySmartGrid
   
   } // namespace api

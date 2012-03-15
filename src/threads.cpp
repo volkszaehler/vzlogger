@@ -178,18 +178,17 @@ void logging_thread_cleanup(void *arg) {
 void * logging_thread(void *arg) {
 	Channel::Ptr ch;
   ch.reset(static_cast<Channel *>(arg)); /* casting argument */
-  print(log_debug, "===> Loggingsthread. with api='%s'...", ch->name(), ch->apiName().c_str());
 
   // create configured api-interface
   vz::ApiIF::Ptr api;
   if( ch->apiName() == "mysmartgrid") {
-    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch));
-  } else {
     api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch));
+    print(log_debug, "Using MSG-Api.", ch->name());
+  } else {
+    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch));
+    print(log_debug, "Using default api:", ch->name());
   }
 
-  print(log_debug, "===> Loggingsthread....", "");
-  
 	//pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
