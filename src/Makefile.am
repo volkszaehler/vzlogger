@@ -22,6 +22,11 @@ vzlogger_SOURCES += \
 	protocols/exec.cpp \
 	protocols/random.cpp
 
+# logger API (add your own here)
+vzlogger_SOURCES += \
+	api/Volkszaehler.cpp \
+	api/MySmartGrid.cpp
+
 vzlogger_LDADD =
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 

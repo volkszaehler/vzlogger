@@ -38,7 +38,7 @@ class Channel {
 public:
 	typedef vz::shared_ptr<Channel> Ptr;
 
-	Channel(const char *pUuid, const char *pMiddleware, ReadingIdentifier::Ptr pIdentifier);
+	Channel(const std::string api, const char *pUuid, const char *pMiddleware, ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
   void start() {
@@ -54,7 +54,8 @@ public:
   
   const char* middleware() { return _middleware; }
   const char* uuid()       { return _uuid; }
-
+  const std::string apiName() { return _apiName; }
+  
   void last(Reading *rd) { _last = rd;}
   void push(const Reading &rd) { _buffer->push(rd); }
 	char *dump(char *dump, size_t len) { return _buffer->dump(dump, len); }
@@ -79,9 +80,10 @@ public:
 protected:
 	static int instances;
 	int id;				/* only for internal usage & debugging */
-
-  std::string _name;
-	Buffer::Ptr _buffer;		/* circular queue to buffer readings */
+  std::string _name; /**< name of the channel */
+  
+  
+	Buffer::Ptr _buffer;		/**< circular queue to buffer readings */
   
 	ReadingIdentifier::Ptr _identifier;	/* channel identifier (OBIS, string) */
 	Reading *_last;			/* most recent reading */
@@ -91,6 +93,8 @@ protected:
 
 	char *_middleware;		/* url to middleware */
 	char *_uuid;			/* unique identifier for middleware */
+  std::string _apiName;  /**< name of api to use for logging */
+
 };
 
 #endif /* _CHANNEL_H_ */

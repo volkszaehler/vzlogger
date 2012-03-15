@@ -27,9 +27,11 @@
 #include <unistd.h>
 
 #include "reading.h"
-#include "api.h"
 #include "vzlogger.h"
 #include "threads.h"
+#include <ApiIF.hpp>
+#include <api/Volkszaehler.hpp>
+#include <api/MySmartGrid.hpp>
 
 extern Config_Options options;
 
@@ -176,64 +178,25 @@ void logging_thread_cleanup(void *arg) {
 void * logging_thread(void *arg) {
 	Channel::Ptr ch;
   ch.reset(static_cast<Channel *>(arg)); /* casting argument */
-  vz::Api api(ch);
+  print(log_debug, "===> Loggingsthread. with api='%s'...", ch->name(), ch->apiName().c_str());
+
+  // create configured api-interface
+  vz::ApiIF::Ptr api;
+  if( ch->apiName() == "mysmartgrid") {
+    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch));
+  } else {
+    api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch));
+  }
 
   print(log_debug, "===> Loggingsthread....", "");
   
 	//pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
-		CURLresponse response;
-		json_object *json_obj;
-
-		const char *json_str;
-		long int http_code;
-    CURLcode curl_code;
-
-		/* initialize response */
-		response.data = NULL;
-		response.size = 0;
 
 		ch->wait();
 
-		json_obj = api_json_tuples(ch->buffer());
-		json_str = json_object_to_json_string(json_obj);
-
-		print(log_debug, "JSON request body: %s", ch->name(), json_str);
-
-		curl_easy_setopt(api.curl(), CURLOPT_POSTFIELDS, json_str);
-		curl_easy_setopt(api.curl(), CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
-		curl_easy_setopt(api.curl(), CURLOPT_WRITEDATA, (void *) &response);
-
-		curl_code = curl_easy_perform(api.curl());
-		curl_easy_getinfo(api.curl(), CURLINFO_RESPONSE_CODE, &http_code);
-
-		/* check response */
-		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-			print(log_debug, "Request succeeded with code: %i", ch->name(), http_code);
-			//clear buffer-readings
-      //ch->buffer.sent = last->next;
-		}
-		else { /* error */
-			if (curl_code != CURLE_OK) {
-				print(log_error, "CURL: %s", ch->name(), curl_easy_strerror(curl_code));
-			}
-			else if (http_code != 200) {
-				char err[255];
-				api_parse_exception(response, err, 255);
-				print(log_error, "Error from middleware: %s", ch->name(), err);
-			}
-		}
-
-		/* householding */
-		free(response.data);
-		json_object_put(json_obj);
-
-		if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
-			print(log_info, "Waiting %i secs for next request due to previous failure",
-            ch->name(), options.retry_pause());
-			sleep(options.retry_pause());
-		}
+    api->send();
     
 	} while (options.daemon());
 

@@ -35,6 +35,7 @@
 int Channel::instances = 0;
 
 Channel::Channel(
+  const std::string apiName,
   const char *pUuid,
   const char *pMiddleware,
   ReadingIdentifier::Ptr pIdentifier
@@ -43,6 +44,7 @@ Channel::Channel(
     , _identifier(pIdentifier)
     , _last(0)
                 //, _last(_identifier)
+    , _apiName(apiName)
 {
 	id = instances++;
 

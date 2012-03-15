@@ -63,7 +63,7 @@ am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
 	obis.$(OBJEXT) options.$(OBJEXT) reading.$(OBJEXT) \
 	exception.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) sml.$(OBJEXT) \
 	fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
-	random.$(OBJEXT)
+	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
@@ -191,11 +191,14 @@ AM_LDFLAGS =
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
 
 # Protocols (add your own here)
+
+# logger API (add your own here)
 vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp \
 	threads.cpp buffer.cpp meter.cpp ltqnorm.cpp obis.cpp \
 	options.cpp reading.cpp exception.cpp protocols/s0.cpp \
 	protocols/d0.cpp protocols/sml.cpp protocols/fluksov2.cpp \
-	protocols/file.cpp protocols/exec.cpp protocols/random.cpp
+	protocols/file.cpp protocols/exec.cpp protocols/random.cpp \
+	api/Volkszaehler.cpp api/MySmartGrid.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
@@ -279,6 +282,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MySmartGrid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Volkszaehler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
@@ -410,6 +415,34 @@ random.obj: protocols/random.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/random.cpp' object='random.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o random.obj `if test -f 'protocols/random.cpp'; then $(CYGPATH_W) 'protocols/random.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/random.cpp'; fi`
+
+Volkszaehler.o: api/Volkszaehler.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Volkszaehler.o -MD -MP -MF $(DEPDIR)/Volkszaehler.Tpo -c -o Volkszaehler.o `test -f 'api/Volkszaehler.cpp' || echo '$(srcdir)/'`api/Volkszaehler.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/Volkszaehler.Tpo $(DEPDIR)/Volkszaehler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/Volkszaehler.cpp' object='Volkszaehler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Volkszaehler.o `test -f 'api/Volkszaehler.cpp' || echo '$(srcdir)/'`api/Volkszaehler.cpp
+
+Volkszaehler.obj: api/Volkszaehler.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Volkszaehler.obj -MD -MP -MF $(DEPDIR)/Volkszaehler.Tpo -c -o Volkszaehler.obj `if test -f 'api/Volkszaehler.cpp'; then $(CYGPATH_W) 'api/Volkszaehler.cpp'; else $(CYGPATH_W) '$(srcdir)/api/Volkszaehler.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/Volkszaehler.Tpo $(DEPDIR)/Volkszaehler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/Volkszaehler.cpp' object='Volkszaehler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Volkszaehler.obj `if test -f 'api/Volkszaehler.cpp'; then $(CYGPATH_W) 'api/Volkszaehler.cpp'; else $(CYGPATH_W) '$(srcdir)/api/Volkszaehler.cpp'; fi`
+
+MySmartGrid.o: api/MySmartGrid.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MySmartGrid.o -MD -MP -MF $(DEPDIR)/MySmartGrid.Tpo -c -o MySmartGrid.o `test -f 'api/MySmartGrid.cpp' || echo '$(srcdir)/'`api/MySmartGrid.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MySmartGrid.Tpo $(DEPDIR)/MySmartGrid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/MySmartGrid.cpp' object='MySmartGrid.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MySmartGrid.o `test -f 'api/MySmartGrid.cpp' || echo '$(srcdir)/'`api/MySmartGrid.cpp
+
+MySmartGrid.obj: api/MySmartGrid.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MySmartGrid.obj -MD -MP -MF $(DEPDIR)/MySmartGrid.Tpo -c -o MySmartGrid.obj `if test -f 'api/MySmartGrid.cpp'; then $(CYGPATH_W) 'api/MySmartGrid.cpp'; else $(CYGPATH_W) '$(srcdir)/api/MySmartGrid.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MySmartGrid.Tpo $(DEPDIR)/MySmartGrid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='api/MySmartGrid.cpp' object='MySmartGrid.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MySmartGrid.obj `if test -f 'api/MySmartGrid.cpp'; then $(CYGPATH_W) 'api/MySmartGrid.cpp'; else $(CYGPATH_W) '$(srcdir)/api/MySmartGrid.cpp'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

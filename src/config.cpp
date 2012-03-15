@@ -224,7 +224,8 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	const char *uuid = NULL;
 	const char *middleware = NULL;
 	const char *id_str = NULL;
-
+  const char *api_str = NULL;
+  
   print(log_debug, "Configure channel.", NULL);
 	json_object_object_foreach(jso.Object(), key, value) {
 		enum json_type type = json_object_get_type(value);
@@ -238,6 +239,9 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		else if (strcmp(key, "identifier") == 0 && type == json_type_string) {
 			id_str = json_object_get_string(value);
 		}
+		else if (strcmp(key, "api") == 0 && type == json_type_string) {
+			api_str = json_object_get_string(value);
+		}
 		else {
 			print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
 				NULL, key, json_object_get_string(value), option_type_str[type]);
@@ -249,13 +253,16 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Missing UUID", NULL);
 		throw vz::VZException("Missing UUID");
 	}
-	else if (!config_validate_uuid(uuid)) {
+  if (!config_validate_uuid(uuid)) {
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-	else if (middleware == NULL) {
+  if (middleware == NULL) {
 		print(log_error, "Missing middleware", NULL);
 		throw vz::VZException("Missing middleware.");
+	}
+  if (api_str == NULL) {
+    api_str = strdup("volkszaehler");
 	}
 
 	/* parse identifier */
@@ -269,7 +276,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		throw vz::VZException("Invalid reader.");
   }
   
-	Channel ch(uuid, middleware, id);
+	Channel ch(api_str, uuid, middleware, id);
 	print(log_info, "New channel initialized (uuid=...%s middleware=%s id=%s)", NULL/*ch*/,
         uuid+30, middleware, (id_str) ? id_str : "(none)");
   mapping.push_back(ch);
