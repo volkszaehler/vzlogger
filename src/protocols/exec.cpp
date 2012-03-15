@@ -31,7 +31,7 @@
 #include <VZException.hpp>
 
 MeterExec::MeterExec(std::list<Option> options) 
-    : Protocol(options)
+    : Protocol("exec", options)
 {
   OptionList optlist;
 

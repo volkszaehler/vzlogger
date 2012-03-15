@@ -1,5 +1,7 @@
 /**
- * Protocol interface
+ * Protocol generic interface
+ * To implement new meter protocol, derive from this class and implement 
+ * the specific code for open(), close() and read()
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -36,32 +38,25 @@
 
 namespace vz {
   namespace protocol {
-  class Protocol {
-  public:
-    typedef vz::shared_ptr<Protocol> Ptr;
+    class Protocol {
+    public:
+      typedef vz::shared_ptr<Protocol> Ptr;
 
-    Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
-    Protocol(std::list<Option> options) : _name("") {};
-    Protocol(const Protocol &proto) {  std::cout<<"====>Protocol - copy!" << std::endl; }
-    Protocol& operator=(const Protocol&proto) {  std::cout<<"====>Protocol - equal!" << std::endl; return (*this); }
+      Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
 
-    
-    virtual ~Protocol() {  std::cout<<"Protocol::~Protocol()\n";};
+      virtual ~Protocol() {};
 
-    //virtual void   init(std::list<Option> options) = 0;
-    virtual int    open() = 0;
-    virtual int    close() = 0;
-    virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
+      virtual int    open() = 0;
+      virtual int    close() = 0;
+      virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
 
-    const std::string &name() { return _name; }
+      const std::string &name() { return _name; }
     
-  private:
-    std::string _name;
+    private:
+      std::string _name;
     
-  };
-  
-    
-} // namespace protocol
+    }; // class protocol
+  } // namespace protocol
 } // namespace vz
 
 #endif /* _protocol_hpp_ */

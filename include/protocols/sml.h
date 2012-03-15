@@ -57,14 +57,11 @@ public:
 protected:
 	std::string _host;
 	std::string _device;
-  //const char *_host;
-  //const char *_device;
 	speed_t _baudrate;
 
 	int _fd;	/* file descriptor of port */
 	struct termios _old_tio;	/* required to reset port */
 
-	//const int BUFFER_LEN = 8192;
 	const int BUFFER_LEN;
 
 	/**

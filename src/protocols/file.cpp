@@ -33,7 +33,7 @@
 #include <VZException.hpp>
 
 MeterFile::MeterFile(std::list<Option> options)
-    : Protocol(options)
+    : Protocol("file", options)
 {
   OptionList optlist;
 

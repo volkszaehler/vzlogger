@@ -163,9 +163,6 @@ Meter::Meter(const Meter *mtr) {
 Meter::~Meter() {
 }
 
-void Meter::init(std::list<Option> options) {
-}
-
 void Meter::open() {
   if( _protocol->open() < 0) {
     print(log_error, "Cannot open meter", name());

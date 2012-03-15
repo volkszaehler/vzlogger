@@ -51,8 +51,6 @@ public:
   private:
 	std::string _host;
 	std::string _device;
-	//const char *_host;
-	//const char *_device;
 	int _baudrate;
 
 	int _fd; /* file descriptor of port */

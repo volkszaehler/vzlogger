@@ -44,36 +44,40 @@ public:
 	Meter(const Meter *mtr);
 	virtual ~Meter();
 
-  void init(std::list<Option> options);
   void open();
   int close();
   size_t read(std::vector<Reading> &rds, size_t n);
 
+  // setter
   void interval(const int i) { _interval = i; }
 
-  vz::protocol::Protocol::Ptr protocol() { return _protocol; }
-  ReadingIdentifier::Ptr identifier() { return _identifier; }
-  const meter_protocol_t protocolId() const { return _protocol_id; } 
-  const bool isEnabled() const { return _enable; }
-  const char *name() const { return _name.c_str(); }
-  const int  interval() const { return _interval; }
+  // getter
+  const char *name() const               { return _name.c_str(); }
+  const bool isEnabled() const           { return _enable; }
 
-protected:
-	//Meter(std::list<Option> options);
+  const meter_protocol_t protocolId() const { return _protocol_id; } 
+  vz::protocol::Protocol::Ptr protocol() { return _protocol; }
+
+  ReadingIdentifier::Ptr identifier()    { return _identifier; }
+
+  const int  interval() const            { return _interval; }
 
   private:
-  vz::protocol::Protocol::Ptr _protocol;
+	static int instances;                   /**< meter instance id (increasing counter) */
+
+	int id;                                 /**< meter id */
+  std::string _name;                      /**< meter name */
+  bool _enable;                           /**< true if meter is disabled (default) */
+
+  meter_protocol_t _protocol_id;          /**< meter protocol id */
+  vz::protocol::Protocol::Ptr _protocol;  /**< meter protocol */
+
   ReadingIdentifier::Ptr _identifier;
-  meter_protocol_t _protocol_id;
-	int id;
-  std::string _name;
-  bool _enable;
   
-	static int instances;
 
 	int _interval;
 
-	std::vector<Channel> channels;
+	std::vector<Channel> channels;          /**< channel for logging */
 
 	pthread_t thread;
 };
