@@ -58,10 +58,18 @@ void Buffer::clean() {
   for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
     if(it->deleted()) _sent.erase(it);
   }
-
-  _sent.clear();
+  //_sent.clear();
   unlock();
 }
+
+void Buffer::undelete() {
+  lock();
+  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+    it->reset();
+  }
+  unlock();
+}
+
 
 void Buffer::shrink(size_t keep) {
 	lock();

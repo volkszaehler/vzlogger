@@ -95,27 +95,24 @@ void vz::api::MySmartGrid::send()
   print(log_debug, "JSON request body: %s", channel()->name(), json_str);
 
   curl_easy_setopt(_curlIF.handle(), CURLOPT_POSTFIELDS, json_str);
-  print(log_debug, "JSON set post data", channel()->name());
-
 
   _api_header();
-  print(log_debug, "JSON sign ", channel()->name());
   hmac_sha1(digest, "385be4cf2439455486739cbd739a0643",
             (const unsigned char*)json_str, strlen(json_str));
   _curlIF.addHeader(digest);
   print(log_debug, "Header_Digest: %s", channel()->name(), digest);
   _curlIF.commitHeader();
-  print(log_debug, "===> perform call", channel()->name());
 
   curl_code = _curlIF.perform();
-  print(log_debug, "===> perform call done %d", channel()->name(), curl_code);
   curl_easy_getinfo(_curlIF.handle(), CURLINFO_RESPONSE_CODE, &http_code);
 
   /* check response */
   if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
     print(log_debug, "Request succeeded with code: %i", channel()->name(), http_code);
+    channel()->buffer()->clean();
   }
   else { /* error */
+    channel()->buffer()->undelete();
     if (curl_code != CURLE_OK) {
       print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
     }
@@ -287,18 +284,16 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod(); 
-		long   timestamp_l = timestamp;
-		double value = it->value();
+		long   timestamp = it->tvtod();
+		double value = it->value() * 3600;
+    it->mark_delete();
+    
 		buf->unlock();
 
-    if( (timestamp_l - first_ts) > 1) {
-      first_ts = timestamp_l;
-      json_object_array_add(json_tuple, json_object_new_int(timestamp_l));
-      //json_object_array_add(json_tuple, json_object_new_double(timestamp));
+    if( (timestamp - first_ts) > 1) {
+      first_ts = timestamp;
+      json_object_array_add(json_tuple, json_object_new_int(timestamp));
       json_object_array_add(json_tuple, json_object_new_int(value));
-      //json_object_array_add(json_tuple, json_object_new_double(value));
-
       json_object_array_add(json_tuples, json_tuple);
     }
   }
@@ -329,22 +324,14 @@ void vz::api::MySmartGrid::hmac_sha1(
   , const unsigned char *data
   ,size_t dataLen
   ) {
-  print(log_debug, "hmac_sha1: ", NULL);
-  print(log_debug, "hmac_sha1: '%s'", NULL, data);
   HMAC_CTX hmacContext;
 
-  print(log_debug, "hmac_sha1: 1", NULL);
   HMAC_Init(&hmacContext, secretKey, strlen(secretKey), EVP_sha1());
-  print(log_debug, "hmac_sha1: 2", NULL);
   HMAC_Update(&hmacContext, data, dataLen);
-  print(log_debug, "hmac_sha1: 3", NULL);
 
   unsigned char out[EVP_MAX_MD_SIZE];
-  print(log_debug, "hmac_sha1: 4", NULL);
   unsigned int len = EVP_MAX_MD_SIZE;
-  print(log_debug, "hmac_sha1: 5 %d", NULL, len);
   HMAC_Final(&hmacContext, out, &len);
-  print(log_debug, "hmac_sha1: 6 %d", NULL, len);
   char ret[2*EVP_MAX_MD_SIZE];
   memset(ret, 0, sizeof(ret));
   
@@ -355,8 +342,4 @@ void vz::api::MySmartGrid::hmac_sha1(
     //strncat(ret, s, sizeof(ret));
   }
   snprintf(digest, 255/*sizeof(digest)*/, "X-Digest: %s", ret);
-  
-  print(log_debug, "hmac_sha1: ", NULL);
-
-  print(log_debug, "hmac_sha1: (%s)", NULL, ret);
 }

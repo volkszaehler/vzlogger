@@ -44,6 +44,9 @@
 #include <meter.h>
 #include <channel.h>
 
+/**
+   The MeterMap is intend to keep the list of all configured channel for a given meter.
+ */
 class MeterMap {
   public:
   typedef vz::shared_ptr<MeterMap> Ptr;
@@ -51,14 +54,16 @@ class MeterMap {
   typedef std::vector<Channel>::const_iterator const_iterator;
 
   MeterMap(std::list<Option> options) : _meter(new Meter(options)){}
-    ~MeterMap() {};
-    Meter::Ptr meter() { return _meter; }
+  ~MeterMap() {};
+  Meter::Ptr meter() { return _meter; }
 
   void stop() {}
   
+  /**
+     If the meter is enabled, start the meter and all its channels.
+   */
   void start() {
     if(_meter->isEnabled()) {
-      
       _meter->open();
       print(log_debug, "meter is opened. Start reader.", _meter->name());
       pthread_create(&_thread, NULL, &reading_thread, (void *) this);
@@ -72,6 +77,9 @@ class MeterMap {
     
   }
   
+  /**
+   * cancel all channels for this meter.
+   */
   void cancel() {
     pthread_cancel(_thread);
     for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
@@ -79,8 +87,10 @@ class MeterMap {
     }
   }
   
+  /** 
+   *  Accessor to the channel list
+   */
   void push_back(Channel channel) { _channels.push_back(channel); }
-
   iterator begin()  { return _channels.begin(); }
   iterator end()    { return _channels.end(); }
   size_t size()     { return _channels.size(); }
@@ -92,7 +102,9 @@ class MeterMap {
 	pthread_t _thread;
 };
 
-
+/**
+   This container is intend to keep the list of all configured meters. 
+ */
 class MapContainer {
   public:
   typedef vz::shared_ptr<MapContainer> Ptr;
@@ -110,10 +122,13 @@ class MapContainer {
     }
   }
   
-  const size_t size() const { return _mappings.size(); }
+  /** 
+   *  Accessor to the MeterMap (meter and its channels) list
+   */
+  void push_back(const MeterMap &map) { _mappings.push_back(map); } 
   iterator begin()  { return _mappings.begin(); }
   iterator end()    { return _mappings.end(); }
-  void push_back(const MeterMap &map) { _mappings.push_back(map); } 
+  const size_t size() const { return _mappings.size(); }
   
   private:
   std::vector<MeterMap> _mappings;

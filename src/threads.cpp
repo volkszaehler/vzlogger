@@ -61,8 +61,8 @@ void * reading_thread(void *arg) {
 	//pthread_cleanup_push(&reading_thread_cleanup, rds);
 
   print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
-  print(log_debug, "Config.daemon: %d", "", options.daemon());
-  print(log_debug, "Config.local: %d", "", options.local());
+  print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
+  print(log_debug, "Config.local: %d", mtr->name(), options.local());
 
 
   do { /* start thread main loop */
@@ -130,6 +130,7 @@ void * reading_thread(void *arg) {
 			}
 
 			/* shrink buffer */
+      //buffer()->clean();
 			//buffer_clean(buf);
 
 			/* notify webserver and logging thread */
@@ -178,6 +179,8 @@ void logging_thread_cleanup(void *arg) {
 void * logging_thread(void *arg) {
 	Channel::Ptr ch;
   ch.reset(static_cast<Channel *>(arg)); /* casting argument */
+  print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
+        ch->apiName().c_str(), options.daemon() ? "yes" : "no");
 
   // create configured api-interface
   vz::ApiIF::Ptr api;
@@ -192,14 +195,20 @@ void * logging_thread(void *arg) {
 	//pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
+    try {
+      ch->wait();
 
-		ch->wait();
-
-    api->send();
+      api->send();
+    }
+    catch(std::exception &e) {
+      print(log_error, "Got an exception : %s", ch->name(), e.what());
+      std::cout<<"Exception: "<< e.what() << std::endl;
+      
+    }
     
 	} while (options.daemon());
 
-  print(log_debug, "Stop logging.! ", ch->name());
+  print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
 	//pthread_cleanup_pop(1);
 
 	return NULL;

@@ -47,13 +47,17 @@ namespace vz {
     ApiIF(Channel::Ptr ch) : _ch(ch){}
     ~ApiIF(){};
     
+    /** 
+     * @brief send measurement values to middleware
+     * to be implemented specific API.
+    **/
     virtual void send() = 0;
 
   protected:
     Channel::Ptr channel() { return _ch; }
     
   private:
-    Channel::Ptr _ch;
+    Channel::Ptr _ch;   /**< pointer to channel where API belongs to */
   }; //class ApiIF
   
 } // namespace vz
