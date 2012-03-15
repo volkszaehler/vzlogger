@@ -287,8 +287,8 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod() * 1000; 
-		long   timestamp_l = timestamp - ( first_ts == 0 ? 0 : 0 );
+		double timestamp = it->tvtod(); 
+		long   timestamp_l = timestamp;
 		double value = it->value();
 		buf->unlock();
 
@@ -311,22 +311,15 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 void vz::api::MySmartGrid::_api_header() {
 	char agent[255];
 
-  print(log_debug, "JSON set header", channel()->name());
 	/* prepare header */
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	/* build user agent */
-  print(log_debug, "JSON set header", channel()->name());
   
   _curlIF.clearHeader();
-  print(log_debug, "JSON set header 1", channel()->name());
   
 	_curlIF.addHeader("Content-type: application/json");
-  print(log_debug, "JSON set header 2", channel()->name());
 	_curlIF.addHeader("Accept: application/json");
-  print(log_debug, "JSON set header 3", channel()->name());
 	_curlIF.addHeader(agent);
-  print(log_debug, "JSON set header 4", channel()->name());
 	_curlIF.addHeader("X-Version: 1.0");
-  print(log_debug, "JSON set header done.", channel()->name());
 
 }
 
