@@ -50,9 +50,6 @@ void * reading_thread(void *arg) {
 	details = meter_get_details(mtr->protocolId());
 
 	/* allocate memory for readings */
-	//size_t bytes = sizeof(reading_t) * details->max_readings;
-	//rds = malloc(bytes);
-	//memset(rds, 0, bytes);
   for(size_t i=0; i< details->max_readings; i++) {
     Reading rd(mtr->identifier());
     rds.push_back(rd);
@@ -65,104 +62,108 @@ void * reading_thread(void *arg) {
   print(log_debug, "Config.local: %d", mtr->name(), options.local());
 
 
-  do { /* start thread main loop */
-		/* fetch readings from meter and calculate delta */
-		last = time(NULL);
-		n = mtr->read(rds, details->max_readings);
-		delta = time(NULL) - last;
+  try {
+    do { /* start thread main loop */
+      /* fetch readings from meter and calculate delta */
+      last = time(NULL);
+      n = mtr->read(rds, details->max_readings);
+      delta = time(NULL) - last;
 
-		/* dumping meter output */
-		if (options.verbosity() > log_debug) {
-			print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
+      /* dumping meter output */
+      if (options.verbosity() > log_debug) {
+        print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
 
-			char identifier[MAX_IDENTIFIER_LEN];
-			for (size_t i = 0; i < n; i++) {
-				rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
-				print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
-              identifier, rds[i].identifier()->toString().c_str(),
-              rds[i].value(), rds[i].tvtod());
-			}
-		}
-
-		/* update buffer length with current interval */
-		if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-			print(log_debug, "Updating interval to %i", mtr->name(), delta);
-			mtr->interval(delta);
-		}
-
-		/* insert readings into channel queues */
-    for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
-			Reading *add = NULL;
-
-      print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
-      
-			for (size_t i = 0; i < n; i++) {
-        print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
-        print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
-              rds[i].identifier()->toString().c_str(),
-              ch->identifier()->toString().c_str());
-        
-				if ( *rds[i].identifier().get() == *ch->identifier().get()) {
-          print(log_debug, "found channel", mtr->name());
-					if (ch->tvtod() < rds[i].tvtod()) {
-						ch->last(&rds[i]);
-					}
-
-					print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch->name(),
+        char identifier[MAX_IDENTIFIER_LEN];
+        for (size_t i = 0; i < n; i++) {
+          rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
+          print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
+                identifier, rds[i].identifier()->toString().c_str(),
                 rds[i].value(), rds[i].tvtod());
-					ch->push(rds[i]);
+        }
+      }
 
-					if (add == NULL) {
-						add = &rds[i]; /* remember first reading which has been added to the buffer */
-					}
-				}
-			}
+      /* update buffer length with current interval */
+      if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
+        print(log_debug, "Updating interval to %i", mtr->name(), delta);
+        mtr->interval(delta);
+      }
 
-			/* update buffer length */
-			if (options.local()) {
-				//buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
-			}
+      /* insert readings into channel queues */
+      for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+        Reading *add = NULL;
 
-			/* queue reading into sending buffer logging thread if
-			   logging is enabled & sent queue is empty */
-			if (options.logging()) {
-				//ch->push(buf->sent = add);
-			}
+        //print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
+      
+        for (size_t i = 0; i < n; i++) {
+          //print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
+          //print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
+          //      rds[i].identifier()->toString().c_str(),
+          //      ch->identifier()->toString().c_str());
+        
+          if ( *rds[i].identifier().get() == *ch->identifier().get()) {
+            //print(log_debug, "found channel", mtr->name());
+            if (ch->tvtod() < rds[i].tvtod()) {
+              ch->last(&rds[i]);
+            }
 
-			/* shrink buffer */
-      //buffer()->clean();
-			//buffer_clean(buf);
+            print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch->name(),
+                  rds[i].value(), rds[i].tvtod());
+            ch->push(rds[i]);
 
-			/* notify webserver and logging thread */
-			ch->notify();
+            if (add == NULL) {
+              add = &rds[i]; /* remember first reading which has been added to the buffer */
+            }
+          }
+        }
 
-			/* debugging */
-			if (options.verbosity() >= log_debug) {
-				size_t dump_len = 24;
-				char *dump = (char*)malloc(dump_len);
+        /* update buffer length */
+        if (options.local()) {
+          //buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
+        }
 
-				if (dump == NULL) {
-					print(log_error, "cannot allocate buffer", ch->name());
-				}
+        /* queue reading into sending buffer logging thread if
+           logging is enabled & sent queue is empty */
+        if (options.logging()) {
+          //ch->push(buf->sent = add);
+        }
 
-				while (dump == NULL || ch->dump(dump, dump_len) == NULL) {
-					dump_len *= 1.5;
-					free(dump);
-					dump = (char*)malloc(dump_len);
-				}
+        /* shrink buffer */
+        ch->buffer()->clean();
 
-				print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch->name(),
-              ch->size(), ch->keep(), dump);
+        /* notify webserver and logging thread */
+        ch->notify();
 
-				free(dump);
-			}
-		}
+        /* debugging */
+        if (options.verbosity() >= log_debug) {
+          size_t dump_len = 24;
+          char *dump = (char*)malloc(dump_len);
 
-		if ((options.daemon() || options.local()) && details->periodic) {
-			print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-			sleep(mtr->interval());
-		}
-  } while (options.daemon() || options.local());
+          if (dump == NULL) {
+            print(log_error, "cannot allocate buffer", ch->name());
+          }
+
+          while (dump == NULL || ch->dump(dump, dump_len) == NULL) {
+            dump_len *= 1.5;
+            free(dump);
+            dump = (char*)malloc(dump_len);
+          }
+
+          print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch->name(),
+                ch->size(), ch->keep(), dump);
+
+          free(dump);
+        }
+      }
+
+      if ((options.daemon() || options.local()) && details->periodic) {
+        print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
+        //sleep(mtr->interval());
+      }
+    } while (options.daemon() || options.local());
+  } catch(std::exception &e) {
+    print(log_error, "THREAD - reading Got an exception : %s", mtr->name(), e.what());
+    std::cout<<"Exception: "<< e.what() << std::endl;
+  }
 
   print(log_debug, "Stop reading.! ", mtr->name());
 	//pthread_cleanup_pop(1);

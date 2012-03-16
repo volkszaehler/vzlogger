@@ -35,11 +35,11 @@ Buffer::Buffer() {
 	pthread_mutex_init(&_mutex, NULL);
 }
 
-/*Buffer::Iterator Buffer::push(Reading data) {
-	Iterator it;
+/*Buffer::iterator Buffer::push_(Reading data) {
+	Buffer::iterator it;
 
 	lock();
-	it = push(data);
+	//it = _sent.push(data);
 	unlock();
 
 	return it;
@@ -47,19 +47,21 @@ Buffer::Buffer() {
 */
 
 void Buffer::push(const Reading &rd) {
-  pthread_mutex_lock(&_mutex);
+  lock();
   _sent.push_back(rd);
-  pthread_mutex_unlock(&_mutex);
+  unlock();
 }
 
 void Buffer::clean() {
 
+  printf("====> Buffer::clean() %d\n", _sent.size());
   lock();
   for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
     if(it->deleted()) _sent.erase(it);
   }
   //_sent.clear();
   unlock();
+  printf("====> Buffer::clean() - done %d\n", _sent.size());
 }
 
 void Buffer::undelete() {
@@ -86,9 +88,9 @@ char * Buffer::dump(char *dump, size_t len) {
   dump[pos++] = '{';
 
   //for (Reading *rd = buf->head; rd != NULL; rd = rd->next) {
-  for(const_iterator it = _sent.begin(); it!= _sent.end(); it++) {
+  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
     if (pos < len) {
-      pos += snprintf(dump+pos, len-pos, "%.2f", it->value());
+      pos += snprintf(dump+pos, len-pos, "%.4f", it->value());
     }
 
     /* indicate last sent reading */
