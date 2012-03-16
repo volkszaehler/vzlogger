@@ -33,6 +33,12 @@
 #include "exception.h"
 #include "reading.h"
 
+Reading::Reading()
+    : _deleted(false)
+    , _value(0)
+{
+}
+
 Reading::Reading(ReadingIdentifier::Ptr pIndentifier)
     : _deleted(false)
     , _value(0)

@@ -90,10 +90,10 @@ class MeterMap {
   /** 
    *  Accessor to the channel list
    */
-  void push_back(Channel channel) { _channels.push_back(channel); }
-  iterator begin()  { return _channels.begin(); }
-  iterator end()    { return _channels.end(); }
-  size_t size()     { return _channels.size(); }
+  inline void push_back(Channel channel) { _channels.push_back(channel); }
+  inline iterator begin()  { return _channels.begin(); }
+  inline iterator end()    { return _channels.end(); }
+  inline size_t size()     { return _channels.size(); }
 
   private:
   Meter::Ptr _meter;
@@ -125,10 +125,10 @@ class MapContainer {
   /** 
    *  Accessor to the MeterMap (meter and its channels) list
    */
-  void push_back(const MeterMap &map) { _mappings.push_back(map); } 
-  iterator begin()  { return _mappings.begin(); }
-  iterator end()    { return _mappings.end(); }
-  const size_t size() const { return _mappings.size(); }
+  inline void push_back(const MeterMap &map) { _mappings.push_back(map); } 
+  inline iterator begin()  { return _mappings.begin(); }
+  inline iterator end()    { return _mappings.end(); }
+  inline const size_t size() const { return _mappings.size(); }
   
   private:
   std::vector<MeterMap> _mappings;
