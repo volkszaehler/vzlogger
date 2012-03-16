@@ -61,8 +61,8 @@ am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
 	api.$(OBJEXT) config.$(OBJEXT) threads.$(OBJEXT) \
 	buffer.$(OBJEXT) meter.$(OBJEXT) ltqnorm.$(OBJEXT) \
 	obis.$(OBJEXT) options.$(OBJEXT) reading.$(OBJEXT) \
-	exception.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) sml.$(OBJEXT) \
-	fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
+	exception.$(OBJEXT) local.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) \
+	sml.$(OBJEXT) fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
 	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT) \
 	CurlIF.$(OBJEXT) CurlCallback.$(OBJEXT) CurlResponse.$(OBJEXT)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
@@ -196,11 +196,11 @@ AM_LDFLAGS =
 # logger API (add your own here)
 vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp \
 	threads.cpp buffer.cpp meter.cpp ltqnorm.cpp obis.cpp \
-	options.cpp reading.cpp exception.cpp protocols/s0.cpp \
-	protocols/d0.cpp protocols/sml.cpp protocols/fluksov2.cpp \
-	protocols/file.cpp protocols/exec.cpp protocols/random.cpp \
-	api/Volkszaehler.cpp api/MySmartGrid.cpp api/CurlIF.cpp \
-	api/CurlCallback.cpp api/CurlResponse.cpp
+	options.cpp reading.cpp exception.cpp local.cpp \
+	protocols/s0.cpp protocols/d0.cpp protocols/sml.cpp \
+	protocols/fluksov2.cpp protocols/file.cpp protocols/exec.cpp \
+	protocols/random.cpp api/Volkszaehler.cpp api/MySmartGrid.cpp \
+	api/CurlIF.cpp api/CurlCallback.cpp api/CurlResponse.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
 all: all-am
@@ -298,6 +298,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fluksov2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/local.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltqnorm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/obis.Po@am__quote@

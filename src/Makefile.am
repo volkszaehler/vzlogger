@@ -9,7 +9,7 @@ bin_PROGRAMS = vzlogger
 
 vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp threads.cpp buffer.cpp
 vzlogger_SOURCES += meter.cpp ltqnorm.cpp obis.cpp options.cpp reading.cpp
-vzlogger_SOURCES += exception.cpp
+vzlogger_SOURCES += exception.cpp local.cpp
 
 
 # Protocols (add your own here)

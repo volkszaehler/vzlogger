@@ -54,14 +54,12 @@ void Buffer::push(const Reading &rd) {
 
 void Buffer::clean() {
 
-  printf("====> Buffer::clean() %d\n", _sent.size());
   lock();
   for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
     if(it->deleted()) _sent.erase(it);
   }
   //_sent.clear();
   unlock();
-  printf("====> Buffer::clean() - done %d\n", _sent.size());
 }
 
 void Buffer::undelete() {
