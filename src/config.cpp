@@ -43,9 +43,10 @@ Config_Options::Config_Options()
     , _comet_timeout(30)
     , _buffer_length(600)
     , _retry_pause(15)
-    , _daemon(FALSE)
-    , _local(FALSE)
-    , _logging(TRUE)
+    , _daemon(false)
+    , _foreground(false)
+    , _local(false)
+    , _logging(true)
 {
 	_logfd = NULL;
 }
@@ -60,9 +61,10 @@ Config_Options::Config_Options(
     , _comet_timeout(30)
     , _buffer_length(600)
     , _retry_pause(15)
-    , _daemon(FALSE)
-    , _local(FALSE)
-    , _logging(TRUE)
+    , _daemon(false)
+    , _foreground(false)
+    , _local(false)
+    , _logging(true)
 {
 	_logfd = NULL;
 }

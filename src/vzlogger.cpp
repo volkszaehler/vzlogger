@@ -337,11 +337,17 @@ int main(int argc, char *argv[]) {
   
 	options.logging((!options.local() || options.daemon()));
 
+  print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
+        options.daemon(), options.local());
+  
 	if (!options.foreground() && (options.daemon() || options.local())) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
-
+  else {
+		print(log_info, "NOT Daemonize process...", (char*)0);
+  }
+  
 	/* open logfile */
 	if (options.log() != "") {
 		FILE *logfd = fopen(options.log().c_str(), "a");
@@ -397,7 +403,7 @@ int main(int argc, char *argv[]) {
 #ifdef LOCAL_SUPPORT
     /* start webserver for local interface */
     if (options.local()) {
-      //print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
+      print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
       httpd_handle = MHD_start_daemon(
         MHD_USE_THREAD_PER_CONNECTION,
         options.port(),
@@ -411,7 +417,9 @@ int main(int argc, char *argv[]) {
     print(log_error, "Startup failed for %s", "", e.what());
   }
   print(log_debug, "Startup done.", "");
-  sleep(81400);
+  while(1) {
+    sleep(81400);
+  }
   print(log_debug, "======> DONE.", "");
   
 	/* wait for all threads to terminate */
