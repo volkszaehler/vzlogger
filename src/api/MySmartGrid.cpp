@@ -109,7 +109,7 @@ void vz::api::MySmartGrid::send()
   /* check response */
   if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
     print(log_debug, "Request succeeded with code: %i", channel()->name(), http_code);
-    channel()->buffer()->clean();
+    //channel()->buffer()->clean();
   }
   else { /* error */
     channel()->buffer()->undelete();
@@ -275,7 +275,8 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
   static time_t first_ts = 0;
-
+  static long last_counter = 0;
+  
   //  json_object_array_add(json_tuples, json_object_new_string("measurements"));
 	for (it = buf->begin(); it != buf->end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
@@ -284,14 +285,15 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		long   timestamp = it->tvtod();
-		double value = it->value() * 3600;
+		long timestamp = it->tvtod();
+		long value = it->value() * 1000;
     it->mark_delete();
     
 		buf->unlock();
 
-    if( (timestamp - first_ts) > 1) {
+    if( ((value - last_counter) >= 1) && (timestamp - first_ts) > 1) {
       first_ts = timestamp;
+      last_counter = value;
       json_object_array_add(json_tuple, json_object_new_int(timestamp));
       json_object_array_add(json_tuple, json_object_new_int(value));
       json_object_array_add(json_tuples, json_tuple);
