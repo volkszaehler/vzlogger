@@ -309,6 +309,11 @@ int main(int argc, char *argv[]) {
 	action.sa_flags = 0;
 	action.sa_handler = quit;
 
+#ifdef LOCAL_SUPPORT
+  /* webserver for local interface */
+	struct MHD_Daemon *httpd_handle = NULL;
+#endif /* LOCAL_SUPPORT */
+
 	sigaction(SIGINT, &action, NULL);	/* catch ctrl-c from terminal */
 	sigaction(SIGHUP, &action, NULL);	/* catch hangup signal */
 	sigaction(SIGTERM, &action, NULL);	/* catch kill signal */
@@ -357,57 +362,57 @@ int main(int argc, char *argv[]) {
 
   print(log_debug, "===> Start meters.", "");
   try {
-	/* open connection meters & start threads */
-  for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-    it->start();
+    /* open connection meters & start threads */
+    for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+      it->start();
     
 #if 0
-		meter_t *mtr = &mapping->meter;
+      meter_t *mtr = &mapping->meter;
 
-		if (meter_open(mtr) != SUCCESS) {
-			print(log_error, "Failed to open meter. Aborting.", mtr);
-			return EXIT_FAILURE;
-		}
-		else {
-			print(log_info, "Meter connection established", mtr);
-		}
+      if (meter_open(mtr) != SUCCESS) {
+        print(log_error, "Failed to open meter. Aborting.", mtr);
+        return EXIT_FAILURE;
+      }
+      else {
+        print(log_info, "Meter connection established", mtr);
+      }
     
-		pthread_create(&mapping->thread, NULL, &reading_thread, (void *) mapping);
-		print(log_debug, "Meter thread started", mtr);
+      pthread_create(&mapping->thread, NULL, &reading_thread, (void *) mapping);
+      print(log_debug, "Meter thread started", mtr);
 
-		foreach(mapping->channels, ch, channel_t) {
-			/* set buffer length for perriodic meters */
-			if (meter_get_details(mtr->protocol)->periodic && options.local) {
-				ch->buffer.keep = ceil(options.buffer_length / (double) mapping->meter.interval);
-			}
+      foreach(mapping->channels, ch, channel_t) {
+        /* set buffer length for perriodic meters */
+        if (meter_get_details(mtr->protocol)->periodic && options.local) {
+          ch->buffer.keep = ceil(options.buffer_length / (double) mapping->meter.interval);
+        }
 
-			if (options.logging) {
-				pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
-				print(log_debug, "Logging thread started", ch);
-			}
-		}
+        if (options.logging) {
+          pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
+          print(log_debug, "Logging thread started", ch);
+        }
+      }
 #endif
-	}
+    }
 
 #ifdef LOCAL_SUPPORT
-	 /* start webserver for local interface */
-	struct MHD_Daemon *httpd_handle = NULL;
-	if (options.local()) {
-		//print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
-		httpd_handle = MHD_start_daemon(
-			MHD_USE_THREAD_PER_CONNECTION,
-			options.port(),
-			NULL, NULL,
-			&handle_request, (void*)&mappings,
-			MHD_OPTION_END
-      );
-	}
+    /* start webserver for local interface */
+    if (options.local()) {
+      //print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
+      httpd_handle = MHD_start_daemon(
+        MHD_USE_THREAD_PER_CONNECTION,
+        options.port(),
+        NULL, NULL,
+        &handle_request, (void*)&mappings,
+        MHD_OPTION_END
+        );
+    }
 #endif /* LOCAL_SUPPORT */
   } catch ( std::exception &e) {
     print(log_error, "Startup failed for %s", "", e.what());
   }
   print(log_debug, "Startup done.", "");
-  sleep(120);
+  sleep(81400);
+  print(log_debug, "======> DONE.", "");
   
 	/* wait for all threads to terminate */
   for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {

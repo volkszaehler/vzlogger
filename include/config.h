@@ -66,8 +66,10 @@ class Config_Options {
   FILE *logfd() { return _logfd; }
   const int &port()      const { return _port; }
   const int &verbosity() const { return _verbosity; }
+  const int &comet_timeout() const { return _comet_timeout; }
 	const int retry_pause() const { return _retry_pause; }
 
+  const bool channel_index() const { return _channel_index; }
   const bool daemon()    const { return _daemon; }
   const bool foreground()const { return _foreground; }
   const bool local()     const { return _local; }
