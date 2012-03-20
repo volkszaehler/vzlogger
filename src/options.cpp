@@ -122,9 +122,7 @@ Option::operator bool() const {
 
 //Option& OptionList::lookup(List<Option> options, char *key) {
 const Option &OptionList::lookup(std::list<Option> options, const std::string &key) {
-  printf("Search %s \n", key.c_str());
   for(const_iterator it = options.begin(); it != options.end(); it++) {
-		//if (strcmp(it->key(), key) == 0) {
 		if ( it->key() == key ) {
 			return (*it);
 		}
@@ -136,28 +134,24 @@ const Option &OptionList::lookup(std::list<Option> options, const std::string &k
 const char *OptionList::lookup_string(std::list<Option> options, const char *key)
 {
   Option opt = lookup(options, key);
-  printf("Found %s (%d)\n", key, opt.type());
   return (const char*)opt;
 }
 
 const int OptionList::lookup_int(std::list<Option> options, const char *key)
 {
   Option opt = lookup(options, key);
-  printf("Found %s (%d)\n", key, opt.type());
   return (int)opt;
 }
 
 const bool OptionList::lookup_bool(std::list<Option> options, const char *key)
 {
   Option opt = lookup(options, key);
-  printf("Found %s (%d)\n", key, opt.type());
   return (bool)opt;
 }
 
 const double OptionList::lookup_double(std::list<Option> options, const char *key)
 {
   Option opt = lookup(options, key);
-  printf("Found %s (%d)\n", key, opt.type());
   return (double)opt;
 }
 
