@@ -1,15 +1,16 @@
-AM_CFLAGS = -Wall -D_REENTRANT  $(DEPS_VZ_CFLAGS) -std=gnu++0x
+AM_CFLAGS = -Wall -D_REENTRANT  $(DEPS_VZ_CFLAGS)
+#AM_CFLAGS = -Wall -D_REENTRANT  $(DEPS_VZ_CFLAGS)
 
-AM_CPPFLAGS = -I $(top_srcdir)/include
+AM_CPPFLAGS = -I $(top_srcdir)/include -std=c++0x
 AM_LDFLAGS =
 
 bin_PROGRAMS = vzlogger
 
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
 
-vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp threads.cpp buffer.cpp
+vzlogger_SOURCES = vzlogger.cpp channel.cpp config.cpp threads.cpp buffer.cpp
 vzlogger_SOURCES += meter.cpp ltqnorm.cpp obis.cpp options.cpp reading.cpp
-vzlogger_SOURCES += exception.cpp local.cpp
+vzlogger_SOURCES += exception.cpp local.cpp MeterMap.cpp
 
 
 # Protocols (add your own here)
@@ -31,7 +32,7 @@ vzlogger_SOURCES += \
 	api/CurlResponse.cpp
 
 vzlogger_LDADD =
-vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
+vzlogger_LDFLAGS = -lpthread -lm -lstdc++ $(DEPS_VZ_LIBS)
 
 # SML support
 ####################################################################

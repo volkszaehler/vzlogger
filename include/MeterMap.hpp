@@ -62,21 +62,8 @@ class MeterMap {
   /**
      If the meter is enabled, start the meter and all its channels.
    */
-  void start() {
-    if(_meter->isEnabled()) {
-      _meter->open();
-      print(log_debug, "meter is opened. Start reader.", _meter->name());
-      pthread_create(&_thread, NULL, &reading_thread, (void *) this);
-      print(log_debug, "meter is opened. Start channels.", _meter->name());
-      for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-        it->start();
-      }
-    } else {
-      print(log_debug, "Skipping disabled meter.", _meter->name());
-    }
+  void start();
     
-  }
-  
   /**
    * cancel all channels for this meter.
    */

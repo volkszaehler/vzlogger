@@ -55,6 +55,7 @@
 
 MapContainer mappings;	/* mapping between meters and channels */
 Config_Options options;	/* global application options */
+bool gStop = false;
 
 /**
  * Command line options
@@ -229,6 +230,7 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
+  gStop = true;
   mappings.quit(sig);
 }
 
@@ -331,11 +333,13 @@ int main(int argc, char *argv[]) {
   try {
     options.config_parse(mappings);
   } catch ( std::exception &e) {
-    std::cout<<"Failed: "<< e.what() << std::endl;
+    std::stringstream oss;
+    oss << e.what();
+    print(log_error, "Failed to parse configuration due to: ", "", oss.str().c_str());
     return EXIT_FAILURE;
   }
   
-	options.logging((!options.local() || options.daemon()));
+	options.logging((!options.local() || options.daemon()) || 1);
 
   print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
         options.daemon(), options.local());
@@ -371,33 +375,6 @@ int main(int argc, char *argv[]) {
     /* open connection meters & start threads */
     for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
       it->start();
-    
-#if 0
-      meter_t *mtr = &mapping->meter;
-
-      if (meter_open(mtr) != SUCCESS) {
-        print(log_error, "Failed to open meter. Aborting.", mtr);
-        return EXIT_FAILURE;
-      }
-      else {
-        print(log_info, "Meter connection established", mtr);
-      }
-    
-      pthread_create(&mapping->thread, NULL, &reading_thread, (void *) mapping);
-      print(log_debug, "Meter thread started", mtr);
-
-      foreach(mapping->channels, ch, channel_t) {
-        /* set buffer length for perriodic meters */
-        if (meter_get_details(mtr->protocol)->periodic && options.local) {
-          ch->buffer.keep = ceil(options.buffer_length / (double) mapping->meter.interval);
-        }
-
-        if (options.logging) {
-          pthread_create(&ch->thread, NULL, &logging_thread, (void *) ch);
-          print(log_debug, "Logging thread started", ch);
-        }
-      }
-#endif
     }
 
 #ifdef LOCAL_SUPPORT
@@ -417,9 +394,10 @@ int main(int argc, char *argv[]) {
     print(log_error, "Startup failed for %s", "", e.what());
   }
   print(log_debug, "Startup done.", "");
-  while(1) {
+  do {
     sleep(81400);
-  }
+  } while (!gStop);
+
   print(log_debug, "======> DONE.", "");
   
 	/* wait for all threads to terminate */

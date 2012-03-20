@@ -58,10 +58,10 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
-	api.$(OBJEXT) config.$(OBJEXT) threads.$(OBJEXT) \
-	buffer.$(OBJEXT) meter.$(OBJEXT) ltqnorm.$(OBJEXT) \
-	obis.$(OBJEXT) options.$(OBJEXT) reading.$(OBJEXT) \
-	exception.$(OBJEXT) local.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) \
+	config.$(OBJEXT) threads.$(OBJEXT) buffer.$(OBJEXT) \
+	meter.$(OBJEXT) ltqnorm.$(OBJEXT) obis.$(OBJEXT) \
+	options.$(OBJEXT) reading.$(OBJEXT) exception.$(OBJEXT) \
+	local.$(OBJEXT) MeterMap.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) \
 	sml.$(OBJEXT) fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
 	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT) \
 	CurlIF.$(OBJEXT) CurlCallback.$(OBJEXT) CurlResponse.$(OBJEXT)
@@ -184,9 +184,10 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -Wall -D_REENTRANT $(DEPS_VZ_CFLAGS) -std=gnu++0x \
-	$(am__append_2) $(am__append_4)
-AM_CPPFLAGS = -I $(top_srcdir)/include
+AM_CFLAGS = -Wall -D_REENTRANT $(DEPS_VZ_CFLAGS) $(am__append_2) \
+	$(am__append_4)
+#AM_CFLAGS = -Wall -D_REENTRANT  $(DEPS_VZ_CFLAGS)
+AM_CPPFLAGS = -I $(top_srcdir)/include -std=c++0x
 AM_LDFLAGS = 
 
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
@@ -194,15 +195,15 @@ AM_LDFLAGS =
 # Protocols (add your own here)
 
 # logger API (add your own here)
-vzlogger_SOURCES = vzlogger.cpp channel.cpp api.cpp config.cpp \
-	threads.cpp buffer.cpp meter.cpp ltqnorm.cpp obis.cpp \
-	options.cpp reading.cpp exception.cpp local.cpp \
+vzlogger_SOURCES = vzlogger.cpp channel.cpp config.cpp threads.cpp \
+	buffer.cpp meter.cpp ltqnorm.cpp obis.cpp options.cpp \
+	reading.cpp exception.cpp local.cpp MeterMap.cpp \
 	protocols/s0.cpp protocols/d0.cpp protocols/sml.cpp \
 	protocols/fluksov2.cpp protocols/file.cpp protocols/exec.cpp \
 	protocols/random.cpp api/Volkszaehler.cpp api/MySmartGrid.cpp \
 	api/CurlIF.cpp api/CurlCallback.cpp api/CurlResponse.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
-vzlogger_LDFLAGS = -lpthread -lm $(DEPS_VZ_LIBS)
+vzlogger_LDFLAGS = -lpthread -lm -lstdc++ $(DEPS_VZ_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -287,9 +288,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlCallback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlIF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlResponse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterMap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MySmartGrid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Volkszaehler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
