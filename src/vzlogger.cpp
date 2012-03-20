@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 #include <errno.h>
 #include <signal.h>
 #include <getopt.h>
@@ -339,7 +338,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
   
-	options.logging((!options.local() || options.daemon()) || 1);
+	options.logging((!options.local() || options.daemon()));
 
   print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
         options.daemon(), options.local());
@@ -394,33 +393,14 @@ int main(int argc, char *argv[]) {
     print(log_error, "Startup failed for %s", "", e.what());
   }
   print(log_debug, "Startup done.", "");
-  do {
-    sleep(81400);
-  } while (!gStop);
-
-  print(log_debug, "======> DONE.", "");
   
-	/* wait for all threads to terminate */
-  for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-    it->stop();
-    
-#if 0
-		meter_t *mtr = &mapping->meter;
-
-		pthread_join(mapping->thread, NULL);
-
-		foreach(mapping->channels, ch, channel_t) {
-			pthread_join(ch->thread, NULL);
-
-			channel_free(ch);
-		}
-
-		meter_close(mtr); /* closing connection */
-
-		list_free(&mapping->channels);
-		meter_free(mtr);
-#endif
-	}
+  do {
+    /* wait for all threads to terminate */
+    for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+      bool ret = it->stop();
+      if(ret) gStop = true;
+    }
+  } while (!gStop);
 
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */
