@@ -83,8 +83,9 @@ Meter::Meter(std::list<Option> pOptions) :
       throw vz::VZException("Protocol not found.");
     }
   } catch( vz::VZException &e ) {
-    std::cout<< "Failed: "<< e.what() << std::endl;
-    print(log_error, "Missing protocol or invalid type", name());
+    std::stringstream oss;
+    oss << e.what();
+    print(log_error, "Missing protocol or invalid type (%s)", name(), oss.str().c_str());
     throw;
   }
 
@@ -105,8 +106,9 @@ Meter::Meter(std::list<Option> pOptions) :
       //print(log_error, "Interval has to be positive!", mtr);
     } 
   } catch( vz::VZException &e ) {
-    std::cout<< "Failed: "<< e.what() << std::endl;
-    print(log_error, "Missing protocol or invalid type", name());
+    std::stringstream oss;
+    oss << e.what();
+    print(log_error, "Missing protocol or invalid type (%s)", name(), oss.str().c_str());
     throw;
   }
   switch(_protocol_id) {
@@ -146,7 +148,7 @@ Meter::Meter(std::list<Option> pOptions) :
     /* interval */
     _enable = optlist.lookup_bool(pOptions, "enabled");
   } catch( vz::OptionNotFoundException &e ) {
-    _enable=false; /* indicates unknown interval */
+    _enable=false; /* bye default meter is disabled */
   } catch( vz::VZException &e ) {
     print(log_error, "Invalid type for enable", name());
     throw;
@@ -156,8 +158,6 @@ Meter::Meter(std::list<Option> pOptions) :
 }
 
 Meter::Meter(const Meter *mtr) {
-  std::cout<<"======> Meter Copy\n";
-  
 }
 
 Meter::~Meter() {
