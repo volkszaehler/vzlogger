@@ -105,7 +105,7 @@ int handle_request(
             struct json_object *json_ch = json_object_new_object();
 
             json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid()));
-            json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware()));
+            //json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware()));
             //json_object_object_add(json_ch, "last", json_object_new_double(ch->last.value));
             json_object_object_add(json_ch, "last", json_object_new_double(ch->tvtod()));
             json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter()->interval()));

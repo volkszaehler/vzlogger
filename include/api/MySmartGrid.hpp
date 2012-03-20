@@ -34,6 +34,7 @@
 #define _MySmartGrid_hpp_
 
 #include <ApiIF.hpp>
+#include <options.h>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
 
@@ -43,10 +44,12 @@ namespace vz {
     public:
       typedef vz::shared_ptr<MySmartGrid> Ptr;
 
-      MySmartGrid(Channel::Ptr ch);
+      MySmartGrid(Channel::Ptr ch, std::list<Option> options);
       ~MySmartGrid();
     
       void send();
+
+      const std::string middleware() const { return _middleware; }
 
     private:
       /**
@@ -63,13 +66,28 @@ namespace vz {
 
       void _api_header();
 
-      void hmac_sha1(char *digest, char *secretKey, const unsigned char *data,size_t dataLen);
+      void hmac_sha1(char *digest, const unsigned char *data,size_t dataLen);
 
       CurlResponse *response()   { return _response.get(); }
 
+      void convertUuid(const std::string uuid);
+      const char *uuid() const      { return _uuid.c_str(); }
+      const char *secretKey() const { return _secretKey.c_str(); }
+      
+      const int interval() const    { return _interval; }
+      const time_t first_ts() const { return _first_ts; }
+
     private:
+      std::string _middleware; /**< url to MySmartGrid Server */
+      std::string _uuid;       /**< unique sensor id */
+      std::string _secretKey;  /**< secretkey for signing messages */
+      int _interval;           /**<  time between 2 logmessages (sec.) */
       CurlIF _curlIF;
       CurlResponse::Ptr _response;
+      
+      // Volatil
+      time_t _first_ts;
+      long _last_counter;
       
     }; //class MySmartGrid
   

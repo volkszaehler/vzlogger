@@ -30,6 +30,7 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include <openssl/ssl.h>
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
@@ -43,16 +44,40 @@
 extern Config_Options options;
 
 vz::api::MySmartGrid::MySmartGrid(
-  Channel::Ptr ch
+  Channel::Ptr ch,
+  std::list<Option> pOptions
 ) 
     : ApiIF(ch)
     , _response(new vz::api::CurlResponse())
+    , _first_ts(0)
+    , _last_counter(0)
+
 {
+  OptionList optlist;
   print(log_debug, "===> Create MySmartGrid-API", channel()->name());
 	char url[255];
-	//sprintf(url, "%s/data/%s.json", ch->middleware, ch->uuid);			/* build url */
-	//sprintf(url, "%s/device/%s", ch->middleware, ch->uuid);			/* build url */
-	sprintf(url, "%s/sensor/a2ec85b1a3968f6612d1d06916e4f53e", channel()->middleware());			/* build url */
+
+  /* parse required options */
+  try {
+    _middleware = optlist.lookup_string(pOptions, "middleware");
+    _secretKey  = optlist.lookup_string(pOptions, "secretKey");
+  } catch ( vz::OptionNotFoundException &e ) {
+    throw;
+  } catch ( vz::VZException &e ) {
+    throw;
+  }
+  /* parse optional options */
+  try {
+    _interval   = optlist.lookup_int(pOptions, "interval");
+  } catch ( vz::OptionNotFoundException &e ) {
+    _interval = 300;  // default time between 2 logmessages
+  } catch ( vz::VZException &e ) {
+    throw;
+  }
+
+  convertUuid(channel()->uuid());
+  
+	sprintf(url, "%s/sensor/%s", middleware().c_str(), uuid());			/* build url */
   print(log_debug, "msg_api_init() %s", channel()->name(), url);
 
   _api_header();
@@ -86,6 +111,17 @@ void vz::api::MySmartGrid::send()
   long int http_code;
   CURLcode curl_code;
   
+  // check if we want to send
+  time_t now = time(NULL);
+  
+  if(_first_ts>0) {
+    if ( (now-first_ts()) < interval() ) {
+      print(log_debug, "api-MySmartGrid, skip measurement message.", "");
+      return;
+    }
+  } else { // _first_ts = 0
+  }
+
   /* initialize response */
   _response->clear_response();
 
@@ -97,8 +133,7 @@ void vz::api::MySmartGrid::send()
   curl_easy_setopt(_curlIF.handle(), CURLOPT_POSTFIELDS, json_str);
 
   _api_header();
-  hmac_sha1(digest, "385be4cf2439455486739cbd739a0643",
-            (const unsigned char*)json_str, strlen(json_str));
+  hmac_sha1(digest, (const unsigned char*)json_str, strlen(json_str));
   _curlIF.addHeader(digest);
   print(log_debug, "Header_Digest: %s", channel()->name(), digest);
   _curlIF.commitHeader();
@@ -109,7 +144,6 @@ void vz::api::MySmartGrid::send()
   /* check response */
   if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
     print(log_debug, "Request succeeded with code: %i", channel()->name(), http_code);
-    //channel()->buffer()->clean();
   }
   else { /* error */
     channel()->buffer()->undelete();
@@ -274,9 +308,8 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 	json_object *json_tuples = json_object_new_array();
 	Buffer::iterator it;
 
-  static time_t first_ts = 0;
-  static long last_counter = 0;
-  
+  long last_counter = 0;
+
   //  json_object_array_add(json_tuples, json_object_new_string("measurements"));
 	for (it = buf->begin(); it != buf->end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
@@ -291,8 +324,8 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
     
 		buf->unlock();
 
-    if( ((value - last_counter) >= 1) && (timestamp - first_ts) > 1) {
-      first_ts = timestamp;
+    if ((value - last_counter) >= 1) {
+      _first_ts = timestamp;
       last_counter = value;
       json_object_array_add(json_tuple, json_object_new_int(timestamp));
       json_object_array_add(json_tuple, json_object_new_int(value));
@@ -322,13 +355,12 @@ void vz::api::MySmartGrid::_api_header() {
 
 void vz::api::MySmartGrid::hmac_sha1(
   char *digest
-  , char *secretKey
   , const unsigned char *data
   ,size_t dataLen
   ) {
   HMAC_CTX hmacContext;
 
-  HMAC_Init(&hmacContext, secretKey, strlen(secretKey), EVP_sha1());
+  HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
   HMAC_Update(&hmacContext, data, dataLen);
 
   unsigned char out[EVP_MAX_MD_SIZE];
@@ -344,4 +376,14 @@ void vz::api::MySmartGrid::hmac_sha1(
     //strncat(ret, s, sizeof(ret));
   }
   snprintf(digest, 255/*sizeof(digest)*/, "X-Digest: %s", ret);
+}
+
+
+void vz::api::MySmartGrid::convertUuid(const std::string uuid) {
+  std::stringstream oss;
+  for(int i = 0; i < uuid.length(); i++) {
+    if( uuid[i] != '-' )
+      oss<< uuid[i];
+  }
+  _uuid = oss.str();
 }

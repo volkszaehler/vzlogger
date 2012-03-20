@@ -37,6 +37,7 @@
 #include <json/json.h>
 
 #include <ApiIF.hpp>
+#include <options.h>
 #include "buffer.h"
 
 namespace vz {
@@ -56,12 +57,16 @@ namespace vz {
     public:
       typedef vz::shared_ptr<ApiIF> Ptr;
 
-      Volkszaehler(Channel::Ptr ch);
+      Volkszaehler(Channel::Ptr ch, std::list<Option> options);
       ~Volkszaehler();
     
       void send();
 
+      const std::string middleware() const { return _middleware; }
+      
     private:
+      std::string _middleware;
+
       CURL *curl() { return _api.curl; }
       /**
        * Create JSON object of tuples

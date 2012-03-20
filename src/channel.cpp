@@ -35,16 +35,17 @@
 int Channel::instances = 0;
 
 Channel::Channel(
-  const std::string apiName,
-  const char *pUuid,
-  const char *pMiddleware,
+  const std::list<Option> &pOptions,
+  const std::string apiProtocol,
+  const std::string uuid,
   ReadingIdentifier::Ptr pIdentifier
   )
-    : _buffer(new Buffer())
+    : _options(pOptions)
+    , _buffer(new Buffer())
     , _identifier(pIdentifier)
     , _last(0)
-                //, _last(_identifier)
-    , _apiName(apiName)
+    , _uuid(uuid)
+    , _apiProtocol(apiProtocol)
 {
 	id = instances++;
 
@@ -53,10 +54,6 @@ Channel::Channel(
   oss<<"chn"<< id;
   _name=oss.str();
 
-  _uuid = strdup(pUuid);
-  _middleware = strdup(pMiddleware);
-
-  //buffer_init(&buffer); /* initialize buffer */
   pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
 }
 
@@ -64,10 +61,6 @@ Channel::Channel(
  * Free all allocated memory recursivly
  */
 Channel::~Channel() {
-	//buffer_free(&buffer);
 	pthread_cond_destroy(&condition);
-
-	//free(uuid);
-	//free(middleware);
 }
 

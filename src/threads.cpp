@@ -161,8 +161,10 @@ void * reading_thread(void *arg) {
       }
     } while (options.daemon() || options.local());
   } catch(std::exception &e) {
+    std::stringstream oss;
+    oss << e.what();
     print(log_error, "THREAD - reading Got an exception : %s", mtr->name(), e.what());
-    std::cout<<"Exception: "<< e.what() << std::endl;
+    //std::cout<<"Exception: "<< e.what() << std::endl;
   }
 
   print(log_debug, "Stop reading.! ", mtr->name());
@@ -181,15 +183,15 @@ void * logging_thread(void *arg) {
 	Channel::Ptr ch;
   ch.reset(static_cast<Channel *>(arg)); /* casting argument */
   print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
-        ch->apiName().c_str(), options.daemon() ? "yes" : "no");
+        ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
 
   // create configured api-interface
   vz::ApiIF::Ptr api;
-  if( ch->apiName() == "mysmartgrid") {
-    api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch));
+  if( ch->apiProtocol() == "mysmartgrid") {
+    api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
     print(log_debug, "Using MSG-Api.", ch->name());
   } else {
-    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch));
+    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch, ch->options()));
     print(log_debug, "Using default api:", ch->name());
   }
 
@@ -203,7 +205,7 @@ void * logging_thread(void *arg) {
     }
     catch(std::exception &e) {
       print(log_error, "Got an exception : %s", ch->name(), e.what());
-      std::cout<<"Exception: "<< e.what() << std::endl;
+      //std::cout<<"Exception: "<< e.what() << std::endl;
       
     }
     

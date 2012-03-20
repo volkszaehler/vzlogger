@@ -164,8 +164,9 @@ void Config_Options::config_parse(
 	}
   } catch (std::exception &e ) {
     json_object_put(json_cfg); /* free allocated memory */
-    std::cout<<"parse configuration failed." << std::endl;
-    std::cout << "Reason: " << e.what() << std::endl;
+    std::stringstream oss;
+    oss << e.what();
+    print(log_error, "parse configuration failed due to:", "",  oss.str().c_str());
     throw;
   }
   
@@ -185,7 +186,6 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 		if (strcmp(key, "channels") == 0 && type == json_type_array) {
 			int len = json_object_array_length(value);
 			for (int i = 0; i < len; i++) {
-				//json_channels.push_back(*json_object_array_get_idx(value, i));
         json_channels.push_back(Json(json_object_array_get_idx(value, i)));
 			}
 		}
@@ -194,16 +194,10 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 		}
 		else { /* all other options will be passed to meter_init() */
 			Option option(key, value);
-
-			//if (option_init(value, key, option) != SUCCESS) {
-			//	print(log_error, "Ignoring invalid type: %s=%s (%s)",
-			//		NULL, key, json_object_get_string(value), option_type_str[type]);
-			//}
-
 			options.push_back(option);
 		}
 	}
-
+  
 	/* init meter */
 	MeterMap  metermap(options);
 
@@ -217,16 +211,16 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 	}
 
 	/* householding */
-  std::cout<< "Return mapping...\n";
   mappings.push_back(metermap);
 }
 
 void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 {
+	std::list<Option> options;
 	const char *uuid = NULL;
 	const char *middleware = NULL;
 	const char *id_str = NULL;
-  const char *api_str = NULL;
+  const char *apiProtocol_str = NULL;
   
   print(log_debug, "Configure channel.", NULL);
 	json_object_object_foreach(jso.Object(), key, value) {
@@ -235,18 +229,21 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		if (strcmp(key, "uuid") == 0 && type == json_type_string) {
 			uuid = json_object_get_string(value);
 		}
-		else if (strcmp(key, "middleware") == 0 && type == json_type_string) {
-			middleware = json_object_get_string(value);
-		}
+		//else if (strcmp(key, "middleware") == 0 && type == json_type_string) {
+		//	middleware = json_object_get_string(value);
+		//}
 		else if (strcmp(key, "identifier") == 0 && type == json_type_string) {
 			id_str = json_object_get_string(value);
 		}
-		else if (strcmp(key, "api") == 0 && type == json_type_string) {
-			api_str = json_object_get_string(value);
+		else if (strcmp(key, "protocol") == 0 && type == json_type_string) {
+			apiProtocol_str = json_object_get_string(value);
 		}
-		else {
-			print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
-				NULL, key, json_object_get_string(value), option_type_str[type]);
+		else { /* all other options will be passed to meter_init() */
+      std::cout<<"test 1 - other - "<< key << "  type=" << type << std::endl;
+			Option option(key, value);
+			options.push_back(option);
+			//print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+			//	NULL, key, json_object_get_string(value), option_type_str[type]);
 		}
 	}
 
@@ -259,12 +256,12 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-  if (middleware == NULL) {
-		print(log_error, "Missing middleware", NULL);
-		throw vz::VZException("Missing middleware.");
-	}
-  if (api_str == NULL) {
-    api_str = strdup("volkszaehler");
+  //if (middleware == NULL) {
+	//	print(log_error, "Missing middleware", NULL);
+	//	throw vz::VZException("Missing middleware.");
+	//}
+  if (apiProtocol_str == NULL) {
+    apiProtocol_str = strdup("volkszaehler");
 	}
 
 	/* parse identifier */
@@ -278,11 +275,12 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		throw vz::VZException("Invalid reader.");
   }
   
-	Channel ch(api_str, uuid, middleware, id);
-	print(log_info, "New channel initialized (uuid=...%s middleware=%s id=%s)", NULL/*ch*/,
-        uuid+30, middleware, (id_str) ? id_str : "(none)");
+  //std::cout<< "New channel....\n";
+	Channel ch(options, apiProtocol_str, uuid, id);
+	print(log_info, "New channel initialized (uuid=...%s protocol=%s id=%s)", ch.name(),
+        uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
   mapping.push_back(ch);
-  std::cout<<"pushed new channel....\n";
+  //std::cout<<"pushed new channel....\n";
   
 }
 

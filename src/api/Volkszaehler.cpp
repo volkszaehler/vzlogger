@@ -40,15 +40,26 @@
 extern Config_Options options;
 
 vz::api::Volkszaehler::Volkszaehler(
-  Channel::Ptr ch
+  Channel::Ptr ch,
+  std::list<Option> pOptions
 ) 
     : ApiIF(ch)
 {
+  OptionList optlist;
   char url[255], agent[255];
 
+  /* parse options */
+  try {
+    _middleware = optlist.lookup_string(pOptions, "middleware");
+  } catch ( vz::OptionNotFoundException &e ) {
+    throw;
+  } catch ( vz::VZException &e ) {
+    throw;
+  }
+  
   /* prepare header, uuid & url */
   sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());     /* build user agent */
-  sprintf(url, "%s/data/%s.json", channel()->middleware(), channel()->uuid());                        /* build url */
+  sprintf(url, "%s/data/%s.json", middleware().c_str(), channel()->uuid());                        /* build url */
 
   _api.headers = NULL;
   _api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
