@@ -118,14 +118,14 @@ void * reading_thread(void *arg) {
 
         /* update buffer length */
         if (options.local()) {
-          //buf->keep = (mtr->interval > 0) ? ceil(options.buffer_length / mtr->interval) : 0;
+          ch->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
         }
 
         /* queue reading into sending buffer logging thread if
            logging is enabled & sent queue is empty */
-        if (options.logging()) {
+        //if (options.logging()) {
           //ch->push(buf->sent = add);
-        }
+        //}
 
         /* shrink buffer */
         ch->buffer()->clean();
@@ -164,12 +164,14 @@ void * reading_thread(void *arg) {
     std::stringstream oss;
     oss << e.what();
     print(log_error, "THREAD - reading Got an exception : %s", mtr->name(), e.what());
+    pthread_exit(0);
     //std::cout<<"Exception: "<< e.what() << std::endl;
   }
 
   print(log_debug, "Stop reading.! ", mtr->name());
 	//pthread_cleanup_pop(1);
-
+  
+  pthread_exit(0);
 	return NULL;
 }
 
@@ -212,6 +214,7 @@ void * logging_thread(void *arg) {
 	} while (options.daemon());
 
   print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
+  pthread_exit(0);
 	//pthread_cleanup_pop(1);
 
 	return NULL;

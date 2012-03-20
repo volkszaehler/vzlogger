@@ -48,6 +48,7 @@ Buffer::Buffer() {
 
 void Buffer::push(const Reading &rd) {
   lock();
+  have_newValues();
   _sent.push_back(rd);
   unlock();
 }

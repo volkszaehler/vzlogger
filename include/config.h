@@ -67,6 +67,7 @@ class Config_Options {
   const int &port()      const { return _port; }
   const int &verbosity() const { return _verbosity; }
   const int &comet_timeout() const { return _comet_timeout; }
+  const int &buffer_length() const { return _buffer_length; }
 	const int retry_pause() const { return _retry_pause; }
 
   const bool channel_index() const { return _channel_index; }

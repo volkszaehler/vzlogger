@@ -33,6 +33,7 @@
 #include "buffer.h"
 #include <threads.h>
 #include <options.h>
+#include <VZException.hpp>
 
 class Channel {
 
@@ -46,12 +47,17 @@ public:
     pthread_create(&_thread, NULL, &logging_thread, (void *) this);
   }
   
+  void join() {
+    pthread_join(_thread, NULL);
+  }
+
   void cancel() { pthread_cancel(_thread); }
 
   const char* name()                  { return _name.c_str(); }
   std::list<Option> &options()        { return _options; }
 
-  ReadingIdentifier::Ptr identifier() { return _identifier; }
+  ReadingIdentifier::Ptr identifier() {
+    if(_identifier.use_count() < 1) throw vz::VZException("Destroyed") ; return _identifier; }
   const double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
   
   const char* uuid()                  { return _uuid.c_str(); }
@@ -65,16 +71,17 @@ public:
   const size_t size() { return _buffer->size(); }  
   const size_t keep() { return _buffer->keep(); }  
 
-  void notify() {
+  inline void notify() {
     _buffer->lock();
     pthread_cond_broadcast(&condition);
     _buffer->unlock();
   }
-  void wait() {
+  inline void wait() {
     _buffer->lock();
-    while(_buffer->size()==0) {
+    while(!_buffer->newValues() ) {
 			_buffer->wait(&condition); /* sleep until new data has been read */
     }
+    _buffer->clear_newValues();
     _buffer->unlock();
   }
   

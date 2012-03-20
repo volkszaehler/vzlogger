@@ -33,6 +33,8 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <math.h>
+
 #include <MeterMap.hpp>
 #include <include/config.h>
 
@@ -52,7 +54,7 @@ void MeterMap::start() {
       for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
         /* set buffer length for perriodic meters */
         if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
-          //it->buffer.keep = ceil(options.buffer_length / (double) _meter->interval());
+          it->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
         }
         
         if (options.logging()) {

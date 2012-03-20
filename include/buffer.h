@@ -61,15 +61,23 @@ public:
   inline iterator end()   { return _sent.end(); }
   inline size_t size() { return _sent.size(); }
   //size_t size() { return _sent.length(); }
-  inline size_t keep() { return _keep; }
+
+  inline const bool newValues() const { return _newValues; }
+  inline void clear_newValues() { _newValues = false; }
   
+  inline const size_t keep() { return _keep; }
+  inline void keep(const size_t keep) { _keep = keep; }
+
   inline void lock()   { pthread_mutex_lock(&_mutex); }
   inline void unlock() { pthread_mutex_unlock(&_mutex); }
   inline void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
   
   private:
+  inline void have_newValues() { _newValues =  true; }
+
+  private:
   std::vector<Reading> _sent;
-  //vz::List<Reading> _sent;
+  bool _newValues;
   
 	size_t _keep;	/* number of readings to cache for local interface */
 
