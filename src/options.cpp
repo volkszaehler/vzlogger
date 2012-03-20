@@ -40,10 +40,7 @@ Option::Option(const char *pKey)
 Option::Option(const char *pKey, struct json_object *jso)
     : _key(pKey)
 {
-  std::cout<< "New option...."<< pKey << std::endl;
-  
-  //_key = strdup(pKey);
-  std::cout<< "New option...."<< _key << std::endl;
+  //std::cout<< "New option...."<< pKey << std::endl;
 
 	switch (json_object_get_type(jso)) {
       case json_type_string:	_value_string = json_object_get_string(jso);   break;
@@ -124,31 +121,16 @@ Option::operator bool() const {
 }
 
 //Option& OptionList::lookup(List<Option> options, char *key) {
-const Option &OptionList::lookup(std::list<Option> options, const char *key) {
-  printf("Search %s \n", key);
+const Option &OptionList::lookup(std::list<Option> options, const std::string &key) {
+  printf("Search %s \n", key.c_str());
   for(const_iterator it = options.begin(); it != options.end(); it++) {
-		if (strcmp(it->key(), key) == 0) {
+		//if (strcmp(it->key(), key) == 0) {
+		if ( it->key() == key ) {
 			return (*it);
 		}
   }
 
-#if 0  
-	//Option &option;
-
-	/* linear search */
-	foreach(options, val, option_t) {
-		if (strcmp(val->key, key) == 0) {
-			option = val;
-		}
-	}
-
-	if (option == options.end()) {
-		throw Exception("Option not found");
-	}
-
-	return option;
-#endif
-  throw vz::OptionNotFoundException("Option not found");
+  throw vz::OptionNotFoundException("Option '"+ std::string(key) +"' not found");
 }
 
 const char *OptionList::lookup_string(std::list<Option> options, const char *key)

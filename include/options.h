@@ -26,7 +26,7 @@ public:
 
 	virtual ~Option();
 
-  const char *key() const { return _key.c_str(); }
+  const std::string key() const { return _key; }
 	operator const char *() const;
 	operator int() const;
 	operator double() const;
@@ -48,7 +48,7 @@ public:
   }
 
 
-protected:
+  private:
 	Option(const char *key);
 
 	std::string _key;
@@ -64,6 +64,7 @@ protected:
 	} value;
 
 };
+
 inline
 std::ostream & operator << (std::ostream &s, const Option &l) {
   s<< l.toString();
@@ -77,7 +78,7 @@ public:
   typedef std::list<Option>::iterator iterator;
   typedef std::list<Option>::const_iterator const_iterator;
 
-  const Option& lookup(std::list<Option> options, const char *key);
+  const Option& lookup(std::list<Option> options, const std::string &key);
   const char  *lookup_string(std::list<Option> options, const char *key);
   const int    lookup_int(std::list<Option> options, const char *key);
   const bool   lookup_bool(std::list<Option> options, const char *key);
