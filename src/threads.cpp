@@ -95,11 +95,6 @@ void * reading_thread(void *arg) {
         //print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
       
         for (size_t i = 0; i < n; i++) {
-          //print(log_debug, "Search channel (%d - %s)", mtr->name(), i, ch->name());
-          //print(log_debug, "lhs-id=%s, rhr=%s", mtr->name(),
-          //      rds[i].identifier()->toString().c_str(),
-          //      ch->identifier()->toString().c_str());
-        
           if ( *rds[i].identifier().get() == *ch->identifier().get()) {
             //print(log_debug, "found channel", mtr->name());
             if (ch->tvtod() < rds[i].tvtod()) {
@@ -211,7 +206,7 @@ void * logging_thread(void *arg) {
       
     }
     
-	} while (options.daemon());
+	} while (options.logging());
 
   print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
   pthread_exit(0);
