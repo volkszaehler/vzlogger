@@ -24,27 +24,16 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
-
+ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+ 
 #include "buffer.h"
-
+ 
 Buffer::Buffer() {
-	pthread_mutex_init(&_mutex, NULL);
+  pthread_mutex_init(&_mutex, NULL);
 }
-
-/*Buffer::iterator Buffer::push_(Reading data) {
-	Buffer::iterator it;
-
-	lock();
-	//it = _sent.push(data);
-	unlock();
-
-	return it;
-}
-*/
 
 void Buffer::push(const Reading &rd) {
   lock();
@@ -54,10 +43,17 @@ void Buffer::push(const Reading &rd) {
 }
 
 void Buffer::clean() {
-
   lock();
   for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-    if(it->deleted()) _sent.erase(it);
+    if(it->deleted()) {
+      if( it == _sent.begin() ){
+        _sent.erase(it);
+        it = _sent.begin();
+      } else {
+        it = _sent.erase(it);
+      }
+    }
+    
   }
   //_sent.clear();
   unlock();

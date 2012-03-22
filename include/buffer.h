@@ -30,26 +30,22 @@
 
 #include <pthread.h>
 #include <sys/time.h>
-#include <vector>
+#include <list>
 
 #include <reading.h>
-#include "list.h"
 
 class Buffer {
 
 public:
     typedef vz::shared_ptr<Buffer> Ptr;
-    typedef std::vector<Reading>::iterator iterator;
-    typedef std::vector<Reading>::const_iterator const_iterator;
+    typedef std::list<Reading>::iterator iterator;
+    typedef std::list<Reading>::const_iterator const_iterator;
     //typedef vz::List<Reading>::iterator iterator;
     //typedef vz::List<Reading>::const_iterator const_iterator;
 
     Buffer();
 	Buffer(size_t keep);
 	virtual ~Buffer();
-
-	//iterator push_(Reading data);
-  //Reading pop();
 
   void push(const Reading &rd);
   void clean();
@@ -76,7 +72,7 @@ public:
   inline void have_newValues() { _newValues =  true; }
 
   private:
-  std::vector<Reading> _sent;
+  std::list<Reading> _sent;
   bool _newValues;
   
 	size_t _keep;	/* number of readings to cache for local interface */

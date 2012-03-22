@@ -135,6 +135,7 @@ public:
 class Reading {
 
 public:
+	typedef vz::shared_ptr<Reading> Ptr;
 	Reading();
 	Reading(ReadingIdentifier::Ptr pIndentifier);
 	Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier);
