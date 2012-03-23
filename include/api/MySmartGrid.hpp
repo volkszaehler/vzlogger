@@ -40,6 +40,9 @@
 
 namespace vz {
   namespace api {
+    const short chn_type_device = 10;
+    const short chn_type_sensor = 20;
+
     class MySmartGrid : public ApiIF {
     public:
       typedef vz::shared_ptr<MySmartGrid> Ptr;
@@ -57,6 +60,15 @@ namespace vz {
        */
       void api_parse_exception(char *err, size_t n);
 
+      /**
+       *  api configured as device
+       */
+      json_object *_apiDevice(Buffer::Ptr buf);
+      
+      /**
+       *  api configured as sensor
+       */
+      json_object *_apiSensor(Buffer::Ptr buf);
 
       json_object * _json_object_registration(Buffer::Ptr buf);
       json_object * _json_object_heartbeat(Buffer::Ptr buf);
@@ -82,11 +94,14 @@ namespace vz {
       std::string _uuid;       /**< unique sensor id */
       std::string _secretKey;  /**< secretkey for signing messages */
       int _interval;           /**<  time between 2 logmessages (sec.) */
+      short _channelType;      /**< Type of channel device or sensor */
+      
       CurlIF _curlIF;
       CurlResponse::Ptr _response;
       
       // Volatil
       time_t _first_ts;
+      long _first_counter;
       long _last_counter;
       
     }; //class MySmartGrid
