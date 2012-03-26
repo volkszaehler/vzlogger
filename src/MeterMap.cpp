@@ -63,7 +63,8 @@ void MeterMap::start() {
         }
       }
     } else {
-      print(log_debug, "Skipping disabled meter.", _meter->name());
+      print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
+            _meter->protocol()->name().c_str());
     }
     
 }

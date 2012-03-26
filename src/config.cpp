@@ -239,7 +239,6 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 			apiProtocol_str = json_object_get_string(value);
 		}
 		else { /* all other options will be passed to meter_init() */
-      std::cout<<"test 1 - other - "<< key << "  type=" << type << std::endl;
 			Option option(key, value);
 			options.push_back(option);
 			//print(log_error, "Ignoring invalid field or type: %s=%s (%s)",

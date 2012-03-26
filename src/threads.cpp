@@ -160,7 +160,6 @@ void * reading_thread(void *arg) {
     oss << e.what();
     print(log_error, "THREAD - reading Got an exception : %s", mtr->name(), e.what());
     pthread_exit(0);
-    //std::cout<<"Exception: "<< e.what() << std::endl;
   }
 
   print(log_debug, "Stop reading.! ", mtr->name());

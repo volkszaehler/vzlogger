@@ -70,7 +70,7 @@ Meter::Meter(std::list<Option> pOptions) :
   oss<<"mtr"<< id;
   _name=oss.str();
   
-  optlist.dump(pOptions);
+  //optlist.dump(pOptions);
   
   try {
     /* protocol */
