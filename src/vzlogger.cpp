@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
   do {
     /* wait for all threads to terminate */
     for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-      bool ret = it->stop();
+      bool ret = it->stopped();
       if(ret) gStop = true;
     }
   } while (!gStop);
