@@ -68,3 +68,14 @@ void MeterMap::start() {
     }
     
 }
+bool MeterMap::stopped() {
+  if( pthread_tryjoin_np(_thread, NULL) == 0 ) {
+
+    // join channel-threads
+    for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+      it->join();
+    }
+    return true;
+  }
+  return false;
+}

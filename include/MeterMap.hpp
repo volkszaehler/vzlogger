@@ -57,23 +57,16 @@ class MeterMap {
   ~MeterMap() {};
   Meter::Ptr meter() { return _meter; }
 
-  bool stop() {
-    if( pthread_tryjoin_np(_thread, NULL) == 0 ) {
-      // join channel-threads
-      for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-        //it->cancel();
-        it->join();
-      }
-      return true;
-    }
-    return false;
-  }
-  
   /**
      If the meter is enabled, start the meter and all its channels.
    */
   void start();
     
+  /**
+     check if meter-thread is joinable
+   */
+  bool stopped();
+  
   /**
    * cancel all channels for this meter.
    */
