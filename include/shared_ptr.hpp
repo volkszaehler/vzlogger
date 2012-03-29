@@ -33,23 +33,11 @@
 #ifndef _shared_ptr_hpp_
 #define _shared_ptr_hpp_
 
-#define USE_STL_TR1 1
-//#include <config.hpp>
-
-#if defined(USE_STL_TR1) && (USE_STL_TR1 == 1)
-#  include <tr1/memory>
+#include <tr1/memory>
 
 namespace vz {
-  using ::std::tr1::shared_ptr;
-  using ::std::tr1::enable_shared_from_this;
+	using ::std::tr1::shared_ptr;
+	using ::std::tr1::enable_shared_from_this;
 }
 
-#else
-#  include <boost/tr1/memory.hpp>
-
-namespace vz {
-  using boost::shared_ptr;
-  using boost::enable_shared_from_this;
-}
-#endif
 #endif /* _shared_ptr_hpp_ */
