@@ -49,6 +49,7 @@ vz::api::MySmartGrid::MySmartGrid(
 ) 
     : ApiIF(ch)
     , _channelType(chn_type_device)
+		, _scaler(1)
     , _response(new vz::api::CurlResponse())
     , _first_ts(0)
     , _first_counter(0)
@@ -79,6 +80,13 @@ vz::api::MySmartGrid::MySmartGrid(
     _interval   = optlist.lookup_int(pOptions, "interval");
   } catch ( vz::OptionNotFoundException &e ) {
     _interval = 300;  // default time between 2 logmessages
+  } catch ( vz::VZException &e ) {
+    throw;
+  }
+  try {
+    _scaler   = optlist.lookup_int(pOptions, "scaler");
+  } catch ( vz::OptionNotFoundException &e ) {
+    _scaler   = 1;  // default scaling faktor
   } catch ( vz::VZException &e ) {
     throw;
   }
@@ -361,7 +369,7 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
 		long timestamp = it->tvtod();
-		long value = it->value() * 1000;
+		long value = it->value() * _scaler;
     it->mark_delete();
     
 		buf->unlock();

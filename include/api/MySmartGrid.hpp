@@ -39,73 +39,74 @@
 #include <api/CurlResponse.hpp>
 
 namespace vz {
-  namespace api {
-    const short chn_type_device = 10;
-    const short chn_type_sensor = 20;
+	namespace api {
+		const short chn_type_device = 10;
+		const short chn_type_sensor = 20;
 
-    class MySmartGrid : public ApiIF {
-    public:
-      typedef vz::shared_ptr<MySmartGrid> Ptr;
+		class MySmartGrid : public ApiIF {
+		public:
+			typedef vz::shared_ptr<MySmartGrid> Ptr;
 
-      MySmartGrid(Channel::Ptr ch, std::list<Option> options);
-      ~MySmartGrid();
-    
-      void send();
+			MySmartGrid(Channel::Ptr ch, std::list<Option> options);
+			~MySmartGrid();
+	
+			void send();
 
-      const std::string middleware() const { return _middleware; }
+			const std::string middleware() const { return _middleware; }
 
-    private:
-      /**
-       * Parses JSON encoded exception and stores describtion in err
-       */
-      void api_parse_exception(char *err, size_t n);
+		private:
+			/**
+			 * Parses JSON encoded exception and stores describtion in err
+			 */
+			void api_parse_exception(char *err, size_t n);
 
-      /**
-       *  api configured as device
-       */
-      json_object *_apiDevice(Buffer::Ptr buf);
-      
-      /**
-       *  api configured as sensor
-       */
-      json_object *_apiSensor(Buffer::Ptr buf);
+			/**
+			 *  api configured as device
+			 */
+			json_object *_apiDevice(Buffer::Ptr buf);
+	
+			/**
+			 *  api configured as sensor
+			 */
+			json_object *_apiSensor(Buffer::Ptr buf);
 
-      json_object * _json_object_registration(Buffer::Ptr buf);
-      json_object * _json_object_heartbeat(Buffer::Ptr buf);
-      json_object * _json_object_event(Buffer::Ptr buf);
-      json_object * _json_object_sensor(Buffer::Ptr buf);
-      json_object * _json_object_measurements(Buffer::Ptr buf);
+			json_object * _json_object_registration(Buffer::Ptr buf);
+			json_object * _json_object_heartbeat(Buffer::Ptr buf);
+			json_object * _json_object_event(Buffer::Ptr buf);
+			json_object * _json_object_sensor(Buffer::Ptr buf);
+			json_object * _json_object_measurements(Buffer::Ptr buf);
 
-      void _api_header();
+			void _api_header();
 
-      void hmac_sha1(char *digest, const unsigned char *data,size_t dataLen);
+			void hmac_sha1(char *digest, const unsigned char *data,size_t dataLen);
 
-      CurlResponse *response()   { return _response.get(); }
+			CurlResponse *response()   { return _response.get(); }
 
-      void convertUuid(const std::string uuid);
-      const char *uuid() const      { return _uuid.c_str(); }
-      const char *secretKey() const { return _secretKey.c_str(); }
-      
-      const int interval() const    { return _interval; }
-      const time_t first_ts() const { return _first_ts; }
+			void convertUuid(const std::string uuid);
+			const char *uuid() const      { return _uuid.c_str(); }
+			const char *secretKey() const { return _secretKey.c_str(); }
+	
+			const int interval() const    { return _interval; }
+			const time_t first_ts() const { return _first_ts; }
 
-    private:
-      std::string _middleware; /**< url to MySmartGrid Server */
-      std::string _uuid;       /**< unique sensor id */
-      std::string _secretKey;  /**< secretkey for signing messages */
-      int _interval;           /**<  time between 2 logmessages (sec.) */
-      short _channelType;      /**< Type of channel device or sensor */
-      
-      CurlIF _curlIF;
-      CurlResponse::Ptr _response;
-      
-      // Volatil
-      time_t _first_ts;
-      long _first_counter;
-      long _last_counter;
-      
-    }; //class MySmartGrid
-  
-  } // namespace api
+		private:
+			std::string _middleware; /**< url to MySmartGrid Server */
+			std::string _uuid;       /**< unique sensor id */
+			std::string _secretKey;  /**< secretkey for signing messages */
+			int   _interval;         /**<  time between 2 logmessages (sec.) */
+			short _channelType;      /**< Type of channel device or sensor */
+			unsigned int _scaler;    /**< scaling faktor for values */
+			
+			CurlIF _curlIF;
+			CurlResponse::Ptr _response;
+	
+			// Volatil
+			time_t _first_ts;
+			long _first_counter;
+			long _last_counter;
+	
+		}; //class MySmartGrid
+	
+	} // namespace api
 } // namespace vz
 #endif /* _MySmartGrid_hpp_ */
