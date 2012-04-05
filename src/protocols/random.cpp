@@ -36,30 +36,30 @@
 #include <VZException.hpp>
 
 MeterRandom::MeterRandom(std::list<Option> options)
-    : Protocol("random", options)
+		: Protocol("random", options)
 {
-  OptionList optlist;
+	OptionList optlist;
 
 	_min = 0;
 	_max = 40;
-  _last = (_max + _min) / 2; /* start in the middle */
+	_last = (_max + _min) / 2; /* start in the middle */
 
-  try {
-    _min = optlist.lookup_double(options, "min");
-  } catch( vz::OptionNotFoundException &e ) {
-    _min = 0;
-  } catch( vz::VZException &e ) {
+	try {
+		_min = optlist.lookup_double(options, "min");
+	} catch( vz::OptionNotFoundException &e ) {
+		_min = 0;
+	} catch( vz::VZException &e ) {
 		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
-    throw;
+		throw;
 	}
 
-  try {
-    _max = optlist.lookup_double(options, "max");
-  } catch( vz::OptionNotFoundException &e ) {
-    _max = 0;
-  } catch( vz::VZException &e ) {
+	try {
+		_max = optlist.lookup_double(options, "max");
+	} catch( vz::OptionNotFoundException &e ) {
+		_max = 0;
+	} catch( vz::VZException &e ) {
 		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
-    throw;
+		throw;
 	}
 }
 
@@ -88,7 +88,7 @@ size_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
 	/* check boundaries */
 	_last += (newval > _max || newval < _min) ? -step : step;
 
-  rds[0].value(_last);
+	rds[0].value(_last);
 	rds[0].time();
 
 	return 1;

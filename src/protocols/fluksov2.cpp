@@ -36,17 +36,17 @@
 #define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
 
 MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
-    : Protocol("fluksov2", options)
+		: Protocol("fluksov2", options)
 {
-  OptionList optlist;
+	OptionList optlist;
 
-  try {
-    _fifo = optlist.lookup_string(options, "fifo");
-  } catch( vz::OptionNotFoundException &e ) {
+	try {
+		_fifo = optlist.lookup_string(options, "fifo");
+	} catch( vz::OptionNotFoundException &e ) {
 		_fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
-  } catch( vz::VZException &e ) {
-    print(log_error, "Failed to parse fifo", name().c_str());
-    throw;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse fifo", name().c_str());
+		throw;
 	}
 }
 
@@ -60,12 +60,12 @@ int MeterFluksoV2::open() {
 	/* open port */
 	_fd = ::open(_fifo, O_RDONLY); 
 
-  if (_fd < 0) {
+	if (_fd < 0) {
 		print(log_error, "open(%s): %s", name().c_str(), _fifo, strerror(errno));
-    return ERR;
-  }
+		return ERR;
+	}
 
-  return SUCCESS;
+	return SUCCESS;
 }
 
 int MeterFluksoV2::close() {
@@ -92,22 +92,24 @@ size_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 
 	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
 	struct timeval time;
-  time.tv_sec = strtol(time_str, NULL, 10);
-  time.tv_usec = 0; /* no millisecond resolution available */
+	time.tv_sec = strtol(time_str, NULL, 10);
+	time.tv_usec = 0; /* no millisecond resolution available */
 
 	while (cursor) {
 		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 
-		/* consumption */
-		//rds[i].time = time;
-		//rds[i].identifier.channel = -channel; /* consumption gets negative channel id as identifier! */
-		//rds[i].value(atoi(strsep(&cursor, " \t")));
+		/* consumption - gets negative channel id as identifier! */
+		ReadingIdentifier *rid1(new ChannelIdentifier(-channel)); 
+		rds[i].time(time);
+		rds[i].identifier(rid1);
+		rds[i].value(atoi(strsep(&cursor, " \t")));
 		i++;
 
-		/* power */
-		//rds[i].time = time;
-		//rds[i].identifier.channel = channel; /* power gets positive channel id as identifier! */
-		//rds[i].value(atoi(strsep(&cursor, " \t")));
+		/* power - gets positive channel id as identifier! */
+		ReadingIdentifier *rid2(new ChannelIdentifier(channel)); 
+		rds[i].time(time);
+		rds[i].identifier(rid2);
+		rds[i].value(atoi(strsep(&cursor, " \t")));
 		i++;
 	}
 
@@ -124,11 +126,11 @@ size_t MeterFluksoV2::_read_line(int fd, char  *buffer, size_t n) {
 
 		if (r == 1) { /* successful read */
 			switch (c) {
-				case '\n': /* line delimiter */
-					return i;
+					case '\n': /* line delimiter */
+						return i;
 
-				default: /* normal character */
-					buffer[i++] = c;
+					default: /* normal character */
+						buffer[i++] = c;
 			}
 		}
 		else if (r < 0) { /* an error occured, pass through to caller */

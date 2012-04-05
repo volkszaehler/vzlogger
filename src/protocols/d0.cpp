@@ -47,33 +47,33 @@
 #include "obis.h"
 
 MeterD0::MeterD0(std::list<Option> options) 
-    : Protocol("d0", options)
-    , _host("")
-    , _device("")
+		: Protocol("d0", options)
+		, _host("")
+		, _device("")
 {
-  OptionList optlist;
+	OptionList optlist;
 
 	/* connection */
-  try {
-    _host = optlist.lookup_string(options, "host");
-  } catch ( vz::OptionNotFoundException &e ) {
-    try {
-      _device = optlist.lookup_string(options, "device");
-    } catch ( vz::VZException &e ){
-      print(log_error, "Missing device or host", name().c_str());
-      throw ;
-    }
-  } catch( vz::VZException &e ) {
+	try {
+		_host = optlist.lookup_string(options, "host");
+	} catch ( vz::OptionNotFoundException &e ) {
+		try {
+			_device = optlist.lookup_string(options, "device");
+		} catch ( vz::VZException &e ){
+			print(log_error, "Missing device or host", name().c_str());
+			throw ;
+		}
+	} catch( vz::VZException &e ) {
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
-  }
+	}
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
 	try {
-    baudrate = optlist.lookup_int(options, "baudrate");
-    /* find constant for termios structure */
-    switch (baudrate) {
+		baudrate = optlist.lookup_int(options, "baudrate");
+		/* find constant for termios structure */
+		switch (baudrate) {
 				case 1200: _baudrate = B1200; break;
 				case 1800: _baudrate = B1800; break;
 				case 2400: _baudrate = B2400; break;
@@ -87,13 +87,13 @@ MeterD0::MeterD0(std::list<Option> options)
 				default:
 					print(log_error, "Invalid baudrate: %i", name().c_str(), baudrate);
 					throw vz::VZException("Invalid baudrate");
-    }
-  } catch( vz::OptionNotFoundException &e ) {
-    /* using default value if not specified */
-    _baudrate = 9600;
-  } catch( vz::VZException &e ) {
-    print(log_error, "Failed to parse the baudrate", name().c_str());
-    throw;
+		}
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_baudrate = 9600;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse the baudrate", name().c_str());
+		throw;
 	}
 }
 
@@ -126,27 +126,27 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
 	char identification[16+1];	/* 16 meter specific + '\0' termination */
 	char obis_code[16+1];		/* A-B:C.D.E*F
-					   fields A, B, E, F are optional
-					   fields C & D are mandatory
-					   A: energy type; 1: energy
-					   B: channel number; 0: no channel specified
-					   C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
-						1:  Totel Active power+
-						21: L1 Active power+
-						31: L1 Current
-						32: L1 Voltage
-						41: L2 Active power+
-						51: L2 Current
-						52: L2 Voltage
-						61: L3 Active power+
-						71: L3 Current
-						72: L3 Voltage
-						96.1.255: Metering point ID 256 (electricity related) 
-						96.5.5: Meter started status flag
-					   D: types
-					   E: further processing or classification of quantities
-					   F: storage of data
-						see DIN-EN-62056-61 */
+														 fields A, B, E, F are optional
+														 fields C & D are mandatory
+														 A: energy type; 1: energy
+														 B: channel number; 0: no channel specified
+														 C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
+														 1:  Totel Active power+
+														 21: L1 Active power+
+														 31: L1 Current
+														 32: L1 Voltage
+														 41: L2 Active power+
+														 51: L2 Current
+														 52: L2 Voltage
+														 61: L3 Active power+
+														 71: L3 Current
+														 72: L3 Voltage
+														 96.1.255: Metering point ID 256 (electricity related) 
+														 96.5.5: Meter started status flag
+														 D: types
+														 E: further processing or classification of quantities
+														 F: storage of data
+														 see DIN-EN-62056-61 */
 	char value[32+1];		/* value, i.e. the actual reading */
 	char unit[16+1];		/* the unit of the value, e.g. kWh, V, ... */
 
@@ -163,106 +163,106 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
 		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
-			case START:			/* strip the initial "/" */
-				byte_iterator = number_of_tuples = 0;	/* start */
-				context = VENDOR;	/* set new context: START -> VENDOR */
-				break;
+				case START:			/* strip the initial "/" */
+					byte_iterator = number_of_tuples = 0;	/* start */
+					context = VENDOR;	/* set new context: START -> VENDOR */
+					break;
 
-			case VENDOR:			/* VENDOR has 3 Bytes */
-				if (!isalpha(byte)) goto error; /* Vendor ID needs to be alpha */
-				vendor[byte_iterator++] = byte;	/* read next byte */
-				if (byte_iterator >= 3) {	/* stop after 3rd byte */
-					vendor[byte_iterator] = '\0'; /* termination */
-					byte_iterator = 0;	/* reset byte counter */
+				case VENDOR:			/* VENDOR has 3 Bytes */
+					if (!isalpha(byte)) goto error; /* Vendor ID needs to be alpha */
+					vendor[byte_iterator++] = byte;	/* read next byte */
+					if (byte_iterator >= 3) {	/* stop after 3rd byte */
+						vendor[byte_iterator] = '\0'; /* termination */
+						byte_iterator = 0;	/* reset byte counter */
 
-					context = BAUDRATE;	/* set new context: VENDOR -> BAUDRATE */
-				} 
-				break;
+						context = BAUDRATE;	/* set new context: VENDOR -> BAUDRATE */
+					} 
+					break;
 
-			case BAUDRATE:			/* BAUDRATE consists of 1 char only */
-				baudrate = byte;	
-				context = IDENTIFICATION;	/* set new context: BAUDRATE -> IDENTIFICATION */
-				byte_iterator = 0;
-				break;
-
-			case IDENTIFICATION:		/* IDENTIFICATION has 16 bytes */
-				if (byte == '\r' || byte == '\n') { /* detect line end */
-					identification[byte_iterator] = '\0'; /* termination */
-					context = OBIS_CODE;	/* set new context: IDENTIFICATION -> OBIS_CODE */
+				case BAUDRATE:			/* BAUDRATE consists of 1 char only */
+					baudrate = byte;	
+					context = IDENTIFICATION;	/* set new context: BAUDRATE -> IDENTIFICATION */
 					byte_iterator = 0;
-				}
-				else identification[byte_iterator++] = byte;
-				break;
+					break;
 
-			case START_LINE:
-				break;
-			case OBIS_CODE:
-				if ((byte != '\n') && (byte != '\r')) 
-				{
-					if (byte == '(') {
-						obis_code[byte_iterator] = '\0';
+				case IDENTIFICATION:		/* IDENTIFICATION has 16 bytes */
+					if (byte == '\r' || byte == '\n') { /* detect line end */
+						identification[byte_iterator] = '\0'; /* termination */
+						context = OBIS_CODE;	/* set new context: IDENTIFICATION -> OBIS_CODE */
+						byte_iterator = 0;
+					}
+					else identification[byte_iterator++] = byte;
+					break;
+
+				case START_LINE:
+					break;
+				case OBIS_CODE:
+					if ((byte != '\n') && (byte != '\r')) 
+					{
+						if (byte == '(') {
+							obis_code[byte_iterator] = '\0';
+							byte_iterator = 0;
+
+							context = VALUE;
+						}
+						else obis_code[byte_iterator++] = byte;
+					}
+					break;
+
+				case VALUE:
+					if (byte == '*' || byte == ')') {
+						value[byte_iterator] = '\0';
 						byte_iterator = 0;
 
-						context = VALUE;
+						if (byte == ')') {
+							unit[0] = '\0';
+							context =  END_LINE;
+						}
+						else {
+							context = UNIT;
+						}
 					}
-					else obis_code[byte_iterator++] = byte;
-				}
-				break;
+					else value[byte_iterator++] = byte;
+					break;
 
-			case VALUE:
-				if (byte == '*' || byte == ')') {
-					value[byte_iterator] = '\0';
-					byte_iterator = 0;
-
+				case UNIT:
 					if (byte == ')') {
-						unit[0] = '\0';
-						context =  END_LINE;
-					}
-					else {
-						context = UNIT;
-					}
-				}
-				else value[byte_iterator++] = byte;
-				break;
-
-			case UNIT:
-				if (byte == ')') {
-					unit[byte_iterator] = '\0';
-					byte_iterator = 0;
-
-					context = END_LINE;
-				}
-				else unit[byte_iterator++] = byte;
-				break;
-
-			case END_LINE:
-				if (byte == '\r' || byte == '\n') {
-					/* free slots available and sain content? */
-					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && 
-              (strlen(value) > 0)) {
-						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
-						rds[number_of_tuples].value(strtof(value, NULL));
-            Obis obis(obis_code);
-            ReadingIdentifier *rid(new ObisIdentifier(obis));
-            rds[number_of_tuples].identifier(rid);
-						rds[number_of_tuples].time();
-
+						unit[byte_iterator] = '\0';
 						byte_iterator = 0;
-						number_of_tuples++;
 
-						context = OBIS_CODE;
+						context = END_LINE;
 					}
-				}
-				break;
+					else unit[byte_iterator++] = byte;
+					break;
 
-			case END:
-				print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-					name().c_str(), number_of_tuples, vendor, baudrate, identification);
-				return number_of_tuples;
+				case END_LINE:
+					if (byte == '\r' || byte == '\n') {
+						/* free slots available and sain content? */
+						if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && 
+								(strlen(value) > 0)) {
+							print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
+							rds[number_of_tuples].value(strtof(value, NULL));
+							Obis obis(obis_code);
+							ReadingIdentifier *rid(new ObisIdentifier(obis));
+							rds[number_of_tuples].identifier(rid);
+							rds[number_of_tuples].time();
+
+							byte_iterator = 0;
+							number_of_tuples++;
+
+							context = OBIS_CODE;
+						}
+					}
+					break;
+
+				case END:
+					print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
+								name().c_str(), number_of_tuples, vendor, baudrate, identification);
+					return number_of_tuples;
 		}
 	}
 
-error:
+	error:
 	print(log_error, "Something unexpected happened: %s:%i!", name().c_str(), __FUNCTION__, __LINE__);
 	return 0;
 }
@@ -298,8 +298,8 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 
 	int fd = ::open(device(), O_RDWR);
 	if (fd < 0) {
-    print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
-		  return ERR;
+		print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
+		return ERR;
 	}
 
 	/* get old configuration */

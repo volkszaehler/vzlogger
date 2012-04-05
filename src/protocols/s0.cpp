@@ -35,25 +35,25 @@
 #include <VZException.hpp>
 
 MeterS0::MeterS0(std::list<Option> options)
-    : Protocol("s0", options)
+		: Protocol("s0", options)
 {
-  OptionList optlist;
+	OptionList optlist;
 
-  try {
-    _device = optlist.lookup_string(options, "device");
-  } catch( vz::VZException &e ) {
+	try {
+		_device = optlist.lookup_string(options, "device");
+	} catch( vz::VZException &e ) {
 		print(log_error, "Missing device or invalid type", "");
 		throw;
 	}
 
 	try {
-    _resolution = optlist.lookup_int(options, "resolution");
-  } catch( vz::OptionNotFoundException &e ) {
-    _resolution = 1;
-  } catch( vz::VZException &e ) {
-			print(log_error, "Failed to parse resolution", "");
+		_resolution = optlist.lookup_int(options, "resolution");
+	} catch( vz::OptionNotFoundException &e ) {
+		_resolution = 1;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse resolution", "");
 		throw;
-  }
+	}
 }
 
 MeterS0::~MeterS0() {
@@ -65,10 +65,10 @@ int MeterS0::open() {
 	/* open port */
 	int fd = ::open(_device, O_RDWR | O_NOCTTY); 
 
-  if (fd < 0) {
+	if (fd < 0) {
 		print(log_error, "open(%s): %s", "", _device, strerror(errno));
-    return ERR;
-  }
+		return ERR;
+	}
 
 	/* save current port settings */
 	tcgetattr(fd, &_old_tio);
@@ -84,13 +84,13 @@ int MeterS0::open() {
 	tio.c_cc[VMIN]=1;
 	tio.c_cc[VTIME]=0;
 
-        tcflush(fd, TCIFLUSH);
+	tcflush(fd, TCIFLUSH);
 
-        /* apply configuration */
-        tcsetattr(fd, TCSANOW, &tio);
+	/* apply configuration */
+	tcsetattr(fd, TCSANOW, &tio);
 	_fd = fd;
 
-        return SUCCESS;
+	return SUCCESS;
 }
 
 int MeterS0::close() {
@@ -105,11 +105,11 @@ size_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	char buf[8];
 
 	/* clear input buffer */
-  tcflush(_fd, TCIOFLUSH);
+	tcflush(_fd, TCIOFLUSH);
 
 	/* blocking until one character/pulse is read */
-  if( ::read(_fd, buf, 8) < 1) return 0;
-  
+	if( ::read(_fd, buf, 8) < 1) return 0;
+	
 	/* store current timestamp */
 	rds[0].time();
 	rds[0].value(1);
