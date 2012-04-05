@@ -41,41 +41,43 @@
 extern Config_Options options;	/* global application options */
 
 /**
-   If the meter is enabled, start the meter and all its channels.
+	 If the meter is enabled, start the meter and all its channels.
 */
 void MeterMap::start() {
-    if(_meter->isEnabled()) {
-      _meter->open();
-      print(log_info, "Meter connection established", _meter->name());
-      pthread_create(&_thread, NULL, &reading_thread, (void *) this);
-      print(log_debug, "Meter thread started", _meter->name());
+	if(_meter->isEnabled()) {
+		_meter->open();
+		print(log_info, "Meter connection established", _meter->name());
+		pthread_create(&_thread, NULL, &reading_thread, (void *) this);
+		print(log_debug, "Meter thread started", _meter->name());
 
-      print(log_debug, "meter is opened. Start channels.", _meter->name());
-      for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-        /* set buffer length for perriodic meters */
-        if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
-          it->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
-        }
-        
-        if (options.logging()) {
-          it->start();
-          print(log_debug, "Logging thread started", it->name());
-        }
-      }
-    } else {
-      print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
-            _meter->protocol()->name().c_str());
-    }
-    
+		print(log_debug, "meter is opened. Start channels.", _meter->name());
+		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+/* set buffer length for perriodic meters */
+			if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
+				it->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
+			}
+
+			if (options.logging()) {
+				it->start();
+				print(log_debug, "Logging thread started", it->name());
+			}
+		}
+	} else {
+		print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
+					_meter->protocol()->name().c_str());
+	}
+
 }
 bool MeterMap::stopped() {
-  if( pthread_tryjoin_np(_thread, NULL) == 0 ) {
+	if(_meter->isEnabled()) {
+		if( pthread_tryjoin_np(_thread, NULL) == 0 ) {
 
-    // join channel-threads
-    for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-      it->join();
-    }
-    return true;
-  }
-  return false;
+// join channel-threads
+			for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+				it->join();
+			}
+			return true;
+		}
+	}
+	return false;
 }
