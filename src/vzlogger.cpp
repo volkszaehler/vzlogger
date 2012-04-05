@@ -39,7 +39,6 @@
 
 #include <list>
 
-//#include "list.h"
 #include <include/config.h>
 #include <meter.h>
 #include "obis.h"
@@ -168,7 +167,7 @@ void show_usage(char *argv[]) {
 	printf("\n  following OBIS aliases are available:\n");
 	char obis_str[OBIS_STR_LEN];
 	for (obis_alias_t *it = obis_get_aliases(); it->name != NULL; it++) {
-    it->id.unparse(obis_str, OBIS_STR_LEN);
+		it->id.unparse(obis_str, OBIS_STR_LEN);
 		printf("\t%-17s%-31s%-22s\n", it->name, it->desc, obis_str);
 	}
 
@@ -229,8 +228,8 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-  gStop = true;
-  mappings.quit(sig);
+	gStop = true;
+	mappings.quit(sig);
 }
 
 /**
@@ -240,7 +239,7 @@ void quit(int sig) {
  * @return int 0 on succes, <0 on error
  */
 int config_parse_cli(int argc, char * argv[], Config_Options * options) {
-				options->local(1);
+	options->local(1);
 	while (1) {
 		int c = getopt_long(argc, argv, "c:o:p:lhVdfv:", long_options, NULL);
 
@@ -248,51 +247,51 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 		if (c == -1) break;
 
 		switch (c) {
-			case 'v':
-				options->verbosity(atoi(optarg));
-				break;
+				case 'v':
+					options->verbosity(atoi(optarg));
+					break;
 
 #ifdef LOCAL_SUPPORT
-			case 'l':
-				options->local(1);
-				break;
+				case 'l':
+					options->local(1);
+					break;
 
-			case 'p': /* port for local interface */
-				options->port(atoi(optarg));
-				break;
+				case 'p': /* port for local interface */
+					options->port(atoi(optarg));
+					break;
 #endif /* LOCAL_SUPPORT */
 
-			case 'd':
-				options->daemon(1);
-				break;
+				case 'd':
+					options->daemon(1);
+					break;
 
-			case 'f':
-				options->foreground(1);
-				break;
+				case 'f':
+					options->foreground(1);
+					break;
 
-			case 'c': /* config file */
-				options->config(optarg);
-				break;
+				case 'c': /* config file */
+					options->config(optarg);
+					break;
 
-			case 'o': /* log file */
-				options->log(optarg);
-				break;
+				case 'o': /* log file */
+					options->log(optarg);
+					break;
 
-			case 'V':
-				printf("%s\n", VERSION);
-				exit(EXIT_SUCCESS);
-				break;
-
-			case '?':
-			case 'h':
-			default:
-				show_usage(argv);
-				if (c == '?') {
-					exit(EXIT_FAILURE);
-				}
-				else {
+				case 'V':
+					printf("%s\n", VERSION);
 					exit(EXIT_SUCCESS);
-				}
+					break;
+
+				case '?':
+				case 'h':
+				default:
+					show_usage(argv);
+					if (c == '?') {
+						exit(EXIT_FAILURE);
+					}
+					else {
+						exit(EXIT_SUCCESS);
+					}
 		}
 	}
 
@@ -311,7 +310,7 @@ int main(int argc, char *argv[]) {
 	action.sa_handler = quit;
 
 #ifdef LOCAL_SUPPORT
-  /* webserver for local interface */
+	/* webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
 #endif /* LOCAL_SUPPORT */
 
@@ -329,28 +328,28 @@ int main(int argc, char *argv[]) {
 	}
 
 	//mappings = (MapContainer::Ptr)(new MapContainer());
-  try {
-    options.config_parse(mappings);
-  } catch ( std::exception &e) {
-    std::stringstream oss;
-    oss << e.what();
-    print(log_error, "Failed to parse configuration due to: ", "", oss.str().c_str());
-    return EXIT_FAILURE;
-  }
-  
+	try {
+		options.config_parse(mappings);
+	} catch ( std::exception &e) {
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "Failed to parse configuration due to: ", "", oss.str().c_str());
+		return EXIT_FAILURE;
+	}
+
 	options.logging((!options.local() || options.daemon()));
 
-  print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
-        options.daemon(), options.local());
-  
+	print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
+				options.daemon(), options.local());
+
 	if (!options.foreground() && (options.daemon() || options.local())) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
-  else {
+	else {
 		print(log_info, "NOT Daemonize process...", (char*)0);
-  }
-  
+	}
+
 	/* open logfile */
 	if (options.log() != "") {
 		FILE *logfd = fopen(options.log().c_str(), "a");
@@ -369,38 +368,38 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-  print(log_debug, "===> Start meters.", "");
-  try {
-    /* open connection meters & start threads */
-    for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-      it->start();
-    }
+	print(log_debug, "===> Start meters.", "");
+	try {
+		/* open connection meters & start threads */
+		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			it->start();
+		}
 
 #ifdef LOCAL_SUPPORT
-    /* start webserver for local interface */
-    if (options.local()) {
-      print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
-      httpd_handle = MHD_start_daemon(
-        MHD_USE_THREAD_PER_CONNECTION,
-        options.port(),
-        NULL, NULL,
-        &handle_request, (void*)&mappings,
-        MHD_OPTION_END
-        );
-    }
+		/* start webserver for local interface */
+		if (options.local()) {
+			print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
+			httpd_handle = MHD_start_daemon(
+				MHD_USE_THREAD_PER_CONNECTION,
+				options.port(),
+				NULL, NULL,
+				&handle_request, (void*)&mappings,
+				MHD_OPTION_END
+				);
+		}
 #endif /* LOCAL_SUPPORT */
-  } catch ( std::exception &e) {
-    print(log_error, "Startup failed for %s", "", e.what());
-  }
-  print(log_debug, "Startup done.", "");
-  
-  do {
-    /* wait for all threads to terminate */
-    for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-      bool ret = it->stopped();
-      if(ret) gStop = true;
-    }
-  } while (!gStop);
+	} catch ( std::exception &e) {
+		print(log_error, "Startup failed for %s", "", e.what());
+	}
+	print(log_debug, "Startup done.", "");
+
+	do {
+		/* wait for all threads to terminate */
+		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			bool ret = it->stopped();
+			if(ret) gStop = true;
+		}
+	} while (!gStop);
 
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */

@@ -36,42 +36,42 @@
 static const char *option_type_str[] = { "null", "boolean", "double", "int", "object", "array", "string" };
 
 Config_Options::Config_Options()
-    :  _config("/etc/vzlogger.conf")
-    , _log("")
-    , _port(8080)
-    , _verbosity(0)
-    , _comet_timeout(30)
-    , _buffer_length(600)
-    , _retry_pause(15)
-    , _daemon(false)
-    , _foreground(false)
-    , _local(false)
-    , _logging(true)
+		:  _config("/etc/vzlogger.conf")
+		, _log("")
+		, _port(8080)
+		, _verbosity(0)
+		, _comet_timeout(30)
+		, _buffer_length(600)
+		, _retry_pause(15)
+		, _daemon(false)
+		, _foreground(false)
+		, _local(false)
+		, _logging(true)
 {
 	_logfd = NULL;
 }
 
 Config_Options::Config_Options(
-  const std::string filename
-  )
-    : _config(filename)
-    , _log("")
-    , _port(8080)
-    , _verbosity(0)
-    , _comet_timeout(30)
-    , _buffer_length(600)
-    , _retry_pause(15)
-    , _daemon(false)
-    , _foreground(false)
-    , _local(false)
-    , _logging(true)
+	const std::string filename
+	)
+		: _config(filename)
+		, _log("")
+		, _port(8080)
+		, _verbosity(0)
+		, _comet_timeout(30)
+		, _buffer_length(600)
+		, _retry_pause(15)
+		, _daemon(false)
+		, _foreground(false)
+		, _local(false)
+		, _logging(true)
 {
 	_logfd = NULL;
 }
 
 void Config_Options::config_parse(
-  MapContainer &mappings
-  ) {
+	MapContainer &mappings
+	) {
 	struct json_object *json_cfg = NULL;
 	struct json_tokener *json_tok = json_tokener_new();
 
@@ -96,8 +96,7 @@ void Config_Options::config_parse(
 
 		if (json_tok->err > 1) {
 			print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_errors[json_tok->err], json_tok->char_offset);
-			throw vz::VZException("");
-      exit(EXIT_FAILURE);
+			throw vz::VZException("Parse configuaration failed.");
 		}
 	}
 
@@ -106,78 +105,78 @@ void Config_Options::config_parse(
 	json_tokener_free(json_tok);
 
 	try {
-/* parse options */
-	json_object_object_foreach(json_cfg, key, value) {
-		enum json_type type = json_object_get_type(value);
+		/* parse options */
+		json_object_object_foreach(json_cfg, key, value) {
+			enum json_type type = json_object_get_type(value);
 
-		if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
-			_daemon = json_object_get_boolean(value);
-		}
-		else if (strcmp(key, "foreground") == 0 && type == json_type_boolean) {
-			_foreground = json_object_get_boolean(value);
-		}
-		else if (strcmp(key, "log") == 0 && type == json_type_string) {
-			_log = strdup(json_object_get_string(value));
-		}
-		else if (strcmp(key, "retry") == 0 && type == json_type_int) {
-			_retry_pause = json_object_get_int(value);
-		}
-		else if (strcmp(key, "verbosity") == 0 && type == json_type_int) {
-			_verbosity = json_object_get_int(value);
-		}
-		else if (strcmp(key, "local") == 0) {
-			json_object_object_foreach(value, key, local_value) {
-				enum json_type local_type = json_object_get_type(local_value);
+			if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
+				_daemon = json_object_get_boolean(value);
+			}
+			else if (strcmp(key, "foreground") == 0 && type == json_type_boolean) {
+				_foreground = json_object_get_boolean(value);
+			}
+			else if (strcmp(key, "log") == 0 && type == json_type_string) {
+				_log = strdup(json_object_get_string(value));
+			}
+			else if (strcmp(key, "retry") == 0 && type == json_type_int) {
+				_retry_pause = json_object_get_int(value);
+			}
+			else if (strcmp(key, "verbosity") == 0 && type == json_type_int) {
+				_verbosity = json_object_get_int(value);
+			}
+			else if (strcmp(key, "local") == 0) {
+				json_object_object_foreach(value, key, local_value) {
+					enum json_type local_type = json_object_get_type(local_value);
 
-				if (strcmp(key, "enabled") == 0 && local_type == json_type_boolean) {
-					_local = json_object_get_boolean(local_value);
-				}
-				else if (strcmp(key, "port") == 0 && local_type == json_type_int) {
-					_port = json_object_get_int(local_value);
-				}
-				else if (strcmp(key, "timeout") == 0 && local_type == json_type_int) {
-					_comet_timeout = json_object_get_int(local_value);
-				}
-				else if (strcmp(key, "buffer") == 0 && local_type == json_type_int) {
-					_buffer_length = json_object_get_int(local_value);
-				}
-				else if (strcmp(key, "index") == 0 && local_type == json_type_boolean) {
-					_channel_index = json_object_get_boolean(local_value);
-				}
-				else {
-					print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
-						NULL, key, json_object_get_string(local_value), option_type_str[local_type]);
+					if (strcmp(key, "enabled") == 0 && local_type == json_type_boolean) {
+						_local = json_object_get_boolean(local_value);
+					}
+					else if (strcmp(key, "port") == 0 && local_type == json_type_int) {
+						_port = json_object_get_int(local_value);
+					}
+					else if (strcmp(key, "timeout") == 0 && local_type == json_type_int) {
+						_comet_timeout = json_object_get_int(local_value);
+					}
+					else if (strcmp(key, "buffer") == 0 && local_type == json_type_int) {
+						_buffer_length = json_object_get_int(local_value);
+					}
+					else if (strcmp(key, "index") == 0 && local_type == json_type_boolean) {
+						_channel_index = json_object_get_boolean(local_value);
+					}
+					else {
+						print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+									NULL, key, json_object_get_string(local_value), option_type_str[local_type]);
+					}
 				}
 			}
-		}
-		else if ((strcmp(key, "sensors") == 0 || strcmp(key, "meters") == 0) && type == json_type_array) {
-			int len = json_object_array_length(value);
-			for (int i = 0; i < len; i++) {
-        Json::Ptr  jso(new Json(json_object_array_get_idx(value, i)));
-				config_parse_meter(mappings, jso);
+			else if ((strcmp(key, "sensors") == 0 || strcmp(key, "meters") == 0) && type == json_type_array) {
+				int len = json_object_array_length(value);
+				for (int i = 0; i < len; i++) {
+					Json::Ptr  jso(new Json(json_object_array_get_idx(value, i)));
+					config_parse_meter(mappings, jso);
+				}
+			}
+			else {
+				print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+							NULL, key, json_object_get_string(value), option_type_str[type]);
 			}
 		}
-		else {
-			print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
-				NULL, key, json_object_get_string(value), option_type_str[type]);
-		}
+	} catch (std::exception &e ) {
+		json_object_put(json_cfg); /* free allocated memory */
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "parse configuration failed due to:", "",  oss.str().c_str());
+		throw;
 	}
-  } catch (std::exception &e ) {
-    json_object_put(json_cfg); /* free allocated memory */
-    std::stringstream oss;
-    oss << e.what();
-    print(log_error, "parse configuration failed due to:", "",  oss.str().c_str());
-    throw;
-  }
-  
+
 	print(log_debug, "Have %d meters.", NULL, mappings.size());
-  
-  
+
+
 	//json_object_put(json_cfg); /* free allocated memory */
 }
 
 void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
-  std::list<Json> json_channels;
+	std::list<Json> json_channels;
 	std::list<Option> options;
 
 	json_object_object_foreach(jso->Object(), key, value) {
@@ -186,7 +185,7 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 		if (strcmp(key, "channels") == 0 && type == json_type_array) {
 			int len = json_object_array_length(value);
 			for (int i = 0; i < len; i++) {
-        json_channels.push_back(Json(json_object_array_get_idx(value, i)));
+				json_channels.push_back(Json(json_object_array_get_idx(value, i)));
 			}
 		}
 		else if (strcmp(key, "channel") == 0 && type == json_type_object) {
@@ -197,32 +196,31 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 			options.push_back(option);
 		}
 	}
-  
+
 	/* init meter */
 	MeterMap  metermap(options);
 
 	print(log_info, "New meter initialized (protocol=%s)", NULL/*(mapping*/,
-        meter_get_details(metermap.meter()->protocolId())->name);
+				meter_get_details(metermap.meter()->protocolId())->name);
 
 	/* init channels */
-  for(std::list<Json>::iterator it=json_channels.begin();
-      it!= json_channels.end(); it++) {
-    config_parse_channel(*it, metermap);
+	for(std::list<Json>::iterator it=json_channels.begin();
+			it!= json_channels.end(); it++) {
+		config_parse_channel(*it, metermap);
 	}
 
 	/* householding */
-  mappings.push_back(metermap);
+	mappings.push_back(metermap);
 }
 
 void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 {
 	std::list<Option> options;
 	const char *uuid = NULL;
-	const char *middleware = NULL;
 	const char *id_str = NULL;
-  const char *apiProtocol_str = NULL;
-  
-  print(log_debug, "Configure channel.", NULL);
+	const char *apiProtocol_str = NULL;
+
+	print(log_debug, "Configure channel.", NULL);
 	json_object_object_foreach(jso.Object(), key, value) {
 		enum json_type type = json_object_get_type(value);
 
@@ -251,51 +249,48 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Missing UUID", NULL);
 		throw vz::VZException("Missing UUID");
 	}
-  if (!config_validate_uuid(uuid)) {
+	if (!config_validate_uuid(uuid)) {
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-  //if (middleware == NULL) {
+	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
 	//}
-  if (apiProtocol_str == NULL) {
-    apiProtocol_str = strdup("volkszaehler");
+	if (apiProtocol_str == NULL) {
+		apiProtocol_str = strdup("volkszaehler");
 	}
 
 	/* parse identifier */
 	ReadingIdentifier::Ptr id;
-  try {
-    if( id_str != NULL ) {
-      id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
-    }
-  } catch ( vz::VZException &e ) {
+	try {
+		if( id_str != NULL ) {
+			id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
+		}
+	} catch ( vz::VZException &e ) {
 		print(log_error, "Invalid id: %s", NULL, id_str);
 		throw vz::VZException("Invalid reader.");
-  }
-  
-  //std::cout<< "New channel....\n";
+	}
+
 	Channel ch(options, apiProtocol_str, uuid, id);
 	print(log_info, "New channel initialized (uuid=...%s protocol=%s id=%s)", ch.name(),
-        uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
-  mapping.push_back(ch);
-  //std::cout<<"pushed new channel....\n";
-  
+				uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
+	mapping.push_back(ch);
 }
 
 int config_validate_uuid(const char *uuid) {
 	for (const char *p = uuid; *p; p++) {
 		switch (p - uuid) {
-			case 8:
-			case 13:
-			case 18:
-			case 23:
-				if (*p != '-') return FALSE;
-				else break;
+				case 8:
+				case 13:
+				case 18:
+				case 23:
+					if (*p != '-') return FALSE;
+					else break;
 
-			default:
-				if (!isxdigit(*p)) return FALSE;
-				else break;
+				default:
+					if (!isxdigit(*p)) return FALSE;
+					else break;
 		}
 	}
 	return TRUE;
