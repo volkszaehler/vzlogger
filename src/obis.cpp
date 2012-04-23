@@ -121,7 +121,11 @@ Obis::Obis(const char *strClear) {
 	//	memcpy(_obisId._raw, raw, 6);
 	//}
 	if(parse(strClear) != SUCCESS) {
-		throw vz::VZException("Parse ObisString failed.");
+		// check alias
+		if (lookup_alias(strClear) == SUCCESS) {
+		} else {
+			throw vz::VZException("Parse ObisString failed.");
+		}
 	}
 }
 
@@ -185,10 +189,10 @@ int Obis::parse(const char *str) {
 	return (field < D) ? ERR : SUCCESS;
 }
 
-int obis_lookup_alias(const char *alias, Obis *id) {
+int Obis::lookup_alias(const char *alias) {
 	for (const obis_alias_t *it = aliases; it != NULL; it++) {
 		if (strcmp(it->name, alias) == 0) {
-			*id = it->id;
+			*this = it->id;
 			return SUCCESS;
 		}
 	}

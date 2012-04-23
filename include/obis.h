@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+	
 #ifndef _OBIS_H_
 #define _OBIS_H_
 
@@ -31,41 +31,42 @@
 #define OBIS_STR_LEN (6*3+5+1)
 
 class Obis {
-  public:
+	public:
 	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
 	Obis(const char *strClear);
-	Obis(){};
+	Obis();
 
-  //static Obis lookup(const char *alias);
+	//static Obis lookup(const char *alias);
 
 
-  /* regex: A-BB:CC.DD.EE([*&]FF)? */
+	/* regex: A-BB:CC.DD.EE([*&]FF)? */
 	size_t unparse(char *buffer, size_t n);
-  const std::string toString()  ;
+	const std::string toString()  ;
 
 	const bool operator==(const Obis &rhs);
 
 	const bool isManufacturerSpecific() const;
-  const bool isNull() const;
+	const bool isNull() const;
 
-  private:
-  int parse(const char *str);
+	private:
+	int parse(const char *str);
+	int lookup_alias(const char *alias);
 
-  private:
-  union {
-    unsigned char _raw[6];
-    struct {
-      unsigned char media, channel, indicator, mode, quantities;
-      unsigned char storage;	/* not used in Germany */
-    } groups;
-  } _obisId;
+	private:
+	union {
+		unsigned char _raw[6];
+		struct {
+			unsigned char media, channel, indicator, mode, quantities;
+			unsigned char storage;	/* not used in Germany */
+		} groups;
+	} _obisId;
 };
 
 typedef struct {
 //  public:
 //	Obis &id() { return &_id; }
 
-  Obis id;
+	Obis id;
 	const char *name;
 	const char *desc;
 } obis_alias_t;

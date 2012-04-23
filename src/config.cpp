@@ -268,7 +268,9 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 			id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
 		}
 	} catch ( vz::VZException &e ) {
-		print(log_error, "Invalid id: %s", NULL, id_str);
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "Invalid id: %s due to: '%s'", NULL, id_str, oss.str().c_str());
 		throw vz::VZException("Invalid reader.");
 	}
 
