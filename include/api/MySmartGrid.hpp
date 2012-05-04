@@ -37,6 +37,7 @@
 #include <options.h>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
+#include <reading.h>
 
 namespace vz {
 	namespace api {
@@ -101,6 +102,8 @@ namespace vz {
 			CurlResponse::Ptr _response;
 	
 			// Volatil
+			std::list<Reading> _values;
+
 			time_t _first_ts;
 			long _first_counter;
 			long _last_counter;
