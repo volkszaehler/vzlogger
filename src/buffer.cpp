@@ -24,47 +24,49 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
- 
+
 #include "buffer.h"
- 
-Buffer::Buffer() {
-  pthread_mutex_init(&_mutex, NULL);
+
+Buffer::Buffer() :
+		_keep(32)
+{
+	pthread_mutex_init(&_mutex, NULL);
 }
 
 void Buffer::push(const Reading &rd) {
-  lock();
-  have_newValues();
-  _sent.push_back(rd);
-  unlock();
+	lock();
+	have_newValues();
+	_sent.push_back(rd);
+	unlock();
 }
 
 void Buffer::clean() {
-  lock();
-  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-    if(it->deleted()) {
-      if( it == _sent.begin() ){
-        _sent.erase(it);
-        it = _sent.begin();
-      } else {
-        it = _sent.erase(it);
-      }
-    }
-    
-  }
-  //_sent.clear();
-  unlock();
+	lock();
+	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+		if(it->deleted()) {
+			if( it == _sent.begin() ){
+				_sent.erase(it);
+				it = _sent.begin();
+			} else {
+				it = _sent.erase(it);
+			}
+		}
+
+	}
+//_sent.clear();
+	unlock();
 }
 
 void Buffer::undelete() {
-  lock();
-  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-    it->reset();
-  }
-  unlock();
+	lock();
+	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+		it->reset();
+	}
+	unlock();
 }
 
 
@@ -79,34 +81,44 @@ void Buffer::shrink(size_t keep) {
 }
 
 char * Buffer::dump(char *dump, size_t len) {
-  size_t pos = 0;
-  dump[pos++] = '{';
+	size_t pos = 0;
+	dump[pos++] = '{';
 
-  //for (Reading *rd = buf->head; rd != NULL; rd = rd->next) {
-  for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-    if (pos < len) {
-      pos += snprintf(dump+pos, len-pos, "%.4f", it->value());
-    }
+	lock();
+	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+		if (pos < len) {
+			pos += snprintf(dump+pos, len-pos, "%.4f", it->value());
+		}
 
-    /* indicate last sent reading */
-    if (pos < len && _sent.end() == it) {
-      dump[pos++] = '!';
-    }
+		/* indicate last sent reading */
+		if (pos < len && _sent.end() == it) {
+			dump[pos++] = '!';
+		}
 
-    /* add seperator between values */
-    if (pos < len && it != _sent.end()) {
-      dump[pos++] = ',';
-    }
-  }
+		/* add seperator between values */
+		if (pos < len && it != _sent.end()) {
+			dump[pos++] = ',';
+		}
+	}
 
-  if (pos+1 < len) {
-    dump[pos++] = '}';
-    dump[pos] = '\0'; /* zero terminated string */
-  }
-
-  return (pos < len) ? dump : NULL; /* buffer full? */
+	if (pos+1 < len) {
+		dump[pos++] = '}';
+		dump[pos] = '\0'; /* zero terminated string */
+	}
+	unlock();
+	
+	return (pos < len) ? dump : NULL; /* buffer full? */
 }
 
 Buffer::~Buffer() {
 	pthread_mutex_destroy(&_mutex);
 }
+
+/*
+ * Local variables:
+ *  tab-width: 2
+ *  c-indent-level: 2
+ *  c-basic-offset: 2
+ *  project-name: vzlogger
+ * End:
+ */
