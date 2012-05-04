@@ -40,25 +40,25 @@
 #include <channel.h>
 
 namespace vz {
-  class ApiIF {
-  public:
-    typedef vz::shared_ptr<ApiIF> Ptr;
+	class ApiIF {
+	public:
+		typedef vz::shared_ptr<ApiIF> Ptr;
 
-    ApiIF(Channel::Ptr ch) : _ch(ch){}
-    ~ApiIF(){};
-    
-    /** 
-     * @brief send measurement values to middleware
-     * to be implemented specific API.
-    **/
-    virtual void send() = 0;
+		ApiIF(Channel::Ptr ch) : _ch(ch){}
+		~ApiIF(){};
 
-  protected:
-    Channel::Ptr channel() { return _ch; }
-    
-  private:
-    Channel::Ptr _ch;   /**< pointer to channel where API belongs to */
-  }; //class ApiIF
-  
+/** 
+ * @brief send measurement values to middleware
+ * to be implemented specific API.
+ **/
+		virtual void send() = 0;
+
+	protected:
+		Channel::Ptr channel() { return _ch; }
+
+	private:
+		Channel::Ptr _ch;   /**< pointer to channel where API belongs to */
+	}; //class ApiIF
+
 } // namespace vz
 #endif /* _ApiIF_hpp_ */

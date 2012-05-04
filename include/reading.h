@@ -40,131 +40,132 @@
 
 /* Identifiers */
 class ReadingIdentifier {
-public:
+	public:
 	typedef vz::shared_ptr<ReadingIdentifier> Ptr;
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-  bool operator==( ReadingIdentifier &cmp);
-  bool compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
+	bool operator==( ReadingIdentifier &cmp);
+	bool compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
 
-  virtual const std::string toString()  = 0;
-  
-  protected:
-  explicit ReadingIdentifier() {};
+	virtual const std::string toString()  = 0;
 
-  private:
-  ReadingIdentifier (const ReadingIdentifier& original);
-  ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
+	protected:
+	explicit ReadingIdentifier() {};
+
+	private:
+//ReadingIdentifier (const ReadingIdentifier& original);
+//ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
 };
 
 class ObisIdentifier : public ReadingIdentifier {
 
-  public:
+	public:
 	typedef vz::shared_ptr<ObisIdentifier> Ptr;
 
-  ObisIdentifier() {}
-  ObisIdentifier(Obis obis) : _obis(obis) {}
-  size_t unparse(char *buffer, size_t n);
-  bool operator==(ObisIdentifier &cmp);
-  const std::string toString() {
-    std::ostringstream oss;
-    oss << "ObisItentifier:" << _obis.toString();
-    return oss.str();
-  };
-    
-    const Obis &obis() const { return _obis; }
-    
-  private:
-  ObisIdentifier (const ObisIdentifier& original);
-  ObisIdentifier& operator= (const ObisIdentifier& rhs);
+	ObisIdentifier() {}
+	ObisIdentifier(Obis obis) : _obis(obis) {}
+		size_t unparse(char *buffer, size_t n);
+		bool operator==(ObisIdentifier &cmp);
+		const std::string toString() {
+			std::ostringstream oss;
+			oss << "ObisItentifier:" << _obis.toString();
+			return oss.str();
+		};
 
-  protected:
-	Obis _obis;
+		const Obis &obis() const { return _obis; }
+
+	private:
+		//ObisIdentifier (const ObisIdentifier& original);
+		//ObisIdentifier& operator= (const ObisIdentifier& rhs);
+
+	protected:
+		Obis _obis;
 };
 
 class StringIdentifier : public ReadingIdentifier {
-public:
+	public:
 	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
 
-    void parse(const char *buffer);
-  size_t unparse(char *buffer, size_t n);
-  bool operator==(StringIdentifier &cmp);
-  const std::string toString()  {
-    std::ostringstream oss;
-    oss << "StringItentifier:";
-    return oss.str();
-  };
-protected:
-	std::string _string;
+		void parse(const char *buffer);
+		size_t unparse(char *buffer, size_t n);
+		bool operator==(StringIdentifier &cmp);
+		const std::string toString()  {
+			std::ostringstream oss;
+			oss << "StringItentifier:";
+			return oss.str();
+		};
+	protected:
+		std::string _string;
 };
 
 
 class ChannelIdentifier : public ReadingIdentifier {
 
-public:
+	public:
 	ChannelIdentifier() {}
 	ChannelIdentifier(int channel) : _channel(channel) {}
 
-    void parse(const char *string);
-    size_t unparse(char *buffer, size_t n);
-    bool operator==(ChannelIdentifier &cmp);
-  const std::string toString()  {
-    std::ostringstream oss;
-    oss << "ChannelItentifier:";
-    return oss.str();
-  };
+		void parse(const char *string);
+		size_t unparse(char *buffer, size_t n);
+		bool operator==(ChannelIdentifier &cmp);
+		const std::string toString()  {
+			std::ostringstream oss;
+			oss << "ChannelItentifier:";
+			return oss.str();
+		};
 
-  protected:
-	int _channel;
+	protected:
+		int _channel;
 };
 
 class NilIdentifier : public ReadingIdentifier {
-public:
+	public:
 	NilIdentifier() {}
-    size_t unparse(char *buffer, size_t n);
-    bool operator==(NilIdentifier &cmp);
-  const std::string toString()  {
-    std::ostringstream oss;
-    oss << "NilItentifier:";
-    return oss.str();
-  };
-  private:
+	size_t unparse(char *buffer, size_t n);
+	bool operator==(NilIdentifier &cmp);
+	const std::string toString()  {
+		std::ostringstream oss;
+		oss << "NilItentifier";
+		return oss.str();
+	};
+	private:
 };
 
 class Reading {
 
-public:
+	public:
 	typedef vz::shared_ptr<Reading> Ptr;
 	Reading();
 	Reading(ReadingIdentifier::Ptr pIndentifier);
 	Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier);
+	Reading(const Reading::Reading &orig);
 
-  const bool deleted() const { return _deleted; }
-  void  mark_delete()        { _deleted = true; }
-  void  reset()              { _deleted = false; }
-  
-  void value(const double &v) { _value = v; }
-  const double value() const  { return _value; }
+	const bool deleted() const { return _deleted; }
+	void  mark_delete()        { _deleted = true; }
+	void  reset()              { _deleted = false; }
 
-  const  double tvtod() const;
-  double tvtod(struct timeval tv);
-  void time() { gettimeofday(&_time, NULL); }
-  void time(struct timeval &v) { _time = v; }
-  struct timeval dtotv(double ts);
+	void value(const double &v) { _value = v; }
+	const double value() const  { return _value; }
 
-  void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
-  const ReadingIdentifier::Ptr identifier() { return _identifier; }
-  
-  /**
-   * Print identifier to buffer for debugging/dump
-   *
-   * @return the amount of bytes used in buffer
-   */
-  size_t unparse(meter_protocol_t protocol, char *buffer, size_t n);
+	const  double tvtod() const;
+	double tvtod(struct timeval tv);
+	void time() { gettimeofday(&_time, NULL); }
+	void time(struct timeval &v) { _time = v; }
+	struct timeval dtotv(double ts);
 
-  protected:
-  bool   _deleted;
+	void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
+	const ReadingIdentifier::Ptr identifier() { return _identifier; }
+
+/**
+ * Print identifier to buffer for debugging/dump
+ *
+ * @return the amount of bytes used in buffer
+ */
+	size_t unparse(meter_protocol_t protocol, char *buffer, size_t n);
+
+	protected:
+	bool   _deleted;
 	double _value;
 	struct timeval _time;
 	ReadingIdentifier::Ptr _identifier;

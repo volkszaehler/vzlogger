@@ -50,122 +50,122 @@ void * reading_thread(void *arg) {
 	details = meter_get_details(mtr->protocolId());
 
 	/* allocate memory for readings */
-  for(size_t i=0; i< details->max_readings; i++) {
-    Reading rd(mtr->identifier());
-    rds.push_back(rd);
-  }
-  
+	for(size_t i=0; i< details->max_readings; i++) {
+		Reading rd(mtr->identifier());
+		rds.push_back(rd);
+	}
+
 	//pthread_cleanup_push(&reading_thread_cleanup, rds);
 
-  print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
-  print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
-  print(log_debug, "Config.local: %d", mtr->name(), options.local());
+	print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
+	print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
+	print(log_debug, "Config.local: %d", mtr->name(), options.local());
 
 
-  try {
-    do { /* start thread main loop */
-      /* fetch readings from meter and calculate delta */
-      last = time(NULL);
-      n = mtr->read(rds, details->max_readings);
-      delta = time(NULL) - last;
+	try {
+		do { /* start thread main loop */
+/* fetch readings from meter and calculate delta */
+			last = time(NULL);
+			n = mtr->read(rds, details->max_readings);
+			delta = time(NULL) - last;
 
-      /* dumping meter output */
-      if (options.verbosity() > log_debug) {
-        print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
+/* dumping meter output */
+			if (options.verbosity() > log_debug) {
+				print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
 
-        char identifier[MAX_IDENTIFIER_LEN];
-        for (size_t i = 0; i < n; i++) {
-          rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
-          print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
-                identifier, rds[i].identifier()->toString().c_str(),
-                rds[i].value(), rds[i].tvtod());
-        }
-      }
+				char identifier[MAX_IDENTIFIER_LEN];
+				for (size_t i = 0; i < n; i++) {
+					rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
+					print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
+								identifier, rds[i].identifier()->toString().c_str(),
+								rds[i].value(), rds[i].tvtod());
+				}
+			}
 
-      /* update buffer length with current interval */
-      if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-        print(log_debug, "Updating interval to %i", mtr->name(), delta);
-        mtr->interval(delta);
-      }
+/* update buffer length with current interval */
+			if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
+				print(log_debug, "Updating interval to %i", mtr->name(), delta);
+				mtr->interval(delta);
+			}
 
-      /* insert readings into channel queues */
-      for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
-        Reading *add = NULL;
+/* insert readings into channel queues */
+			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+				Reading *add = NULL;
 
-        //print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
-      
-        for (size_t i = 0; i < n; i++) {
-          if ( *rds[i].identifier().get() == *ch->identifier().get()) {
-            //print(log_debug, "found channel", mtr->name());
-            if (ch->tvtod() < rds[i].tvtod()) {
-              ch->last(&rds[i]);
-            }
+				//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
 
-            print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch->name(),
-                  rds[i].value(), rds[i].tvtod());
-            ch->push(rds[i]);
+				for (size_t i = 0; i < n; i++) {
+					if ( *rds[i].identifier().get() == *ch->identifier().get()) {
+						//print(log_debug, "found channel", mtr->name());
+						if (ch->tvtod() < rds[i].tvtod()) {
+							ch->last(&rds[i]);
+						}
 
-            if (add == NULL) {
-              add = &rds[i]; /* remember first reading which has been added to the buffer */
-            }
-          }
-        }
+						print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", ch->name(),
+									rds[i].value(), rds[i].tvtod());
+						ch->push(rds[i]);
 
-        /* update buffer length */
-        if (options.local()) {
-          ch->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
-        }
+						if (add == NULL) {
+							add = &rds[i]; /* remember first reading which has been added to the buffer */
+						}
+					}
+				}
 
-        /* queue reading into sending buffer logging thread if
-           logging is enabled & sent queue is empty */
-        //if (options.logging()) {
-          //ch->push(buf->sent = add);
-        //}
+/* update buffer length */
+				if (options.local()) {
+					ch->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
+				}
 
-        /* shrink buffer */
-        ch->buffer()->clean();
+/* queue reading into sending buffer logging thread if
+	 logging is enabled & sent queue is empty */
+//if (options.logging()) {
+//ch->push(buf->sent = add);
+//}
 
-        /* notify webserver and logging thread */
-        ch->notify();
+/* shrink buffer */
+				ch->buffer()->clean();
 
-        /* debugging */
-        if (options.verbosity() >= log_debug) {
-          size_t dump_len = 24;
-          char *dump = (char*)malloc(dump_len);
+/* notify webserver and logging thread */
+				ch->notify();
 
-          if (dump == NULL) {
-            print(log_error, "cannot allocate buffer", ch->name());
-          }
+/* debugging */
+				if (options.verbosity() >= log_debug) {
+					size_t dump_len = 24;
+					char *dump = (char*)malloc(dump_len);
 
-          while (dump == NULL || ch->dump(dump, dump_len) == NULL) {
-            dump_len *= 1.5;
-            free(dump);
-            dump = (char*)malloc(dump_len);
-          }
+					if (dump == NULL) {
+						print(log_error, "cannot allocate buffer", ch->name());
+					}
 
-          print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch->name(),
-                ch->size(), ch->keep(), dump);
+					while (dump == NULL || ch->dump(dump, dump_len) == NULL) {
+						dump_len *= 1.5;
+						free(dump);
+						dump = (char*)malloc(dump_len);
+					}
 
-          free(dump);
-        }
-      }
+					print(log_debug, "Buffer dump (size=%i keep=%i): %s", ch->name(),
+								ch->size(), ch->keep(), dump);
 
-      if ((options.daemon() || options.local()) && details->periodic) {
-        print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-        //sleep(mtr->interval());
-      }
-    } while (options.daemon() || options.local() || options.logging());
-  } catch(std::exception &e) {
-    std::stringstream oss;
-    oss << e.what();
-    print(log_error, "THREAD - reading Got an exception : %s", mtr->name(), e.what());
-    pthread_exit(0);
-  }
+					free(dump);
+				}
+			}
 
-  print(log_debug, "Stop reading.! ", mtr->name());
+			if ((options.daemon() || options.local()) && details->periodic) {
+				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
+//sleep(mtr->interval());
+			}
+		} while (options.daemon() || options.local() || options.logging());
+	} catch(std::exception &e) {
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "Reading-THREAD - reading Got an exception : %s", mtr->name(), e.what());
+		pthread_exit(0);
+	}
+
+	print(log_debug, "Stop reading.! ", mtr->name());
 	//pthread_cleanup_pop(1);
-  
-  pthread_exit(0);
+
+	pthread_exit(0);
 	return NULL;
 }
 
@@ -177,38 +177,36 @@ void logging_thread_cleanup(void *arg) {
 
 void * logging_thread(void *arg) {
 	Channel::Ptr ch;
-  ch.reset(static_cast<Channel *>(arg)); /* casting argument */
-  print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
-        ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
+	ch.reset(static_cast<Channel *>(arg)); /* casting argument */
+	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
+				ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
 
-  // create configured api-interface
-  vz::ApiIF::Ptr api;
-  if( ch->apiProtocol() == "mysmartgrid") {
-    api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
-    print(log_debug, "Using MSG-Api.", ch->name());
-  } else {
-    api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch, ch->options()));
-    print(log_debug, "Using default api:", ch->name());
-  }
+// create configured api-interface
+	vz::ApiIF::Ptr api;
+	if( ch->apiProtocol() == "mysmartgrid") {
+		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
+		print(log_debug, "Using MSG-Api.", ch->name());
+	} else {
+		api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch, ch->options()));
+		print(log_debug, "Using default api:", ch->name());
+	}
 
 	//pthread_cleanup_push(&logging_thread_cleanup, &api);
 
 	do { /* start thread mainloop */
-    try {
-      ch->wait();
+		try {
+			ch->wait();
 
-      api->send();
-    }
-    catch(std::exception &e) {
-      print(log_error, "Got an exception : %s", ch->name(), e.what());
-      //std::cout<<"Exception: "<< e.what() << std::endl;
-      
-    }
-    
+			api->send();
+		}
+		catch(std::exception &e) {
+			print(log_error, "logging thread failed due to: %s", ch->name(), e.what());
+		}
+
 	} while (options.logging());
 
-  print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
-  pthread_exit(0);
+	print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
+	pthread_exit(0);
 	//pthread_cleanup_pop(1);
 
 	return NULL;
