@@ -57,7 +57,7 @@ class Channel {
 	std::list<Option> &options()        { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {
-		if(_identifier.use_count() < 1) throw vz::VZException("Destroyed") ; return _identifier; }
+		if(_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
 	const double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
 	
 	const char* uuid()                  { return _uuid.c_str(); }
@@ -93,8 +93,8 @@ class Channel {
 	
 	Buffer::Ptr _buffer;		/**< circular queue to buffer readings */
 	
-	ReadingIdentifier::Ptr _identifier;	/* channel identifier (OBIS, string) */
-	Reading *_last;			/* most recent reading */
+	ReadingIdentifier::Ptr _identifier;	/**< channel identifier (OBIS, string) */
+	Reading *_last;			       /**< most recent reading */
 
 	pthread_cond_t condition;	 /**< pthread syncronization to notify logging thread and local webserver */
 	pthread_t _thread;		     /**< pthread for asynchronus logging */
