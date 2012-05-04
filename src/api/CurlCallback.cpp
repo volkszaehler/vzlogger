@@ -31,53 +31,53 @@
 
 
 size_t vz::api::CurlCallback::header_callback(
-  char *ptr
-  , size_t size
-  , size_t nmemb
-  , void *userdata
-  ) {
-  const std::string data(ptr, nmemb);
+	char *ptr
+	, size_t size
+	, size_t nmemb
+	, void *userdata
+	) {
+	const std::string data(ptr, nmemb);
 
-  CurlResponse *resp = static_cast<CurlResponse*> (userdata);
-  resp->header_callback(data);
+	CurlResponse *resp = static_cast<CurlResponse*> (userdata);
+	resp->header_callback(data);
 
-  return size*nmemb;
+	return size*nmemb;
 }
 
 size_t vz::api::CurlCallback::write_callback(
-  char *ptr
-  , size_t size
-  , size_t nmemb
-  , void *userdata
-  ) {
-  const std::string data(ptr, nmemb);
+	char *ptr
+	, size_t size
+	, size_t nmemb
+	, void *userdata
+	) {
+	const std::string data(ptr, nmemb);
 
-  CurlResponse *resp = static_cast<CurlResponse*> (userdata);
-  resp->write_callback(data);
+	CurlResponse *resp = static_cast<CurlResponse*> (userdata);
+	resp->write_callback(data);
 
-  return size*nmemb;
+	return size*nmemb;
 }
 
 size_t vz::api::CurlCallback::debug_callback(
-  CURL *hCurl
-  , curl_infotype infotype
-  , char *info
-  , size_t size
-  , void *userdata
-  ) {
-  const std::string data(info, size);
-  CurlResponse *resp = static_cast<CurlResponse*> (userdata);
-  resp->debug_callback(infotype, data);
+	CURL *hCurl
+	, curl_infotype infotype
+	, char *info
+	, size_t size
+	, void *userdata
+	) {
+	const std::string data(info, size);
+	CurlResponse *resp = static_cast<CurlResponse*> (userdata);
+	resp->debug_callback(infotype, data);
 
-  return 0;
+	return 0;
 }
 
 int vz::api::CurlCallback::progress_callback(
-  void *clientp
-  , double dltotal
-  , double dlnow
-  , double ultotal
-  , double ulnow)
+	void *clientp
+	, double dltotal
+	, double dlnow
+	, double ultotal
+	, double ulnow)
 {
-  return 0;
+	return 0;
 }

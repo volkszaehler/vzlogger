@@ -27,7 +27,7 @@
 #include <api/CurlIF.hpp>
 
 vz::api::CurlIF::CurlIF()
-    : _headers(0)
+		: _headers(0)
 {
 	_curl = curl_easy_init();
 	if (!_curl) {
@@ -42,15 +42,15 @@ vz::api::CurlIF::~CurlIF() {
 
 void vz::api::CurlIF::addHeader(const std::string value)
 {
-  _headers = curl_slist_append(_headers, value.c_str());
+	_headers = curl_slist_append(_headers, value.c_str());
 }
 void vz::api::CurlIF::clearHeader() {
 	if(_headers != NULL) 
-    curl_slist_free_all(_headers);
-  _headers=NULL;
+		curl_slist_free_all(_headers);
+	_headers=NULL;
 }
 void vz::api::CurlIF::commitHeader() {
-  if( _headers != NULL )
-    curl_easy_setopt(handle(), CURLOPT_HTTPHEADER, _headers);
+	if( _headers != NULL )
+		curl_easy_setopt(handle(), CURLOPT_HTTPHEADER, _headers);
 }
 

@@ -35,26 +35,26 @@
 int Channel::instances = 0;
 
 Channel::Channel(
-  const std::list<Option> &pOptions,
-  const std::string apiProtocol,
-  const std::string uuid,
-  ReadingIdentifier::Ptr pIdentifier
-  )
-    : _options(pOptions)
-    , _buffer(new Buffer())
-    , _identifier(pIdentifier)
-    , _last(0)
-    , _uuid(uuid)
-    , _apiProtocol(apiProtocol)
+	const std::list<Option> &pOptions,
+	const std::string apiProtocol,
+	const std::string uuid,
+	ReadingIdentifier::Ptr pIdentifier
+	)
+		: _options(pOptions)
+		, _buffer(new Buffer())
+		, _identifier(pIdentifier)
+		, _last(0)
+		, _uuid(uuid)
+		, _apiProtocol(apiProtocol)
 {
 	id = instances++;
 
-  // set channel name
-  std::stringstream oss;
-  oss<<"chn"<< id;
-  _name=oss.str();
+// set channel name
+	std::stringstream oss;
+	oss<<"chn"<< id;
+	_name=oss.str();
 
-  pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
+	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
 }
 
 /**
@@ -64,3 +64,12 @@ Channel::~Channel() {
 	pthread_cond_destroy(&condition);
 }
 
+
+/*
+ * Local variables:
+ *  tab-width: 2
+ *  c-indent-level: 2
+ *  c-basic-offset: 2
+ *  project-name: vzlogger
+ * End:
+ */
