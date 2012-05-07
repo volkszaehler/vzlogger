@@ -22,20 +22,49 @@ endif( "${OPENWRT_HOME}" STREQUAL "")
 
 ##
 find_file(_openwrt_configuration
-  NAMES openwrt.cmake
-  HINTS ${OPENWRT_HOME}/staging_dir
-  DOC "find cross-compiler configuration"
+  NAMES .config
+  HINTS ${OPENWRT_HOME}
+  DOC "find OpenWRT configuration file"
   )
 
 if( ${_openwrt_configuration} STREQUAL "_openwrt_configuration-NOTFOUND" )
   message(FATAL_ERROR  "OpenWRT cross-compiling environement not found.")
 endif( ${_openwrt_configuration} STREQUAL "_openwrt_configuration-NOTFOUND" )
-include(${_openwrt_configuration})
+#include(${_openwrt_configuration})
 
-## search compiler
-#find_program()
+# read configuragtion file
+file(READ ${_openwrt_configuration} _openwrt_config )
+#string(REGEX REPLACE "#[A-Za-z0-9 =_-]+\n" "" _openwrt_config_passed ${_openwrt_config})
+string(REGEX MATCH "CONFIG_ARCH=\"[a-zA-Z0-9]+\"" _dummy ${_openwrt_config})
+string(REGEX REPLACE "CONFIG_ARCH=\"(.*)\"" "\\1" openwrt_arch ${_dummy})
 
-message(STATUS "===> found gcc in: '${openwrt_compiler}'")
+string(REGEX MATCH "CONFIG_TARGET_BOARD=\"([a-zA-Z0-9]+)\"" _dummy ${_openwrt_config})
+string(REGEX REPLACE "CONFIG_TARGET_BOARD=\"(.*)\"" "\\1" openwrt_target_board ${_dummy})
+
+string(REGEX MATCH "CONFIG_LIBC=\"[a-zA-Z0-9]+\"" _dummy ${_openwrt_config})
+string(REGEX REPLACE "CONFIG_LIBC=\"(.*)\"" "\\1" openwrt_libc ${_dummy})
+
+string(REGEX MATCH "CONFIG_LIBC_VERSION=\"[a-zA-Z0-9.]+\"" _dummy ${_openwrt_config})
+string(REGEX REPLACE "CONFIG_LIBC_VERSION=\"(.*)\"" "\\1" openwrt_libc_version ${_dummy})
+
+string(REGEX MATCH "CONFIG_GCC_VERSION=\"[a-zA-Z0-9.+]+\"" _dummy ${_openwrt_config})
+string(REGEX REPLACE "CONFIG_GCC_VERSION=\"(.*)\"" "\\1" openwrt_gcc_version ${_dummy})
+
+message(STATUS "ARCH         '${openwrt_arch}'")
+message(STATUS "LIBC         '${openwrt_libc}'")
+message(STATUS "LIBC_version '${openwrt_libc_version}'")
+message(STATUS "BOARD'       '${openwrt_target_board}'")
+message(STATUS "GCC'         '${openwrt_gcc_version}'")
+
+#CONFIG_GCC_VERSION="4.3.3+cs"
+
+set(openwrt_system       "linux")
+
+set(openwrt_toolchain "toolchain-${openwrt_arch}_r2_gcc-${openwrt_gcc_version}_${openwrt_libc}-${openwrt_libc_version}")
+set(openwrt_target    "target-${openwrt_arch}_r2_${openwrt_libc}-${openwrt_libc_version}")
+set(_openwrt_c_compiler  "${openwrt_arch}-openwrt-${openwrt_system}-gcc")
+set(_openwrt_cxx_compiler  "${openwrt_arch}-openwrt-${openwrt_system}-g++")
+
 # set(OPENWRT_HOME /homes/krueger/Project/MySmartGrid/backfire_ubuntu/build/openwrt)
 set(OPENWRT_STAGING_DIR ${OPENWRT_HOME}/staging_dir)
 set(OPENWRT_STAGING_DIR_HOST ${OPENWRT_STAGING_DIR}/host)
@@ -46,10 +75,42 @@ set(OPENWRT_TARGET_DIR    ${OPENWRT_STAGING_DIR}/${openwrt_target})
 set(ENV{STAGING_DIR}     ${OPENWRT_STAGING_DIR})
 set(ENV{PKG_CONFIG_PATH} ${OPENWRT_TARGET_DIR}/usr/lib/pkgconfig)
 message("export STAGING_DIR=${OPENWRT_STAGING_DIR}")
+message("export STAGING_DIR=$ENV{STAGING_DIR}")
+message("export PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}")
 
 #compiler
-SET(CMAKE_C_COMPILER   ${OPENWRT_TOOLCHAIN_DIR}/bin/mips-openwrt-linux-gcc)
-SET(CMAKE_CXX_COMPILER ${OPENWRT_TOOLCHAIN_DIR}/bin/mips-openwrt-linux-g++)
+find_program(openwrt_c_compiler
+  NAMES ${_openwrt_c_compiler}
+  HINTS ${OPENWRT_TOOLCHAIN_DIR}
+  PATH_SUFFIXES bin
+  DOC "find gcc compiler"
+  NO_DEFAULT_PATH
+  NO_CMAKE_ENVIRONMENT_PATH
+  NO_CMAKE_PATH
+  NO_SYSTEM_ENVIRONMENT_PATH
+  NO_CMAKE_SYSTEM_PATH
+)
+if( ${openwrt_c_compiler} STREQUAL "openwrt_c_compiler-NOTFOUND" )
+  message(FATAL_ERROR  "OpenWRT cross c-compiler ${openwrt_compiler} not found.")
+endif( ${openwrt_c_compiler} STREQUAL "openwrt_c_compiler-NOTFOUND" )
+
+find_program(openwrt_cxx_compiler
+  NAMES ${_openwrt_cxx_compiler}
+  HINTS ${OPENWRT_TOOLCHAIN_DIR}
+  PATH_SUFFIXES bin
+  DOC "find gcc compiler"
+  NO_DEFAULT_PATH
+  NO_CMAKE_ENVIRONMENT_PATH
+  NO_CMAKE_PATH
+  NO_SYSTEM_ENVIRONMENT_PATH
+  NO_CMAKE_SYSTEM_PATH
+)
+if( ${openwrt_cxx_compiler} STREQUAL "openwrt_cxx_compiler-NOTFOUND" )
+  message(FATAL_ERROR  "OpenWRT cross c++-compiler ${openwrt_compiler} not found.")
+endif( ${openwrt_cxx_compiler} STREQUAL "openwrt_cxx_compiler-NOTFOUND" )
+
+SET(CMAKE_C_COMPILER   ${openwrt_c_compiler})
+SET(CMAKE_CXX_COMPILER ${openwrt_cxx_compiler})
 
 #SET(CMAKE_C_FLAGS "-ffreestanding -fno-exceptions -fno-stack-protector")
 #SET(CMAKE_CXX_FLAGS "-ffreestanding -fno-exceptions -fno-stack-protector")
@@ -62,6 +123,9 @@ SET(CMAKE_FIND_ROOT_PATH ${OPENWRT_TARGET_DIR} ${OPENWRT_TOOLCHAIN_DIR})
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+
 message(STATUS "OpenWRT staging....: '${OPENWRT_STAGING_DIR}'")
 message(STATUS "OpenWRT toolchain..: '${OPENWRT_TOOLCHAIN_DIR}'")
 message(STATUS "OpenWRT target.....: '${OPENWRT_TARGET_DIR}'")
+message(STATUS "OpenWRT gcc .......: '${openwrt_c_compiler}'")
+message(STATUS "OpenWRT g++ .......: '${openwrt_cxx_compiler}'")
