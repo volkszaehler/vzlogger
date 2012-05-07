@@ -400,6 +400,7 @@ int main(int argc, char *argv[]) {
 			if(ret) gStop = true;
 		}
 	} while (!gStop);
+	print(log_debug, "Server stopped.", "");
 
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */

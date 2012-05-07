@@ -32,56 +32,56 @@
 
 
 Option::Option(const char *pKey)
-    : _key(pKey)
+		: _key(pKey)
 {
 	//_key = strdup(pKey);
 }
 
 Option::Option(const char *pKey, struct json_object *jso)
-    : _key(pKey)
+		: _key(pKey)
 {
-  //std::cout<< "New option...."<< pKey << std::endl;
+//std::cout<< "New option...."<< pKey << std::endl;
 
 	switch (json_object_get_type(jso)) {
-      case json_type_string:	_value_string = json_object_get_string(jso);   break;
-      case json_type_int:	    value.integer = json_object_get_int(jso);     break;
-      case json_type_boolean:	value.boolean = json_object_get_boolean(jso); break;
-      case json_type_double:	value.floating = json_object_get_double(jso); break;
-      default:		throw vz::VZException("Not a valid Type");
+			case json_type_string:	_value_string = json_object_get_string(jso);   break;
+			case json_type_int:	    value.integer = json_object_get_int(jso);     break;
+			case json_type_boolean:	value.boolean = json_object_get_boolean(jso); break;
+			case json_type_double:	value.floating = json_object_get_double(jso); break;
+			default:		throw vz::VZException("Not a valid Type");
 	}
 
 	_type = (type_t)json_object_get_type(jso);
 }
 
 Option::Option(const char *pKey, char *pValue)
-    : _key(pKey)
-    , _type(type_string)
-    , _value_string(pValue)
+		: _key(pKey)
+		, _type(type_string)
+		, _value_string(pValue)
 {
-  //_key = strdup(pKey);
+//_key = strdup(pKey);
 	//value.string = strdup(pValue);
 }
 
 Option::Option(const char *pKey, int pValue)
-    : _key(pKey)
+		: _key(pKey)
 {
-  //_key = strdup(pKey);
+//_key = strdup(pKey);
 	value.integer = pValue;
 	_type = type_int;
 }
 
 Option::Option(const char *pKey, double pValue)
-    : _key(pKey)
+		: _key(pKey)
 {
-  //_key = strdup(pKey);
+//_key = strdup(pKey);
 	value.floating = pValue;
 	_type = type_double;
 }
 
 Option::Option(const char *pKey, bool pValue)
-    : _key(pKey)
+		: _key(pKey)
 {
-  //_key = strdup(pKey);
+//_key = strdup(pKey);
 	value.boolean = pValue;
 	_type = type_boolean;
 }
@@ -122,43 +122,43 @@ Option::operator bool() const {
 
 //Option& OptionList::lookup(List<Option> options, char *key) {
 const Option &OptionList::lookup(std::list<Option> options, const std::string &key) {
-  for(const_iterator it = options.begin(); it != options.end(); it++) {
+	for(const_iterator it = options.begin(); it != options.end(); it++) {
 		if ( it->key() == key ) {
 			return (*it);
 		}
-  }
+	}
 
-  throw vz::OptionNotFoundException("Option '"+ std::string(key) +"' not found");
+	throw vz::OptionNotFoundException("Option '"+ std::string(key) +"' not found");
 }
 
 const char *OptionList::lookup_string(std::list<Option> options, const char *key)
 {
-  Option opt = lookup(options, key);
-  return (const char*)opt;
+	Option opt = lookup(options, key);
+	return (const char*)opt;
 }
 
 const int OptionList::lookup_int(std::list<Option> options, const char *key)
 {
-  Option opt = lookup(options, key);
-  return (int)opt;
+	Option opt = lookup(options, key);
+	return (int)opt;
 }
 
 const bool OptionList::lookup_bool(std::list<Option> options, const char *key)
 {
-  Option opt = lookup(options, key);
-  return (bool)opt;
+	Option opt = lookup(options, key);
+	return (bool)opt;
 }
 
 const double OptionList::lookup_double(std::list<Option> options, const char *key)
 {
-  Option opt = lookup(options, key);
-  return (double)opt;
+	Option opt = lookup(options, key);
+	return (double)opt;
 }
 
 void OptionList::dump(std::list<Option> options) {
-  std::cout<< "OptionList dump\n" ;
-  
-  for(const_iterator it = options.begin(); it != options.end(); it++) {
-    std::cout << (*it) << std::endl;
-  }
+	std::cout<< "OptionList dump\n" ;
+
+	for(const_iterator it = options.begin(); it != options.end(); it++) {
+		std::cout << (*it) << std::endl;
+	}
 }
