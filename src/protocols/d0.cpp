@@ -90,7 +90,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		}
 	} catch( vz::OptionNotFoundException &e ) {
 		/* using default value if not specified */
-		_baudrate = 9600;
+		_baudrate = B9600;
 	} catch( vz::VZException &e ) {
 		print(log_error, "Failed to parse the baudrate", name().c_str());
 		throw;
@@ -123,6 +123,7 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
+	bool error_flag = false;
 	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
 	char identification[16+1];	/* 16 meter specific + '\0' termination */
 	char obis_code[16+1];		/* A-B:C.D.E*F
@@ -191,7 +192,15 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 						context = OBIS_CODE;	/* set new context: IDENTIFICATION -> OBIS_CODE */
 						byte_iterator = 0;
 					}
-					else identification[byte_iterator++] = byte;
+					else {
+						if(!isprint(byte)) {
+							print(log_error, "====> binary character '%x'", name().c_str(), byte);
+							//error_flag=true;
+						}
+						else {
+							identification[byte_iterator++] = byte;
+						}
+					}
 					break;
 
 				case START_LINE:
@@ -256,6 +265,10 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					break;
 
 				case END:
+					if(error_flag) {
+						print(log_error, "reading binary values.", name().c_str());
+						goto error;
+					}
 					print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
 								name().c_str(), number_of_tuples, vendor, baudrate, identification);
 					return number_of_tuples;
@@ -312,6 +325,7 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL);
 	tio.c_oflag &= ~(OPOST | ONLCR);
 	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
+	tio.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB);
 	tio.c_cflag |= (CS7 | PARENB);
 
 	/* set baudrate */
