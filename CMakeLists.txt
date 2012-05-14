@@ -13,6 +13,8 @@ set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MI
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
 set(VZLOGGER_RPM_VERSION "${VZLOGGER_MAJOR_VERSION}.${VZLOGGER_MINOR_VERSION}.${VZLOGGER_SUB_VERSION}")
 set(VERSION_DATE "2012-02-20")
+set(PACKAGE_STRING "${PROJECT_NAME} ${VZLOGGER_RPM_VERSION}")
+set(VERSION "${VZLOGGER_RPM_VERSION}")
 
 ###########################################################
 # Where are the additional libraries installed? Note: provide includes
@@ -111,6 +113,7 @@ INSTALL(FILES README INSTALL COPYING DESTINATION
 
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)
+#set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2;PKG")
 set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "volkszaehler.org ist ein freies Smart Meter (hier: intelligenter Stromzähler) im Selbstbau.")

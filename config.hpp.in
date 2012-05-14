@@ -37,5 +37,5 @@
 #cmakedefine HAVE_OPENSSL 1
 
 /* Version number of package */
-#cmakedefine VERSION "@VERSION@"
+#cmakedefine VERSION "@VZLOGGER_RPM_VERSION@"
 #endif /* _config_hpp_in_ */
