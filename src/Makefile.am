@@ -8,20 +8,20 @@ bin_PROGRAMS = vzlogger
 
 #vzlogger_SOURCES = test.cpp buffer.cpp reading.cpp obis.cpp exception.cpp
 
-vzlogger_SOURCES = vzlogger.cpp channel.cpp config.cpp threads.cpp buffer.cpp
-vzlogger_SOURCES += meter.cpp ltqnorm.cpp obis.cpp options.cpp reading.cpp
+vzlogger_SOURCES = vzlogger.cpp Channel.cpp Config_Options.cpp threads.cpp Buffer.cpp
+vzlogger_SOURCES += Meter.cpp ltqnorm.cpp Obis.cpp Options.cpp Reading.cpp
 vzlogger_SOURCES += exception.cpp local.cpp MeterMap.cpp
 
 
 # Protocols (add your own here)
 vzlogger_SOURCES += \
-	protocols/s0.cpp \
-	protocols/d0.cpp \
-	protocols/sml.cpp \
-	protocols/fluksov2.cpp \
-	protocols/file.cpp \
-	protocols/exec.cpp \
-	protocols/random.cpp
+	protocols/MeterS0.cpp \
+	protocols/MeterD0.cpp \
+	protocols/MeterS0SML.cpp \
+	protocols/MeterS0FluksoV2.cpp \
+	protocols/MeterS0File.cpp \
+	protocols/MeterS0Exec.cpp \
+	protocols/MeterS0Random.cpp
 
 # logger API (add your own here)
 vzlogger_SOURCES += \

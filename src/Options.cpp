@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "options.h"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 

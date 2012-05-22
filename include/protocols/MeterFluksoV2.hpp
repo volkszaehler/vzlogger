@@ -1,7 +1,5 @@
 /**
- * Protocol generic interface
- * To implement new meter protocol, derive from this class and implement 
- * the specific code for open(), close() and read()
+ * Replacement for fluksod by directly parsing the fluksometers SPI output
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -25,38 +23,30 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _protocol_hpp_
-#define _protocol_hpp_
+#ifndef _FLUKSOV2_H_
+#define _FLUKSOV2_H_
 
-#include <vector>
-#include <list>
+#include <protocols/Protocol.hpp>
 
-#include <common.h>
-#include <shared_ptr.hpp>
-#include <reading.h>
-#include <options.h>
+class MeterFluksoV2 : public vz::protocol::Protocol {
 
-namespace vz {
-  namespace protocol {
-    class Protocol {
-    public:
-      typedef vz::shared_ptr<Protocol> Ptr;
+public:
+	MeterFluksoV2(std::list<Option> options);
+	virtual ~MeterFluksoV2();
 
-      Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
+	int open();
+	int close();
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-      virtual ~Protocol() {};
+  private:
+  size_t _read_line(int fd, char  *buffer, size_t n);
+  
+  private:
+	const char *_fifo;
+	int _fd;	/* file descriptor of fifo */
 
-      virtual int    open() = 0;
-      virtual int    close() = 0;
-      virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
+	//const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
+	const char *_DEFAULT_FIFO;
+};
 
-      const std::string &name() { return _name; }
-    
-    private:
-      std::string _name;
-    
-    }; // class protocol
-  } // namespace protocol
-} // namespace vz
-
-#endif /* _protocol_hpp_ */
+#endif /* _FLUKSOV2_H_ */

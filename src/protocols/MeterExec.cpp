@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "protocols/exec.h"
-#include "options.h"
+#include "protocols/MeterExec.hpp"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 MeterExec::MeterExec(std::list<Option> options) 

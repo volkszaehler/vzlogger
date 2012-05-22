@@ -31,8 +31,8 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "protocols/random.h"
-#include "options.h"
+#include "protocols/MeterRandom.hpp"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 MeterRandom::MeterRandom(std::list<Option> options)

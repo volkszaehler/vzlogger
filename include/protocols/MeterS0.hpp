@@ -1,5 +1,5 @@
 /**
- * Channel class
+ * S0 Hutschienenzähler directly connected to an rs232 port
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,54 +22,35 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _S0_H_
+#define _S0_H_
 
-#include <sstream>
+#include <termios.h>
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <protocols/Protocol.hpp>
 
-#include "channel.h"
+class MeterS0 : public vz::protocol::Protocol {
 
-int Channel::instances = 0;
+public:
+	MeterS0(std::list<Option> options);
+	virtual ~MeterS0();
 
-Channel::Channel(
-	const std::list<Option> &pOptions,
-	const std::string apiProtocol,
-	const std::string uuid,
-	ReadingIdentifier::Ptr pIdentifier
-	)
-		: _options(pOptions)
-		, _buffer(new Buffer())
-		, _identifier(pIdentifier)
-		, _last(0)
-		, _uuid(uuid)
-		, _apiProtocol(apiProtocol)
-{
-	id = instances++;
+	int open();
+	int close();
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-// set channel name
-	std::stringstream oss;
-	oss<<"chn"<< id;
-	_name=oss.str();
+  private:
+  int _open_socket(const char *node, const char *service);
+  int _open_device(struct termios *old_tio, speed_t baudrate);
 
-	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
-}
+  protected:
+	const char *_device;
+	int _resolution;
+	int _counter;
 
-/**
- * Free all allocated memory recursivly
- */
-Channel::~Channel() {
-	pthread_cond_destroy(&condition);
-}
+	int _fd;	/* file descriptor of port */
+	struct termios _old_tio;	/* required to reset port */
+};
 
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */
+#endif /* _S0_H_ */

@@ -36,7 +36,7 @@
 #include <math.h>
 
 #include <MeterMap.hpp>
-#include <include/config.h>
+#include <Config_Options.hpp>
 
 extern Config_Options options;	/* global application options */
 

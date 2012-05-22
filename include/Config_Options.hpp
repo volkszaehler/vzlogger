@@ -29,66 +29,64 @@
 #include <list>
 #include <vector>
 
-#include <json.hpp>
+#include <Json.hpp>
 
 #include <common.h>
 
 #include <MeterMap.hpp>
-#include <options.h>
+#include <Options.hpp>
 #include <meter_protocol.hpp>
 
 /**
  * General options from CLI
  */
 class Config_Options {
-  public:
-  Config_Options();
-  Config_Options(const std::string filename);
-  ~Config_Options() {};
-  
-  /**
-   * Parse JSON formatted configuration file
-   *
-   * @param const char *filename the path of the configuration file
-   * @param list_t *mappings a pointer to a list, where new channel<->meter mappings should be stored
-   * @param config_options_t *options a pointer to a structure of global configuration options
-   * @return int non-zero on success
-   */
-  void config_parse(MapContainer &mappings);
-  //Map::Ptr config_parse_meter(struct json_object *jso);
-  //void config_parse_channel(struct json_object *jso, Map::Ptr mapping);
-  void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
-  void config_parse_channel(Json& jso, MeterMap &metermap);
+public:
+	Config_Options();
+	Config_Options(const std::string filename);
+	~Config_Options() {};
 
-  // getter
-  const std::string &config() const { return _config; }
-  const std::string &log() const { return _log; }
-  FILE *logfd() { return _logfd; }
-  const int &port()      const { return _port; }
-  const int &verbosity() const { return _verbosity; }
-  const int &comet_timeout() const { return _comet_timeout; }
-  const int &buffer_length() const { return _buffer_length; }
+/**
+ * Parse JSON formatted configuration file
+ *
+ * @param const char *filename the path of the configuration file
+ * @param list_t *mappings a pointer to a list, where new channel<->meter mappings should be stored
+ * @param config_options_t *options a pointer to a structure of global configuration options
+ * @return int non-zero on success
+ */
+	void config_parse(MapContainer &mappings);
+	void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
+	void config_parse_channel(Json& jso, MeterMap &metermap);
+
+// getter
+	const std::string &config() const { return _config; }
+	const std::string &log() const { return _log; }
+	FILE *logfd() { return _logfd; }
+	const int &port()      const { return _port; }
+	const int &verbosity() const { return _verbosity; }
+	const int &comet_timeout() const { return _comet_timeout; }
+	const int &buffer_length() const { return _buffer_length; }
 	const int retry_pause() const { return _retry_pause; }
 
-  const bool channel_index() const { return _channel_index; }
-  const bool daemon()    const { return _daemon; }
-  const bool foreground()const { return _foreground; }
-  const bool local()     const { return _local; }
-  const bool logging()   const { return _logging; }
-  
-  // setter
-    void config(const std::string &v) { _config = v; }
-    void log(const std::string &v)    { _log = v; }
-    void logfd(FILE *fd)              { _logfd = fd; }
-    void port(const int v)      { _port = v; }
-    void verbosity(int v) { _verbosity = v; }
+	const bool channel_index() const { return _channel_index; }
+	const bool daemon()    const { return _daemon; }
+	const bool foreground()const { return _foreground; }
+	const bool local()     const { return _local; }
+	const bool logging()   const { return _logging; }
 
-    void daemon(const bool v)    { _daemon = v; }
-    void foreground(const bool v){ _foreground = v; }
-    void local(const bool v)     { _local = v; }
-    void logging(const bool v)    { _logging = v; }
-  
-  private:
+// setter
+	void config(const std::string &v) { _config = v; }
+	void log(const std::string &v)    { _log = v; }
+	void logfd(FILE *fd)              { _logfd = fd; }
+	void port(const int v)      { _port = v; }
+	void verbosity(int v) { _verbosity = v; }
+
+	void daemon(const bool v)    { _daemon = v; }
+	void foreground(const bool v){ _foreground = v; }
+	void local(const bool v)     { _local = v; }
+	void logging(const bool v)    { _logging = v; }
+
+private:
 	std::string _config;		/* filename of configuration */
 	std::string _log;		/* filename for logging */
 	FILE *_logfd;

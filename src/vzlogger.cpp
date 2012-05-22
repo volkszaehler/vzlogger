@@ -39,11 +39,11 @@
 
 #include <list>
 
-#include <include/config.h>
-#include <meter.h>
-#include "obis.h"
+#include <Config_Options.hpp>
+#include <Meter.hpp>
+#include "Obis.hpp"
 #include "vzlogger.h"
-#include "channel.h"
+#include "Channel.hpp"
 #include "threads.h"
 
 #ifdef LOCAL_SUPPORT

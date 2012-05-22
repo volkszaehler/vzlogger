@@ -32,7 +32,7 @@
 #include <sys/time.h>
 #include <list>
 
-#include <reading.h>
+#include <Reading.hpp>
 
 class Buffer {
 
@@ -53,7 +53,6 @@ class Buffer {
 	inline iterator begin() { return _sent.begin(); }
 	inline iterator end()   { return _sent.end(); }
 	inline size_t size() { return _sent.size(); }
-//size_t size() { return _sent.length(); }
 
 	inline const bool newValues() const { return _newValues; }
 	inline void clear_newValues() { _newValues = false; }
@@ -72,7 +71,7 @@ class Buffer {
 	std::list<Reading> _sent;
 	bool _newValues;
 
-	size_t _keep;	/* number of readings to cache for local interface */
+	size_t _keep;	/**< number of readings to cache for local interface */
 
 	pthread_mutex_t _mutex;
 };

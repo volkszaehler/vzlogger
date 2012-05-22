@@ -35,8 +35,8 @@
 
 #include <termios.h>
 
-#include <protocols/protocol.hpp>
-#include "obis.h"
+#include <protocols/Protocol.hpp>
+#include "Obis.hpp"
 
 class MeterSML : public vz::protocol::Protocol {
 

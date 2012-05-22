@@ -29,8 +29,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "protocols/fluksov2.h"
-#include "options.h"
+#include "protocols/MeterFluksoV2.hpp"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 #define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"

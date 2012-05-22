@@ -29,9 +29,9 @@
 #include <pthread.h>
 #include <vector>
 
-#include "config.h"
-#include "meter.h"
-#include "channel.h"
+#include "Config_Options.hpp"
+#include "Meter.hpp"
+#include "Channel.hpp"
 
 using namespace std;
 

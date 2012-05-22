@@ -19,17 +19,17 @@ endif(ENABLE_LOCAL)
 set(vzlogger_srcs
   vzlogger.cpp 
   ltqnorm.cpp
-  meter.cpp
+  Meter.cpp
 )
 
 set(libvz_srcs 
-  channel.cpp
-  config.cpp
+  Channel.cpp
+  Config_Options.cpp
   threads.cpp
-  buffer.cpp
-  obis.cpp
-  options.cpp
-  reading.cpp
+  Buffer.cpp
+  Obis.cpp
+  Options.cpp
+  Reading.cpp
   exception.cpp
   local.cpp 
   MeterMap.cpp

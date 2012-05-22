@@ -63,9 +63,6 @@ class Obis {
 };
 
 typedef struct {
-//  public:
-//	Obis &id() { return &_id; }
-
 	Obis id;
 	const char *name;
 	const char *desc;

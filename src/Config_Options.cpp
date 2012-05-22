@@ -28,8 +28,8 @@
 #include <ctype.h>
 
 #include <config.h>
-#include <include/config.h>
-#include "channel.h"
+#include <Config_Options.hpp>
+#include "Channel.hpp"
 #include <VZException.hpp>
 
 

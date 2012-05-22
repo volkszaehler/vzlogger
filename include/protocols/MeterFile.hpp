@@ -1,8 +1,5 @@
 /**
- * Plaintext protocol according to DIN EN 62056-21
- *
- * This protocol uses OBIS to identify the readout data
- * And is also sometimes called "D0"
+ * Read data from files & fifos
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,45 +23,30 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _D0_H_
-#define _D0_H_
+#ifndef _FILE_H_
+#define _FILE_H_
 
-#define D0_BUFFER_LENGTH 1024
+#include <protocols/Protocol.hpp>
 
-#include <termios.h>
-
-#include <protocols/protocol.hpp>
-
-class MeterD0 : public vz::protocol::Protocol {
+class MeterFile : public vz::protocol::Protocol {
 
 public:
-	MeterD0(std::list<Option> options);
-	virtual ~MeterD0();
+	MeterFile(std::list<Option> options);
+	virtual ~MeterFile();
 
 	int open();
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
-  const char *host() const { return _host.c_str(); }
-  const char *device() const { return _device.c_str(); }
-
+  const char *path() { return _path.c_str(); }
+  const char *format() { return _format.c_str(); }
+  
   private:
-	std::string _host;
-	std::string _device;
-	int _baudrate;
+	std::string _path;
+	std::string _format;
+	int _rewind;
 
-	int _fd; /* file descriptor of port */
-	struct termios _oldtio; /* required to reset port */
-
-	/**
-	 * Open socket
-	 *
-	 * @param node the hostname or ASCII encoded IP address
-	 * @param the ASCII encoded portnum or service as in /etc/services
-	 * @return file descriptor, <0 on error
-	 */
-	int _openSocket(const char *node, const char *service);
-  int _openDevice(struct termios *old_tio, speed_t baudrate);
+	FILE *_fd;
 };
 
-#endif /* _D0_H_ */
+#endif /* _FILE_H_ */

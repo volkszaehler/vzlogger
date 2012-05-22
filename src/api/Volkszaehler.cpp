@@ -34,7 +34,7 @@
 #include <sys/time.h>
 
 #include <VZException.hpp>
-#include "include/config.h"
+#include "Config_Options.hpp"
 #include <api/Volkszaehler.hpp>
 
 extern Config_Options options;

@@ -31,7 +31,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "obis.h"
+#include "Obis.hpp"
 #include "common.h"
 #include <VZException.hpp>
 

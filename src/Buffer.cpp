@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "buffer.h"
+#include "Buffer.hpp"
 
 Buffer::Buffer() :
 		_keep(32)

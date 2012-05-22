@@ -47,9 +47,9 @@
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#include "protocols/sml.h"
-#include "obis.h"
-#include "options.h"
+#include "protocols/MeterSML.hpp"
+#include "Obis.hpp"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 #define SML_BUFFER_LEN 8096

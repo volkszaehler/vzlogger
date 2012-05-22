@@ -29,7 +29,7 @@
 #include <time.h>
 
 #include "vzlogger.h"
-#include "channel.h"
+#include "Channel.hpp"
 #include "local.h"
 //#include "api.h"
 #include <MeterMap.hpp>

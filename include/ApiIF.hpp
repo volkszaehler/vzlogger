@@ -37,7 +37,7 @@
 
 #include <../config.h>
 #include <shared_ptr.hpp>
-#include <channel.h>
+#include <Channel.hpp>
 
 namespace vz {
 	class ApiIF {
@@ -45,7 +45,7 @@ namespace vz {
 		typedef vz::shared_ptr<ApiIF> Ptr;
 
 		ApiIF(Channel::Ptr ch) : _ch(ch){}
-		~ApiIF(){};
+		virtual ~ApiIF(){};
 
 /** 
  * @brief send measurement values to middleware

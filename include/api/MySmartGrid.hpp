@@ -34,10 +34,10 @@
 #define _MySmartGrid_hpp_
 
 #include <ApiIF.hpp>
-#include <options.h>
+#include <Options.hpp>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
-#include <reading.h>
+#include <Reading.hpp>
 
 namespace vz {
 	namespace api {

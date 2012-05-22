@@ -1,5 +1,5 @@
 /**
- * Get data by calling programs
+ * Channel class
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,25 +22,54 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef _EXEC_H_
-#define _EXEC_H_
 
-#include <protocols/protocol.hpp>
+#include <sstream>
 
-class MeterExec : public vz::protocol::Protocol {
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 
-public:
-	MeterExec(std::list<Option> options);
-	virtual ~MeterExec();
+#include "Channel.hpp"
 
-	int open();
-	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+int Channel::instances = 0;
 
-  private:
-	const char *_command;
-	const char *_format;
-};
+Channel::Channel(
+	const std::list<Option> &pOptions,
+	const std::string apiProtocol,
+	const std::string uuid,
+	ReadingIdentifier::Ptr pIdentifier
+	)
+		: _options(pOptions)
+		, _buffer(new Buffer())
+		, _identifier(pIdentifier)
+		, _last(0)
+		, _uuid(uuid)
+		, _apiProtocol(apiProtocol)
+{
+	id = instances++;
 
-#endif /* _EXEC_H_ */
+// set channel name
+	std::stringstream oss;
+	oss<<"chn"<< id;
+	_name=oss.str();
+
+	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
+}
+
+/**
+ * Free all allocated memory recursivly
+ */
+Channel::~Channel() {
+	pthread_cond_destroy(&condition);
+}
+
+
+/*
+ * Local variables:
+ *  tab-width: 2
+ *  c-indent-level: 2
+ *  c-basic-offset: 2
+ *  project-name: vzlogger
+ * End:
+ */

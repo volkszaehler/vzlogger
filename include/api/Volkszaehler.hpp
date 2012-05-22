@@ -37,8 +37,8 @@
 #include <json/json.h>
 
 #include <ApiIF.hpp>
-#include <options.h>
-#include "buffer.h"
+#include <Options.hpp>
+#include "Buffer.hpp"
 
 namespace vz {
   namespace api {

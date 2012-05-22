@@ -28,52 +28,52 @@
 #include <list>
 #include <vector>
 
-#include <reading.h>
-#include <options.h>
-#include <channel.h>
+#include <Reading.hpp>
+#include <Options.hpp>
+#include <Channel.hpp>
 #include <shared_ptr.hpp>
 #include <meter_protocol.hpp>
-#include <protocols/protocol.hpp>
+#include <protocols/Protocol.hpp>
 
 class Meter {
 
 public:
-  typedef vz::shared_ptr<Meter> Ptr;
-  
+	typedef vz::shared_ptr<Meter> Ptr;
+
 	Meter(std::list<Option> options);
 	Meter(const Meter *mtr);
 	virtual ~Meter();
 
-  void open();
-  int close();
-  size_t read(std::vector<Reading> &rds, size_t n);
+	void open();
+	int close();
+	size_t read(std::vector<Reading> &rds, size_t n);
 
-  // setter
-  void interval(const int i) { _interval = i; }
+// setter
+	void interval(const int i) { _interval = i; }
 
-  // getter
-  const char *name() const               { return _name.c_str(); }
-  const bool isEnabled() const           { return _enable; }
+// getter
+	const char *name() const               { return _name.c_str(); }
+	const bool isEnabled() const           { return _enable; }
 
-  const meter_protocol_t protocolId() const { return _protocol_id; } 
-  vz::protocol::Protocol::Ptr protocol() { return _protocol; }
+	const meter_protocol_t protocolId() const { return _protocol_id; } 
+	vz::protocol::Protocol::Ptr protocol() { return _protocol; }
 
-  ReadingIdentifier::Ptr identifier()    { return _identifier; }
+	ReadingIdentifier::Ptr identifier()    { return _identifier; }
 
-  const int  interval() const            { return _interval; }
+	const int  interval() const            { return _interval; }
 
-  private:
+private:
 	static int instances;                   /**< meter instance id (increasing counter) */
 
 	int id;                                 /**< meter id */
-  std::string _name;                      /**< meter name */
-  bool _enable;                           /**< true if meter is disabled (default) */
+	std::string _name;                      /**< meter name */
+	bool _enable;                           /**< true if meter is disabled (default) */
 
-  meter_protocol_t _protocol_id;          /**< meter protocol id */
-  vz::protocol::Protocol::Ptr _protocol;  /**< meter protocol */
+	meter_protocol_t _protocol_id;          /**< meter protocol id */
+	vz::protocol::Protocol::Ptr _protocol;  /**< meter protocol */
 
-  ReadingIdentifier::Ptr _identifier;
-  
+	ReadingIdentifier::Ptr _identifier;
+
 
 	int _interval;
 
@@ -88,9 +88,6 @@ typedef struct {
 	const char *desc;		/* more detailed description */
 	const size_t max_readings;	/* how many readings can be read with 1 call */
 	const int periodic:1;		/* does this meter has be triggered periodically? */
-
-  //const Meter _meter;
-  
 } meter_details_t;
 
 /**

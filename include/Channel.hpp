@@ -29,10 +29,10 @@
 #include <iostream>
 #include <pthread.h>
 
-#include "reading.h"
-#include "buffer.h"
+#include "Reading.hpp"
+#include "Buffer.hpp"
 #include <threads.h>
-#include <options.h>
+#include <Options.hpp>
 #include <VZException.hpp>
 
 class Channel {

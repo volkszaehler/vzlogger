@@ -31,7 +31,7 @@
 #include <math.h>
 
 #include "VZException.hpp"
-#include "reading.h"
+#include "Reading.hpp"
 
 Reading::Reading()
 		: _deleted(false)

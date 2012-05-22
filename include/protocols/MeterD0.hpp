@@ -1,5 +1,8 @@
 /**
- * Generate pseudo random data series by a random walk
+ * Plaintext protocol according to DIN EN 62056-21
+ *
+ * This protocol uses OBIS to identify the readout data
+ * And is also sometimes called "D0"
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,27 +26,45 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
+#ifndef _D0_H_
+#define _D0_H_
 
-#include <protocols/protocol.hpp>
+#define D0_BUFFER_LENGTH 1024
 
-double ltqnorm(double p); /* forward declaration */
+#include <termios.h>
 
-class MeterRandom : public vz::protocol::Protocol {
+#include <protocols/Protocol.hpp>
+
+class MeterD0 : public vz::protocol::Protocol {
 
 public:
-	MeterRandom(std::list<Option> options);
-	virtual ~MeterRandom();
+	MeterD0(std::list<Option> options);
+	virtual ~MeterD0();
 
 	int open();
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
-	double _min;
-  double _max;
-	double _last;
+  const char *host() const { return _host.c_str(); }
+  const char *device() const { return _device.c_str(); }
+
+  private:
+	std::string _host;
+	std::string _device;
+	int _baudrate;
+
+	int _fd; /* file descriptor of port */
+	struct termios _oldtio; /* required to reset port */
+
+	/**
+	 * Open socket
+	 *
+	 * @param node the hostname or ASCII encoded IP address
+	 * @param the ASCII encoded portnum or service as in /etc/services
+	 * @return file descriptor, <0 on error
+	 */
+	int _openSocket(const char *node, const char *service);
+  int _openDevice(struct termios *old_tio, speed_t baudrate);
 };
 
-#endif /* _RANDOM_H_ */
+#endif /* _D0_H_ */

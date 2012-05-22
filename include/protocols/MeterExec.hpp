@@ -1,5 +1,5 @@
 /**
- * Replacement for fluksod by directly parsing the fluksometers SPI output
+ * Get data by calling programs
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,31 +22,25 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _EXEC_H_
+#define _EXEC_H_
 
-#ifndef _FLUKSOV2_H_
-#define _FLUKSOV2_H_
+#include <protocols/Protocol.hpp>
 
-#include <protocols/protocol.hpp>
-
-class MeterFluksoV2 : public vz::protocol::Protocol {
+class MeterExec : public vz::protocol::Protocol {
 
 public:
-	MeterFluksoV2(std::list<Option> options);
-	virtual ~MeterFluksoV2();
+	MeterExec(std::list<Option> options);
+	virtual ~MeterExec();
 
 	int open();
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
   private:
-  size_t _read_line(int fd, char  *buffer, size_t n);
-  
-  private:
-	const char *_fifo;
-	int _fd;	/* file descriptor of fifo */
-
-	//const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
-	const char *_DEFAULT_FIFO;
+	const char *_command;
+	const char *_format;
 };
 
-#endif /* _FLUKSOV2_H_ */
+#endif /* _EXEC_H_ */

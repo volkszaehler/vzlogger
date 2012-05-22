@@ -3,19 +3,19 @@
 # SML support
 #####################################################################
 if( SML_SUPPORT )
-  set(sml_srcs sml.cpp)
+  set(sml_srcs MeterSML.cpp)
 else( SML_SUPPORT )
   set(sml_srcs "")
 endif( SML_SUPPORT )
 
 set(proto_srcs
-  s0.cpp
-  d0.cpp
+  MeterS0.cpp
+  MeterD0.cpp
   ${sml_srcs}
-  fluksov2.cpp
-  file.cpp
-  exec.cpp
-  random.cpp
+  MeterFluksoV2.cpp
+  MeterFile.cpp
+  MeterExec.cpp
+  MeterRandom.cpp
 )
 
 add_library(proto ${proto_srcs})

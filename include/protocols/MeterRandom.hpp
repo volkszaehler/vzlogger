@@ -1,5 +1,5 @@
 /**
- * S0 Hutschienenzähler directly connected to an rs232 port
+ * Generate pseudo random data series by a random walk
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,33 +23,27 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef _S0_H_
-#define _S0_H_
+#ifndef _RANDOM_H_
+#define _RANDOM_H_
 
-#include <termios.h>
+#include <protocols/Protocol.hpp>
 
-#include <protocols/protocol.hpp>
+double ltqnorm(double p); /* forward declaration */
 
-class MeterS0 : public vz::protocol::Protocol {
+class MeterRandom : public vz::protocol::Protocol {
 
 public:
-	MeterS0(std::list<Option> options);
-	virtual ~MeterS0();
+	MeterRandom(std::list<Option> options);
+	virtual ~MeterRandom();
 
 	int open();
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
-  private:
-  int _open_socket(const char *node, const char *service);
-  int _open_device(struct termios *old_tio, speed_t baudrate);
-
-  protected:
-	const char *_device;
-	int _resolution;
-
-	int _fd;	/* file descriptor of port */
-	struct termios _old_tio;	/* required to reset port */
+protected:
+	double _min;
+  double _max;
+	double _last;
 };
 
-#endif /* _S0_H_ */
+#endif /* _RANDOM_H_ */

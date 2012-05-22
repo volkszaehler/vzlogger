@@ -28,8 +28,8 @@
 #include <sys/time.h>
 #include <errno.h>
 
-#include "protocols/file.h"
-#include "options.h"
+#include "protocols/MeterFile.hpp"
+#include "Options.hpp"
 #include <VZException.hpp>
 
 MeterFile::MeterFile(std::list<Option> options)

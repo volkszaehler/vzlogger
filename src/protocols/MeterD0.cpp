@@ -41,10 +41,10 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
-#include "protocols/d0.h"
+#include "protocols/MeterD0.hpp"
 #include <VZException.hpp>
 
-#include "obis.h"
+#include "Obis.hpp"
 
 MeterD0::MeterD0(std::list<Option> options) 
 		: Protocol("d0", options)

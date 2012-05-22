@@ -1,5 +1,7 @@
 /**
- * Read data from files & fifos
+ * Protocol generic interface
+ * To implement new meter protocol, derive from this class and implement 
+ * the specific code for open(), close() and read()
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,31 +24,39 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifndef _FILE_H_
-#define _FILE_H_
 
-#include <protocols/protocol.hpp>
+#ifndef _protocol_hpp_
+#define _protocol_hpp_
 
-class MeterFile : public vz::protocol::Protocol {
+#include <vector>
+#include <list>
 
-public:
-	MeterFile(std::list<Option> options);
-	virtual ~MeterFile();
+#include <common.h>
+#include <shared_ptr.hpp>
+#include <Reading.hpp>
+#include <Options.hpp>
 
-	int open();
-	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+namespace vz {
+  namespace protocol {
+    class Protocol {
+    public:
+      typedef vz::shared_ptr<Protocol> Ptr;
 
-  const char *path() { return _path.c_str(); }
-  const char *format() { return _format.c_str(); }
-  
-  private:
-	std::string _path;
-	std::string _format;
-	int _rewind;
+      Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
 
-	FILE *_fd;
-};
+      virtual ~Protocol() {};
 
-#endif /* _FILE_H_ */
+      virtual int    open() = 0;
+      virtual int    close() = 0;
+      virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
+
+      const std::string &name() { return _name; }
+    
+    private:
+      std::string _name;
+    
+    }; // class protocol
+  } // namespace protocol
+} // namespace vz
+
+#endif /* _protocol_hpp_ */
