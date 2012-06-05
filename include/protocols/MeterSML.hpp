@@ -45,14 +45,14 @@ public:
 	MeterSML(const MeterSML &mtr);
 	virtual ~MeterSML();
 
-  MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" << std::endl; return (*this); }
+	MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" << std::endl; return (*this); }
 
 	int open();
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
-  const char *host() const { return _host.c_str(); }
-  const char *device() const { return _device.c_str(); }
+	const char *host() const { return _host.c_str(); }
+	const char *device() const { return _device.c_str(); }
   
 protected:
 	std::string _host;

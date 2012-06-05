@@ -42,7 +42,7 @@ public:
 
 protected:
 	double _min;
-  double _max;
+	double _max;
 	double _last;
 };
 

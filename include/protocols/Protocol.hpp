@@ -37,26 +37,26 @@
 #include <Options.hpp>
 
 namespace vz {
-  namespace protocol {
-    class Protocol {
-    public:
-      typedef vz::shared_ptr<Protocol> Ptr;
+	namespace protocol {
+		class Protocol {
+		public:
+			typedef vz::shared_ptr<Protocol> Ptr;
 
-      Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
+			Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
 
-      virtual ~Protocol() {};
+			virtual ~Protocol() {};
 
-      virtual int    open() = 0;
-      virtual int    close() = 0;
-      virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
+			virtual int    open() = 0;
+			virtual int    close() = 0;
+			virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
 
-      const std::string &name() { return _name; }
+			const std::string &name() { return _name; }
     
-    private:
-      std::string _name;
+		private:
+			std::string _name;
     
-    }; // class protocol
-  } // namespace protocol
+		}; // class protocol
+	} // namespace protocol
 } // namespace vz
 
 #endif /* _protocol_hpp_ */

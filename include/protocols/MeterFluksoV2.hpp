@@ -39,7 +39,7 @@ public:
 	size_t read(std::vector<Reading> &rds, size_t n);
 
   private:
-  size_t _read_line(int fd, char  *buffer, size_t n);
+	size_t _read_line(int fd, char  *buffer, size_t n);
   
   private:
 	const char *_fifo;

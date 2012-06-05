@@ -29,20 +29,20 @@
 #include <curl/curl.h>
 
 namespace vz {
-  namespace api {
+	namespace api {
 
-    class CurlCallback {
-    public:
-      static size_t header_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
-      static size_t write_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
-      static size_t debug_callback(CURL *hCurl, curl_infotype, char *info
-                                   , size_t size, void *userdata );
-      static int    progress_callback(void *clientp, double dltotal, double dlnow
+		class CurlCallback {
+		public:
+			static size_t header_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
+			static size_t write_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
+			static size_t debug_callback(CURL *hCurl, curl_infotype, char *info
+																	 , size_t size, void *userdata );
+			static int    progress_callback(void *clientp, double dltotal, double dlnow
                                       , double ultotal, double ulnow);
 
-    }; // class 
+		}; // class 
       
-  } // namespace vz
+	} // namespace vz
 } // namespace vz
 #endif /* _CurlCallback_hpp_ */
 

@@ -31,26 +31,26 @@
 #include <curl/curl.h>
 
 namespace vz {
-  namespace api {
+	namespace api {
 
-    class  CurlIF{
-    public:
-      CurlIF();
-      ~CurlIF();
+		class  CurlIF{
+		public:
+			CurlIF();
+			~CurlIF();
       
-      CURL *handle() { return _curl; }
+			CURL *handle() { return _curl; }
       
-      void addHeader(const std::string value);
-      void clearHeader();
-      void commitHeader();
+			void addHeader(const std::string value);
+			void clearHeader();
+			void commitHeader();
       
-      CURLcode perform() { return curl_easy_perform(handle()); }
+			CURLcode perform() { return curl_easy_perform(handle()); }
       
-    private:
-      CURL *_curl;
-      struct curl_slist *_headers;
-    }; // class CurlIF
+		private:
+			CURL *_curl;
+			struct curl_slist *_headers;
+		}; // class CurlIF
       
-  } // namespace vz
+	} // namespace vz
 } // namespace vz
 #endif /* _CurlIF_hpp_ */

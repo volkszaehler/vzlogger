@@ -41,8 +41,8 @@ public:
 	size_t read(std::vector<Reading> &rds, size_t n);
 
   private:
-  int _open_socket(const char *node, const char *service);
-  int _open_device(struct termios *old_tio, speed_t baudrate);
+	int _open_socket(const char *node, const char *service);
+	int _open_device(struct termios *old_tio, speed_t baudrate);
 
   protected:
 	const char *_device;

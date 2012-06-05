@@ -36,7 +36,6 @@
 #include <protocols/Protocol.hpp>
 
 class MeterD0 : public vz::protocol::Protocol {
-
 public:
 	MeterD0(std::list<Option> options);
 	virtual ~MeterD0();
@@ -45,10 +44,10 @@ public:
 	int close();
 	size_t read(std::vector<Reading> &rds, size_t n);
 
-  const char *host() const { return _host.c_str(); }
-  const char *device() const { return _device.c_str(); }
+	const char *host() const { return _host.c_str(); }
+	const char *device() const { return _device.c_str(); }
 
-  private:
+private:
 	std::string _host;
 	std::string _device;
 	int _baudrate;
@@ -64,7 +63,7 @@ public:
 	 * @return file descriptor, <0 on error
 	 */
 	int _openSocket(const char *node, const char *service);
-  int _openDevice(struct termios *old_tio, speed_t baudrate);
+	int _openDevice(struct termios *old_tio, speed_t baudrate);
 };
 
 #endif /* _D0_H_ */

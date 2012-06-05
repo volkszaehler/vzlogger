@@ -52,7 +52,8 @@ namespace vz {
  * to be implemented specific API.
  **/
 		virtual void send() = 0;
-
+		virtual	void register_device()  = 0;
+		
 	protected:
 		Channel::Ptr channel() { return _ch; }
 
