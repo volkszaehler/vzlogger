@@ -74,6 +74,8 @@ public:
 	const bool local()     const { return _local; }
 	const bool logging()   const { return _logging; }
 
+	const bool doRegistration()   const { return _doRegistration; }
+
 // setter
 	void config(const std::string &v) { _config = v; }
 	void log(const std::string &v)    { _log = v; }
@@ -85,6 +87,7 @@ public:
 	void foreground(const bool v){ _foreground = v; }
 	void local(const bool v)     { _local = v; }
 	void logging(const bool v)    { _logging = v; }
+	void doRegistration(const bool v)    { _doRegistration = v; }
 
 private:
 	std::string _config;		/* filename of configuration */
@@ -103,6 +106,7 @@ private:
 	int _foreground:1;	/* dont fork in background */
 	int _local:1;		/* enable local interface */
 	int _logging:1;		/* start logging threads, depends on local & daemon */
+	int _doRegistration:1;		/* start logging threads, depends on local & daemon */
 };
 
 /**

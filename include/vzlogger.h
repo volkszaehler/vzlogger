@@ -44,4 +44,6 @@ void show_aliases();
 
 int options_parse(int argc, char *argv[], Config_Options *options);
 
+void register_device();
+
 #endif /* _VZLOGGER_H_ */

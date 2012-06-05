@@ -63,7 +63,8 @@ vz::api::MySmartGrid::MySmartGrid(
 /* parse required options */
 	try {
 		_middleware  = optlist.lookup_string(pOptions, "middleware");
-		_secretKey   = optlist.lookup_string(pOptions, "secretKey");
+		convertUuid(optlist.lookup_string(pOptions, "secretKey"), _secretKey);
+		convertUuid(optlist.lookup_string(pOptions, "device"), _deviceId);
 
 		std::string channelType = optlist.lookup_string(pOptions, "type");
 		if(channelType == "device") _channelType = chn_type_device;
@@ -148,7 +149,7 @@ void vz::api::MySmartGrid::send()
 
 	switch(_channelType) {
 			case chn_type_device:
-				json_obj = _apiDevice(channel()->buffer());
+				json_obj = _apiDevice();
 				break;
 			case chn_type_sensor:
 				json_obj = _apiSensor(channel()->buffer());
@@ -207,6 +208,106 @@ void vz::api::MySmartGrid::send()
 //sleep(20);
 }
 
+void vz::api::MySmartGrid::register_device() {
+	OptionList optlist;
+	//print(log_debug, "Register device: '%s'", channel()->name(), channel()->uuid());
+
+	char url[255];
+	sprintf(url, "%s/device/%s", middleware().c_str(), _deviceId.c_str());			/* build url */
+
+	json_object *json_obj;
+
+	std::string sensorName;
+	try {
+		convertUuid(optlist.lookup_string(channel()->options(), "name"), sensorName);
+
+		// register device
+	json_obj = _json_object_registration();
+	_send(url, json_obj);
+
+	// send a heartbeat
+	json_obj = _json_object_heartbeat();
+	_send(url, json_obj);
+
+	// register sensor
+	sprintf(url, "%s/sensor/%s", middleware().c_str(), uuid());			/* build url */
+	json_obj = _json_object_sensor(sensorName);
+	_send(url, json_obj);
+	
+	} catch ( vz::OptionNotFoundException &e ) {
+		throw;
+	} catch ( vz::VZException &e ) {
+		throw;
+	}
+}
+
+void vz::api::MySmartGrid::_send(
+	const std::string &url
+	, json_object *json_obj
+	) 
+{
+	char digest[255];
+
+	const char *json_str;
+	long int http_code;
+	CURLcode curl_code;
+
+	print(log_debug, "msg_api_send() %s", channel()->name(), url.c_str());
+	curl_easy_setopt(_curlIF.handle(), CURLOPT_URL, url.c_str());
+
+	json_str = json_object_to_json_string(json_obj);
+	if(json_str == NULL || strcmp(json_str, "null")==0) {
+		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
+		return;
+	}
+	
+	print(log_debug, "JSON request body: '%s'", channel()->name(), json_str);
+
+	/* initialize response */
+	_response->clear_response();
+
+	curl_easy_setopt(_curlIF.handle(), CURLOPT_POSTFIELDS, json_str);
+
+	_api_header();
+	hmac_sha1(digest, (const unsigned char*)json_str, strlen(json_str));
+	_curlIF.addHeader(digest);
+	print(log_debug, "Header_Digest: %s", channel()->name(), digest);
+
+	_curlIF.commitHeader();
+
+	curl_code = _curlIF.perform();
+	curl_easy_getinfo(_curlIF.handle(), CURLINFO_RESPONSE_CODE, &http_code);
+
+	/* check response */
+	if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
+		print(log_debug, "Request succeeded with code: %i", channel()->name(), http_code);
+		_values.clear();
+	}
+	else { /* error */
+		channel()->buffer()->undelete();
+		if (curl_code != CURLE_OK) {
+			print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
+		}
+		else if (http_code != 200) {
+			// 502 - Bad gateway
+			char err[255];
+			api_parse_exception(err, 255);
+			print(log_error, "Error from middleware: %s", channel()->name(), err);
+		}
+		
+	}
+
+	/* householding */
+	json_object_put(json_obj);
+
+	if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
+		print(log_info, "Waiting %i secs for next request due to previous failure",
+					channel()->name(), options.retry_pause());
+		sleep(options.retry_pause());
+	}
+}
+
+
 void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 	struct json_tokener *json_tok;
 	struct json_object *json_obj_in;
@@ -241,14 +342,14 @@ void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 	json_tokener_free(json_tok);
 }
 
-json_object *vz::api::MySmartGrid::_apiDevice(Buffer::Ptr buf) {
+json_object *vz::api::MySmartGrid::_apiDevice() {
 
 	if(_first_ts>0) { // send lifesign
 		_first_ts = time(NULL);
-		return _json_object_heartbeat(buf);
+		return _json_object_heartbeat();
 	} else{ // send  device registration
 		_first_ts = time(NULL);
-		return _json_object_registration(buf);
+		return _json_object_registration();
 	}
 }
 
@@ -267,7 +368,7 @@ json_object *vz::api::MySmartGrid::_apiSensor(Buffer::Ptr buf) {
  @return json-object
 **/
 /*---------------------------------------------------------------------*/
-json_object * vz::api::MySmartGrid::_json_object_registration(Buffer::Ptr buf) {
+json_object * vz::api::MySmartGrid::_json_object_registration() {
 // url https://api.mysmartgrid.de:8443/device/<device id>
 // key : <device-id>
 	json_object *json_obj    = json_object_new_object();
@@ -287,7 +388,7 @@ json_object * vz::api::MySmartGrid::_json_object_registration(Buffer::Ptr buf) {
  @return <ReturnValue>
 **/
 /*---------------------------------------------------------------------*/
-json_object * vz::api::MySmartGrid::_json_object_heartbeat(Buffer::Ptr buf) {
+json_object * vz::api::MySmartGrid::_json_object_heartbeat() {
 // url https://api.mysmartgrid.de:8443/device/<device id>
 //  memtotal:   <total RAM>,
 //  version:    <firmware version>, 
@@ -298,13 +399,13 @@ json_object * vz::api::MySmartGrid::_json_object_heartbeat(Buffer::Ptr buf) {
 //  reset:      <number of times the device has been reseted>
 	json_object *json_obj    = json_object_new_object();
 
-	json_object_object_add(json_obj, "memtotal", json_object_new_string(""));
-	json_object_object_add(json_obj, "version", json_object_new_string(""));
-	json_object_object_add(json_obj, "memcached", json_object_new_string(""));
-	json_object_object_add(json_obj, "membuffers", json_object_new_string(""));
-	json_object_object_add(json_obj, "memfree", json_object_new_string(""));
-	json_object_object_add(json_obj, "uptime", json_object_new_string(""));
-	json_object_object_add(json_obj, "reset", json_object_new_string(""));
+	json_object_object_add(json_obj, "memtotal", json_object_new_int(128));
+	json_object_object_add(json_obj, "version", json_object_new_string("1.0.0"));
+	json_object_object_add(json_obj, "memcached", json_object_new_int(128));
+	json_object_object_add(json_obj, "membuffers", json_object_new_int(12));
+	json_object_object_add(json_obj, "memfree", json_object_new_int(1));
+	json_object_object_add(json_obj, "uptime", json_object_new_int(1));
+	json_object_object_add(json_obj, "reset", json_object_new_int(1));
 
 	return json_obj;
 }
@@ -337,16 +438,27 @@ json_object * vz::api::MySmartGrid::_json_object_event(Buffer::Ptr buf) {
  @return <ReturnValue>
 **/
 /*---------------------------------------------------------------------*/
-json_object * vz::api::MySmartGrid::_json_object_sensor(Buffer::Ptr buf) {
+json_object * vz::api::MySmartGrid::_json_object_sensor(
+	const std::string &sensorName) {
 // url https://api.mysmartgrid.de:8443/sensor/<sensor id>
 // device:    <device id>,
 // function:  <sensor name>
+	json_object *json_obj_ext= json_object_new_object();
 	json_object *json_obj    = json_object_new_object();
 
-	json_object_object_add(json_obj, "device", json_object_new_string(channel()->uuid()));
-	json_object_object_add(json_obj, "function", json_object_new_string(""));
+	json_object_object_add(json_obj, "device",   json_object_new_string(_deviceId.c_str()));
+	json_object_object_add(json_obj, "function", json_object_new_string(sensorName.c_str()));
+//	json_object_object_add(json_obj, "class",    json_object_new_string("analog"));
+//	json_object_object_add(json_obj, "type",     json_object_new_string("electricity"));
+//	json_object_object_add(json_obj, "voltage",  json_object_new_int(230));
+//	json_object_object_add(json_obj, "current",  json_object_new_int(0));
+//	json_object_object_add(json_obj, "constant", json_object_new_int(0));
+	json_object_object_add(json_obj, "enable",   json_object_new_int(1));
+//	json_object_object_add(json_obj, "phase",   json_object_new_int(1));
 
-	return json_obj;
+	json_object_object_add(json_obj_ext, "config", json_obj);
+	
+	return json_obj_ext;
 }
 
 /*---------------------------------------------------------------------*/
@@ -449,6 +561,8 @@ void vz::api::MySmartGrid::hmac_sha1(
 	) {
 	HMAC_CTX hmacContext;
 
+	printf(">>>>%s<<<\n", secretKey());
+	
 	HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
 	HMAC_Update(&hmacContext, data, dataLen);
 
@@ -467,6 +581,15 @@ void vz::api::MySmartGrid::hmac_sha1(
 	snprintf(digest, 255/*sizeof(digest)*/, "X-Digest: %s", ret);
 }
 
+
+void vz::api::MySmartGrid::convertUuid(const std::string uuidIn, std::string &uuidOut) {
+	std::stringstream oss;
+	for(int i = 0; i < uuidIn.length(); i++) {
+		if( uuidIn[i] != '-' )
+			oss<< uuidIn[i];
+	}
+	uuidOut = oss.str();
+}
 
 void vz::api::MySmartGrid::convertUuid(const std::string uuid) {
 	std::stringstream oss;

@@ -67,6 +67,7 @@ const struct option long_options[] = {
 	{"httpd", 	no_argument,		0,	'l'},
 	{"httpd-port",	required_argument,	0,	'p'},
 #endif /* LOCAL_SUPPORT */
+	{"register",		no_argument,	0,	'r'},
 	{"verbose",	required_argument,	0,	'v'},
 	{"help",	no_argument,		0,	'h'},
 	{"version",	no_argument,		0,	'V'},
@@ -85,6 +86,7 @@ const char *long_options_descs[] = {
 	"activate local interface (tiny HTTPd which serves live readings)",
 	"TCP port for HTTPd",
 #endif /* LOCAL_SUPPORT */
+	"register device",
 	"enable verbose output",
 	"show this help",
 	"show version of vzlogger",
@@ -228,7 +230,7 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-	gStop = true;
+	//gStop = true;
 	mappings.quit(sig);
 }
 
@@ -241,7 +243,7 @@ void quit(int sig) {
 int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 	options->local(1);
 	while (1) {
-		int c = getopt_long(argc, argv, "c:o:p:lhVdfv:", long_options, NULL);
+		int c = getopt_long(argc, argv, "c:o:p:lhrVdfv:", long_options, NULL);
 
 		/* detect the end of the options. */
 		if (c == -1) break;
@@ -282,6 +284,10 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 					exit(EXIT_SUCCESS);
 					break;
 
+				case 'r':
+					options->doRegistration(1);
+					break;
+
 				case '?':
 				case 'h':
 				default:
@@ -296,6 +302,24 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 	}
 
 	return SUCCESS;
+}
+
+/*---------------------------------------------------------------------*/
+/** 
+ * @brief send api-device registration message
+ **/
+/*---------------------------------------------------------------------*/
+void register_device() {
+// using global variable:  mappings	 mapping between meters and channels */
+// using global variable:  options	 global application options */
+	try {
+		/* open connection meters & start threads */
+		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			it->registration();
+		}
+	} catch ( std::exception &e) {
+		print(log_error, "Registration failed for %s", "", e.what());
+	}
 }
 
 /**
@@ -337,6 +361,13 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+  // Register vzlogger
+	if( options.doRegistration()) {
+		register_device();
+		return (0);
+	}
+
+	//
 	options.logging((!options.local() || options.daemon()));
 
 	print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
@@ -393,13 +424,17 @@ int main(int argc, char *argv[]) {
 	}
 	print(log_debug, "Startup done.", "");
 
-	do {
-		/* wait for all threads to terminate */
-		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
-			bool ret = it->stopped();
-			if(ret) gStop = true;
-		}
-	} while (!gStop);
+	try {
+		do {
+			/* wait for all threads to terminate */
+			for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+				bool ret = it->stopped();
+				if(ret) gStop = true;
+			}
+		} while (!gStop);
+	} catch ( std::exception &e) {
+		print(log_error, "MainLOOP failed for %s", "", e.what());
+	}
 	print(log_debug, "Server stopped.", "");
 
 #ifdef LOCAL_SUPPORT

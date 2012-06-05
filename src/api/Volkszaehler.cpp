@@ -136,6 +136,10 @@ void vz::api::Volkszaehler::send()
 	}
 }
 
+void vz::api::Volkszaehler::register_device() {
+}
+
+
 json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 
 	json_object *json_tuples = json_object_new_array();

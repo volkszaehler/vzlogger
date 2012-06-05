@@ -53,9 +53,13 @@ namespace vz {
 	
 			void send();
 
+			void register_device();
+			
 			const std::string middleware() const { return _middleware; }
 
 		private:
+			void _send(const std::string &url, json_object *json_obj);
+			
 			/**
 			 * Parses JSON encoded exception and stores describtion in err
 			 */
@@ -64,17 +68,17 @@ namespace vz {
 			/**
 			 *  api configured as device
 			 */
-			json_object *_apiDevice(Buffer::Ptr buf);
+			json_object *_apiDevice();
 	
 			/**
 			 *  api configured as sensor
 			 */
 			json_object *_apiSensor(Buffer::Ptr buf);
 
-			json_object * _json_object_registration(Buffer::Ptr buf);
-			json_object * _json_object_heartbeat(Buffer::Ptr buf);
+			json_object * _json_object_registration();
+			json_object * _json_object_heartbeat();
 			json_object * _json_object_event(Buffer::Ptr buf);
-			json_object * _json_object_sensor(Buffer::Ptr buf);
+			json_object * _json_object_sensor(const std::string &sensorName);
 			json_object * _json_object_measurements(Buffer::Ptr buf);
 
 			void _api_header();
@@ -83,6 +87,7 @@ namespace vz {
 
 			CurlResponse *response()   { return _response.get(); }
 
+			void convertUuid(const std::string uuidIn, std::string &uuidOut);
 			void convertUuid(const std::string uuid);
 			const char *uuid() const      { return _uuid.c_str(); }
 			const char *secretKey() const { return _secretKey.c_str(); }
@@ -93,6 +98,7 @@ namespace vz {
 		private:
 			std::string _middleware; /**< url to MySmartGrid Server */
 			std::string _uuid;       /**< unique sensor id */
+			std::string _deviceId;   /**< deviceid */
 			std::string _secretKey;  /**< secretkey for signing messages */
 			int   _interval;         /**<  time between 2 logmessages (sec.) */
 			short _channelType;      /**< Type of channel device or sensor */
