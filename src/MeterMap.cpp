@@ -37,6 +37,8 @@
 
 #include <MeterMap.hpp>
 #include <Config_Options.hpp>
+#include <api/Volkszaehler.hpp>
+#include <api/MySmartGrid.hpp>
 
 extern Config_Options options;	/* global application options */
 
@@ -52,16 +54,17 @@ void MeterMap::start() {
 
 		print(log_debug, "meter is opened. Start channels.", _meter->name());
 		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-/* set buffer length for perriodic meters */
+			/* set buffer length for perriodic meters */
 			if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
-				it->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
+				(*it)->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
 			}
 
 			if (options.logging()) {
-				it->start();
-				print(log_debug, "Logging thread started", it->name());
+				(*it)->start();
+				print(log_debug, "Logging thread started", (*it)->name());
 			}
 		}
+		_thread_running = true;
 	} else {
 		print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
 					_meter->protocol()->name().c_str());
@@ -69,15 +72,54 @@ void MeterMap::start() {
 
 }
 bool MeterMap::stopped() {
-	if(_meter->isEnabled()) {
+	if(_meter->isEnabled()  && running() ) {
 		if( pthread_join(_thread, NULL) == 0 ) {
+			_thread_running = false;
 
-// join channel-threads
+			// join channel-threads
 			for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-				it->join();
+				(*it)->cancel();
+				(*it)->join();
 			}
 			return true;
 		}
 	}
 	return false;
+}
+
+void MeterMap::cancel() {
+	if(_meter->isEnabled() && running() ) {
+		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+			(*it)->cancel();
+			(*it)->join();
+		}
+		pthread_cancel(_thread);
+		pthread_join(_thread, NULL);
+		_thread_running = false;
+
+		//_channels.clear();
+	}
+}
+
+void MeterMap::registration() {
+	//Channel::Ptr ch;
+
+	if( !_meter->isEnabled()) {
+		return;
+	}
+	for(iterator ch = _channels.begin(); ch!=_channels.end(); ch++) {
+    // create configured api-interface
+		vz::ApiIF::Ptr api;
+		if( (*ch)->apiProtocol() == "mysmartgrid") {
+			api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(*ch, (*ch)->options()));
+			print(log_debug, "Using MSG-Api.", (*ch)->name());
+		} else {
+			api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(*ch, (*ch)->options()));
+			print(log_debug, "Using default api:", (*ch)->name());
+		}
+
+		//
+		api->register_device();
+	}
+	printf("..done\n");
 }

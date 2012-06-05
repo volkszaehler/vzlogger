@@ -89,7 +89,7 @@ int handle_request(
 			for(MapContainer::iterator mapping = mappings->begin(); mapping!=mappings->end(); mapping++) {
 				for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 //foreach(mapping->channels, ch, channel_t) {
-					if (strcmp(ch->uuid(), uuid) == 0 || show_all) {
+					if (strcmp((*ch)->uuid(), uuid) == 0 || show_all) {
 						response_code = MHD_HTTP_OK;
 
 /* blocking until new data arrives (comet-like blocking of HTTP response) */
@@ -99,15 +99,15 @@ int handle_request(
 							ts.tv_sec  = tp.tv_sec + options.comet_timeout();
 							ts.tv_nsec = tp.tv_usec * 1000;
 
-							ch->wait();
+							(*ch)->wait();
 						}
 
 						struct json_object *json_ch = json_object_new_object();
 
-						json_object_object_add(json_ch, "uuid", json_object_new_string(ch->uuid()));
+						json_object_object_add(json_ch, "uuid", json_object_new_string((*ch)->uuid()));
 //json_object_object_add(json_ch, "middleware", json_object_new_string(ch->middleware()));
 //json_object_object_add(json_ch, "last", json_object_new_double(ch->last.value));
-						json_object_object_add(json_ch, "last", json_object_new_double(ch->tvtod()));
+						json_object_object_add(json_ch, "last", json_object_new_double((*ch)->tvtod()));
 						json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter()->interval()));
 						json_object_object_add(json_ch, "protocol", json_object_new_string(meter_get_details(mapping->meter()->protocolId())->name));
 

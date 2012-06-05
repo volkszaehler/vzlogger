@@ -274,8 +274,8 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		throw vz::VZException("Invalid reader.");
 	}
 
-	Channel ch(options, apiProtocol_str, uuid, id);
-	print(log_info, "New channel initialized (uuid=...%s protocol=%s id=%s)", ch.name(),
+	Channel::Ptr ch(new Channel(options, apiProtocol_str, uuid, id));
+	print(log_info, "New channel initialized (uuid=...%s protocol=%s id=%s)", ch->name(),
 				uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
 	mapping.push_back(ch);
 }

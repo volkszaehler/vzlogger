@@ -50,8 +50,8 @@
 class MeterMap {
 public:
 	typedef vz::shared_ptr<MeterMap> Ptr;
-	typedef std::vector<Channel>::iterator iterator;
-	typedef std::vector<Channel>::const_iterator const_iterator;
+	typedef std::vector<Channel::Ptr>::iterator iterator;
+	typedef std::vector<Channel::Ptr>::const_iterator const_iterator;
 
 	MeterMap(std::list<Option> options) : _meter(new Meter(options)){}
 	~MeterMap() {};
@@ -70,26 +70,29 @@ public:
 /**
  * cancel all channels for this meter.
  */
-	void cancel() {
-		pthread_cancel(_thread);
-		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
-			it->cancel();
-		}
-	}
+	void cancel();
+
+/**
+ * send device-registration for each channel
+ */
+	void registration();
 
 /** 
  *  Accessor to the channel list
  */
-	inline void push_back(Channel channel) { _channels.push_back(channel); }
+	inline void push_back(Channel::Ptr channel) { _channels.push_back(channel); }
 	inline iterator begin()  { return _channels.begin(); }
 	inline iterator end()    { return _channels.end(); }
 	inline size_t size()     { return _channels.size(); }
 
+	const bool running() const { return _thread_running; }
+
 private:
 	Meter::Ptr _meter;
-	std::vector<Channel> _channels;
+	std::vector<Channel::Ptr> _channels;
 
-	pthread_t _thread;
+	bool _thread_running;   /**< flag if thread is started */
+	pthread_t _thread;      /**< Thread data for meter (reading) */
 };
 
 /**

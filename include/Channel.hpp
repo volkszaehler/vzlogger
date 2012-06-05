@@ -45,14 +45,18 @@ class Channel {
 
 	void start() {
 		pthread_create(&_thread, NULL, &logging_thread, (void *) this);
+		_thread_running = true;
 	}
 	
 	void join() {
 		pthread_join(_thread, NULL);
+		_thread_running = false;
 	}
 
-	void cancel() { pthread_cancel(_thread); }
-
+	void cancel() { if(running()) pthread_cancel(_thread); }
+	
+	const bool running() const { return _thread_running; }
+	
 	const char* name()                  { return _name.c_str(); }
 	std::list<Option> &options()        { return _options; }
 
@@ -87,6 +91,8 @@ class Channel {
 	
 	private:
 	static int instances;
+	bool _thread_running;   /**< flag if thread is started */
+	
 	int id;		       		  /**< only for internal usage & debugging */
 	std::string _name;    /**< name of the channel */
 	std::list<Option> _options;

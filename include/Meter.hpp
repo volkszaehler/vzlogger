@@ -64,6 +64,7 @@ public:
 
 private:
 	static int instances;                   /**< meter instance id (increasing counter) */
+	bool _thread_running;   								/**< flag if thread is started */
 
 	int id;                                 /**< meter id */
 	std::string _name;                      /**< meter name */
@@ -78,8 +79,6 @@ private:
 	int _interval;
 
 	std::vector<Channel> channels;          /**< channel for logging */
-
-	pthread_t thread;
 };
 
 typedef struct {

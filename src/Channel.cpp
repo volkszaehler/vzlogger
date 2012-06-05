@@ -40,7 +40,8 @@ Channel::Channel(
 	const std::string uuid,
 	ReadingIdentifier::Ptr pIdentifier
 	)
-		: _options(pOptions)
+		: _thread_running(false)
+		, _options(pOptions)
 		, _buffer(new Buffer())
 		, _identifier(pIdentifier)
 		, _last(0)
