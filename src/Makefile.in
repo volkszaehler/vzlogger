@@ -57,14 +57,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) channel.$(OBJEXT) \
-	config.$(OBJEXT) threads.$(OBJEXT) buffer.$(OBJEXT) \
-	meter.$(OBJEXT) ltqnorm.$(OBJEXT) obis.$(OBJEXT) \
-	options.$(OBJEXT) reading.$(OBJEXT) exception.$(OBJEXT) \
-	local.$(OBJEXT) MeterMap.$(OBJEXT) s0.$(OBJEXT) d0.$(OBJEXT) \
-	sml.$(OBJEXT) fluksov2.$(OBJEXT) file.$(OBJEXT) exec.$(OBJEXT) \
-	random.$(OBJEXT) Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT) \
-	CurlIF.$(OBJEXT) CurlCallback.$(OBJEXT) CurlResponse.$(OBJEXT)
+am_vzlogger_OBJECTS = vzlogger.$(OBJEXT) Channel.$(OBJEXT) \
+	Config_Options.$(OBJEXT) threads.$(OBJEXT) Buffer.$(OBJEXT) \
+	Meter.$(OBJEXT) ltqnorm.$(OBJEXT) Obis.$(OBJEXT) \
+	Options.$(OBJEXT) Reading.$(OBJEXT) exception.$(OBJEXT) \
+	local.$(OBJEXT) MeterMap.$(OBJEXT) MeterS0.$(OBJEXT) \
+	MeterD0.$(OBJEXT) MeterSML.$(OBJEXT) MeterFluksoV2.$(OBJEXT) \
+	MeterFile.$(OBJEXT) MeterExec.$(OBJEXT) MeterRandom.$(OBJEXT) \
+	Volkszaehler.$(OBJEXT) MySmartGrid.$(OBJEXT) CurlIF.$(OBJEXT) \
+	CurlCallback.$(OBJEXT) CurlResponse.$(OBJEXT)
 vzlogger_OBJECTS = $(am_vzlogger_OBJECTS)
 am__DEPENDENCIES_1 =
 @SML_SUPPORT_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
@@ -195,13 +196,15 @@ AM_LDFLAGS =
 # Protocols (add your own here)
 
 # logger API (add your own here)
-vzlogger_SOURCES = vzlogger.cpp channel.cpp config.cpp threads.cpp \
-	buffer.cpp meter.cpp ltqnorm.cpp obis.cpp options.cpp \
-	reading.cpp exception.cpp local.cpp MeterMap.cpp \
-	protocols/s0.cpp protocols/d0.cpp protocols/sml.cpp \
-	protocols/fluksov2.cpp protocols/file.cpp protocols/exec.cpp \
-	protocols/random.cpp api/Volkszaehler.cpp api/MySmartGrid.cpp \
-	api/CurlIF.cpp api/CurlCallback.cpp api/CurlResponse.cpp
+vzlogger_SOURCES = vzlogger.cpp Channel.cpp Config_Options.cpp \
+	threads.cpp Buffer.cpp Meter.cpp ltqnorm.cpp Obis.cpp \
+	Options.cpp Reading.cpp exception.cpp local.cpp MeterMap.cpp \
+	protocols/MeterS0.cpp protocols/MeterD0.cpp \
+	protocols/MeterSML.cpp protocols/MeterFluksoV2.cpp \
+	protocols/MeterFile.cpp protocols/MeterExec.cpp \
+	protocols/MeterRandom.cpp api/Volkszaehler.cpp \
+	api/MySmartGrid.cpp api/CurlIF.cpp api/CurlCallback.cpp \
+	api/CurlResponse.cpp
 vzlogger_LDADD = $(am__append_1) $(am__append_3)
 vzlogger_LDFLAGS = -lpthread -lm -lstdc++ $(DEPS_VZ_LIBS)
 all: all-am
@@ -285,29 +288,29 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Channel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Config_Options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlCallback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlIF.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CurlResponse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Meter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterD0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterExec.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterFile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterFluksoV2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterMap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterRandom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterS0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MeterSML.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MySmartGrid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Obis.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Options.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Reading.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Volkszaehler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/d0.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exception.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fluksov2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/local.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltqnorm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meter.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/obis.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/random.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reading.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s0.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sml.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vzlogger.Po@am__quote@
 
@@ -325,103 +328,103 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-s0.o: protocols/s0.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT s0.o -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.o `test -f 'protocols/s0.cpp' || echo '$(srcdir)/'`protocols/s0.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/s0.cpp' object='s0.o' libtool=no @AMDEPBACKSLASH@
+MeterS0.o: protocols/MeterS0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterS0.o -MD -MP -MF $(DEPDIR)/MeterS0.Tpo -c -o MeterS0.o `test -f 'protocols/MeterS0.cpp' || echo '$(srcdir)/'`protocols/MeterS0.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterS0.Tpo $(DEPDIR)/MeterS0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterS0.cpp' object='MeterS0.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o s0.o `test -f 'protocols/s0.cpp' || echo '$(srcdir)/'`protocols/s0.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterS0.o `test -f 'protocols/MeterS0.cpp' || echo '$(srcdir)/'`protocols/MeterS0.cpp
 
-s0.obj: protocols/s0.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT s0.obj -MD -MP -MF $(DEPDIR)/s0.Tpo -c -o s0.obj `if test -f 'protocols/s0.cpp'; then $(CYGPATH_W) 'protocols/s0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/s0.Tpo $(DEPDIR)/s0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/s0.cpp' object='s0.obj' libtool=no @AMDEPBACKSLASH@
+MeterS0.obj: protocols/MeterS0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterS0.obj -MD -MP -MF $(DEPDIR)/MeterS0.Tpo -c -o MeterS0.obj `if test -f 'protocols/MeterS0.cpp'; then $(CYGPATH_W) 'protocols/MeterS0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterS0.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterS0.Tpo $(DEPDIR)/MeterS0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterS0.cpp' object='MeterS0.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o s0.obj `if test -f 'protocols/s0.cpp'; then $(CYGPATH_W) 'protocols/s0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/s0.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterS0.obj `if test -f 'protocols/MeterS0.cpp'; then $(CYGPATH_W) 'protocols/MeterS0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterS0.cpp'; fi`
 
-d0.o: protocols/d0.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT d0.o -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.o `test -f 'protocols/d0.cpp' || echo '$(srcdir)/'`protocols/d0.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/d0.cpp' object='d0.o' libtool=no @AMDEPBACKSLASH@
+MeterD0.o: protocols/MeterD0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterD0.o -MD -MP -MF $(DEPDIR)/MeterD0.Tpo -c -o MeterD0.o `test -f 'protocols/MeterD0.cpp' || echo '$(srcdir)/'`protocols/MeterD0.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterD0.Tpo $(DEPDIR)/MeterD0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterD0.cpp' object='MeterD0.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o d0.o `test -f 'protocols/d0.cpp' || echo '$(srcdir)/'`protocols/d0.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterD0.o `test -f 'protocols/MeterD0.cpp' || echo '$(srcdir)/'`protocols/MeterD0.cpp
 
-d0.obj: protocols/d0.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT d0.obj -MD -MP -MF $(DEPDIR)/d0.Tpo -c -o d0.obj `if test -f 'protocols/d0.cpp'; then $(CYGPATH_W) 'protocols/d0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/d0.Tpo $(DEPDIR)/d0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/d0.cpp' object='d0.obj' libtool=no @AMDEPBACKSLASH@
+MeterD0.obj: protocols/MeterD0.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterD0.obj -MD -MP -MF $(DEPDIR)/MeterD0.Tpo -c -o MeterD0.obj `if test -f 'protocols/MeterD0.cpp'; then $(CYGPATH_W) 'protocols/MeterD0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterD0.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterD0.Tpo $(DEPDIR)/MeterD0.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterD0.cpp' object='MeterD0.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o d0.obj `if test -f 'protocols/d0.cpp'; then $(CYGPATH_W) 'protocols/d0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/d0.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterD0.obj `if test -f 'protocols/MeterD0.cpp'; then $(CYGPATH_W) 'protocols/MeterD0.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterD0.cpp'; fi`
 
-sml.o: protocols/sml.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sml.o -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.o `test -f 'protocols/sml.cpp' || echo '$(srcdir)/'`protocols/sml.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/sml.cpp' object='sml.o' libtool=no @AMDEPBACKSLASH@
+MeterSML.o: protocols/MeterSML.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterSML.o -MD -MP -MF $(DEPDIR)/MeterSML.Tpo -c -o MeterSML.o `test -f 'protocols/MeterSML.cpp' || echo '$(srcdir)/'`protocols/MeterSML.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterSML.Tpo $(DEPDIR)/MeterSML.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterSML.cpp' object='MeterSML.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sml.o `test -f 'protocols/sml.cpp' || echo '$(srcdir)/'`protocols/sml.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterSML.o `test -f 'protocols/MeterSML.cpp' || echo '$(srcdir)/'`protocols/MeterSML.cpp
 
-sml.obj: protocols/sml.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT sml.obj -MD -MP -MF $(DEPDIR)/sml.Tpo -c -o sml.obj `if test -f 'protocols/sml.cpp'; then $(CYGPATH_W) 'protocols/sml.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/sml.Tpo $(DEPDIR)/sml.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/sml.cpp' object='sml.obj' libtool=no @AMDEPBACKSLASH@
+MeterSML.obj: protocols/MeterSML.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterSML.obj -MD -MP -MF $(DEPDIR)/MeterSML.Tpo -c -o MeterSML.obj `if test -f 'protocols/MeterSML.cpp'; then $(CYGPATH_W) 'protocols/MeterSML.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterSML.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterSML.Tpo $(DEPDIR)/MeterSML.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterSML.cpp' object='MeterSML.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o sml.obj `if test -f 'protocols/sml.cpp'; then $(CYGPATH_W) 'protocols/sml.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/sml.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterSML.obj `if test -f 'protocols/MeterSML.cpp'; then $(CYGPATH_W) 'protocols/MeterSML.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterSML.cpp'; fi`
 
-fluksov2.o: protocols/fluksov2.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fluksov2.o -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.o `test -f 'protocols/fluksov2.cpp' || echo '$(srcdir)/'`protocols/fluksov2.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/fluksov2.cpp' object='fluksov2.o' libtool=no @AMDEPBACKSLASH@
+MeterFluksoV2.o: protocols/MeterFluksoV2.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterFluksoV2.o -MD -MP -MF $(DEPDIR)/MeterFluksoV2.Tpo -c -o MeterFluksoV2.o `test -f 'protocols/MeterFluksoV2.cpp' || echo '$(srcdir)/'`protocols/MeterFluksoV2.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterFluksoV2.Tpo $(DEPDIR)/MeterFluksoV2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterFluksoV2.cpp' object='MeterFluksoV2.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fluksov2.o `test -f 'protocols/fluksov2.cpp' || echo '$(srcdir)/'`protocols/fluksov2.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterFluksoV2.o `test -f 'protocols/MeterFluksoV2.cpp' || echo '$(srcdir)/'`protocols/MeterFluksoV2.cpp
 
-fluksov2.obj: protocols/fluksov2.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fluksov2.obj -MD -MP -MF $(DEPDIR)/fluksov2.Tpo -c -o fluksov2.obj `if test -f 'protocols/fluksov2.cpp'; then $(CYGPATH_W) 'protocols/fluksov2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/fluksov2.Tpo $(DEPDIR)/fluksov2.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/fluksov2.cpp' object='fluksov2.obj' libtool=no @AMDEPBACKSLASH@
+MeterFluksoV2.obj: protocols/MeterFluksoV2.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterFluksoV2.obj -MD -MP -MF $(DEPDIR)/MeterFluksoV2.Tpo -c -o MeterFluksoV2.obj `if test -f 'protocols/MeterFluksoV2.cpp'; then $(CYGPATH_W) 'protocols/MeterFluksoV2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterFluksoV2.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterFluksoV2.Tpo $(DEPDIR)/MeterFluksoV2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterFluksoV2.cpp' object='MeterFluksoV2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fluksov2.obj `if test -f 'protocols/fluksov2.cpp'; then $(CYGPATH_W) 'protocols/fluksov2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/fluksov2.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterFluksoV2.obj `if test -f 'protocols/MeterFluksoV2.cpp'; then $(CYGPATH_W) 'protocols/MeterFluksoV2.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterFluksoV2.cpp'; fi`
 
-file.o: protocols/file.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT file.o -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.o `test -f 'protocols/file.cpp' || echo '$(srcdir)/'`protocols/file.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/file.cpp' object='file.o' libtool=no @AMDEPBACKSLASH@
+MeterFile.o: protocols/MeterFile.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterFile.o -MD -MP -MF $(DEPDIR)/MeterFile.Tpo -c -o MeterFile.o `test -f 'protocols/MeterFile.cpp' || echo '$(srcdir)/'`protocols/MeterFile.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterFile.Tpo $(DEPDIR)/MeterFile.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterFile.cpp' object='MeterFile.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o file.o `test -f 'protocols/file.cpp' || echo '$(srcdir)/'`protocols/file.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterFile.o `test -f 'protocols/MeterFile.cpp' || echo '$(srcdir)/'`protocols/MeterFile.cpp
 
-file.obj: protocols/file.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT file.obj -MD -MP -MF $(DEPDIR)/file.Tpo -c -o file.obj `if test -f 'protocols/file.cpp'; then $(CYGPATH_W) 'protocols/file.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/file.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/file.Tpo $(DEPDIR)/file.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/file.cpp' object='file.obj' libtool=no @AMDEPBACKSLASH@
+MeterFile.obj: protocols/MeterFile.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterFile.obj -MD -MP -MF $(DEPDIR)/MeterFile.Tpo -c -o MeterFile.obj `if test -f 'protocols/MeterFile.cpp'; then $(CYGPATH_W) 'protocols/MeterFile.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterFile.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterFile.Tpo $(DEPDIR)/MeterFile.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterFile.cpp' object='MeterFile.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o file.obj `if test -f 'protocols/file.cpp'; then $(CYGPATH_W) 'protocols/file.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/file.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterFile.obj `if test -f 'protocols/MeterFile.cpp'; then $(CYGPATH_W) 'protocols/MeterFile.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterFile.cpp'; fi`
 
-exec.o: protocols/exec.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT exec.o -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.o `test -f 'protocols/exec.cpp' || echo '$(srcdir)/'`protocols/exec.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/exec.cpp' object='exec.o' libtool=no @AMDEPBACKSLASH@
+MeterExec.o: protocols/MeterExec.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterExec.o -MD -MP -MF $(DEPDIR)/MeterExec.Tpo -c -o MeterExec.o `test -f 'protocols/MeterExec.cpp' || echo '$(srcdir)/'`protocols/MeterExec.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterExec.Tpo $(DEPDIR)/MeterExec.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterExec.cpp' object='MeterExec.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o exec.o `test -f 'protocols/exec.cpp' || echo '$(srcdir)/'`protocols/exec.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterExec.o `test -f 'protocols/MeterExec.cpp' || echo '$(srcdir)/'`protocols/MeterExec.cpp
 
-exec.obj: protocols/exec.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT exec.obj -MD -MP -MF $(DEPDIR)/exec.Tpo -c -o exec.obj `if test -f 'protocols/exec.cpp'; then $(CYGPATH_W) 'protocols/exec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/exec.Tpo $(DEPDIR)/exec.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/exec.cpp' object='exec.obj' libtool=no @AMDEPBACKSLASH@
+MeterExec.obj: protocols/MeterExec.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterExec.obj -MD -MP -MF $(DEPDIR)/MeterExec.Tpo -c -o MeterExec.obj `if test -f 'protocols/MeterExec.cpp'; then $(CYGPATH_W) 'protocols/MeterExec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterExec.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterExec.Tpo $(DEPDIR)/MeterExec.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterExec.cpp' object='MeterExec.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o exec.obj `if test -f 'protocols/exec.cpp'; then $(CYGPATH_W) 'protocols/exec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/exec.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterExec.obj `if test -f 'protocols/MeterExec.cpp'; then $(CYGPATH_W) 'protocols/MeterExec.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterExec.cpp'; fi`
 
-random.o: protocols/random.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT random.o -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.o `test -f 'protocols/random.cpp' || echo '$(srcdir)/'`protocols/random.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/random.cpp' object='random.o' libtool=no @AMDEPBACKSLASH@
+MeterRandom.o: protocols/MeterRandom.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterRandom.o -MD -MP -MF $(DEPDIR)/MeterRandom.Tpo -c -o MeterRandom.o `test -f 'protocols/MeterRandom.cpp' || echo '$(srcdir)/'`protocols/MeterRandom.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterRandom.Tpo $(DEPDIR)/MeterRandom.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterRandom.cpp' object='MeterRandom.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o random.o `test -f 'protocols/random.cpp' || echo '$(srcdir)/'`protocols/random.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterRandom.o `test -f 'protocols/MeterRandom.cpp' || echo '$(srcdir)/'`protocols/MeterRandom.cpp
 
-random.obj: protocols/random.cpp
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT random.obj -MD -MP -MF $(DEPDIR)/random.Tpo -c -o random.obj `if test -f 'protocols/random.cpp'; then $(CYGPATH_W) 'protocols/random.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/random.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/random.Tpo $(DEPDIR)/random.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/random.cpp' object='random.obj' libtool=no @AMDEPBACKSLASH@
+MeterRandom.obj: protocols/MeterRandom.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MeterRandom.obj -MD -MP -MF $(DEPDIR)/MeterRandom.Tpo -c -o MeterRandom.obj `if test -f 'protocols/MeterRandom.cpp'; then $(CYGPATH_W) 'protocols/MeterRandom.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterRandom.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/MeterRandom.Tpo $(DEPDIR)/MeterRandom.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='protocols/MeterRandom.cpp' object='MeterRandom.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o random.obj `if test -f 'protocols/random.cpp'; then $(CYGPATH_W) 'protocols/random.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/random.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MeterRandom.obj `if test -f 'protocols/MeterRandom.cpp'; then $(CYGPATH_W) 'protocols/MeterRandom.cpp'; else $(CYGPATH_W) '$(srcdir)/protocols/MeterRandom.cpp'; fi`
 
 Volkszaehler.o: api/Volkszaehler.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Volkszaehler.o -MD -MP -MF $(DEPDIR)/Volkszaehler.Tpo -c -o Volkszaehler.o `test -f 'api/Volkszaehler.cpp' || echo '$(srcdir)/'`api/Volkszaehler.cpp

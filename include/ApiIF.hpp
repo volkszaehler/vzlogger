@@ -35,8 +35,7 @@
 
 #include <string>
 
-#include <../config.h>
-#include <shared_ptr.hpp>
+#include <common.h>
 #include <Channel.hpp>
 
 namespace vz {

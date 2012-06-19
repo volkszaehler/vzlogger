@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include <config.h>
 #include <Config_Options.hpp>
 #include "Channel.hpp"
 #include <VZException.hpp>

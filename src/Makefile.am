@@ -17,11 +17,11 @@ vzlogger_SOURCES += exception.cpp local.cpp MeterMap.cpp
 vzlogger_SOURCES += \
 	protocols/MeterS0.cpp \
 	protocols/MeterD0.cpp \
-	protocols/MeterS0SML.cpp \
-	protocols/MeterS0FluksoV2.cpp \
-	protocols/MeterS0File.cpp \
-	protocols/MeterS0Exec.cpp \
-	protocols/MeterS0Random.cpp
+	protocols/MeterSML.cpp \
+	protocols/MeterFluksoV2.cpp \
+	protocols/MeterFile.cpp \
+	protocols/MeterExec.cpp \
+	protocols/MeterRandom.cpp
 
 # logger API (add your own here)
 vzlogger_SOURCES += \

@@ -557,7 +557,7 @@ PACKAGE_STRING='vzlogger 0.3.3'
 PACKAGE_BUGREPORT='http://bugs.volkszaehler.org'
 PACKAGE_URL=''
 
-ac_unique_file="src/meter.cpp"
+ac_unique_file="src/Meter.cpp"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

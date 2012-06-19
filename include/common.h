@@ -6,7 +6,11 @@
 #include <stdlib.h>
 
 
-#include "../config.h" /* GNU buildsystem config */
+#ifdef HAVE_CONFIG_HPP
+#  include "config.hpp" /* GNU buildsystem config */
+#else
+#  include "../config.h" /* GNU buildsystem config */
+#endif
 
 #include <VZException.hpp>
 #include <shared_ptr.hpp>
