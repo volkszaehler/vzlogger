@@ -53,3 +53,8 @@ if( TARGET )
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
 target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARY})
+
+# add programs to the install target 
+INSTALL(PROGRAMS 
+  ${CMAKE_CURRENT_BINARY_DIR}/vzlogger
+  DESTINATION bin)
