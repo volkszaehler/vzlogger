@@ -72,7 +72,7 @@ endif( STAGING_DIR)
 ctest_build(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE build_res)
 message("====> BUILD: ${build_res}")
 
-#ctest_submit(RETURN_VALUE res)
+ctest_submit(RETURN_VALUE res)
 
 # package files
 include(${CTEST_BINARY_DIRECTORY}/CPackConfig.cmake)
@@ -83,7 +83,7 @@ endif( STAGING_DIR)
 if( NOT ${build_res})
   execute_process(
     COMMAND cpack -G DEB
-    COMMAND cpack -G TGZ
+#    COMMAND cpack -G TGZ
     WORKING_DIRECTORY ${CTEST_BINARY_DIRECTORY}
     )
 endif( NOT ${build_res})
