@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export LANG=en_US.UTF-8
+export CTEST=/usr/bin/ctest
+
+echo "Running ctest"
+
+
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZloggerNightly_1.cmake
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZloggerNightly_2.cmake
+
+
