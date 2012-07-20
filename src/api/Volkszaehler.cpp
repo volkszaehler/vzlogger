@@ -97,6 +97,10 @@ void vz::api::Volkszaehler::send()
 
 	json_obj = api_json_tuples(channel()->buffer());
 	json_str = json_object_to_json_string(json_obj);
+	if(json_str == NULL || strcmp(json_str, "null")==0) {
+		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
+		return;
+	}
 
 	print(log_debug, "JSON request body: %s", channel()->name(), json_str);
 
@@ -109,7 +113,8 @@ void vz::api::Volkszaehler::send()
 
 	/* check response */
 	if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-		print(log_debug, "Request succeeded with code: %i", channel()->name(), http_code);
+		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
+		_values.clear();
 		//clear buffer-readings
 //channel()->buffer.sent = last->next;
 	}
@@ -120,7 +125,7 @@ void vz::api::Volkszaehler::send()
 		else if (http_code != 200) {
 			char err[255];
 			api_parse_exception(response, err, 255);
-			print(log_error, "Error from middleware: %s", channel()->name(), err);
+			print(log_error, "CURL Error from middleware: %s", channel()->name(), err);
 		}
 	}
 
@@ -146,17 +151,38 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", "api", buf->size());
+	long timestamp = 0;
+	//long value     = 0.0;
 
+	if(_values.size() ) {
+		timestamp = _values.back().tvtod();
+	//	value     = _values.back().value();
+	}
+
+	// copy all values to local buffer queue
+	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		struct json_object *json_tuple = json_object_new_array();
+      if(timestamp < (long)it->tvtod()/* && value != (long)(it->value() * _scaler) */) {
+        _values.push_back(*it);
+        timestamp = it->tvtod();
+      //value     = it->value() * _scaler;
+      }
+      it->mark_delete();
+	}
+	buf->unlock();
+	buf->clean();
 
-		buf->lock();
+	if(_values.size() < 2 /*|| (_values.size() < 2 && _first_counter==0) */) {
+		return NULL;
+	}
+
+	for (it = _values.begin(); it != _values.end(); it++) {
+		struct json_object *json_tuple = json_object_new_array();
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
 		double timestamp = it->tvtod() * 1000; 
 		double value = it->value();
-		buf->unlock();
 
 		json_object_array_add(json_tuple, json_object_new_double(timestamp));
 		json_object_array_add(json_tuple, json_object_new_double(value));
@@ -219,11 +245,13 @@ int vz::api::curl_custom_debug_callback(
 			case CURLINFO_SSL_DATA_IN:
 			case CURLINFO_DATA_IN:
 				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
+				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", "CURL", data);
 				break;
 
 			case CURLINFO_SSL_DATA_OUT:
 			case CURLINFO_DATA_OUT:
 				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
+				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", "CURL", data);
 				break;
 
 			case CURLINFO_HEADER_IN:

@@ -88,6 +88,9 @@ namespace vz {
 
 		private:
 			api_handle_t _api;
+
+          // Volatil
+			std::list<Reading> _values;
 		}; //class Volkszaehler
   
     /**
