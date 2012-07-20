@@ -155,16 +155,16 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	//long value     = 0.0;
 
 	if(_values.size() ) {
-		timestamp = _values.back().tvtod();
+		timestamp = _values.back().tvtod() * 1000;
 	//	value     = _values.back().value();
 	}
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-      if(timestamp < (long)it->tvtod()/* && value != (long)(it->value() * _scaler) */) {
+      if(timestamp < (long)it->tvtod() * 1000/* && value != (long)(it->value() * _scaler) */) {
         _values.push_back(*it);
-        timestamp = it->tvtod();
+        timestamp = it->tvtod() * 1000;
       //value     = it->value() * _scaler;
       }
       it->mark_delete();
