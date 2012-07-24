@@ -32,6 +32,7 @@
 #include <curl/curl.h>
 #include <json/json.h>
 #include <sys/time.h>
+#include <math.h>
 
 #include <VZException.hpp>
 #include "Config_Options.hpp"
@@ -44,6 +45,7 @@ vz::api::Volkszaehler::Volkszaehler(
 	std::list<Option> pOptions
 	) 
 		: ApiIF(ch)
+        , _last_timestamp(0)
 {
 	OptionList optlist;
 	char url[255], agent[255];
@@ -151,28 +153,23 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", "api", buf->size());
-	long timestamp = 0;
-	//long value     = 0.0;
-
-	if(_values.size() ) {
-		timestamp = _values.back().tvtod() * 1000;
-	//	value     = _values.back().value();
-	}
+	long timestamp = 1;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-      if(timestamp < (long)it->tvtod() * 1000/* && value != (long)(it->value() * _scaler) */) {
+      timestamp = round(it->tvtod() * 1000);
+      print(log_debug, "compare: %ld %ld %f", "CURL", _last_timestamp, timestamp, it->tvtod() * 1000);
+      if(_last_timestamp < timestamp ) {
         _values.push_back(*it);
-        timestamp = it->tvtod() * 1000;
-      //value     = it->value() * _scaler;
+        _last_timestamp = timestamp;
       }
       it->mark_delete();
 	}
 	buf->unlock();
 	buf->clean();
 
-	if(_values.size() < 2 /*|| (_values.size() < 2 && _first_counter==0) */) {
+	if( _values.size() < 1 ) {
 		return NULL;
 	}
 
