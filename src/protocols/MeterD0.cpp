@@ -165,8 +165,10 @@ size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
 				case START:			/* strip the initial "/" */
-					byte_iterator = number_of_tuples = 0;	/* start */
-					context = VENDOR;	/* set new context: START -> VENDOR */
+                    if  (byte != '\r' &&  byte != '\n') { /*allow extra new line at the start */
+                      byte_iterator = number_of_tuples = 0;        /* start */
+                      context = VENDOR;        /* set new context: START -> VENDOR */
+                    }
 					break;
 
 				case VENDOR:			/* VENDOR has 3 Bytes */
