@@ -180,8 +180,10 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t max_readings) {
 		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
 			case START:			/* strip the initial "/" */
-				byte_iterator = number_of_tuples = 0;	/* start */
-				context = VENDOR;	/* set new context: START -> VENDOR */
+				if  (byte != '\r' &&  byte != '\n') { /*allow extra new line at the start */
+					byte_iterator = number_of_tuples = 0;	/* start */
+					context = VENDOR;	/* set new context: START -> VENDOR */
+				}
 				break;
 
 			case VENDOR:			/* VENDOR has 3 Bytes */
@@ -322,11 +324,13 @@ int meter_d0_open_device(const char *device, struct termios *old_tio, speed_t ba
 	/* backup old configuration to restore it when closing the meter connection */
 	memcpy(old_tio, &tio, sizeof(struct termios));
 
-	/*  set 7-N-1 */
+	/*  set 7-E-1 */
 	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL);
 	tio.c_oflag &= ~(OPOST | ONLCR);
 	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
-	tio.c_cflag |= (CS7 | PARENB);
+	tio.c_cflag &= ~PARODD;
+	tio.c_cflag |= PARENB;
+	tio.c_cflag = (tio.c_cflag & ~CSIZE) | CS7;
 
 	/* set baudrate */
 	cfsetispeed(&tio, baudrate);
