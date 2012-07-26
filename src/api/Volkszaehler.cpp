@@ -153,7 +153,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", "api", buf->size());
-	long timestamp = 1;
+	double timestamp = 1;
 
 	// copy all values to local buffer queue
 	buf->lock();
