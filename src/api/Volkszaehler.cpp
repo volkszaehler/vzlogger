@@ -153,13 +153,13 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", "api", buf->size());
-	double timestamp = 1;
+	uint64_t timestamp = 1;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
       timestamp = round(it->tvtod() * 1000);
-      print(log_debug, "compare: %ld %ld %f", "CURL", _last_timestamp, timestamp, it->tvtod() * 1000);
+      print(log_debug, "compare: %llu %llu %f", "CURL", _last_timestamp, timestamp, it->tvtod() * 1000);
       if(_last_timestamp < timestamp ) {
         _values.push_back(*it);
         _last_timestamp = timestamp;
