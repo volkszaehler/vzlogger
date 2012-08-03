@@ -7,9 +7,10 @@
 set(CTEST_PROJECT_NAME "vzlogger")
 set(CTEST_NIGHTLY_START_TIME "04:00:00 GMT")
 
+set(ENV{http_proxy} "http://squid.itwm.fhg.de:3128/")
 set(CTEST_DROP_METHOD "http")
-set(CTEST_DROP_SITE "pubdoc.itwm.fhg.de")
-set(CTEST_DROP_LOCATION "/p/hpc/pspro/cdash/submit.php?project=${CTEST_PROJECT_NAME}")
+set(CTEST_DROP_SITE "cdash.hexabus.de")
+set(CTEST_DROP_LOCATION "/submit.php?project=${CTEST_PROJECT_NAME}")
 set(CTEST_DROP_SITE_CDASH TRUE)
 
 #SET (CTEST_TRIGGER_SITE "http:///cgi-bin/Submit-CMake-TestingResults.pl")
