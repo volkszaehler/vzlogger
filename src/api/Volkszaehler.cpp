@@ -78,6 +78,9 @@ vz::api::Volkszaehler::Volkszaehler(
 	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
+
+    // set timeout to 5 sec. required if next router has an ip-change.
+    curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, 5);
 }
 
 vz::api::Volkszaehler::~Volkszaehler() 
@@ -128,7 +131,7 @@ void vz::api::Volkszaehler::send()
 			char err[255];
 			api_parse_exception(response, err, 255);
 			print(log_error, "CURL Error from middleware: %s", channel()->name(), err);
-		}
+        }
 	}
 
 	/* householding */
