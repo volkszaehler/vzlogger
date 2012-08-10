@@ -42,13 +42,14 @@ extern Config_Options options;
 
 vz::api::Volkszaehler::Volkszaehler(
 	Channel::Ptr ch,
-	std::list<Option> pOptions
+  std::list<Option> pOptions
 	) 
 		: ApiIF(ch)
-        , _last_timestamp(0)
+    , _last_timestamp(0)
 {
 	OptionList optlist;
 	char url[255], agent[255];
+  unsigned short curlTimeout = 30; // 30 seconds
 
 /* parse options */
 	try {
@@ -56,6 +57,15 @@ vz::api::Volkszaehler::Volkszaehler(
 	} catch ( vz::OptionNotFoundException &e ) {
 		throw;
 	} catch ( vz::VZException &e ) {
+		throw;
+	}
+
+	try {
+		curlTimeout = optlist.lookup_int(pOptions, "timeout");
+	} catch ( vz::OptionNotFoundException &e ) {
+// use default value instead
+    curlTimeout = 30; // 30 seconds
+  } catch ( vz::VZException &e ) {
 		throw;
 	}
 
@@ -79,8 +89,11 @@ vz::api::Volkszaehler::Volkszaehler(
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
 
-    // set timeout to 5 sec. required if next router has an ip-change.
-    curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, 5);
+  // signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
+  curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
+
+  // set timeout to 5 sec. required if next router has an ip-change.
+  curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, curlTimeout);
 }
 
 vz::api::Volkszaehler::~Volkszaehler() 
@@ -131,7 +144,7 @@ void vz::api::Volkszaehler::send()
 			char err[255];
 			api_parse_exception(response, err, 255);
 			print(log_error, "CURL Error from middleware: %s", channel()->name(), err);
-        }
+    }
 	}
 
 	/* householding */
@@ -155,19 +168,19 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	json_object *json_tuples = json_object_new_array();
 	Buffer::iterator it;
 
-	print(log_debug, "==> number of tuples: %d", "api", buf->size());
+	print(log_debug, "==> number of tuples: %d", channel()->name(), buf->size());
 	uint64_t timestamp = 1;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-      timestamp = round(it->tvtod() * 1000);
-      print(log_debug, "compare: %llu %llu %f", "CURL", _last_timestamp, timestamp, it->tvtod() * 1000);
-      if(_last_timestamp < timestamp ) {
-        _values.push_back(*it);
-        _last_timestamp = timestamp;
-      }
-      it->mark_delete();
+    timestamp = round(it->tvtod() * 1000);
+    print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
+    if(_last_timestamp < timestamp ) {
+      _values.push_back(*it);
+      _last_timestamp = timestamp;
+    }
+    it->mark_delete();
 	}
 	buf->unlock();
 	buf->clean();
@@ -204,10 +217,17 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 		json_obj = json_object_object_get(json_obj, "exception");
 
 		if (json_obj) {
-			snprintf(err, n, "%s: %s",
-							 json_object_get_string(json_object_object_get(json_obj,  "type")),
-							 json_object_get_string(json_object_object_get(json_obj,  "message"))
-							 );
+      const std::string err_type(json_object_get_string(json_object_object_get(json_obj,  "type")));
+      const std::string err_message( json_object_get_string(json_object_object_get(json_obj,  "message")));
+
+      snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
+// evaulate error 
+      if( err_type == "PDOException") {
+        if( err_message.find("Duplicate entry") ) {
+          print(log_warning, "middle says duplicated value. removing first entry!", channel()->name());
+          _values.pop_front();
+        }
+      }
 		}
 		else {
 			strncpy(err, "missing exception", n);
@@ -245,13 +265,14 @@ int vz::api::curl_custom_debug_callback(
 			case CURLINFO_SSL_DATA_IN:
 			case CURLINFO_DATA_IN:
 				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
-				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", "CURL", data);
+				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", ch->name(), data);
 				break;
 
 			case CURLINFO_SSL_DATA_OUT:
-			case CURLINFO_DATA_OUT:
-				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
-				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", "CURL", data);
+			case CURLINFO_DATA_OUT:	
+        data[size]=0;
+        print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
+				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", ch->name(), data);
 				break;
 
 			case CURLINFO_HEADER_IN:
@@ -279,3 +300,11 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 	return realsize;
 }
 
+/*
+ * Local variables:
+ *  tab-width: 2
+ *  c-indent-level: 2
+ *  c-basic-offset: 2
+ *  project-name: vzlogger
+ * End:
+ */
