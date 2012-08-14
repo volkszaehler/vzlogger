@@ -36,7 +36,7 @@
 #include <VZException.hpp>
 
 MeterRandom::MeterRandom(std::list<Option> options)
-		: Protocol("random", options)
+		: Protocol("random")
 {
 	OptionList optlist;
 
@@ -79,7 +79,7 @@ int MeterRandom::close() {
 	return SUCCESS;
 }
 
-size_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
+ssize_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
 	if(rds.size() < 1) return -1;
 
 	double step = ltqnorm((float) rand() / RAND_MAX);

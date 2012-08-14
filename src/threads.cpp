@@ -75,7 +75,7 @@ void * reading_thread(void *arg) {
 
 				char identifier[MAX_IDENTIFIER_LEN];
 				for (size_t i = 0; i < n; i++) {
-					rds[i].unparse(mtr->protocolId(), identifier, MAX_IDENTIFIER_LEN);
+                    rds[i].unparse(/*mtr->protocolId(),*/ identifier, MAX_IDENTIFIER_LEN);
 					print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
 								identifier, rds[i].identifier()->toString().c_str(),
 								rds[i].value(), rds[i].tvtod());
@@ -169,7 +169,7 @@ void * reading_thread(void *arg) {
 	return NULL;
 }
 
-void logging_thread_cleanup(void *arg) {
+void logging_thread_cleanup(/*void *arg*/) {
 //	api_handle_t *api = (api_handle_t *) arg;
 
 //	api_free(api);

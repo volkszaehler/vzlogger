@@ -572,7 +572,7 @@ void vz::api::MySmartGrid::hmac_sha1(
 	char ret[2*EVP_MAX_MD_SIZE];
 	memset(ret, 0, sizeof(ret));
 
-	for(int i=0; i<len; i++) {
+	for(size_t i=0; i<len; i++) {
 		char s[4];
 		snprintf(s, 3, "%02x:", out[i]);
 		strncat(ret, s, 2*len);
@@ -584,7 +584,7 @@ void vz::api::MySmartGrid::hmac_sha1(
 
 void vz::api::MySmartGrid::convertUuid(const std::string uuidIn, std::string &uuidOut) {
 	std::stringstream oss;
-	for(int i = 0; i < uuidIn.length(); i++) {
+	for(size_t i = 0; i < uuidIn.length(); i++) {
 		if( uuidIn[i] != '-' )
 			oss<< uuidIn[i];
 	}
@@ -593,7 +593,7 @@ void vz::api::MySmartGrid::convertUuid(const std::string uuidIn, std::string &uu
 
 void vz::api::MySmartGrid::convertUuid(const std::string uuid) {
 	std::stringstream oss;
-	for(int i = 0; i < uuid.length(); i++) {
+	for(size_t i = 0; i < uuid.length(); i++) {
 		if( uuid[i] != '-' )
 			oss<< uuid[i];
 	}

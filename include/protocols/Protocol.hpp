@@ -42,13 +42,13 @@ namespace vz {
 		public:
 			typedef vz::shared_ptr<Protocol> Ptr;
 
-			Protocol(const std::string &name, std::list<Option> options) : _name(name) {};
+			Protocol(const std::string &name) : _name(name) {};
 
 			virtual ~Protocol() {};
 
 			virtual int    open() = 0;
 			virtual int    close() = 0;
-			virtual size_t read(std::vector<Reading> &rds, size_t n) = 0;
+			virtual ssize_t read(std::vector<Reading> &rds, size_t n) = 0;
 
 			const std::string &name() { return _name; }
     

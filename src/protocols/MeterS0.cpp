@@ -35,7 +35,7 @@
 #include <VZException.hpp>
 
 MeterS0::MeterS0(std::list<Option> options)
-		: Protocol("s0", options)
+		: Protocol("s0")
 		, _counter(0)
 {
 	OptionList optlist;
@@ -102,7 +102,7 @@ int MeterS0::close() {
 	return ::close(_fd); /* close serial port */
 }
 
-size_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
+ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	struct timeval time1;
 	struct timeval time2;

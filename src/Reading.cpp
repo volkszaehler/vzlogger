@@ -137,7 +137,7 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 
 // reading_id_unparse
 size_t Reading::unparse(
-	meter_protocol_t protocol,
+//	meter_protocol_t protocol,
 	char *buffer, size_t n
 	) {
 

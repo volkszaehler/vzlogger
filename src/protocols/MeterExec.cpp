@@ -31,7 +31,7 @@
 #include <VZException.hpp>
 
 MeterExec::MeterExec(std::list<Option> options) 
-		: Protocol("exec", options)
+		: Protocol("exec")
 {
 	OptionList optlist;
 
@@ -73,7 +73,7 @@ int MeterExec::close() {
 	return ERR;
 }
 
-size_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
+ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 	//meter_handle_exec_t *handle = &mtr->handle.exec;
 
 	// TODO implement

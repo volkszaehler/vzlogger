@@ -55,7 +55,7 @@
 #define SML_BUFFER_LEN 8096
 
 MeterSML::MeterSML(std::list<Option> options) 
-		: Protocol("sml", options)
+		: Protocol("sml")
 		, _host("")
 		, _device("")
 		, BUFFER_LEN(SML_BUFFER_LEN)
@@ -141,7 +141,7 @@ int MeterSML::close() {
 	return ::close(_fd);
 }
 
-size_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
+ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 	unsigned char buffer[SML_BUFFER_LEN];
 	size_t bytes, m = 0;

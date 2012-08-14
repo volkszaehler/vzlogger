@@ -47,7 +47,7 @@ class Buffer {
 	void push(const Reading &rd);
 	void clean();
 	void undelete();
-	void shrink(size_t keep = 0);
+	void shrink(/*size_t keep = 0*/);
 	char *dump(char *dump, size_t len);
 
 	inline iterator begin() { return _sent.begin(); }

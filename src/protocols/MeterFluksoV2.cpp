@@ -36,7 +36,7 @@
 #define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
 
 MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
-		: Protocol("fluksov2", options)
+		: Protocol("fluksov2")
 {
 	OptionList optlist;
 
@@ -74,10 +74,10 @@ int MeterFluksoV2::close() {
 }
 
 
-size_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) { 
+ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) { 
 
 	size_t i = 0;		/* number of readings */
-	size_t bytes = 0;	/* read_line() return code */
+	ssize_t bytes = 0;	/* read_line() return code */
 	char line[64];		/* stores each line read */
 	char *cursor = line;	/* moving cursor for strsep() */
 
@@ -117,12 +117,12 @@ size_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 }
 
 
-size_t MeterFluksoV2::_read_line(int fd, char  *buffer, size_t n) {
+ssize_t MeterFluksoV2::_read_line(int fd, char  *buffer, size_t n) {
 	size_t i = 0;	/* iterator for buffer */
 	char c;		/* character buffer */
 
 	while (i < n) {
-		size_t r = ::read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
+		ssize_t r = ::read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
 
 		if (r == 1) { /* successful read */
 			switch (c) {

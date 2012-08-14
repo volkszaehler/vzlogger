@@ -102,7 +102,8 @@ Meter::Meter(std::list<Option> pOptions) :
 
 	try{
 		const meter_details_t *details = meter_get_details(_protocol_id);
-		if (details->periodic == true && _interval < 0) {
+		if (details->periodic == true 
+            && _interval < 0) {
 //print(log_error, "Interval has to be positive!", mtr);
 		} 
 	} catch( vz::VZException &e ) {
@@ -157,8 +158,8 @@ Meter::Meter(std::list<Option> pOptions) :
 	print(log_debug, "Meter configured.", name());
 }
 
-Meter::Meter(const Meter *mtr) {
-}
+//Meter::Meter(const Meter *mtr) {
+//}
 
 Meter::~Meter() {
 }

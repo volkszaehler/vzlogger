@@ -33,7 +33,7 @@
 #include <VZException.hpp>
 
 MeterFile::MeterFile(std::list<Option> options)
-		: Protocol("file", options)
+		: Protocol("file")
 {
 	OptionList optlist;
 
@@ -131,7 +131,7 @@ int MeterFile::close() {
 	return fclose(_fd);
 }
 
-size_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
+ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 	
 	// TODO use inotify to block eading until file changes
 

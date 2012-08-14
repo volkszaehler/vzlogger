@@ -70,7 +70,7 @@ void Buffer::undelete() {
 }
 
 
-void Buffer::shrink(size_t keep) {
+void Buffer::shrink(/*size_t keep*/) {
 	lock();
 
 //	while(size > keep && begin() != sent) {

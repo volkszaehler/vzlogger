@@ -36,7 +36,7 @@ public:
 
 	int open();
 	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+	ssize_t read(std::vector<Reading> &rds, size_t n);
 
 	const char *path() { return _path.c_str(); }
 	const char *format() { return _format.c_str(); }

@@ -108,6 +108,7 @@ public:
 	~MapContainer() {};
 
 	void quit(int sig) {
+        print(log_debug, "terminating on signal %d.", (char*)0, sig);
 		print(log_info, "Closing connections to terminate", (char*)0);
 
 		for(iterator it = _mappings.begin(); it!=_mappings.end(); it++) {

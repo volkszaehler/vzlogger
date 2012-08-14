@@ -165,7 +165,7 @@ public:
  *
  * @return the amount of bytes used in buffer
  */
-	size_t unparse(meter_protocol_t protocol, char *buffer, size_t n);
+    size_t unparse(/*meter_protocol_t protocol,*/ char *buffer, size_t n);
 
 protected:
 	bool   _deleted;

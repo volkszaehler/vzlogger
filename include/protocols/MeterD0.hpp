@@ -42,7 +42,7 @@ public:
 
 	int open();
 	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+	ssize_t read(std::vector<Reading> &rds, size_t n);
 
 	const char *host() const { return _host.c_str(); }
 	const char *device() const { return _device.c_str(); }
