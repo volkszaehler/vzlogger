@@ -36,7 +36,7 @@ public:
 
 	int open();
 	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+	ssize_t read(std::vector<Reading> &rds, size_t n);
 
   private:
 	const char *_command;

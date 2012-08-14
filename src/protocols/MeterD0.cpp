@@ -47,7 +47,7 @@
 #include "Obis.hpp"
 
 MeterD0::MeterD0(std::list<Option> options) 
-		: Protocol("d0", options)
+		: Protocol("d0")
 		, _host("")
 		, _device("")
 {
@@ -119,7 +119,7 @@ int MeterD0::close() {
 	return ::close(_fd);
 }
 
-size_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
+ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
