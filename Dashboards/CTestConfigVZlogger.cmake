@@ -1,3 +1,4 @@
+# -*- mode: cmake; -*-
 ## This file should be placed in the root directory of your project.
 ## Then modify the CMakeLists.txt file in the root directory of your
 ## project to incorporate the testing dashboard.
@@ -12,15 +13,19 @@ set(CTEST_DROP_METHOD "http")
 set(CTEST_DROP_SITE "cdash.hexabus.de")
 set(CTEST_DROP_LOCATION "/submit.php?project=${CTEST_PROJECT_NAME}")
 set(CTEST_DROP_SITE_CDASH TRUE)
+set(CTEST_USE_LAUNCHERS 0)
+
+set(CTEST_PACKAGE_SITE "packages.mysmartgrid.de")
 
 #SET (CTEST_TRIGGER_SITE "http:///cgi-bin/Submit-CMake-TestingResults.pl")
 #SET (VALGRIND_COMMAND_OPTIONS "-q --tool=memcheck --leak-check=full --show-reachable=yes --workaround-gcc296-bugs=yes --num-callers=50")
 #SET (CTEST_EXPERIMENTAL_COVERAGE_EXCLUDE ".*test_.*")
 site_name(CTEST_SITE)
 
-#set(_git_branch "development")
-#set(_git_branch "origin/c++-port")
-set(_git_branch "c++-port")
+if( NOT _git_branch )
+  set(_git_branch "c++-port")
+  #set(_git_branch "development")
+endif( NOT _git_branch )
 set(GIT_UPDATE_OPTIONS "pull")
 
 if(NOT TARGET_ARCH)
@@ -37,7 +42,11 @@ else(NOT TARGET_ARCH)
   endif(${TARGET_ARCH} MATCHES "ar71xx")
 endif(NOT TARGET_ARCH)
 
-set(CTEST_BUILD_NAME "${CTEST_BUILD_ARCH}-gcc-default")
+if( ${_git_branch} MATCHES "development" )
+  set(CTEST_BUILD_NAME "${CTEST_BUILD_ARCH}-gcc-default")
+else( ${_git_branch} MATCHES "development" )
+  set(CTEST_BUILD_NAME "${CTEST_BUILD_ARCH}-gcc-default-${_git_branch}")
+endif( ${_git_branch} MATCHES "development" )
 set(_projectNameDir "${CTEST_PROJECT_NAME}")
 set(_srcDir "srcdir")
 set(_buildDir "builddir")

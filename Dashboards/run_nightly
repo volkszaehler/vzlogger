@@ -9,4 +9,5 @@ echo "Running ctest"
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZloggerNightly_1.cmake
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZloggerNightly_2.cmake
 
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake
 
