@@ -60,7 +60,7 @@ Reading::Reading(
 }
 
 Reading::Reading(
-	const Reading::Reading &orig
+	const Reading &orig
 	) :
 		_deleted(orig._deleted)
 		, _value(orig._value)

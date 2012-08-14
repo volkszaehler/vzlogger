@@ -142,7 +142,7 @@ public:
 	Reading();
 	Reading(ReadingIdentifier::Ptr pIndentifier);
 	Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier);
-	Reading(const Reading::Reading &orig);
+	Reading(const Reading &orig);
 
 	const bool deleted() const { return _deleted; }
 	void  mark_delete()        { _deleted = true; }
