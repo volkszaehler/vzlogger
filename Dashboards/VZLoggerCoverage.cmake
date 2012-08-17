@@ -90,6 +90,14 @@ endif( STAGING_DIR)
 ctest_build(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE build_res)
 message("====> BUILD: ${build_res}")
 
+# do codecoverage now
+ctest_coverage(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE res)
+message(STATUS "===> ctest_coverage: res='${res}'")
+
+# do codecoverage now
+ctest_memcheck(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE res)
+message(STATUS "===> ctest_memcheck: res='${res}'")
+
 ctest_test(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE test_res)
 message("====> TESTS: ${test_res}")
 

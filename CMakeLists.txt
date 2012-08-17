@@ -20,6 +20,7 @@ set(VERSION "${VZLOGGER_RPM_VERSION}")
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
+include (UseCodeCoverage)
 
 message("Compiling for target '${TARGET}'")
 if( TARGET )
