@@ -10,6 +10,7 @@
 
 set($ENV{https_proxy} "http://squid.itwm.fhg.de:3128/")
 include(Tools.cmake)
+my_ctest_setup()
 include(CTestConfigVZlogger.cmake)
 set(_ctest_type "Nightly")
 # set(_ctest_type "Continuous")
@@ -29,10 +30,6 @@ set(CMAKE_INSTALL_PREFIX "/usr")
 set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
 
 configure_ctest_config(${KDE_CTEST_VCS_REPOSITORY} "CTestConfigVZlogger.cmake")
-
-# generic support code, provides the kde_ctest_setup() macro, which sets up everything required:
-get_filename_component(_currentDir "${CMAKE_CURRENT_LIST_FILE}" PATH)
-include( "${_currentDir}/KDECTestNightly.cmake")
 kde_ctest_setup()
 
 FindOS(OS_NAME OS_VERSION)

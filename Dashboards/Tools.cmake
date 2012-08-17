@@ -1,9 +1,79 @@
 # -*- mode: cmake; -*-
 
+# generic support code, provides the kde_ctest_setup() macro, which sets up everything required:
+get_filename_component(_currentDir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include( "${_currentDir}/KDECTestNightly.cmake")
+
+macro(my_ctest_setup)
+  set(_git_default_branch "c++-port")
+
+  # init branch to checkout
+  if( NOT _git_branch )
+    set(_git_branch ${_git_default_branch})
+  endif( NOT _git_branch )
+
+  # initialisation target architectur
+  if(NOT TARGET_ARCH)
+    message("=1======> Setup Arch: ${TARGET_ARCH}")
+    set(CTEST_BUILD_ARCH "linux")
+  else(NOT TARGET_ARCH)
+    message("=2======> Setup Arch: ${TARGET_ARCH}")
+    set(CTEST_BUILD_ARCH ${TARGET_ARCH})
+    if(${TARGET_ARCH} MATCHES "ar71xx")
+      message("=3======> Setup Arch: ${TARGET_ARCH}")
+      set(CMAKE_TOOLCHAIN_FILE /usr/local/OpenWrt-SDK-ar71xx-for-Linux-x86_64-gcc-4.3.3+cs_uClibc-0.9.30.1/staging_dir/host/Modules/Toolchain-OpenWRT.cmake)
+    else(${TARGET_ARCH} MATCHES "ar71xx")
+      set(CMAKE_TOOLCHAIN_FILE "CMAKE_TOOLCHAIN_FILE-NO_FOUND")
+    endif(${TARGET_ARCH} MATCHES "ar71xx")
+  endif(NOT TARGET_ARCH)
+
+  # initialisation compiler
+  if( NOT compiler )
+    set(COMPILER_ID "gcc")
+  else( NOT compiler )
+    if( ${compiler} STREQUAL "clang" )
+      find_program( CLANG_CC clang )
+      find_program( CLANG_CXX clang++ )
+      if( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
+	message( WARNING "clang compiler not found. build may be misleading" )
+	set(COMPILER_ID "gcc")
+      else( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
+	set(ENV{CC} ${CLANG_CC})
+	set(ENV{CXX} ${CLANG_CXX})
+	set(COMPILER_ID "clang")
+      endif( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
+    else( ${compiler} STREQUAL "clang" )
+      set(COMPILER_ID "gcc")
+    endif( ${compiler} STREQUAL "clang" )
+  endif( NOT compiler )
+
+  # init branch to checkout
+  if( NOT CTEST_PUSH_PACKAGES )
+    set(CTEST_PUSH_PACKAGES 0)
+  endif( NOT CTEST_PUSH_PACKAGES )
+
+  # setup CTEST_BUILD_NAME
+  if( ${_git_branch} STREQUAL ${_git_default_branch} )
+    set(CTEST_BUILD_NAME "${CTEST_BUILD_ARCH}-${COMPILER_ID}-default")
+  else( ${_git_branch} STREQUAL ${_git_default_branch} )
+    set(CTEST_BUILD_NAME "${CTEST_BUILD_ARCH}-${COMPILER_ID}-default-${_git_branch}")
+  endif( ${_git_branch} STREQUAL ${_git_default_branch} )
+
+  set(_projectNameDir "${CTEST_PROJECT_NAME}")
+  set(_srcDir "srcdir")
+  set(_buildDir "builddir")
+
+  set(GIT_UPDATE_OPTIONS "pull")
+
+endmacro()
+
+#
+#
+#
 function(create_project_xml) 
   set(projectFile "${CTEST_BINARY_DIRECTORY}/Project.xml")
   file(WRITE ${projectFile}  "<Project name=\"${CTEST_PROJECT_NAME}\">")
- 
+  
   foreach(subproject ${CTEST_PROJECT_SUBPROJECTS})
     file(APPEND ${projectFile}
       "<SubProject name=\"${subproject}\">
@@ -16,12 +86,18 @@ function(create_project_xml)
   ctest_submit(FILES "${CTEST_BINARY_DIRECTORY}/Project.xml") 
 endfunction()
 
+#
+#
+#
 function(configure_ctest_config _CTEST_VCS_REPOSITORY configfile)
   string(REGEX REPLACE "[ /:\\.]" "_" _tmpDir ${_CTEST_VCS_REPOSITORY})
   set(_tmpDir "${_CTEST_DASHBOARD_DIR}/tmp/${_tmpDir}")
   configure_file(${configfile} ${_tmpDir}/CTestConfig.cmake COPYONLY)
 endfunction()
 
+#
+#
+#
 function(FindOS OS_NAME OS_VERSION)
 
   set(_LinuxReleaseFiles
@@ -90,3 +166,4 @@ function(ctest_push_files packageDir distFile)
     WORKING_DIRECTORY ${packageDir}
     )
 endfunction(ctest_push_files)
+
