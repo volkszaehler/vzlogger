@@ -33,6 +33,7 @@
 #ifndef _Volkszaehler_hpp_
 #define _Volkszaehler_hpp_
 
+#include <stdint.h>
 #include <curl/curl.h>
 #include <json/json.h>
 
