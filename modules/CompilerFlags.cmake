@@ -70,6 +70,16 @@ if(NOT WIN32)
 
   endif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
 
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CXXFLAGS} -W -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-parentheses")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-constant-logical-operand")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+  endif()
+
   # TODO: we need to check the compiler here, gcc does not know about those flags, is this The Right Thing To Do (TM)?
   if (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
     set(CMAKE_CXX_FLAGS "${CXXFLAGS} -wd383 -wd981")
