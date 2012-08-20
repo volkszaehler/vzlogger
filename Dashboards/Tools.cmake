@@ -35,15 +35,14 @@ macro(my_ctest_setup)
       find_program( CLANG_CC clang )
       find_program( CLANG_CXX clang++ )
       if( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
-	message( WARNING "clang compiler not found. build may be misleading" )
-	set(COMPILER_ID "gcc")
+	message(FATAL_ERROR "clang compiler not found. stopping here.")
       else( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
 	set(ENV{CC} ${CLANG_CC})
 	set(ENV{CXX} ${CLANG_CXX})
 	set(COMPILER_ID "clang")
       endif( ${CLANG_CC} STREQUAL "CLANG_CC-NOTFOUND" OR ${CLANG_CXX} STREQUAL "CLANG_CC-NOTFOUND")
     else( ${compiler} STREQUAL "clang" )
-      set(COMPILER_ID "gcc")
+      message(FATAL_ERROR "Error. Compiler '${compiler}' not found. Stopping here.")
     endif( ${compiler} STREQUAL "clang" )
   endif( NOT compiler )
 
@@ -89,11 +88,12 @@ endfunction()
 #
 #
 #
-function(configure_ctest_config _CTEST_VCS_REPOSITORY configfile)
+macro(configure_ctest_config _CTEST_VCS_REPOSITORY configfile)
   string(REGEX REPLACE "[ /:\\.]" "_" _tmpDir ${_CTEST_VCS_REPOSITORY})
   set(_tmpDir "${_CTEST_DASHBOARD_DIR}/tmp/${_tmpDir}")
   configure_file(${configfile} ${_tmpDir}/CTestConfig.cmake COPYONLY)
-endfunction()
+  set(ctest_config ${_tmpDir}/CTestConfig.cmake)
+endmacro()
 
 #
 #

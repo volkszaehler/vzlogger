@@ -8,7 +8,7 @@
 # * feeds update
 # * feeds install
 
-set($ENV{https_proxy} "http://squid.itwm.fhg.de:3128/")
+set(ENV{https_proxy} "http://squid.itwm.fhg.de:3128/")
 include(Tools.cmake)
 my_ctest_setup()
 include(CTestConfigVZlogger.cmake)
@@ -18,7 +18,6 @@ set(_ctest_type "Coverage")
 
 set(URL "https://github.com/kaikrueger/vzlogger.git")
 
-set(KDE_CTEST_DASHBOARD_DIR "/tmp/msgrid")
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
 set(CTEST_BINARY_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_buildDir}-${CTEST_BUILD_NAME}")
@@ -38,18 +37,17 @@ set(ctest_config ${CTEST_BASE_DIRECTORY}/CTestConfig.cmake)
 #######################################################################
 ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
 
-
 find_program(CTEST_GIT_COMMAND NAMES git)
-#set(CTEST_UPDATE_TYPE git)
+set(CTEST_UPDATE_TYPE git)
 
 set(CTEST_UPDATE_COMMAND  ${CTEST_GIT_COMMAND})
 if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
   set(CTEST_CHECKOUT_COMMAND "${CTEST_GIT_COMMAND} clone ${URL} ${CTEST_SOURCE_DIRECTORY}")
 endif(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 
-ctest_empty_binary_directory("${CTEST_BINARY_DIRECTORY}")
 ctest_start(${_ctest_type})
 ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY})
+ctest_submit(PARTS Update)
 
 execute_process(
   COMMAND ${CTEST_GIT_COMMAND} checkout  ${_git_branch}
