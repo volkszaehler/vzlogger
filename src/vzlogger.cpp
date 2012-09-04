@@ -161,7 +161,7 @@ void show_usage(char *argv[]) {
 
 	/* protocols */
 	printf("\n  following protocol types are supported:\n");
-	for (const meter_details_t *it = meter_get_protocols(); it->name != NULL; it++) {
+	for (const meter_details_t *it = meter_get_protocols(); it->id >0; it++) {
 		printf("\t%-12s\t%s\n", it->name, it->desc);
 	}
 
@@ -172,6 +172,10 @@ void show_usage(char *argv[]) {
 		it->id.unparse(obis_str, OBIS_STR_LEN);
 		printf("\t%-17s%-31s%-22s\n", it->name, it->desc, obis_str);
 	}
+
+	printf("\n  following APIs are supported:\n");
+	printf("\tvolkszaehler-api\n");
+	printf("\tmysmartgrid-api\n");
 
 	/* footer */
 	printf("\n%s - volkszaehler.org logging utility\n", PACKAGE_STRING);
