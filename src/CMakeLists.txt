@@ -38,6 +38,7 @@ set(libvz_srcs
 add_library(vz ${libvz_srcs})
 
 add_executable(vzlogger ${vzlogger_srcs})
+
 target_link_libraries(vzlogger proto vz vz-api)
 target_link_libraries(vzlogger ${JSON_LIBRARY})
 target_link_libraries(vzlogger ${SML_LIBRARY})
@@ -52,7 +53,7 @@ if( TARGET )
     target_link_libraries(vzlogger dl)
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
-target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARY})
+target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES})
 
 # add programs to the install target 
 INSTALL(PROGRAMS 

@@ -9,6 +9,16 @@
 
 message(STATUS "FindCURL check")
 
+IF (NOT WIN32)
+  include(FindPkgConfig)
+  if ( PKG_CONFIG_FOUND )
+
+     pkg_check_modules (PC_CURL libcurl>=7.19)
+
+     set(CURL_DEFINITIONS ${PC_CURL_CFLAGS_OTHER})
+  endif(PKG_CONFIG_FOUND)
+endif (NOT WIN32)
+
 #
 # set defaults
 SET(_curl_HOME "/usr/local")
@@ -62,8 +72,11 @@ ENDIF( CURL_HOME )
 # find the include files
 FIND_PATH(CURL_INCLUDE_DIR
   NAMES curl/curl.h
-  HINTS ${_curl_INCLUDE_SEARCH_DIRS}
-)
+  HINTS
+  ${_curl_INCLUDE_SEARCH_DIRS}
+  ${PC_CURL_INCLUDEDIR}
+  ${PC_CURL_INCLUDE_DIRS}
+  ${CMAKE_INCLUDE_PATH})
 
 # locate the library
 SET(CURL_LIBRARY_NAMES ${CURL_LIBRARY_NAMES} libcurl ssleay32)
