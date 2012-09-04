@@ -27,6 +27,7 @@
 #define _meter_protocol_hpp_
 
 typedef enum meter_procotol {
+	meter_protocol_none = 0,
 	meter_protocol_file = 1,
 	meter_protocol_exec,
 	meter_protocol_random,
