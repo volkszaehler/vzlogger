@@ -87,7 +87,9 @@ static obis_alias_t aliases[] = {
 	{Obis(  1,   0,  96,  50,   0,   5), "hag-temp-max",	"maximale Chiptemperatur"},
 	{Obis(  1,   0,  96,  50,   0,   6), "hag-check",		"Kontrollnr."},
 	{Obis(  1,   0,  96,  50,   0,   7), "hag-diag",		"Diagnose"},
+
 //{} /* stop condition for iterator */
+	{Obis(  0,   0,  0,  0,   0,   0), NULL,		NULL},
 };
 
 

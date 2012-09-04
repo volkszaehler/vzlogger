@@ -45,18 +45,19 @@
 int Meter::instances=0;
 
 static const meter_details_t protocols[] = {
-/*	     alias	description						max_rds	periodic
-	===============================================================================================*/
-	METER_DETAIL( 	file, File,	"Read from file or fifo",				32,	true),
-//METER_DETAIL(exec, 	"Parse program output",					32,	true),
-	METER_DETAIL(random, Random, 	"Generate random values with a random walk",		1,	true),
-	METER_DETAIL(fluksov2, Fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	false),
-	METER_DETAIL(s0, S0,	"S0-meter directly connected to RS232",			3,	true),
-	METER_DETAIL(d0, D0,	"DLMS/IEC 62056-21 plaintext protocol",			32,	false),
+/*     aliasdescriptionmax_rdsperiodic
+			 ===============================================================================================*/
+	METER_DETAIL( file, File,"Read from file or fifo",32,true),
+//METER_DETAIL(exec, "Parse program output",32,true),
+	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
+	METER_DETAIL(fluksov2, Fluksov2,"Read from Flukso's onboard SPI fifo",16,false),
+	METER_DETAIL(s0, S0,"S0-meter directly connected to RS232",3,true),
+	METER_DETAIL(d0, D0,"DLMS/IEC 62056-21 plaintext protocol",32,false),
 #ifdef SML_SUPPORT
-	METER_DETAIL(sml, Sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,	false),
+	METER_DETAIL(sml, Sml,"Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
 #endif /* SML_SUPPORT */
 //{} /* stop condition for iterator */
+	METER_DETAIL(none, NULL,NULL, 0,false),
 };
 
 Meter::Meter(std::list<Option> pOptions) :
