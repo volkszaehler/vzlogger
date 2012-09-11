@@ -59,6 +59,7 @@ vz::api::MySmartGrid::MySmartGrid(
 	OptionList optlist;
 	print(log_debug, "===> Create MySmartGrid-API", channel()->name());
 	char url[255];
+  unsigned short curlTimeout = 30; // 30 seconds
 
 /* parse required options */
 	try {
@@ -92,6 +93,13 @@ vz::api::MySmartGrid::MySmartGrid(
 		throw;
 	}
 
+	try {
+		curlTimeout = optlist.lookup_int(pOptions, "timeout");
+	} catch ( vz::OptionNotFoundException &e ) {
+    curlTimeout = 30; // use default value instead
+  } catch ( vz::VZException &e ) {
+		throw;
+	}
 	convertUuid(channel()->uuid());
 
 	switch(_channelType) {
@@ -121,6 +129,12 @@ vz::api::MySmartGrid::MySmartGrid(
 // CurlCallback::debug_callback requires CurlResponse* as data
 	curl_easy_setopt(_curlIF.handle(), CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
 	curl_easy_setopt(_curlIF.handle(), CURLOPT_DEBUGDATA, response());
+
+  // signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
+  curl_easy_setopt(_curlIF.handle(), CURLOPT_NOSIGNAL, 1);
+
+  // set timeout to 5 sec. required if next router has an ip-change.
+	curl_easy_setopt(_curlIF.handle(), CURLOPT_TIMEOUT, curlTimeout);
 }
 
 vz::api::MySmartGrid::~MySmartGrid() 
@@ -150,6 +164,7 @@ void vz::api::MySmartGrid::send()
 	switch(_channelType) {
 			case chn_type_device:
 				json_obj = _apiDevice();
+				channel()->buffer()->clean();
 				break;
 			case chn_type_sensor:
 				json_obj = _apiSensor(channel()->buffer());
@@ -490,7 +505,7 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		if(timestamp < (long)it->tvtod() && value != (long)(it->value() * _scaler) ) {
+		if(timestamp < (long)it->tvtod() /*&& value != (long)(it->value() * _scaler)*/ ) {
 			_values.push_back(*it);
 			timestamp = it->tvtod();
 			value     = it->value() * _scaler;
@@ -524,7 +539,7 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 			_first_counter = value;
 			_last_counter = value;
 		} else {
-			if ( (_last_counter < value)  && (_first_ts < timestamp)) {
+			if ( /*(_last_counter < value)  &&*/ (_first_ts < timestamp)) {
 				_first_ts = timestamp;
 				json_object_array_add(json_tuple, json_object_new_int(timestamp));
 				json_object_array_add(json_tuple, json_object_new_int(value-_first_counter));
@@ -561,8 +576,6 @@ void vz::api::MySmartGrid::hmac_sha1(
 	) {
 	HMAC_CTX hmacContext;
 
-	printf(">>>>%s<<<\n", secretKey());
-	
 	HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
 	HMAC_Update(&hmacContext, data, dataLen);
 
