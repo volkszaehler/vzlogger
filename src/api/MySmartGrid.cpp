@@ -163,8 +163,7 @@ void vz::api::MySmartGrid::send()
 
 	switch(_channelType) {
 			case chn_type_device:
-				json_obj = _apiDevice();
-				channel()->buffer()->clean();
+				json_obj = _apiDevice(channel()->buffer());
 				break;
 			case chn_type_sensor:
 				json_obj = _apiSensor(channel()->buffer());
@@ -357,7 +356,15 @@ void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 	json_tokener_free(json_tok);
 }
 
-json_object *vz::api::MySmartGrid::_apiDevice() {
+json_object *vz::api::MySmartGrid::_apiDevice(Buffer::Ptr buf) {
+
+	// copy all values to local buffer queue
+	buf->lock();
+	for (	Buffer::iterator it = buf->begin(); it != buf->end(); it++) {
+		it->mark_delete();
+	}
+	buf->unlock();
+	buf->clean();
 
 	if(_first_ts>0) { // send lifesign
 		_first_ts = time(NULL);

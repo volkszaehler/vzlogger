@@ -68,7 +68,7 @@ namespace vz {
 			/**
 			 *  api configured as device
 			 */
-			json_object *_apiDevice();
+			json_object *_apiDevice(Buffer::Ptr buf);
 	
 			/**
 			 *  api configured as sensor
