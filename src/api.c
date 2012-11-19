@@ -124,6 +124,7 @@ int api_init(channel_t *ch, api_handle_t *api) {
 		return EXIT_FAILURE;
 	}
 
+	curl_easy_setopt(api->curl, CURLOPT_NOSIGNAL, TRUE); // ensure thread-safe behaviour
 	curl_easy_setopt(api->curl, CURLOPT_URL, url);
 	curl_easy_setopt(api->curl, CURLOPT_HTTPHEADER, api->headers);
 	curl_easy_setopt(api->curl, CURLOPT_VERBOSE, options.verbosity);
