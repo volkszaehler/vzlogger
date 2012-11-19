@@ -278,7 +278,7 @@ size_t meter_read_d0(meter_t *mtr, reading_t rds[], size_t max_readings) {
 	}
 
 error:
-	print(log_error, "%s(): read unexpected byte: %x: %s%c%c!", __FUNCTION__, byte,isprint(byte)?"\"":"(non-printabl",isprint(byte)?byte:'e',isprint(byte)?'"':')');
+	print(log_error, "%s(): read unexpected byte: %x: %s%c%c!", __FUNCTION__, byte,isprint(byte)?"\"":"(non-printable",isprint(byte)?byte:'e',isprint(byte)?'"':')');
 	return 0;
 }
 
