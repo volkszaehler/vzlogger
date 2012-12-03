@@ -38,7 +38,7 @@ METER_DETAIL(file, 	"Read from file or fifo",				32,	TRUE),
 //METER_DETAIL(exec, 	"Parse program output",					32,	TRUE),
 METER_DETAIL(random,	"Generate random values with a random walk",		1,	TRUE),
 METER_DETAIL(fluksov2,	"Read from Flukso's onboard SPI fifo",		16,	FALSE),
-METER_DETAIL(s0,	"S0-meter directly connected to RS232",			1,	TRUE),
+METER_DETAIL(s0,	"S0-meter directly connected to RS232",			1,	FALSE),
 METER_DETAIL(d0,	"DLMS/IEC 62056-21 plaintext protocol",			32,	FALSE),
 #ifdef SML_SUPPORT
 METER_DETAIL(sml,	"Smart Message Language as used by EDL-21, eHz and SyM²", 32,	FALSE),
