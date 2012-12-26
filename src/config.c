@@ -166,7 +166,7 @@ map_t * config_parse_meter(struct json_object *jso) {
 	list_init(&mapping->channels);
 
 	if (meter_init(&mapping->meter, options) != SUCCESS) {
-		print(log_error, "Failed to initialize meter. Arborting.", mapping);
+		print(log_error, "Failed to initialize meter. Aborting.", mapping);
 		free(mapping);
 		return NULL;
 	}

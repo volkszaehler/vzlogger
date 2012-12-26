@@ -98,7 +98,7 @@ size_t meter_read(meter_t *mtr, reading_t rds[], size_t n) {
 }
 
 int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
-	for (const meter_details_t *it = meter_get_protocols(); it != NULL; it++) {
+	for (const meter_details_t *it = meter_get_protocols(); it->name != NULL; it++) {
 		if (strcmp(it->name, name) == 0) {
 			*protocol = it->id;
 			return SUCCESS;
