@@ -16,7 +16,7 @@ include(CTestConfigVZlogger.cmake)
 # set(_ctest_type "Continuous")
 set(_ctest_type "Coverage")
 
-set(URL "https://github.com/kaikrueger/vzlogger.git")
+set(URL "https://github.com/mysmartgrid/vzlogger.git")
 
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
@@ -59,7 +59,6 @@ execute_process(
 set(ENABLE_CODECOVERAGE 1)
 set(CMAKE_BUILD_TYPE Profile)
 set(CMAKE_ADDITIONAL_PATH ${CTEST_INSTALL_DIRECTORY})
-#set(blah "${CTEST_INSTALL_DIRECTORY}/lib")
 
 if(CMAKE_TOOLCHAIN_FILE)
   kde_ctest_write_initial_cache("${CTEST_BINARY_DIRECTORY}"

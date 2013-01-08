@@ -16,7 +16,7 @@ set(_ctest_type "Nightly")
 # set(_ctest_type "Continuous")
 # set(_ctest_type "Coverage")
 
-set(URL "https://github.com/kaikrueger/vzlogger.git")
+set(URL "https://github.com/mysmartgrid/vzlogger.git")
 
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
