@@ -33,6 +33,7 @@
 #include <json/json.h>
 #include <sys/time.h>
 #include <math.h>
+#include <unistd.h>
 
 #include <VZException.hpp>
 #include "Config_Options.hpp"

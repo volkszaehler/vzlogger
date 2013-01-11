@@ -35,6 +35,7 @@
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
+#include <unistd.h>
 
 #include <VZException.hpp>
 #include "Config_Options.hpp"
