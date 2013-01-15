@@ -53,6 +53,7 @@ if( ENABLE_SML )
   include(FindSML)
   if(SML_FOUND)
     set(SML_SUPPORT 1)
+    include_directories(${SML_INCLUDE_DIR})
   endif(SML_FOUND)
 endif( ENABLE_SML )
 
@@ -70,7 +71,8 @@ ENDIF(NOT WIN32)
 # libjson
 include(FindJson)
 if( NOT JSON_FOUND)
-  message(FATAL_ERROR "libjson ist required")
+  message(FATAL_ERROR "libjson ist required.
+Install json or call cmake -DJSON_HOME=path_to_json_install")
 endif( NOT JSON_FOUND)
 include_directories(${JSON_INCLUDE_DIR})
 
@@ -109,6 +111,15 @@ message("             prefix: ${CMAKE_INSTALL_PREFIX}")
 message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
 message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
+
+if( NOT SML_FOUND) 
+  message(FATAL_ERROR "libsml ist required.
+Install libsml or call cmake -DSML_HOME=path_to_sml_install")
+endif( NOT SML_FOUND) 
+if( NOT MICROHTTPD_FOUND )
+  message(FATAL_ERROR "microhttpd ist required.
+Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
+endif( NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
 INSTALL(FILES README INSTALL COPYING DESTINATION

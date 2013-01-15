@@ -11,6 +11,7 @@ add_subdirectory(protocols)
 #####################################################################
 if(ENABLE_LOCAL)
   set(local_srcs local.cpp)
+  include_directories(${MICROHTTPD_INCLUDE_DIR})
 else(ENABLE_LOCAL)
   set(local_srcs "")
 endif(ENABLE_LOCAL)
