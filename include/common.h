@@ -30,6 +30,8 @@ typedef unsigned char bool;
 #define ERR_INVALID_TYPE -3
 
 /* prototypes */
-void print(log_level_t lvl, const char *format, void *id, ... );
+/* http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html */
+void print(log_level_t lvl, const char *format, void *id, ... )
+	__attribute__ ((format (printf, 2, 4)));
 
 #endif /* _COMMON_H_ */
