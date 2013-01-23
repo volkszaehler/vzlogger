@@ -64,7 +64,7 @@ void * reading_thread(void *arg) {
 
 		/* dumping meter output */
 		if (options.verbosity > log_debug) {
-			print(log_debug, "Got %i new readings from meter:", mtr, n);
+			print(log_debug, "Got %zu new readings from meter:", mtr, n);
 
 			char identifier[MAX_IDENTIFIER_LEN];
 			for (int i = 0; i < n; i++) {
@@ -75,7 +75,7 @@ void * reading_thread(void *arg) {
 
 		/* update buffer length with current interval */
 		if (details->periodic == FALSE && delta > 0 && delta != mtr->interval) {
-			print(log_debug, "Updating interval to %i", mtr, delta);
+			print(log_debug, "Updating interval to %zu", mtr, delta);
 			mtr->interval = delta;
 		}
 
@@ -200,7 +200,7 @@ void * logging_thread(void *arg) {
 
 		/* check response */
 		if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
-			print(log_debug, "Request succeeded with code: %i", ch, http_code);
+			print(log_debug, "Request succeeded with code: %lu", ch, http_code);
 			ch->buffer.sent = last->next;
 		}
 		else { /* error */
