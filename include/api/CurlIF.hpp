@@ -1,10 +1,10 @@
 /**
- * Main header file
+ * Header file for volkszaehler.org API calls
  *
- * @package vzlogger
+ * @author Kai Krueger <kai.krueger@itwm.fraunhofer.de>
  * @copyright Copyright (c) 2011, The volkszaehler.org project
- * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
- * @author Steffen Vogel <info@steffenvogel.de>
+ * @package vzlogger
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 /*
  * This file is part of volkzaehler.org
@@ -23,27 +23,34 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#ifndef _CurlIF_hpp_
+#define _CurlIF_hpp_
 
-#include <pthread.h>
-#include <vector>
+#include <string>
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
+#include <curl/curl.h>
 
-using namespace std;
+namespace vz {
+	namespace api {
 
-/* prototypes */
-void quit(int sig);
-void daemonize();
-
-void show_usage(char ** argv);
-void show_aliases();
-
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+		class  CurlIF{
+		public:
+			CurlIF();
+			~CurlIF();
+      
+			CURL *handle() { return _curl; }
+      
+			void addHeader(const std::string value);
+			void clearHeader();
+			void commitHeader();
+      
+			CURLcode perform() { return curl_easy_perform(handle()); }
+      
+		private:
+			CURL *_curl;
+			struct curl_slist *_headers;
+		}; // class CurlIF
+      
+	} // namespace vz
+} // namespace vz
+#endif /* _CurlIF_hpp_ */

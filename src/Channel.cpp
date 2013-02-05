@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Channel class
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,27 +23,54 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#include <sstream>
 
-#include <pthread.h>
-#include <vector>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
 #include "Channel.hpp"
 
-using namespace std;
+int Channel::instances = 0;
 
-/* prototypes */
-void quit(int sig);
-void daemonize();
+Channel::Channel(
+	const std::list<Option> &pOptions,
+	const std::string apiProtocol,
+	const std::string uuid,
+	ReadingIdentifier::Ptr pIdentifier
+	)
+		: _thread_running(false)
+		, _options(pOptions)
+		, _buffer(new Buffer())
+		, _identifier(pIdentifier)
+		, _last(0)
+		, _uuid(uuid)
+		, _apiProtocol(apiProtocol)
+{
+	id = instances++;
 
-void show_usage(char ** argv);
-void show_aliases();
+// set channel name
+	std::stringstream oss;
+	oss<<"chn"<< id;
+	_name=oss.str();
 
-int options_parse(int argc, char *argv[], Config_Options *options);
+	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
+}
 
-void register_device();
+/**
+ * Free all allocated memory recursivly
+ */
+Channel::~Channel() {
+	pthread_cond_destroy(&condition);
+}
 
-#endif /* _VZLOGGER_H_ */
+
+/*
+ * Local variables:
+ *  tab-width: 2
+ *  c-indent-level: 2
+ *  c-basic-offset: 2
+ *  project-name: vzlogger
+ * End:
+ */

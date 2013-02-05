@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Exceptions
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,28 +22,15 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _EXCEPTION_H_
+#define _EXCEPTION_H_
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+class Exception {
 
-#include <pthread.h>
-#include <vector>
+public:
+	Exception(const char * msg);
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
+};
 
-using namespace std;
-
-/* prototypes */
-void quit(int sig);
-void daemonize();
-
-void show_usage(char ** argv);
-void show_aliases();
-
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+#endif /* _EXCEPTION_H_ */

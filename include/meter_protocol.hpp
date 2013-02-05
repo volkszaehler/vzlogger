@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Meter interface
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,27 +23,17 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#ifndef _meter_protocol_hpp_
+#define _meter_protocol_hpp_
 
-#include <pthread.h>
-#include <vector>
-
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
-
-using namespace std;
-
-/* prototypes */
-void quit(int sig);
-void daemonize();
-
-void show_usage(char ** argv);
-void show_aliases();
-
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+typedef enum meter_procotol {
+	meter_protocol_none = 0,
+	meter_protocol_file = 1,
+	meter_protocol_exec,
+	meter_protocol_random,
+	meter_protocol_s0,
+	meter_protocol_d0,
+	meter_protocol_sml,
+	meter_protocol_fluksov2
+} meter_protocol_t;
+#endif /* _meter_protocol_hpp_ */

@@ -1,5 +1,7 @@
 /**
- * Main header file
+ * Protocol generic interface
+ * To implement new meter protocol, derive from this class and implement 
+ * the specific code for open(), close() and read()
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,27 +25,38 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#ifndef _protocol_hpp_
+#define _protocol_hpp_
 
-#include <pthread.h>
 #include <vector>
+#include <list>
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
+#include <common.h>
+#include <shared_ptr.hpp>
+#include <Reading.hpp>
+#include <Options.hpp>
 
-using namespace std;
+namespace vz {
+	namespace protocol {
+		class Protocol {
+		public:
+			typedef vz::shared_ptr<Protocol> Ptr;
 
-/* prototypes */
-void quit(int sig);
-void daemonize();
+			Protocol(const std::string &name) : _name(name) {};
 
-void show_usage(char ** argv);
-void show_aliases();
+			virtual ~Protocol() {};
 
-int options_parse(int argc, char *argv[], Config_Options *options);
+			virtual int    open() = 0;
+			virtual int    close() = 0;
+			virtual ssize_t read(std::vector<Reading> &rds, size_t n) = 0;
 
-void register_device();
+			const std::string &name() { return _name; }
+    
+		private:
+			std::string _name;
+    
+		}; // class protocol
+	} // namespace protocol
+} // namespace vz
 
-#endif /* _VZLOGGER_H_ */
+#endif /* _protocol_hpp_ */

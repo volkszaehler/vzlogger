@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Read data from files & fifos
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,28 +22,31 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _FILE_H_
+#define _FILE_H_
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#include <protocols/Protocol.hpp>
 
-#include <pthread.h>
-#include <vector>
+class MeterFile : public vz::protocol::Protocol {
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
+public:
+	MeterFile(std::list<Option> options);
+	virtual ~MeterFile();
 
-using namespace std;
+	int open();
+	int close();
+	ssize_t read(std::vector<Reading> &rds, size_t n);
 
-/* prototypes */
-void quit(int sig);
-void daemonize();
+	const char *path() { return _path.c_str(); }
+	const char *format() { return _format.c_str(); }
+  
+  private:
+	std::string _path;
+	std::string _format;
+	int _rewind;
 
-void show_usage(char ** argv);
-void show_aliases();
+	FILE *_fd;
+};
 
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+#endif /* _FILE_H_ */

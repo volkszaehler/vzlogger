@@ -1,0 +1,41 @@
+#ifndef _config_hpp_in_
+#define _config_hpp_in_
+/* Local interface */
+#cmakedefine LOCAL_SUPPORT 1
+
+/* Name of package */
+#define PACKAGE "vzlogger"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "http://bugs.volkszaehler.org"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "vzlogger"
+
+/* Define to the full name and version of this package. */
+#cmakedefine PACKAGE_STRING "@PACKAGE_STRING@"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "vzlogger"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
+
+/* Define to the version of this package. */
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+/* Smart Messaging Language */
+#cmakedefine SML_SUPPORT 1
+
+/* true if we use shared_ptr from stl */
+#cmakedefine USE_STL_TR1 1
+
+/* true if openssl is found */
+#cmakedefine WITH_OPENSSL 1
+
+/* true if openssl is found */
+#cmakedefine HAVE_OPENSSL 1
+
+/* Version number of package */
+#cmakedefine VERSION "@VZLOGGER_RPM_VERSION@"
+#endif /* _config_hpp_in_ */

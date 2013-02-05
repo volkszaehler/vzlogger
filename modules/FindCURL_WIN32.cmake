@@ -1,0 +1,121 @@
+# -*- mode: cmake; -*-
+# Find the CURL package
+#
+# This file defines:
+# CURL_FOUND if curl was found
+# CURL_LIBRARY The lib to link to (currently only a static unix lib, not
+# portable)
+# CURL_INCLUDE_DIR the protoc executable
+
+message(STATUS "FindCURL check")
+
+IF (NOT WIN32)
+  include(FindPkgConfig)
+  if ( PKG_CONFIG_FOUND )
+
+     pkg_check_modules (PC_CURL libcurl>=7.19)
+
+     set(CURL_DEFINITIONS ${PC_CURL_CFLAGS_OTHER})
+  endif(PKG_CONFIG_FOUND)
+endif (NOT WIN32)
+
+#
+# set defaults
+SET(_curl_HOME "/usr/local")
+SET(_curl_INCLUDE_SEARCH_DIRS
+  ${CMAKE_INCLUDE_PATH}
+  /usr/local/include
+  /usr/include
+  )
+
+SET(_curl_LIBRARIES_SEARCH_DIRS
+  ${CMAKE_LIBRARY_PATH}
+  /usr/local/lib
+  /usr/lib
+  )
+
+##
+if( "${CURL_HOME}" STREQUAL "")
+  if("" MATCHES "$ENV{CURL_HOME}")
+    message(STATUS "CURL_HOME env is not set, setting it to /usr/local")
+    set (CURL_HOME ${_curl_HOME})
+  else("" MATCHES "$ENV{CURL_HOME}")
+    set (CURL_HOME "$ENV{CURL_HOME}")
+  endif("" MATCHES "$ENV{CURL_HOME}")
+else( "${CURL_HOME}" STREQUAL "")
+  message(STATUS "CURL_HOME is not empty: \"${CURL_HOME}\"")
+endif( "${CURL_HOME}" STREQUAL "")
+##
+
+message(STATUS "Looking for curl in ${CURL_HOME}")
+
+IF( NOT ${CURL_HOME} STREQUAL "" )
+    SET(_curl_INCLUDE_SEARCH_DIRS ${CURL_HOME}/include ${_curl_INCLUDE_SEARCH_DIRS})
+    SET(_curl_LIBRARIES_SEARCH_DIRS ${CURL_HOME}/lib ${_curl_LIBRARIES_SEARCH_DIRS})
+    SET(_curl_HOME ${CURL_HOME})
+ENDIF( NOT ${CURL_HOME} STREQUAL "" )
+
+IF( NOT $ENV{CURL_INCLUDEDIR} STREQUAL "" )
+  SET(_curl_INCLUDE_SEARCH_DIRS $ENV{CURL_INCLUDEDIR} ${_curl_INCLUDE_SEARCH_DIRS})
+ENDIF( NOT $ENV{CURL_INCLUDEDIR} STREQUAL "" )
+
+IF( NOT $ENV{CURL_LIBRARYDIR} STREQUAL "" )
+  SET(_curl_LIBRARIES_SEARCH_DIRS $ENV{CURL_LIBRARYDIR} ${_curl_LIBRARIES_SEARCH_DIRS})
+ENDIF( NOT $ENV{CURL_LIBRARYDIR} STREQUAL "" )
+
+IF( CURL_HOME )
+  SET(_curl_INCLUDE_SEARCH_DIRS ${CURL_HOME}/include ${_curl_INCLUDE_SEARCH_DIRS})
+  SET(_curl_LIBRARIES_SEARCH_DIRS ${CURL_HOME}/lib ${_curl_LIBRARIES_SEARCH_DIRS})
+  SET(_curl_HOME ${CURL_HOME})
+ENDIF( CURL_HOME )
+
+# find the include files
+FIND_PATH(CURL_INCLUDE_DIR
+  NAMES curl/curl.h
+  HINTS
+  ${_curl_INCLUDE_SEARCH_DIRS}
+  ${PC_CURL_INCLUDEDIR}
+  ${PC_CURL_INCLUDE_DIRS}
+  ${CMAKE_INCLUDE_PATH})
+
+# locate the library
+SET(CURL_LIBRARY_NAMES ${CURL_LIBRARY_NAMES} libcurl ssleay32)
+IF(WIN32)
+   SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ELSE(WIN32)
+   SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ENDIF(WIN32)
+FIND_LIBRARY(CURL_STATIC_LIBRARY NAMES libcurl_static
+  HINTS
+    ${_curl_LIBRARIES_SEARCH_DIRS}
+    ${PC_CURL_LIBDIR}
+    ${PC_CURL_LIBRARY_DIRS}
+)
+
+# evaluate search results
+IF(CURL_INCLUDE_DIR AND CURL_STATIC_LIBRARY)
+   SET(CURL_FOUND TRUE)
+ELSE(CURL_INCLUDE_DIR AND CURL_STATIC_LIBRARY)
+   SET(CURL_FOUND FALSE)
+ENDIF (CURL_INCLUDE_DIR AND CURL_STATIC_LIBRARY)
+
+IF (CURL_FOUND)
+   set(CURL_STATIC_LIBRARIES ${CURL_STATIC_LIBRARY}
+   )
+   IF (NOT Curl_FIND_QUIETLY)
+      MESSAGE(STATUS "Found Curl: ${CURL_STATIC_LIBRARIES}")
+   ENDIF (NOT Curl_FIND_QUIETLY)
+   SET(HAVE_CURL_CURL_H true)
+ELSE (CURL_FOUND)
+   IF (Curl_FIND_REQUIRED)
+      MESSAGE(FATAL_ERROR "Could NOT find Curl")
+   ENDIF (Curl_FIND_REQUIRED)
+ENDIF (CURL_FOUND)
+
+MARK_AS_ADVANCED(
+  CURL_FOUND
+  CURL_LIBRARY
+  CURL_STATIC_LIBRARY
+  CURL_STATIC_LIBRARIES
+  CURL_INCLUDE_DIR
+)

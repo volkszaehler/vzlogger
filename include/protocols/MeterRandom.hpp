@@ -1,5 +1,5 @@
 /**
- * Main header file
+ * Generate pseudo random data series by a random walk
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -22,28 +22,28 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifndef _RANDOM_H_
+#define _RANDOM_H_
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#include <protocols/Protocol.hpp>
 
-#include <pthread.h>
-#include <vector>
+double ltqnorm(double p); /* forward declaration */
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
+class MeterRandom : public vz::protocol::Protocol {
 
-using namespace std;
+public:
+	MeterRandom(std::list<Option> options);
+	virtual ~MeterRandom();
 
-/* prototypes */
-void quit(int sig);
-void daemonize();
+	int open();
+	int close();
+	ssize_t read(std::vector<Reading> &rds, size_t n);
 
-void show_usage(char ** argv);
-void show_aliases();
+protected:
+	double _min;
+	double _max;
+	double _last;
+};
 
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+#endif /* _RANDOM_H_ */

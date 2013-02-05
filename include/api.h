@@ -44,8 +44,20 @@ typedef struct {
 	struct curl_slist *headers;
 } api_handle_t;
 
-int api_init(channel_t *ch, api_handle_t *api);
-void api_free(api_handle_t *api);
+namespace vz {
+  
+  class Api {
+    public:
+    Api(Channel::Ptr ch);
+    ~Api();
+    CURL *curl() { return _api.curl; }
+    
+    
+    private:
+    Channel::Ptr _ch;
+    api_handle_t _api;
+  };
+} // namespace vz
 
 /**
  * Reformat CURLs debugging output
@@ -62,7 +74,8 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
  * @param last	the last tuple of our linked list which should be encoded
  * @return the json_object (has to be free'd)
  */
-json_object * api_json_tuples(buffer_t *buf, reading_t *first, reading_t *last);
+json_object * api_json_tuples(Buffer::Ptr buf);
+//Reading *first, Reading *last);
 
 /**
  * Parses JSON encoded exception and stores describtion in err

@@ -1,10 +1,12 @@
 /**
- * Main header file
+ * Exceptions
  *
- * @package vzlogger
- * @copyright Copyright (c) 2011, The volkszaehler.org project
- * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
+ * Used to store recent readings and buffer in case of net inconnectivity
+ *
  * @author Steffen Vogel <info@steffenvogel.de>
+ * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @package vzlogger
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 /*
  * This file is part of volkzaehler.org
@@ -23,27 +25,10 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VZLOGGER_H_
-#define _VZLOGGER_H_
+#include <cstdio>
 
-#include <pthread.h>
-#include <vector>
+#include "exception.h"
 
-#include "Config_Options.hpp"
-#include "Meter.hpp"
-#include "Channel.hpp"
-
-using namespace std;
-
-/* prototypes */
-void quit(int sig);
-void daemonize();
-
-void show_usage(char ** argv);
-void show_aliases();
-
-int options_parse(int argc, char *argv[], Config_Options *options);
-
-void register_device();
-
-#endif /* _VZLOGGER_H_ */
+Exception::Exception(const char *msg) {
+	printf("Exception: %s", msg);
+}
