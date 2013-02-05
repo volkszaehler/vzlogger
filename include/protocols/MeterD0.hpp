@@ -66,6 +66,4 @@ private:
 	int _openDevice(struct termios *old_tio, speed_t baudrate);
 };
 
-int meter_d0_open_device(const char *device, struct termios *old_tio, speed_t baudrate);
-
 #endif /* _D0_H_ */
