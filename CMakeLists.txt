@@ -87,6 +87,7 @@ else(WIN32)
 endif(WIN32)
 
 find_library(LIBUUID uuid)
+find_library(LIBGCRYPT gcrypt)
 
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
