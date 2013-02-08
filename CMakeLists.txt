@@ -124,7 +124,7 @@ endif( NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
 INSTALL(FILES README INSTALL COPYING DESTINATION
-  share/doc/vzlogger-${V_MAJOR}-${V_MINOR}
+  share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
 )
 
 # CPACK packaging
