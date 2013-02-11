@@ -1,5 +1,5 @@
 /**
- * Generic linked list
+ * Single linked list
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -26,91 +26,105 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-#include <stdlib.h>
+#include "exception.h"
 
-#define CONCAT2(a, b) a ## b
-#define CONCAT(a, b) CONCAT2(a, b)
-#define UNIQUE(prefix) CONCAT(__ ## prefix ## _, __LINE__ )
+template<class T>
+class List {
 
-#define foreach(list, value, type) \
-	__list_item_t *UNIQUE(it) = (list).head; \
-	for( \
-		type * (value) = UNIQUE(it)->data; \
-		({ \
-			if (UNIQUE(it)) { \
-				(value) = UNIQUE(it)->data; \
-			} \
-			; UNIQUE(it) != NULL; \
-		}); \
-		UNIQUE(it) = UNIQUE(it)->next \
-	) \
+protected:
+	class Node; /* protected forward declaration */
 
-typedef struct __list_item {
-	void *data;
-	struct __list_item *prev;
-	struct __list_item *next;
-} __list_item_t;
+public:
+	class Iterator; /* public forward declaration */
+	typedef Iterator iterator;
 
-typedef struct {
+	List() : size(0), head(NULL), tail(NULL) { };
+	~List() { clear(); };
+
+	Iterator push(T data) {
+		Node *newNode = new Node;
+
+		if (newNode == NULL) {
+			throw new Exception("Out of memory!");
+		}
+
+		newNode->data = data;
+		newNode->next = NULL;
+
+		if (head == NULL) { /* empty list */
+			newNode->prev = NULL;
+			head = newNode;
+		}
+		else {
+			newNode->prev = tail;
+			tail->next = newNode;
+		}
+
+		tail = newNode;
+		size++;
+
+		return Iterator(newNode);
+	}
+
+	T pop() {
+		Node *oldNode = head;
+		T data = head->data;
+
+		if (oldNode == NULL) {
+			throw new Exception("List is empty!");
+		}
+
+		head = oldNode->next;
+		size--;
+
+		delete oldNode;
+		return data;
+	}
+
+	size_t length() const { return size; };
+	void clear() { while (size > 0) { pop(); } };
+
+	/* Iterators */
+	Iterator begin() { return Iterator(head); };
+	Iterator end() { return Iterator(NULL); };
+
+protected:
 	size_t size;
-	__list_item_t *head;
-	__list_item_t *tail;
-} list_t;
+	Node *head, *tail;
+};
 
-inline void list_init(list_t *list) {
-	list->size = 0;
-	list->head = list->tail = NULL;
-}
+template<class T>
+class List<T>::Node {
+	friend class List<T>;
+	friend class List<T>::Iterator;
 
-inline size_t list_push(list_t *list, void *data) {
-	__list_item_t *new = malloc(sizeof(__list_item_t));
+protected:
+	T data;
+	Node *next, *prev;
+};
 
-	if (new == NULL) return -1; /* cannot allocate memory */
+template<class T>
+class List<T>::Iterator {
+	friend class List<T>;
 
-	new->data = data;
-	new->prev = list->tail;
-	new->next = NULL;
+public:
+	Iterator() : cur(NULL) { };
 
-	if (list->tail == NULL) {
-		list->head = new;
-	}
-	else {
-		list->tail->next = new;
-	}
+	bool operator==(Iterator const& i) const { return (cur == i.cur); };
+	bool operator!=(Iterator const& i) const { return (cur != i.cur); };
 
-	list->tail = new;
-	list->size = list->size + 1;
+	T* operator->() const { return &cur->data; };
+	T& operator*() const { return cur->data; };
 
-	return list->size;
-}
+	Iterator operator++() {
+		cur = cur->next;
+		return *this;
+	};
 
-inline void * list_pop(list_t *list) {
-	__list_item_t *old = list->tail;
+protected:
+	Iterator(Node *node) : cur(node) { };
 
-	if (old == NULL) {
-		return NULL;
-	}
-
-	void *data = old->data;
-
-	list->tail = old->prev;
-	list->size--;
-
-	free(old);
-
-	return data;
-}
-
-inline void list_free(list_t *list) {
-	while (list->head != NULL) {
-		__list_item_t *old = list->head;
-		list->head = old->next;
-
-		free(old->data);
-		free(old);
-	}
-
-	list_init(list);
-}
+	Node *cur;
+};
 
 #endif /* _LIST_H_ */
