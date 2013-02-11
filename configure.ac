@@ -1,13 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.65])
 
 # update version here!
 AC_INIT([vzlogger], [0.3.3], [http://bugs.volkszaehler.org])
 AM_INIT_AUTOMAKE([vzlogger], [0.3.3])
 
-AC_CONFIG_SRCDIR([src/meter.c])
+AC_CONFIG_SRCDIR([src/Meter.cpp])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
@@ -16,7 +16,7 @@ AC_CONFIG_FILES([
 ])
 
 # Checks for programs.
-AC_PROG_CC
+AC_PROG_CXX
 
 # We use per target compiler flags
 AM_PROG_CC_C_O
@@ -25,7 +25,7 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
 # Checks for libraries.
-PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.19])
+PKG_CHECK_MODULES([DEPS_VZ], [json >= 0.9 libcurl >= 7.19 openssl ])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stddef.h stdint.h stdlib.h string.h sys/time.h termios.h unistd.h getopt.h signal.h pthread.h])
@@ -88,7 +88,7 @@ AC_ARG_ENABLE(
 
 if test x"$debug" = x"yes"; then
     AC_DEFINE([DEBUG], [], [Debug Mode])
-    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0"
+    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -Werror -Wno-uninitialized -O0 -fno-omit-frame-pointer -Woverloaded-virtual -Wno-system-headers"
 else
     AM_CXXFLAGS="$AM_CXXFLAGS -O3"
 fi

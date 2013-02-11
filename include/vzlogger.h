@@ -27,23 +27,13 @@
 #define _VZLOGGER_H_
 
 #include <pthread.h>
+#include <vector>
 
-#include "../config.h" /* GNU buildsystem config */
+#include "Config_Options.hpp"
+#include "Meter.hpp"
+#include "Channel.hpp"
 
-#include "config.h"
-#include "meter.h"
-#include "common.h"
-#include "list.h"
-
-/**
- * Type for mapping channels to meters
- */
-typedef struct map {
-	meter_t meter;
-	list_t channels;
-
-	pthread_t thread;
-} map_t;
+using namespace std;
 
 /* prototypes */
 void quit(int sig);
@@ -52,6 +42,8 @@ void daemonize();
 void show_usage(char ** argv);
 void show_aliases();
 
-int options_parse(int argc, char *argv[], config_options_t *options);
+int options_parse(int argc, char *argv[], Config_Options *options);
+
+void register_device();
 
 #endif /* _VZLOGGER_H_ */

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+export LANG=en_US.UTF-8
+export CTEST=/usr/bin/ctest
+
+echo "Running ctest"
+
+
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_PACKAGES=1,TARGET_ARCH=ar71xx
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_PACKAGES=1,
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,compiler=clang
+
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake,compiler=clang
+
