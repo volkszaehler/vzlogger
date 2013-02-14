@@ -132,6 +132,9 @@ vz::Api::Api(Channel::Ptr ch)
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
 
+	// WORKAROUND for lighthttp not supporting Expect: properly
+	_api.headers = curl_slist_append(_api.headers, "Expect: ");
+
 	_api.curl = curl_easy_init();
 	if (!_api.curl) {
 		throw vz::VZException("CURL: cannot create handle.");
