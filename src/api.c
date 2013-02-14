@@ -119,6 +119,9 @@ int api_init(channel_t *ch, api_handle_t *api) {
 	api->headers = curl_slist_append(api->headers, "Accept: application/json");
 	api->headers = curl_slist_append(api->headers, agent);
 
+	// WORKAROUND for lighthttp not supporting Expect: properly
+	api->headers = curl_slist_append(api->headers, "Expect: ");
+
 	api->curl = curl_easy_init();
 	if (!api->curl) {
 		return EXIT_FAILURE;
