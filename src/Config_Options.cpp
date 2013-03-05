@@ -95,6 +95,7 @@ void Config_Options::config_parse(
 			print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
 			throw vz::VZException("extra data after end of configuration");
 		}
+
 		json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 		if (json_tok->err > 1) {
