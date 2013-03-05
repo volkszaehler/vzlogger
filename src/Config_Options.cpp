@@ -107,7 +107,7 @@ void Config_Options::config_parse(
 	fclose(file);
 	json_tokener_free(json_tok);
 
-	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens"); 
+	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?"); 
 
 	try {
 		/* parse options */
