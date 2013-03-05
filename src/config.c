@@ -53,6 +53,11 @@ int config_parse(const char *filename, list_t *mappings, config_options_t *optio
 	while(fgets(buf, JSON_FILE_BUF_SIZE, file)) {
 		line++;
 
+		if (json_cfg){
+			print(log_error, "extra data after end of configuration in %s:%d", NULL, filename, line);
+			exit(EXIT_FAILURE);
+		}
+
 		json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 		if (json_tok->err > 1) {
@@ -64,6 +69,11 @@ int config_parse(const char *filename, list_t *mappings, config_options_t *optio
 	/* householding */
 	fclose(file);
 	json_tokener_free(json_tok);
+
+	if (!json_cfg){
+		print(log_error, "configuration file incomplete, missing closing braces/parens?",NULL);
+		exit(EXIT_FAILURE);
+	}
 
 	/* parse options */
 	json_object_object_foreach(json_cfg, key, value) {
