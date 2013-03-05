@@ -91,6 +91,11 @@ void Config_Options::config_parse(
 	while(fgets(buf, JSON_FILE_BUF_SIZE, file)) {
 		line++;
 
+		if (json_cfg!=NULL){
+			print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
+			throw vz::VZException("extra data after end of configuration");
+		}
+
 		json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 		if (json_tok->err > 1) {
@@ -102,6 +107,8 @@ void Config_Options::config_parse(
 	/* householding */
 	fclose(file);
 	json_tokener_free(json_tok);
+
+	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?"); 
 
 	try {
 		/* parse options */
