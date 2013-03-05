@@ -361,7 +361,7 @@ int main(int argc, char *argv[]) {
 	} catch ( std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Failed to parse configuration due to: ", "", oss.str().c_str());
+		print(log_error, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
 		return EXIT_FAILURE;
 	}
 
