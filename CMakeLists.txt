@@ -15,6 +15,7 @@ set(VZLOGGER_RPM_VERSION "${VZLOGGER_MAJOR_VERSION}.${VZLOGGER_MINOR_VERSION}.${
 set(VERSION_DATE "2012-02-20")
 set(PACKAGE_STRING "${PROJECT_NAME} ${VZLOGGER_RPM_VERSION}")
 set(VERSION "${VZLOGGER_RPM_VERSION}")
+set(CMAKE_VERBOSE_MAKEFILE 1)
 
 ###########################################################
 # Where are the additional libraries installed? Note: provide includes
