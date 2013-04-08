@@ -153,6 +153,11 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	/* wait until a we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
 
+	if(bytes < 16 ) {
+		print(log_error, "short message from sml_transport_read len=%d", name().c_str(), bytes);
+		return(0);
+	}
+
 	/* parse SML file & stripping escape sequences */
 	file = sml_file_parse(buffer + 8, bytes - 16);
 
