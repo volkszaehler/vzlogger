@@ -58,6 +58,7 @@ protected:
 	std::string _host;
 	std::string _device;
 	speed_t _baudrate;
+	std::string _pull;
 
 	int _fd;	/* file descriptor of port */
 	struct termios _old_tio;	/* required to reset port */

@@ -34,6 +34,7 @@
 Buffer::Buffer() :
 		_keep(32)
 {
+	_newValues=false;
 	pthread_mutex_init(&_mutex, NULL);
 }
 

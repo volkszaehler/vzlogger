@@ -76,6 +76,24 @@ MeterSML::MeterSML(std::list<Option> options)
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
 	}
+	try {
+		std::string hex;
+		hex = optlist.lookup_string(options, "pullseq");
+		int n=hex.size();
+		int i;
+		for(i=0;i<n;i=i+2) {
+			char hs[3];
+			strncpy(hs,hex.c_str()+i,2);
+			char hx[2];
+			hx[0]=strtol(hs,NULL,16);
+			_pull.append(hx,1);
+		}
+		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_pull = "";
+	}
+
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
@@ -149,6 +167,10 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_file *file;
 	sml_get_list_response *body;
 	sml_list *entry;
+
+	if(_pull.size()) {
+		write(_fd,_pull.c_str(),_pull.size());
+	}
 
 	/* wait until a we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
