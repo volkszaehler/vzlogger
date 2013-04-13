@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "float.h" /* double min max */
 
 #include "Buffer.hpp"
 
@@ -36,14 +37,77 @@ Buffer::Buffer() :
 {
 	_newValues=false;
 	pthread_mutex_init(&_mutex, NULL);
+	_aggmode=NONE;
 }
 
 void Buffer::push(const Reading &rd) {
 	lock();
-	have_newValues();
 	_sent.push_back(rd);
 	unlock();
 }
+
+void Buffer::aggregate() {
+	if(_aggmode == NONE) return;
+	if(_aggmode == MAXIMUM) {
+		lock();
+		Reading *latest=NULL;
+		double aggvalue=DBL_MIN;
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(!latest) {
+					latest=&*it;
+				} else {
+					if(it->tvtod() > latest->tvtod()) {
+						latest=&*it;
+					}
+				}
+				aggvalue=std::max(aggvalue,it->value());
+			}
+		}
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(&*it==latest) {
+					it->value(aggvalue);
+				} else {
+					it->mark_delete();
+				}
+			}
+		}
+		unlock();
+		return;
+	}
+	if(_aggmode == AVG) {
+		lock();
+		Reading *latest=NULL;
+		double aggvalue=0;
+		int aggcount=0;
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(!latest) {
+					latest=&*it;
+				} else {
+					if(it->tvtod() > latest->tvtod()) {
+						latest=&*it;
+					}
+				}
+				aggvalue=aggvalue+it->value();
+				aggcount++;
+			}
+		}
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(&*it==latest) {
+					it->value(aggvalue/aggcount);
+				} else {
+					it->mark_delete();
+				}
+			}
+		}
+		unlock();
+		return;
+	}
+}
+
 
 void Buffer::clean() {
 	lock();
