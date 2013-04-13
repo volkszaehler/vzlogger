@@ -95,6 +95,30 @@ MeterD0::MeterD0(std::list<Option> options)
 		print(log_error, "Failed to parse the baudrate", name().c_str());
 		throw;
 	}
+
+	_parity=parity_7e1;
+	try {
+		const char *parity = optlist.lookup_string(options, "parity");
+		/* find constant for termios structure */
+		if(strcasecmp(parity,"8n1")==0) {
+			_parity=parity_8n1;
+		} else if(strcasecmp(parity,"7n1")==0) {
+			_parity=parity_7n1;
+		} else if(strcasecmp(parity,"7e1")==0) {
+			_parity=parity_7e1;
+		} else if(strcasecmp(parity,"7o1")==0) {
+			_parity=parity_7o1;
+		} else {
+			throw vz::VZException("Invalid parity");
+		}
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_parity = parity_7e1;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse the parity", name().c_str());
+		throw;
+	}
+
 }
 
 MeterD0::~MeterD0() {
@@ -323,12 +347,38 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	/* backup old configuration to restore it when closing the meter connection */
 	memcpy(old_tio, &tio, sizeof(struct termios));
 
-	/*  set 7-N-1 */
 	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL);
 	tio.c_oflag &= ~(OPOST | ONLCR);
 	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
-	tio.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB);
-	tio.c_cflag |= (CS7 | PARENB);
+
+	switch(_parity) {
+	case parity_8n1:
+		tio.c_cflag &= ~ PARENB;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS8;
+		break;
+	case parity_7n1:
+		tio.c_cflag &= ~ PARENB;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	case parity_7e1:
+		tio.c_cflag |= ~ PARENB;
+		tio.c_cflag &= ~ PARODD;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	case parity_7o1:
+		tio.c_cflag |= ~ PARENB;
+		tio.c_cflag |= ~ PARODD;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	}
 
 	/* set baudrate */
 	cfsetispeed(&tio, baudrate);
