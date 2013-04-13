@@ -77,6 +77,7 @@ void Buffer::aggregate() {
 			}
 		}
 		unlock();
+		clean();
 		return;
 	}
 	if(_aggmode == AVG) {
@@ -110,6 +111,7 @@ void Buffer::aggregate() {
 			}
 		}
 		unlock();
+		clean();
 		return;
 	}
 }
