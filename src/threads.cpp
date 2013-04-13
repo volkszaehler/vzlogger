@@ -64,7 +64,7 @@ void * reading_thread(void *arg) {
 
 	try {
 		do { /* start thread main loop */
-			while(delta < mtr->aggtime()) {
+			while(delta <= mtr->aggtime()) {
 				/* fetch readings from meter and calculate delta */
 				/* defautl aggtime is -1, so this loop while normale exit after one turn */
 

@@ -105,7 +105,7 @@ Meter::Meter(std::list<Option> pOptions) :
 		Option interval_opt = optlist.lookup(pOptions, "aggtime");
 		_aggtime = (int)(interval_opt);
 	} catch( vz::OptionNotFoundException &e ) {
-		_aggtime = -1; /* indicates unknown interval */
+		_aggtime = -1; /* indicates no aggregation */
 	} catch( vz::VZException &e ) {
 		print(log_error, "Invalid type for aggtime", name());
 		throw;

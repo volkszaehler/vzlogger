@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "float.h" /* double min max */
+#include "common.h"
 
 #include "Buffer.hpp"
 
@@ -62,12 +63,14 @@ void Buffer::aggregate() {
 					}
 				}
 				aggvalue=std::max(aggvalue,it->value());
+				print(log_debug, "%f @ %f", "MAX",it->value(),it->tvtod());
 			}
 		}
 		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if(! it->deleted()) {
 				if(&*it==latest) {
 					it->value(aggvalue);
+					print(log_debug, "RESULT %f @ %f", "MAX",it->value(),it->tvtod());
 				} else {
 					it->mark_delete();
 				}
@@ -91,6 +94,8 @@ void Buffer::aggregate() {
 					}
 				}
 				aggvalue=aggvalue+it->value();
+				print(log_debug, "[%d] %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
+
 				aggcount++;
 			}
 		}
@@ -98,6 +103,7 @@ void Buffer::aggregate() {
 			if(! it->deleted()) {
 				if(&*it==latest) {
 					it->value(aggvalue/aggcount);
+					print(log_debug, "[%d] RESULT %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
 				} else {
 					it->mark_delete();
 				}
