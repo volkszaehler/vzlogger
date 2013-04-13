@@ -325,7 +325,7 @@ void register_device() {
 		print(log_error, "Registration failed for %s", "", e.what());
 	}
 }
-
+#ifndef NOMAIN
 /**
  * The application entrypoint
  */
@@ -458,3 +458,4 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+#endif

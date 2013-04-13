@@ -121,12 +121,8 @@ void Buffer::clean() {
 	lock();
 	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
 		if(it->deleted()) {
-			if( it == _sent.begin() ){
-				_sent.erase(it);
-				it = _sent.begin();
-			} else {
-				it = _sent.erase(it);
-			}
+			it = _sent.erase(it);
+			it--;
 		}
 
 	}
