@@ -71,10 +71,13 @@ Channel::Channel(
 		} else {
 			throw vz::VZException("Aggmode unknown.");
 		}
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_buffer->set_aggmode(Buffer::NONE);
 	} catch( vz::VZException &e ) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Missing protocol or invalid type (%s)", name(), oss.str().c_str());
+		print(log_error, "Missing or invalid aggmode (%s)", name(), oss.str().c_str());
 		throw;
 	}
 
