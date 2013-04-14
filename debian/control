@@ -10,7 +10,7 @@ Vcs-Browser: http://github.com/volkszaehler/volkszaehler.org/tree/master/misc/co
 
 Package: vzlogger
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, libsml
 Description: program for logging measurements to an volkszaehler.org middleware
  vzlogger...
   * is a tool to read and log measurements of a wide variety of smartmeters and
