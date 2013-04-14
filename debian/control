@@ -18,6 +18,5 @@ Description: program for logging measurements to an volkszaehler.org middleware
   * can run as a daemon or via Cron.
   * includes a tiny onboard httpd to serve
     realtime readings to the AJAX web frontend.
-  * is written in ANSI C and should run on most embedded devices
-    which conform to the POSIX standard.
+  * is written in C++.
 
