@@ -67,7 +67,7 @@ void * reading_thread(void *arg) {
 			while(delta <= mtr->aggtime()) {
 				/* fetch readings from meter and calculate delta */
 				/* defautl aggtime is -1, so this loop while normale exit after one turn */
-
+				if(delta < 0 ) delta=0;
 				last = time(NULL);
 				n = mtr->read(rds, details->max_readings);
 				delta = delta+(time(NULL) - last);
@@ -120,7 +120,6 @@ void * reading_thread(void *arg) {
 					}
 				} // channel loop
 			} // while delta < aggtime
-			delta=-1;
 
 			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 
@@ -158,10 +157,12 @@ void * reading_thread(void *arg) {
 				}
 			}
 
-			if ((options.daemon() || options.local()) && details->periodic) {
-				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-				//sleep(mtr->interval());
+			if ((options.daemon() || options.local()) && details->periodic && mtr->interval() > 0) {
+				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval()-delta);
+				sleep(mtr->interval()-delta);
 			}
+			delta=-1;
+
 		} while (options.daemon() || options.local() || options.logging() );
 	} catch(std::exception &e) {
 		std::stringstream oss;

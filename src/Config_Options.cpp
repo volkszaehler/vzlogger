@@ -259,6 +259,11 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
+// check if identifier is set. If not, use default
+	if( id_str == NULL ) {
+		print(log_error, "Identifier is not set. Set it to default value 'NilIdentifier'.", NULL);
+		id_str = "NilIdentifier";
+	} 
 	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");

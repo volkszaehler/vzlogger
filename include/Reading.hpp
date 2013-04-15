@@ -129,7 +129,7 @@ public:
 	bool operator==(NilIdentifier &cmp);
 	const std::string toString()  {
 		std::ostringstream oss;
-		oss << "NilItentifier";
+		oss << "NilIdentifier";
 		return oss.str();
 	};
 private:
