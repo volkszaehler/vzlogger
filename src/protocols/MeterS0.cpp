@@ -36,7 +36,6 @@
 
 MeterS0::MeterS0(std::list<Option> options)
 		: Protocol("s0")
-		, _counter(0)
 {
 	OptionList optlist;
 
@@ -103,39 +102,21 @@ int MeterS0::close() {
 }
 
 ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
-
-	struct timeval time1;
-	struct timeval time2;
 	char buf[8];
+
+	/* check that we can store the data */
+	if(n<1) return 0;
 
 	/* clear input buffer */
 	tcflush(_fd, TCIOFLUSH);
 
 	/* blocking until one character/pulse is read */
 	if( ::read(_fd, buf, 8) < 1) return 0;
-	gettimeofday(&time1, NULL);
-	if( ::read(_fd, buf, 8) < 1) return 0;
-	gettimeofday(&time2, NULL);
 
-	double t1 = time1.tv_sec + time1.tv_usec / 1e6;
-	double t2 = time2.tv_sec + time2.tv_usec / 1e6;
-	double value = ( 3600000 ) / ( (t2-t1) * _resolution ) ;
-	
-	/* store current timestamp */
-	ReadingIdentifier *rid(new NilIdentifier());
-	rds[0].identifier(new StringIdentifier("Counter"));
-	rds[0].time(time2);
-	rds[0].value(++_counter);
+	rds[0].identifier(new NilIdentifier());
+	rds[0].value(1);
+	rds[0].time();
 
-	rds[1].identifier(rid);
-	rds[1].time(time2);
-	rds[1].value(1);
-
-	rds[2].identifier(new StringIdentifier("Power"));
-	rds[2].time(time2);
-	rds[2].value(value);
-
-	print(log_debug, "Reading S0 - n=%d power=%f  counter=%f", name().c_str(), n, value, rds[2].value());
 	/* wait some ms for debouncing */
 	usleep(30000);
 

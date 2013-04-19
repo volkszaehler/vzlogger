@@ -47,7 +47,6 @@ public:
   protected:
 	const char *_device;
 	int _resolution;
-	int _counter;
 
 	int _fd;	/* file descriptor of port */
 	struct termios _old_tio;	/* required to reset port */
