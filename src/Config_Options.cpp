@@ -270,9 +270,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	/* parse identifier */
 	ReadingIdentifier::Ptr id;
 	try {
-		if( id_str != NULL ) {
-			id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
-		}
+		id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
 	} catch ( vz::VZException &e ) {
 		std::stringstream oss;
 		oss << e.what();
