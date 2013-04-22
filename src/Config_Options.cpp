@@ -259,11 +259,6 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-// check if identifier is set. If not, use default
-	if( id_str == NULL ) {
-		print(log_error, "Identifier is not set. Set it to default value 'NilIdentifier'.", NULL);
-		id_str = "NilIdentifier";
-	} 
 	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
@@ -275,9 +270,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	/* parse identifier */
 	ReadingIdentifier::Ptr id;
 	try {
-		if( id_str != NULL ) {
-			id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
-		}
+		id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
 	} catch ( vz::VZException &e ) {
 		std::stringstream oss;
 		oss << e.what();

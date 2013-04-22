@@ -193,7 +193,8 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_list *entry;
 
 	if(_pull.size()) {
-		write(_fd,_pull.c_str(),_pull.size());
+		int wlen=write(_fd,_pull.c_str(),_pull.size());
+		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
 
 	/* wait until a we receive a new datagram from the meter (blocking read) */

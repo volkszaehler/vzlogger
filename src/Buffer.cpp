@@ -79,8 +79,7 @@ void Buffer::aggregate() {
 		unlock();
 		clean();
 		return;
-	}
-	if(_aggmode == AVG) {
+	} else 	if(_aggmode == AVG) {
 		lock();
 		Reading *latest=NULL;
 		double aggvalue=0;
@@ -105,6 +104,36 @@ void Buffer::aggregate() {
 				if(&*it==latest) {
 					it->value(aggvalue/aggcount);
 					print(log_debug, "[%d] RESULT %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
+				} else {
+					it->mark_delete();
+				}
+			}
+		}
+		unlock();
+		clean();
+		return;
+	} else if(_aggmode == SUM) {
+		lock();
+		Reading *latest=NULL;
+		double aggvalue=0;
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(!latest) {
+					latest=&*it;
+				} else {
+					if(it->tvtod() > latest->tvtod()) {
+						latest=&*it;
+					}
+				}
+				aggvalue=aggvalue+it->value();
+				print(log_debug, "%f @ %f", "SUM",it->value(),it->tvtod());
+			}
+		}
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				if(&*it==latest) {
+					it->value(aggvalue);
+					print(log_debug, "RESULT %f @ %f", "SUM",it->value(),it->tvtod());
 				} else {
 					it->mark_delete();
 				}

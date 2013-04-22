@@ -114,6 +114,7 @@ public:
 		for(iterator it = _mappings.begin(); it!=_mappings.end(); it++) {
 			it->cancel();
 		}
+		exit(-1);
 	}
 
 /** 

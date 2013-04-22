@@ -86,10 +86,10 @@ void * reading_thread(void *arg) {
 				}
 
 				/* update buffer length with current interval */
-				if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-					print(log_debug, "Updating interval to %i", mtr->name(), delta);
-					mtr->interval(delta);
-				}
+//				if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
+//					print(log_debug, "Updating interval to %i", mtr->name(), delta);
+//					mtr->interval(delta);
+//				}
 
 				/* insert readings into channel queues */
 				for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
@@ -157,7 +157,7 @@ void * reading_thread(void *arg) {
 				}
 			}
 
-			if ((options.daemon() || options.local()) && details->periodic && mtr->interval() > 0) {
+			if (mtr->interval() > 0 && mtr->interval()-delta >0 ) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval()-delta);
 				sleep(mtr->interval()-delta);
 			}

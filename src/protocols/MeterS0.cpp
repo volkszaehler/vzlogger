@@ -65,10 +65,10 @@ MeterS0::~MeterS0() {
 int MeterS0::open() {
 
 	/* open port */
-	int fd = ::open(_device, O_RDWR | O_NOCTTY); 
+	int fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY);
 
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", "", _device, strerror(errno));
+		print(log_error, "open(%s): %s", "", _device.c_str(), strerror(errno));
 		return ERR;
 	}
 
@@ -99,7 +99,8 @@ int MeterS0::close() {
 
 	tcsetattr(_fd, TCSANOW, &_old_tio); /* reset serial port */
 
-	return ::close(_fd); /* close serial port */
+	::close(_fd);
+	return SUCCESS; /* close serial port */
 }
 
 ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
@@ -122,23 +123,18 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	double value = ( 3600000 ) / ( (t2-t1) * _resolution ) ;
 	
 	/* store current timestamp */
-	ReadingIdentifier *rid(new NilIdentifier());
-	rds[0].identifier(new StringIdentifier("Counter"));
+	rds[0].identifier(new StringIdentifier("Power"));
 	rds[0].time(time2);
-	rds[0].value(++_counter);
+	rds[0].value(value);
 
-	rds[1].identifier(rid);
+	rds[1].identifier(new StringIdentifier("Impulse"));
 	rds[1].time(time2);
-	rds[1].value(1);
+	rds[1].value(2);
 
-	rds[2].identifier(new StringIdentifier("Power"));
-	rds[2].time(time2);
-	rds[2].value(value);
-
-	print(log_debug, "Reading S0 - n=%d power=%f  counter=%f", name().c_str(), n, value, rds[2].value());
+	print(log_debug, "Reading S0 - n=%d power=%f", name().c_str(), n, rds[0].value());
 	/* wait some ms for debouncing */
 	usleep(30000);
 
-	return 1;
+	return 2;
 }
 
