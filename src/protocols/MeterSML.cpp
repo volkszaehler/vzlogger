@@ -117,7 +117,7 @@ MeterSML::MeterSML(std::list<Option> options)
 		}
 	} catch( vz::OptionNotFoundException &e ) {
 		/* using default value if not specified */
-		_baudrate = 9600;
+		_baudrate = B9600;
 	} catch( vz::VZException &e ) {
 		print(log_error, "Failed to parse the baudrate", name().c_str());
 		throw;
