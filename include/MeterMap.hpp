@@ -53,7 +53,7 @@ public:
 	typedef std::vector<Channel::Ptr>::iterator iterator;
 	typedef std::vector<Channel::Ptr>::const_iterator const_iterator;
 
-	MeterMap(std::list<Option> options) : _meter(new Meter(options)){}
+	MeterMap(std::list<Option> options) : _meter(new Meter(options)){_thread_running=false;}
 	~MeterMap() {};
 	Meter::Ptr meter() { return _meter; }
 
@@ -114,7 +114,6 @@ public:
 		for(iterator it = _mappings.begin(); it!=_mappings.end(); it++) {
 			it->cancel();
 		}
-		exit(-1);
 	}
 
 /** 
