@@ -16,7 +16,7 @@ set(_ctest_type "Nightly")
 # set(_ctest_type "Continuous")
 # set(_ctest_type "Coverage")
 
-set(URL "https://github.com/mysmartgrid/vzlogger.git")
+set(URL "https://github.com/volkszaehler/vzlogger.git")
 
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
@@ -46,8 +46,9 @@ if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 endif(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 
 ctest_start(${_ctest_type})
-ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY})
-ctest_submit(PARTS Update)
+ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY} RETURN_VALUE update_res)
+message("===> Update returns: ${update_res}")
+#ctest_submit(PARTS Update)
 
 execute_process(
   COMMAND ${CTEST_GIT_COMMAND} checkout  ${_git_branch}
@@ -85,10 +86,12 @@ endif( STAGING_DIR)
 ctest_build(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE build_res)
 message("====> BUILD: ${build_res}")
 
-ctest_test(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE test_res)
-message("====> TESTS: ${test_res}")
+if( NOT CMAKE_TOOLCHAIN_FILE )
+  ctest_test(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE test_res)
+  message("====> TESTS: ${test_res}")
+endif( NOT CMAKE_TOOLCHAIN_FILE )
 
-ctest_submit(RETURN_VALUE res)
+#ctest_submit(RETURN_VALUE res)
 
 # package files
 include(${CTEST_BINARY_DIRECTORY}/CPackConfig.cmake)
@@ -104,7 +107,7 @@ if( NOT ${build_res})
 endif( NOT ${build_res})
 
 # upload files
-if( NOT ${build_res} AND ${CTEST_PUSH_PACKAGES})
+if( NOT ${build_res} AND NOT ${update_res} AND ${CTEST_PUSH_PACKAGES})
   message( "OS_NAME .....: ${OS_NAME}")
   message( "OS_VERSION ..: ${OS_VERSION}")
   message( "CMAKE_SYSTEM_PROCESSOR ..: ${CMAKE_SYSTEM_PROCESSOR}")
@@ -125,6 +128,6 @@ if( NOT ${build_res} AND ${CTEST_PUSH_PACKAGES})
     COMMAND scp -p ${_package_file} ${_export_host}:${_remote_dir}/${_package_file}
     WORKING_DIRECTORY ${CTEST_BINARY_DIRECTORY}/${subproject}
     )
-endif( NOT ${build_res} AND ${CTEST_PUSH_PACKAGES})
+endif( NOT ${build_res} AND NOT ${update_res} AND ${CTEST_PUSH_PACKAGES})
 
 message("DONE")

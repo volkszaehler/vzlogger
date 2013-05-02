@@ -16,7 +16,7 @@ set(CTEST_DROP_LOCATION "/submit.php?project=${CTEST_PROJECT_NAME}")
 #set(CTEST_DROP_LOCATION "/p/hpc/pspro/cdash/submit.php?project=${CTEST_PROJECT_NAME}")
 set(CTEST_DROP_SITE_CDASH TRUE)
 set(CTEST_USE_LAUNCHERS 1)
-set(KDE_CTEST_DASHBOARD_DIR "/tmp/msgrid")
+set(KDE_CTEST_DASHBOARD_DIR "/tmp/$ENV{USER}")
 
 set(CTEST_PACKAGE_SITE "packages.mysmartgrid.de")
 

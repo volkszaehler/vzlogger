@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export LANG=en_US.UTF-8
-export CTEST=/usr/bin/ctest
+export CTEST="echo /usr/bin/ctest"
 
 echo "Running ctest"
 
@@ -10,6 +10,27 @@ ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_PACKAGES=1,
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,compiler=clang
 
+for toolchain in `find ${HOME}/x-tools/ -name Toolchain-RaspberryPi.cmake`
+do
+   echo "Compiling with toolchain ${toolchain}"
+   ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_toolchain_file=${toolchain}
+done
+
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake,compiler=clang
 
+# compiliere alle xx-dev branches
+allBranches=`git branch -a | grep remotes | sed -e 's%remotes/origin/%%' | grep '.*[-_]dev$' `
+for branch in ${allBranches}
+do
+  echo ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_git_branch=${branch}
+  ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_git_branch=${branch}
+  # ${CTEST} -V -VV -S ${dir}/VZLoggerContinuous.cmake,_git_branch=${branch}
+  ${CTEST} -V -VV -S ${dir}/VZLoggerCoverage.cmake,_git_branch=${branch}
+  ${CTEST} -V -VV -S ${dir}/VZLoggerCoverage.cmake,_git_branch=${branch},compiler=clang
+  for toolchain in `find ${HOME}/x-tools/ -name Toolchain-RaspberryPi.cmake`
+  do
+     echo "Compiling with toolchain ${toolchain}"
+     ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_git_branch=${branch},_toolchain_file=${toolchain}
+  done
+done

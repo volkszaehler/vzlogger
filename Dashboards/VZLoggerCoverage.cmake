@@ -16,7 +16,7 @@ include(CTestConfigVZlogger.cmake)
 # set(_ctest_type "Continuous")
 set(_ctest_type "Coverage")
 
-set(URL "https://github.com/mysmartgrid/vzlogger.git")
+set(URL "https://github.com/volkszaehler/vzlogger.git")
 
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
@@ -46,7 +46,8 @@ if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 endif(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 
 ctest_start(${_ctest_type})
-ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY})
+ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY} RETURN_VALUE ret)
+message("===> Update returns: ${ret}")
 ctest_submit(PARTS Update)
 
 execute_process(
@@ -96,8 +97,10 @@ message(STATUS "===> ctest_coverage: res='${res}'")
 ctest_memcheck(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE res)
 message(STATUS "===> ctest_memcheck: res='${res}'")
 
-ctest_test(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE test_res)
-message("====> TESTS: ${test_res}")
+if( NOT CMAKE_TOOLCHAIN_FILE )
+  ctest_test(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE test_res)
+  message("====> TESTS: ${test_res}")
+endif( NOT CMAKE_TOOLCHAIN_FILE )
 
 ctest_submit(RETURN_VALUE res)
 
