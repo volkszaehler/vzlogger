@@ -13,7 +13,7 @@ ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,compiler=cl
 for toolchain in `find ${HOME}/x-tools/ -name Toolchain-RaspberryPi.cmake`
 do
    echo "Compiling with toolchain ${toolchain}"
-   ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_toolchain_file=${toolchain}
+   ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,_toolchain_file=${toolchain}
 done
 
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerCoverage.cmake
