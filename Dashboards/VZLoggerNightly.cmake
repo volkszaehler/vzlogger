@@ -48,7 +48,7 @@ endif(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/.git/HEAD")
 ctest_start(${_ctest_type})
 ctest_update(SOURCE ${CTEST_SOURCE_DIRECTORY} RETURN_VALUE update_res)
 message("===> Update returns: ${update_res}")
-#ctest_submit(PARTS Update)
+ctest_submit(PARTS Update)
 
 execute_process(
   COMMAND ${CTEST_GIT_COMMAND} checkout  ${_git_branch}
@@ -91,7 +91,7 @@ if( NOT CMAKE_TOOLCHAIN_FILE )
   message("====> TESTS: ${test_res}")
 endif( NOT CMAKE_TOOLCHAIN_FILE )
 
-#ctest_submit(RETURN_VALUE res)
+ctest_submit(RETURN_VALUE res)
 
 # package files
 include(${CTEST_BINARY_DIRECTORY}/CPackConfig.cmake)
