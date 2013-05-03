@@ -74,6 +74,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		baudrate = optlist.lookup_int(options, "baudrate");
 		/* find constant for termios structure */
 		switch (baudrate) {
+				case 300: _baudrate = B300; break; /* for Landis&Gyr D0 Meters */
 				case 1200: _baudrate = B1200; break;
 				case 1800: _baudrate = B1800; break;
 				case 2400: _baudrate = B2400; break;
