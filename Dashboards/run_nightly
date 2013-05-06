@@ -9,6 +9,9 @@ echo "Running ctest"
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_PACKAGES=1,TARGET_ARCH=ar71xx
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,CTEST_PUSH_PACKAGES=1,
 ${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,compiler=clang
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,ENABLE_SML=Off,ENABLE_LOCAL=Off
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,ENABLE_SML=Off,ENABLE_LOCAL=On
+${CTEST} -V -VV -S ${HOME}/vzlogger/Dashboards/VZLoggerNightly.cmake,ENABLE_SML=On,ENABLE_LOCAL=Off
 
 for toolchain in `find ${HOME}/x-tools/ -name Toolchain-RaspberryPi.cmake`
 do
@@ -27,6 +30,7 @@ do
   ${CTEST} -V -VV -S ${dir}/VZLoggerNightly.cmake,_git_branch=${branch}
   # ${CTEST} -V -VV -S ${dir}/VZLoggerContinuous.cmake,_git_branch=${branch}
   ${CTEST} -V -VV -S ${dir}/VZLoggerCoverage.cmake,_git_branch=${branch}
+  ${CTEST} -V -VV -S ${dir}/VZLoggerCoverage.cmake,_git_branch=${branch},ENABLE_SML=Off,ENABLE_LOCAL=Off
   ${CTEST} -V -VV -S ${dir}/VZLoggerCoverage.cmake,_git_branch=${branch},compiler=clang
   for toolchain in `find ${HOME}/x-tools/ -name Toolchain-RaspberryPi.cmake`
   do

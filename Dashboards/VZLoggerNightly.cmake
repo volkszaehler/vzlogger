@@ -33,6 +33,14 @@ kde_ctest_setup()
 
 FindOS(OS_NAME OS_VERSION)
 
+if(DEFINED ENABLE_SML)
+  list(APPEND ADD_PARAM "ENABLE_SML")
+endif(DEFINED ENABLE_SML)
+
+if(DEFINED ENABLE_LOCAL)
+  list(APPEND ADD_PARAM "ENABLE_LOCAL")
+endif(DEFINED ENABLE_LOCAL)
+
 set(ctest_config ${CTEST_BASE_DIRECTORY}/CTestConfig.cmake)
 #######################################################################
 ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
@@ -58,22 +66,16 @@ execute_process(
 # to get CTEST_PROJECT_SUBPROJECTS definition:
 
 set(CMAKE_BUILD_TYPE Release)
+list(APPEND ADD_PARAM "CMAKE_BUILD_TYPE")
 
 if(CMAKE_TOOLCHAIN_FILE)
-  kde_ctest_write_initial_cache("${CTEST_BINARY_DIRECTORY}"
-    CMAKE_TOOLCHAIN_FILE
-    CMAKE_INSTALL_PREFIX
-    CMAKE_BUILD_TYPE
-    )
+  list(APPEND ADD_PARAM "CMAKE_TOOLCHAIN_FILE")
+  list(APPEND ADD_PARAM "CMAKE_INSTALL_PREFIX")
   set(OS_NAME "openWRT")
   set(OS_VERSION "10.03.1")
   set(CMAKE_SYSTEM_PROCESSOR ${openwrt_arch})
-else(CMAKE_TOOLCHAIN_FILE)
-  kde_ctest_write_initial_cache("${CTEST_BINARY_DIRECTORY}"
-    CMAKE_BUILD_TYPE
-    )
 endif(CMAKE_TOOLCHAIN_FILE)
-
+kde_ctest_write_initial_cache("${CTEST_BINARY_DIRECTORY}" ${ADD_PARAM})
 
 ctest_configure(BUILD "${CTEST_BINARY_DIRECTORY}"  RETURN_VALUE resultConfigure)
 message("====> Configure: ${resultConfigure}")
