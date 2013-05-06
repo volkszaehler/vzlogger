@@ -45,8 +45,6 @@ target_link_libraries(vzlogger ${JSON_LIBRARY})
 target_link_libraries(vzlogger ${SML_LIBRARY})
 target_link_libraries(vzlogger ${MICROHTTPD_LIBRARY})
 target_link_libraries(vzlogger ${LIBGCRYPT})
-target_link_libraries(vzlogger pthread m ${LIBUUID})
-target_link_libraries(vzlogger dl)
 if( TARGET )
   if( ${TARGET} STREQUAL "ar71xx")
     set_target_properties(vzlogger PROPERTIES LINK_FLAGS "-static")
@@ -56,7 +54,11 @@ if( TARGET )
     target_link_libraries(vzlogger dl)
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
-target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES})
+
+target_link_libraries(vzlogger ${GNUTLS_LIBRARIES})
+target_link_libraries(vzlogger pthread m ${LIBUUID})
+target_link_libraries(vzlogger dl)
+target_link_libraries(vzlogger ${CURL_LIBRARIES})
 
 # add programs to the install target 
 INSTALL(PROGRAMS 

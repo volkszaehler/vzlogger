@@ -52,6 +52,7 @@
 #include "Options.hpp"
 #include <VZException.hpp>
 
+#ifdef SML_SUPPORT
 #define SML_BUFFER_LEN 8096
 
 MeterSML::MeterSML(std::list<Option> options) 
@@ -277,3 +278,4 @@ int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 
 	return fd;
 }
+#endif /* SML_SUPPORT */
