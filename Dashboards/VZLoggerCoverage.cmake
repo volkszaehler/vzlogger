@@ -79,6 +79,7 @@ if(CMAKE_TOOLCHAIN_FILE)
   list(APPEND ADD_PARAM "CMAKE_TOOLCHAIN_FILE")
   list(APPEND ADD_PARAM "CMAKE_INSTALL_PREFIX")
 endif(CMAKE_TOOLCHAIN_FILE)
+kde_ctest_write_initial_cache("${CTEST_BINARY_DIRECTORY}" ${ADD_PARAM})
 
 ctest_configure(BUILD "${CTEST_BINARY_DIRECTORY}"  RETURN_VALUE resultConfigure)
 message("====> Configure: ${resultConfigure}")
