@@ -18,6 +18,15 @@ set(_ctest_type "Nightly")
 
 set(URL "https://github.com/volkszaehler/vzlogger.git")
 
+if(DEFINED ENABLE_SML)
+  list(APPEND ADD_PARAM "ENABLE_SML")
+  set(CTEST_BUILD_NAME "${CTEST_BUILD_NAME}-sml${ENABLE_SML}")
+endif(DEFINED ENABLE_SML)
+if(DEFINED ENABLE_LOCAL)
+  list(APPEND ADD_PARAM "ENABLE_LOCAL")
+  set(CTEST_BUILD_NAME "${CTEST_BUILD_NAME}-local${ENABLE_LOCAL}")
+endif(DEFINED ENABLE_LOCAL)
+
 set(CTEST_BASE_DIRECTORY "${KDE_CTEST_DASHBOARD_DIR}/${_projectNameDir}/${_ctest_type}")
 set(CTEST_SOURCE_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_srcDir}-${_git_branch}" )
 set(CTEST_BINARY_DIRECTORY "${CTEST_BASE_DIRECTORY}/${_buildDir}-${CTEST_BUILD_NAME}")
@@ -32,14 +41,6 @@ configure_ctest_config(${KDE_CTEST_VCS_REPOSITORY} "CTestConfigVZlogger.cmake")
 kde_ctest_setup()
 
 FindOS(OS_NAME OS_VERSION)
-
-if(DEFINED ENABLE_SML)
-  list(APPEND ADD_PARAM "ENABLE_SML")
-endif(DEFINED ENABLE_SML)
-
-if(DEFINED ENABLE_LOCAL)
-  list(APPEND ADD_PARAM "ENABLE_LOCAL")
-endif(DEFINED ENABLE_LOCAL)
 
 set(ctest_config ${CTEST_BASE_DIRECTORY}/CTestConfig.cmake)
 #######################################################################
