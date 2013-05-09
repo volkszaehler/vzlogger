@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export LANG=en_US.UTF-8
-export CTEST="echo /usr/bin/ctest"
+export CTEST="/usr/bin/ctest"
 dir=${HOME}/vzlogger/Dashboards
 
 echo "Running ctest"
