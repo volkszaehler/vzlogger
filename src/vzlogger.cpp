@@ -325,7 +325,7 @@ void register_device() {
 		print(log_error, "Registration failed for %s", "", e.what());
 	}
 }
-
+#ifndef NOMAIN
 /**
  * The application entrypoint
  */
@@ -424,7 +424,8 @@ int main(int argc, char *argv[]) {
 		}
 #endif /* LOCAL_SUPPORT */
 	} catch ( std::exception &e) {
-		print(log_error, "Startup failed for %s", "", e.what());
+		print(log_error, "Startup failed: %s", "", e.what());
+		exit(1);
 	}
 	print(log_debug, "Startup done.", "");
 
@@ -458,3 +459,4 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+#endif

@@ -76,6 +76,24 @@ MeterSML::MeterSML(std::list<Option> options)
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
 	}
+	try {
+		std::string hex;
+		hex = optlist.lookup_string(options, "pullseq");
+		int n=hex.size();
+		int i;
+		for(i=0;i<n;i=i+2) {
+			char hs[3];
+			strncpy(hs,hex.c_str()+i,2);
+			char hx[2];
+			hx[0]=strtol(hs,NULL,16);
+			_pull.append(hx,1);
+		}
+		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_pull = "";
+	}
+
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
@@ -99,11 +117,35 @@ MeterSML::MeterSML(std::list<Option> options)
 		}
 	} catch( vz::OptionNotFoundException &e ) {
 		/* using default value if not specified */
-		_baudrate = 9600;
+		_baudrate = B9600;
 	} catch( vz::VZException &e ) {
 		print(log_error, "Failed to parse the baudrate", name().c_str());
 		throw;
 	}
+
+	_parity=parity_8n1;
+	try {
+		const char *parity = optlist.lookup_string(options, "parity");
+		/* find constant for termios structure */
+		if(strcasecmp(parity,"8n1")==0) {
+			_parity=parity_8n1;
+		} else if(strcasecmp(parity,"7n1")==0) {
+			_parity=parity_7n1;
+		} else if(strcasecmp(parity,"7e1")==0) {
+			_parity=parity_7e1;
+		} else if(strcasecmp(parity,"7o1")==0) {
+			_parity=parity_7o1;
+		} else {
+			throw vz::VZException("Invalid parity");
+		}
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_parity = parity_8n1;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse the parity", name().c_str());
+		throw;
+	}
+
 }
 
 MeterSML::MeterSML(const MeterSML &proto)
@@ -149,6 +191,11 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_file *file;
 	sml_get_list_response *body;
 	sml_list *entry;
+
+	if(_pull.size()) {
+		int wlen=write(_fd,_pull.c_str(),_pull.size());
+		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
+	}
 
 	/* wait until a we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
@@ -261,12 +308,38 @@ int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	/* backup old configuration to restore it when closing the meter connection */
 	memcpy(old_tio, &tio, sizeof(struct termios));
 
-	/*  set 8-N-1 */
 	tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
 	tio.c_oflag &= ~OPOST;
 	tio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-	tio.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB);
-	tio.c_cflag |= CS8;
+
+	switch(_parity) {
+	case parity_8n1:
+		tio.c_cflag &= ~ PARENB;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS8;
+		break;
+	case parity_7n1:
+		tio.c_cflag &= ~ PARENB;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	case parity_7e1:
+		tio.c_cflag |= ~ PARENB;
+		tio.c_cflag &= ~ PARODD;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	case parity_7o1:
+		tio.c_cflag |= ~ PARENB;
+		tio.c_cflag |= ~ PARODD;
+		tio.c_cflag &= ~ CSTOPB;
+		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= CS7;
+		break;
+	}
 
 	/* set baudrate */
 	cfsetispeed(&tio, baudrate);

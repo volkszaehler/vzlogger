@@ -52,6 +52,8 @@ private:
 	std::string _device;
 	int _baudrate;
 
+	parity_type_t _parity;
+
 	int _fd; /* file descriptor of port */
 	struct termios _oldtio; /* required to reset port */
 

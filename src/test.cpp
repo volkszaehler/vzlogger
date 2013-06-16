@@ -2,27 +2,32 @@
 
 #include <cstdio>
 
-#include "list.h"
-#include "buffer.h"
+#include "common.h"
+//#include "list.h"
+#include "Buffer.hpp"
 
-void test_list() {
-	List<int> li;
+//void test_list() {
+//	List<int> li;
+//
+//	for (int i = 0; i < 10; i++) {
+//		li.push(i);
+//	}
+//
+//	for (List<int>::iterator it = li.begin(); it != li.end(); ++it) {
+//		printf("%i\n", *it);
+//	}
+//
+//	printf("popped %i\n", li.pop());
+//	printf("popped %i\n", li.pop());
+//
+//	for (List<int>::iterator it = li.begin(); it != li.end(); ++it) {
+//		printf("%i\n", *it);
+//	}
+//}
 
-	for (int i = 0; i < 10; i++) {
-		li.push(i);
-	}
+#define NOMAIN
+#include "vzlogger.cpp"
 
-	for (List<int>::iterator it = li.begin(); it != li.end(); ++it) {
-		printf("%i\n", *it);
-	}
-
-	printf("popped %i\n", li.pop());
-	printf("popped %i\n", li.pop());
-
-	for (List<int>::iterator it = li.begin(); it != li.end(); ++it) {
-		printf("%i\n", *it);
-	}
-}
 
 void test_buffer() {
 	Buffer buf;
@@ -34,22 +39,24 @@ void test_buffer() {
 
 	for (int i = 0; i < 10; i++) {
 		Reading rd;
-		rd.value = 11*i;
-		rd.time = tv;
-		rd.identifier = &id;
+		rd.value(11*i);
+		rd.time(tv);
+		rd.identifier( new StringIdentifier());
 
 		buf.push(rd);
 	}
 
+	int p=0;
 	for (Buffer::iterator it = buf.begin(); it != buf.end(); ++it) {
-		printf("%i\n", it->value);
+		if( p > 3) it->mark_delete();
+		p++;
+		printf("%d %f %d\n",p, it->value(),it->deleted());
 	}
 
-	printf("popped %i\n", buf.pop().value);
-	printf("popped %i\n", buf.pop().value);
+	buf.clean();
 
 	for (Buffer::iterator it = buf.begin(); it != buf.end(); ++it) {
-		printf("%i\n", it->value);
+		printf("%f\n", it->value());
 	}
 
 }
