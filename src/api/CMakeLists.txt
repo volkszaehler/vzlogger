@@ -1,5 +1,8 @@
 # -*- mode: cmake; -*-
 
+include_directories(
+  ${OPENSSL_INCLUDE_DIR}
+)
 
 set(api_srcs
   Volkszaehler.cpp
@@ -10,3 +13,6 @@ set(api_srcs
 )
 
 add_library(vz-api ${api_srcs})
+target_link_libraries(vz-api
+  ${OPENSSL_CRYPTO_LIBRARY}
+)

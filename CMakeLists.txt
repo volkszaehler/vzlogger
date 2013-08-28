@@ -86,6 +86,7 @@ else(WIN32)
   include(FindCurl)
   include(FindGnutls)
 endif(WIN32)
+find_package(OpenSSL)
 
 find_library(LIBUUID uuid)
 find_library(LIBGCRYPT gcrypt)
