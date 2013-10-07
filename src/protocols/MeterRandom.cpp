@@ -90,6 +90,7 @@ ssize_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
 
 	rds[0].value(_last);
 	rds[0].time();
+	rds[0].identifier(new NilIdentifier());
 
 	return 1;
 }

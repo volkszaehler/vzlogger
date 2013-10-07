@@ -124,6 +124,7 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 
 			case meter_protocol_file:
 			case meter_protocol_exec:
+			case meter_protocol_s0:
 				rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
 				break;
 
@@ -177,19 +178,25 @@ bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs
 	if(ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
 		if(ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
 			return *lhsx == *rhsx;
-		} else { return -1; }
+		} else { return false; }
 	} else 
 		if( StringIdentifier* lhsx = dynamic_cast<StringIdentifier*>(rhs)) {
 			if(StringIdentifier* rhsx = dynamic_cast<StringIdentifier*>(lhs)) {
-				return lhsx == rhsx;
-			} else { return -1; }
+				return *lhsx == *rhsx;
+			} else { return false; }
 		} else 
 			if(ChannelIdentifier* lhsx = dynamic_cast<ChannelIdentifier*>(lhs)) {
 				if(ChannelIdentifier* rhsx = dynamic_cast<ChannelIdentifier*>(rhs)) {
-					return lhsx == rhsx;
-				} else { return -1; }
-			}
-	return -1;
+					return *lhsx == *rhsx;
+				} else { return false; }
+			}  else
+				if(NilIdentifier* lhsx = dynamic_cast<NilIdentifier*>(lhs)) {
+					if(NilIdentifier* rhsx = dynamic_cast<NilIdentifier*>(rhs)) {
+						return true;
+					} else { return false; }
+				}
+
+	return false;
 }
 
 size_t ObisIdentifier::unparse(char *buffer, size_t n) {

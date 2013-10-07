@@ -25,6 +25,12 @@ typedef enum {
 	log_finest = 15
 } log_level_t;
 
+typedef enum {
+	parity_8n1,
+	parity_7n1,
+	parity_7e1,
+	parity_7o1
+} parity_type_t;
 /* types */
 
 /* constants */
