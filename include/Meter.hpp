@@ -62,6 +62,8 @@ public:
 
 	const int  interval() const            { return _interval; }
 
+	const int aggtime() const 				{ return _aggtime; }
+
 private:
 	static int instances;                   /**< meter instance id (increasing counter) */
 	bool _thread_running;   								/**< flag if thread is started */
@@ -77,6 +79,8 @@ private:
 
 
 	int _interval;
+
+	int _aggtime;
 
 	std::vector<Channel> channels;          /**< channel for logging */
 };
