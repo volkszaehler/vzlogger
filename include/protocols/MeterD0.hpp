@@ -53,6 +53,8 @@ private:
 	int _baudrate;
 
 	parity_type_t _parity;
+	std::string _pull;
+
 
 	int _fd; /* file descriptor of port */
 	struct termios _oldtio; /* required to reset port */

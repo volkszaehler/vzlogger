@@ -67,6 +67,23 @@ MeterD0::MeterD0(std::list<Option> options)
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
 	}
+	try {
+		std::string hex;
+		hex = optlist.lookup_string(options, "pullseq");
+		int n=hex.size();
+		int i;
+		for(i=0;i<n;i=i+2) {
+			char hs[3];
+			strncpy(hs,hex.c_str()+i,2);
+			char hx[2];
+			hx[0]=strtol(hs,NULL,16);
+			_pull.append(hx,1);
+		}
+		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
+	} catch( vz::OptionNotFoundException &e ) {
+		/* using default value if not specified */
+		_pull = "";
+	}
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
@@ -74,6 +91,14 @@ MeterD0::MeterD0(std::list<Option> options)
 		baudrate = optlist.lookup_int(options, "baudrate");
 		/* find constant for termios structure */
 		switch (baudrate) {
+				case 50: _baudrate = B50; break;
+				case 75: _baudrate = B75; break;
+				case 110: _baudrate = B110; break;
+				case 134: _baudrate = B134; break;
+				case 150: _baudrate = B150; break;
+				case 200: _baudrate = B200; break;
+				case 300: _baudrate = B300; break;
+				case 600: _baudrate = B600; break;
 				case 1200: _baudrate = B1200; break;
 				case 1800: _baudrate = B1800; break;
 				case 2400: _baudrate = B2400; break;
@@ -179,6 +204,12 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 	char byte;			/* we parse our input byte wise */
 	int byte_iterator; 
 	size_t number_of_tuples;
+
+	if(_pull.size()) {
+		int wlen=write(_fd,_pull.c_str(),_pull.size());
+		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
+	}
+
 
 	byte_iterator =  number_of_tuples = baudrate = 0;
 

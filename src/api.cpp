@@ -162,21 +162,21 @@ void api_parse_exception(CURLresponse response, char *err, size_t n) {
 	json_obj = json_tokener_parse_ex(json_tok, response.data, response.size);
 
 	if (json_tok->err == json_tokener_success) {
-		json_obj = json_object_object_get(json_obj, "exception");
+    json_obj = json_object_object_get(json_obj, "exception");
 
-		if (json_obj) {
-			snprintf(err, n, "%s: %s",
-							 json_object_get_string(json_object_object_get(json_obj,  "type")),
-							 json_object_get_string(json_object_object_get(json_obj,  "message"))
-							 );
-		}
-		else {
-			strncpy(err, "missing exception", n);
-		}
-	}
-	else {
-		strncpy(err, json_tokener_errors[json_tok->err], n);
-	}
+    if (json_obj) {
+      snprintf(err, n, "%s: %s",
+               json_object_get_string(json_object_object_get(json_obj,  "type")),
+               json_object_get_string(json_object_object_get(json_obj,  "message"))
+               );
+    }
+    else {
+      strncpy(err, "missing exception", n);
+    }
+  }
+  else {
+    strncpy(err, json_tokener_errors[json_tok->err], n);
+  }
 
 	json_object_put(json_obj);
 	json_tokener_free(json_tok);

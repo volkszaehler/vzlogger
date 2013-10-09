@@ -101,6 +101,14 @@ MeterSML::MeterSML(std::list<Option> options)
 		baudrate = optlist.lookup_int(options, "baudrate");
 		/* find constant for termios structure */
 		switch (baudrate) {
+				case 50: _baudrate = B50; break;
+				case 75: _baudrate = B75; break;
+				case 110: _baudrate = B110; break;
+				case 134: _baudrate = B134; break;
+				case 150: _baudrate = B150; break;
+				case 200: _baudrate = B200; break;
+				case 300: _baudrate = B300; break;
+				case 600: _baudrate = B600; break;
 				case 1200: _baudrate = B1200; break;
 				case 1800: _baudrate = B1800; break;
 				case 2400: _baudrate = B2400; break;
