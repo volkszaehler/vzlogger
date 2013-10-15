@@ -110,6 +110,14 @@ Meter::Meter(std::list<Option> pOptions) :
 		print(log_error, "Invalid type for aggtime", name());
 		throw;
 	}
+	try {
+		_aggFixedInterval = optlist.lookup_bool(pOptions, "aggfixedinterval");
+	} catch( vz::OptionNotFoundException &e ) {
+		_aggFixedInterval = false;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Invalid type for aggfixedinterval", name());
+		throw;
+	}
 
 	try{
 		const meter_details_t *details = meter_get_details(_protocol_id);

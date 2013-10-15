@@ -47,10 +47,11 @@ void Buffer::push(const Reading &rd) {
 	unlock();
 }
 
-void Buffer::aggregate() {
+void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 	if(_aggmode == NONE) return;
+	
+	lock();
 	if(_aggmode == MAXIMUM) {
-		lock();
 		Reading *latest=NULL;
 		double aggvalue=DBL_MIN;
 		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
@@ -76,11 +77,7 @@ void Buffer::aggregate() {
 				}
 			}
 		}
-		unlock();
-		clean();
-		return;
-	} else 	if(_aggmode == AVG) {
-		lock();
+	} else if(_aggmode == AVG) {
 		Reading *latest=NULL;
 		double aggvalue=0;
 		int aggcount=0;
@@ -109,11 +106,7 @@ void Buffer::aggregate() {
 				}
 			}
 		}
-		unlock();
-		clean();
-		return;
 	} else if(_aggmode == SUM) {
-		lock();
 		Reading *latest=NULL;
 		double aggvalue=0;
 		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
@@ -139,10 +132,21 @@ void Buffer::aggregate() {
 				}
 			}
 		}
-		unlock();
-		clean();
-		return;
 	}
+	/* fix timestamp if aggFixedInterval set */
+	if ((aggFixedInterval==true) && (aggtime>0)) {
+		struct timeval tv;
+		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if(! it->deleted()) {
+				tv.tv_usec = 0;
+				tv.tv_sec = aggtime * (long int)(it->tvtod() / aggtime);
+				it->time(tv);
+			}
+		}
+	}
+	unlock();
+	clean();
+	return;
 }
 
 

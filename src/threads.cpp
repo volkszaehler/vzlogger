@@ -43,7 +43,7 @@ void * reading_thread(void *arg) {
 	std::vector<Reading> rds;
 	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr  mtr = mapping->meter();
-	time_t last, delta=-1;
+	time_t aggIntEnd;
 	const meter_details_t *details;
 	size_t n = 0;
 
@@ -63,14 +63,12 @@ void * reading_thread(void *arg) {
 
 
 	try {
+		aggIntEnd = time(NULL);
 		do { /* start thread main loop */
-			while(delta <= mtr->aggtime()) {
+			aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
+			do { /* aggregate loop */
 				/* fetch readings from meter and calculate delta */
-				/* defautl aggtime is -1, so this loop while normale exit after one turn */
-				if(delta < 0 ) delta=0;
-				last = time(NULL);
 				n = mtr->read(rds, details->max_readings);
-				delta = delta+(time(NULL) - last);
 
 				/* dumping meter output */
 				if (options.verbosity() > log_debug) {
@@ -119,15 +117,14 @@ void * reading_thread(void *arg) {
 						(*ch)->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
 					}
 				} // channel loop
-			} // while delta < aggtime
+			} while((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
 			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 
 				/* aggregate buffer values if aggmode != NONE */
-				(*ch)->buffer()->aggregate();
+				(*ch)->buffer()->aggregate(mtr->aggtime(), mtr->aggFixedInterval());
 				/* mark buffer "ready" */
 				(*ch)->buffer()->have_newValues();
-
 
 				/* shrink buffer */
 				(*ch)->buffer()->clean();
@@ -157,12 +154,10 @@ void * reading_thread(void *arg) {
 				}
 			}
 
-			if (mtr->interval() > 0 && mtr->interval()-delta >0 ) {
-				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval()-delta);
-				sleep(mtr->interval()-delta);
+			if (mtr->interval() > 0) {
+				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
+				sleep(mtr->interval());
 			}
-			delta=-1;
-
 		} while (options.daemon() || options.local() || options.logging() );
 	} catch(std::exception &e) {
 		std::stringstream oss;
