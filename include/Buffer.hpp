@@ -46,7 +46,7 @@ class Buffer {
 	Buffer();
 	virtual ~Buffer();
 
-	void aggregate();
+	void aggregate(int aggtime, bool aggFixedInterval);
 	void push(const Reading &rd);
 	void clean();
 	void undelete();
@@ -72,13 +72,10 @@ class Buffer {
 	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
 
 	private:
-
-	private:
 	std::list<Reading> _sent;
 	bool _newValues;
 
 	Buffer::aggmode _aggmode;
-
 
 	size_t _keep;	/**< number of readings to cache for local interface */
 
