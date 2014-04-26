@@ -35,7 +35,7 @@
 static const char *option_type_str[] = { "null", "boolean", "double", "int", "object", "array", "string" };
 
 Config_Options::Config_Options()
-		:  _config("/etc/vzlogger.conf")
+    :  _config("/etc/vzlogger.conf")
 		, _log("")
 		, _port(8080)
 		, _verbosity(0)
@@ -259,6 +259,11 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
+  // check if identifier is set. If not, use default
+  if( id_str == NULL ) {
+		print(log_error, "Identifier is not set. Set it to default value 'NilItentifier'.", NULL);
+    id_str = "NilItentifier";
+  }
 	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
@@ -270,9 +275,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	/* parse identifier */
 	ReadingIdentifier::Ptr id;
 	try {
-		if( id_str != NULL ) {
-			id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
-		}
+		id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
 	} catch ( vz::VZException &e ) {
 		std::stringstream oss;
 		oss << e.what();

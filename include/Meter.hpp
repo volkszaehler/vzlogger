@@ -62,6 +62,9 @@ public:
 
 	const int  interval() const            { return _interval; }
 
+	const int aggtime() const 				{ return _aggtime; }
+	const bool aggFixedInterval() const 				{ return _aggFixedInterval; }
+
 private:
 	static int instances;                   /**< meter instance id (increasing counter) */
 	bool _thread_running;   								/**< flag if thread is started */
@@ -77,6 +80,9 @@ private:
 
 
 	int _interval;
+
+	int _aggtime;
+	bool _aggFixedInterval;
 
 	std::vector<Channel> channels;          /**< channel for logging */
 };

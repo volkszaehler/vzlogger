@@ -45,7 +45,7 @@ public:
 	int _open_device(struct termios *old_tio, speed_t baudrate);
 
   protected:
-	const char *_device;
+	std::string _device;
 	int _resolution;
 	int _counter;
 

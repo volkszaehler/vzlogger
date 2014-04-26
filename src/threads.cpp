@@ -43,7 +43,7 @@ void * reading_thread(void *arg) {
 	std::vector<Reading> rds;
 	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr  mtr = mapping->meter();
-	time_t last, delta;
+	time_t aggIntEnd;
 	const meter_details_t *details;
 	size_t n = 0;
 
@@ -63,64 +63,68 @@ void * reading_thread(void *arg) {
 
 
 	try {
+		aggIntEnd = time(NULL);
 		do { /* start thread main loop */
-			/* fetch readings from meter and calculate delta */
-			last = time(NULL);
-			n = mtr->read(rds, details->max_readings);
-			delta = time(NULL) - last;
+			aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
+			do { /* aggregate loop */
+				/* fetch readings from meter and calculate delta */
+				n = mtr->read(rds, details->max_readings);
 
-			/* dumping meter output */
-			if (options.verbosity() > log_debug) {
-				print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
+				/* dumping meter output */
+				if (options.verbosity() > log_debug) {
+					print(log_debug, "Got %i new readings from meter:", mtr->name(), n);
 
-				char identifier[MAX_IDENTIFIER_LEN];
-				for (size_t i = 0; i < n; i++) {
-                    rds[i].unparse(/*mtr->protocolId(),*/ identifier, MAX_IDENTIFIER_LEN);
-					print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
+					char identifier[MAX_IDENTIFIER_LEN];
+					for (size_t i = 0; i < n; i++) {
+						rds[i].unparse(/*mtr->protocolId(),*/ identifier, MAX_IDENTIFIER_LEN);
+						print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
 								identifier, rds[i].identifier()->toString().c_str(),
 								rds[i].value(), rds[i].tvtod());
-				}
-			}
-
-			/* update buffer length with current interval */
-			if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-				print(log_debug, "Updating interval to %i", mtr->name(), delta);
-				mtr->interval(delta);
-			}
-
-			/* insert readings into channel queues */
-			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
-				Reading *add = NULL;
-
-				//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
-
-				for (size_t i = 0; i < n; i++) {
-					if ( *rds[i].identifier().get() == *(*ch)->identifier().get()) {
-						//print(log_debug, "found channel", mtr->name());
-						if ((*ch)->tvtod() < rds[i].tvtod()) {
-							(*ch)->last(&rds[i]);
-						}
-
-						print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", (*ch)->name(),
-									rds[i].value(), rds[i].tvtod());
-						(*ch)->push(rds[i]);
-
-						if (add == NULL) {
-							add = &rds[i]; /* remember first reading which has been added to the buffer */
-						}
 					}
 				}
 
-				/* update buffer length */
-				if (options.local()) {
-					(*ch)->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
-				}
+				/* update buffer length with current interval */
+//				if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
+//					print(log_debug, "Updating interval to %i", mtr->name(), delta);
+//					mtr->interval(delta);
+//				}
 
-				/* queue reading into sending buffer logging thread if
-					 logging is enabled & sent queue is empty */
-				//if (options.logging()) {
-				//ch->push(buf->sent = add);
-				//}
+				/* insert readings into channel queues */
+				for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+					Reading *add = NULL;
+
+					//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
+
+					for (size_t i = 0; i < n; i++) {
+						if ( *rds[i].identifier().get() == *(*ch)->identifier().get()) {
+							//print(log_debug, "found channel", mtr->name());
+							if ((*ch)->tvtod() < rds[i].tvtod()) {
+								(*ch)->last(&rds[i]);
+							}
+
+							print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", (*ch)->name(),
+									rds[i].value(), rds[i].tvtod());
+							(*ch)->push(rds[i]);
+
+							if (add == NULL) {
+								add = &rds[i]; /* remember first reading which has been added to the buffer */
+							}
+						}
+					}
+
+					/* update buffer length */
+					if (options.local()) {
+						(*ch)->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
+					}
+				} // channel loop
+			} while((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
+
+			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+
+				/* aggregate buffer values if aggmode != NONE */
+				(*ch)->buffer()->aggregate(mtr->aggtime(), mtr->aggFixedInterval());
+				/* mark buffer "ready" */
+				(*ch)->buffer()->have_newValues();
 
 				/* shrink buffer */
 				(*ch)->buffer()->clean();
@@ -144,15 +148,15 @@ void * reading_thread(void *arg) {
 					}
 
 					print(log_debug, "Buffer dump (size=%i keep=%i): %s", (*ch)->name(),
-								(*ch)->size(), (*ch)->keep(), dump);
+							(*ch)->size(), (*ch)->keep(), dump);
 
 					free(dump);
 				}
 			}
 
-			if ((options.daemon() || options.local()) && details->periodic) {
+			if (mtr->interval() > 0) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-//sleep(mtr->interval());
+				sleep(mtr->interval());
 			}
 		} while (options.daemon() || options.local() || options.logging() );
 	} catch(std::exception &e) {

@@ -53,7 +53,7 @@ static const meter_details_t protocols[] = {
 //METER_DETAIL(exec, "Parse program output",32,true),
 	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
 	METER_DETAIL(fluksov2, Fluksov2,"Read from Flukso's onboard SPI fifo",16,false),
-	METER_DETAIL(s0, S0,"S0-meter directly connected to RS232",3,true),
+	METER_DETAIL(s0, S0,"S0-meter directly connected to RS232",2,false),
 	METER_DETAIL(d0, D0,"DLMS/IEC 62056-21 plaintext protocol",32,false),
 #ifdef SML_SUPPORT
 	METER_DETAIL(sml, Sml,"Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
@@ -102,11 +102,29 @@ Meter::Meter(std::list<Option> pOptions) :
 		print(log_error, "Invalid type for interval", name());
 		throw;
 	}
+	try {
+/* aggregation time */
+		Option interval_opt = optlist.lookup(pOptions, "aggtime");
+		_aggtime = (int)(interval_opt);
+	} catch( vz::OptionNotFoundException &e ) {
+		_aggtime = -1; /* indicates no aggregation */
+	} catch( vz::VZException &e ) {
+		print(log_error, "Invalid type for aggtime", name());
+		throw;
+	}
+	try {
+		_aggFixedInterval = optlist.lookup_bool(pOptions, "aggfixedinterval");
+	} catch( vz::OptionNotFoundException &e ) {
+		_aggFixedInterval = false;
+	} catch( vz::VZException &e ) {
+		print(log_error, "Invalid type for aggfixedinterval", name());
+		throw;
+	}
 
 	try{
 		const meter_details_t *details = meter_get_details(_protocol_id);
 		if (details->periodic == true && _interval < 0) {
-//print(log_error, "Interval has to be positive!", mtr);
+			print(log_error, "Interval has to be set and positive!", name());
 		} 
 	} catch( vz::VZException &e ) {
 		std::stringstream oss;
@@ -129,7 +147,7 @@ Meter::Meter(std::list<Option> pOptions) :
 				break;
 			case meter_protocol_s0:
 				_protocol = vz::protocol::Protocol::Ptr(new MeterS0(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new NilIdentifier());
+				_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 				break;
 			case meter_protocol_d0:
 				_protocol = vz::protocol::Protocol::Ptr(new MeterD0(pOptions));
@@ -159,7 +177,7 @@ Meter::Meter(std::list<Option> pOptions) :
 		throw;
 	}
 
-	print(log_debug, "Meter configured.", name());
+	print(log_debug, "Meter configured. %s", name(),_enable?"enabled":"disabled");
 }
 
 //Meter::Meter(const Meter *mtr) {

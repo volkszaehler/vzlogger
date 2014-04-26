@@ -41,9 +41,12 @@ class Buffer {
 	typedef std::list<Reading>::iterator iterator;
 	typedef std::list<Reading>::const_iterator const_iterator;
 
+	enum aggmode { NONE,MAXIMUM,AVG,SUM };
+
 	Buffer();
 	virtual ~Buffer();
 
+	void aggregate(int aggtime, bool aggFixedInterval);
 	void push(const Reading &rd);
 	void clean();
 	void undelete();
@@ -64,12 +67,15 @@ class Buffer {
 	inline void unlock() { pthread_mutex_unlock(&_mutex); }
 	inline void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
 
-	private:
 	inline void have_newValues() { _newValues =  true; }
+
+	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
 
 	private:
 	std::list<Reading> _sent;
 	bool _newValues;
+
+	Buffer::aggmode _aggmode;
 
 	size_t _keep;	/**< number of readings to cache for local interface */
 
