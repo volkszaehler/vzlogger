@@ -25,7 +25,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+// RW: added ack 
 #ifndef _D0_H_
 #define _D0_H_
 
@@ -51,9 +51,11 @@ private:
 	std::string _host;
 	std::string _device;
 	int _baudrate;
+	int _baudrate_read;
 
 	parity_type_t _parity;
 	std::string _pull;
+	std::string _ack;
 
 
 	int _fd; /* file descriptor of port */
