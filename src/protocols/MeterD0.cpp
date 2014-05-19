@@ -28,11 +28,13 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- // Add Acknowlegde RW
-// Corrected parity
-// Correct Obidis( filter 1 und 2)
-// Filter STX
-// Baudrate change
+/*
+ * Add Acknowlegde RW
+ * Corrected parity
+ * Correct Obidis( filter 1 und 2)
+ * Filter STX
+ * Baudrate change
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -292,12 +294,12 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 		else if (byte == '?' or byte == '!') context = END; /* "!" is the identifier for the END */
 //		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
 		switch (context) {
-		    case START:			/* strip the initial "/" */
-                    if  (byte != '\r' &&  byte != '\n') { /*allow extra new line at the start */
-                      byte_iterator = number_of_tuples = 0;        /* start */
-                      context = VENDOR;        /* set new context: START -> VENDOR */
-                    }
-			break;
+			case START:			/* strip the initial "/" */
+				if  (byte != '\r' &&  byte != '\n') { /*allow extra new line at the start */
+					byte_iterator = number_of_tuples = 0;        /* start */
+					context = VENDOR;        /* set new context: START -> VENDOR */
+				}
+				break;
 
 			case VENDOR:			/* VENDOR has 3 Bytes */
 				if  (byte == '\r' or  byte == '\n' or byte == '/' ) {
@@ -341,7 +343,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					}
 				//break;
 				}
-				break; //--um dies Ack Sequenz send zu können zwar den context wechseln, aber ohne ein Zeichen zu erwarten
+				break;
 			case ACK:
 				if(_ack.size()) {
 					//tcflush(_fd, TCIOFLUSH);
@@ -355,10 +357,12 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					print(log_debug,"sending ack sequenz send (len:%d is:%d,%s).",name().c_str(),_ack.size(),wlen,_ack.c_str());
 				}
 				context = OBIS_CODE;
-
 				break;
+				
+
 			case START_LINE:
 				break;
+
 			case OBIS_CODE:
 				print(log_debug, "DEBUG OBIS_CODE byte %c hex= %X ",name().c_str(), byte, byte);
 				if ((byte != '\n') && (byte != '\r')&& (byte != 0x02))// STX ausklammern 
@@ -370,8 +374,6 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					}
 					else obis_code[byte_iterator++] = byte;
 				}
-
-				
 				break;
 
 			case VALUE:
@@ -497,29 +499,29 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 
 	/* backup old configuration to restore it when closing the meter connection */
 	memcpy(old_tio, &tio, sizeof(struct termios));
-      /* 
-          initialize all control characters 
-          default values can be found in /usr/include/termios.h, and are given
-          in the comments, but we don't need them here
-        */
-         tio.c_cc[VINTR]    = 0;     /* Ctrl-c */ 
-         tio.c_cc[VQUIT]    = 0;     /* Ctrl-\ */
-         tio.c_cc[VERASE]   = 0;     /* del */
-         tio.c_cc[VKILL]    = 0;     /* @ */
-         tio.c_cc[VEOF]     = 4;     /* Ctrl-d */
-         tio.c_cc[VTIME]    = 0;     /* inter-character timer unused */
-         tio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
-         tio.c_cc[VSWTC]    = 0;     /* '\0' */
-         tio.c_cc[VSTART]   = 0;     /* Ctrl-q */ 
-         tio.c_cc[VSTOP]    = 0;     /* Ctrl-s */
-         tio.c_cc[VSUSP]    = 0;     /* Ctrl-z */
-         tio.c_cc[VEOL]     = 0;     /* '\0' */
-         tio.c_cc[VREPRINT] = 0;     /* Ctrl-r */
-         tio.c_cc[VDISCARD] = 0;     /* Ctrl-u */
-         tio.c_cc[VWERASE]  = 0;     /* Ctrl-w */
-         tio.c_cc[VLNEXT]   = 0;     /* Ctrl-v */
-         tio.c_cc[VEOL2]    = 0;     /* '\0' */
-       
+	/* 
+	initialize all control characters 
+	default values can be found in /usr/include/termios.h, and are given
+	in the comments, but we don't need them here
+	*/
+	tio.c_cc[VINTR]    = 0;     /* Ctrl-c */ 
+	tio.c_cc[VQUIT]    = 0;     /* Ctrl-\ */
+	tio.c_cc[VERASE]   = 0;     /* del */
+	tio.c_cc[VKILL]    = 0;     /* @ */
+	tio.c_cc[VEOF]     = 4;     /* Ctrl-d */
+	tio.c_cc[VTIME]    = 0;     /* inter-character timer unused */
+	tio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
+	tio.c_cc[VSWTC]    = 0;     /* '\0' */
+	tio.c_cc[VSTART]   = 0;     /* Ctrl-q */ 
+	tio.c_cc[VSTOP]    = 0;     /* Ctrl-s */
+	tio.c_cc[VSUSP]    = 0;     /* Ctrl-z */
+	tio.c_cc[VEOL]     = 0;     /* '\0' */
+	tio.c_cc[VREPRINT] = 0;     /* Ctrl-r */
+	tio.c_cc[VDISCARD] = 0;     /* Ctrl-u */
+	tio.c_cc[VWERASE]  = 0;     /* Ctrl-w */
+	tio.c_cc[VLNEXT]   = 0;     /* Ctrl-v */
+	tio.c_cc[VEOL2]    = 0;     /* '\0' */
+
 	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL | IXOFF| IXON);
 	tio.c_oflag &= ~(OPOST | ONLCR);
 	tio.c_lflag &= ~(ISIG | ICANON | IEXTEN | ECHO);
