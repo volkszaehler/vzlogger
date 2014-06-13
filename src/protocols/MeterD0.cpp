@@ -312,12 +312,12 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
         while(_wait_sync_end && ::read(_fd, &byte, 1)){
             if (byte == '!'){
                 _wait_sync_end=false;
-                print(log_debug, "found wait_sync_end. skipped %d bytes.", skipped);
+                print(log_debug, "found wait_sync_end. skipped %d bytes.", name().c_str(), skipped);
             }else{
                 skipped++;
                 if (skipped>D0_BUFFER_LENGTH){
                     _wait_sync_end=false;
-                    print(log_error, "stopped searching for wait_sync_end after %d bytes without success!", skipped);
+                    print(log_error, "stopped searching for wait_sync_end after %d bytes without success!", name().c_str(), skipped);
                 }
             }
         }
