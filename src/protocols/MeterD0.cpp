@@ -474,7 +474,9 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					endseq[byte_iterator] = '\0';
 					print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
 					byte_iterator = 0;
-					endseq[3] = 0;
+					endseq[0] = 0;
+					endseq[1] = 0;	
+					endseq[2] = 0;
 							}
 				break;
 						}

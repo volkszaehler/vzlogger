@@ -85,7 +85,7 @@ public:
 	inline iterator end()    { return _channels.end(); }
 	inline size_t size()     { return _channels.size(); }
 
-	const bool running() const { return _thread_running; }
+	bool running() const { return _thread_running; }
 
 private:
 	Meter::Ptr _meter;
@@ -122,7 +122,7 @@ public:
 	inline void push_back(const MeterMap &map) { _mappings.push_back(map); } 
 	inline iterator begin()  { return _mappings.begin(); }
 	inline iterator end()    { return _mappings.end(); }
-	inline const size_t size() const { return _mappings.size(); }
+	inline size_t size() const { return _mappings.size(); }
 
 private:
 	std::vector<MeterMap> _mappings;
