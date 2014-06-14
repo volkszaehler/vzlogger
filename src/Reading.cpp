@@ -70,11 +70,11 @@ Reading::Reading(
 //	printf("+==>Copy: %f %f orig %f %f\n", tvtod(), _value, orig.tvtod(), orig._value);
 }
 
-const double Reading::tvtod() const {
+double Reading::tvtod() const {
 	return _time.tv_sec + _time.tv_usec / 1e6;
 }
 
-double Reading::tvtod(struct timeval tv) {
+double Reading::tvtod(struct timeval tv) const {
 	return tv.tv_sec + tv.tv_usec / 1e6;
 }
 

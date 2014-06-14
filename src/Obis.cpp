@@ -223,7 +223,7 @@ size_t Obis::unparse(char *buffer, size_t n) {
 									);
 }
 
-const bool Obis::operator==(const Obis &rhs) {
+bool Obis::operator==(const Obis &rhs) const {
 	for (int i = 0; i < 6; i++) {
 		if (_obisId._raw[i] == rhs._obisId._raw[i] || _obisId._raw[i] == 0xff || rhs._obisId._raw[i] == 0xff ) {
 			continue; /* skip on wildcard or equal */
@@ -239,7 +239,7 @@ const bool Obis::operator==(const Obis &rhs) {
 	return 1; /* equal */
 }
 
-const bool Obis::isNull() const {
+bool Obis::isNull() const {
 	return !(
 		_obisId._raw[0] ||
 		_obisId._raw[1] ||
@@ -250,7 +250,7 @@ const bool Obis::isNull() const {
 		);
 }
 
-const bool Obis::isManufacturerSpecific() const {
+bool Obis::isManufacturerSpecific() const {
 	return (
 		(_obisId.groups.channel >= 128 && _obisId.groups.channel <= 199) ||
 		(_obisId.groups.indicator >= 128 && _obisId.groups.indicator <= 199) ||
