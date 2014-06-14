@@ -92,8 +92,8 @@ namespace vz {
 			const char *uuid() const      { return _uuid.c_str(); }
 			const char *secretKey() const { return _secretKey.c_str(); }
 	
-			const int interval() const    { return _interval; }
-			const time_t first_ts() const { return _first_ts; }
+			int interval() const    { return _interval; }
+			time_t first_ts() const { return _first_ts; }
 
 		private:
 			std::string _middleware; /**< url to MySmartGrid Server */
