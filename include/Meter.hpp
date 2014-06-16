@@ -53,17 +53,17 @@ public:
 
 // getter
 	const char *name() const               { return _name.c_str(); }
-	const bool isEnabled() const           { return _enable; }
+	bool isEnabled() const           { return _enable; }
 
-	const meter_protocol_t protocolId() const { return _protocol_id; } 
-	vz::protocol::Protocol::Ptr protocol() { return _protocol; }
+	meter_protocol_t protocolId() const { return _protocol_id; } 
+	vz::protocol::Protocol::Ptr protocol() const { return _protocol; }
 
-	ReadingIdentifier::Ptr identifier()    { return _identifier; }
+	ReadingIdentifier::Ptr identifier() const { return _identifier; }
 
-	const int  interval() const            { return _interval; }
+	int  interval() const            { return _interval; }
 
-	const int aggtime() const 				{ return _aggtime; }
-	const bool aggFixedInterval() const 				{ return _aggFixedInterval; }
+	int aggtime() const 				{ return _aggtime; }
+	bool aggFixedInterval() const 				{ return _aggFixedInterval; }
 
 private:
 	static int instances;                   /**< meter instance id (increasing counter) */

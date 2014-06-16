@@ -71,7 +71,7 @@ const struct option long_options[] = {
 	{"verbose",	required_argument,	0,	'v'},
 	{"help",	no_argument,		0,	'h'},
 	{"version",	no_argument,		0,	'V'},
-	{} /* stop condition for iterator */
+	{0, 0, 0, 0} /* stop condition for iterator */
 };
 
 /**
