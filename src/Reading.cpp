@@ -192,6 +192,7 @@ bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs
 			}  else
 				if(NilIdentifier* lhsx = dynamic_cast<NilIdentifier*>(lhs)) {
 					if(NilIdentifier* rhsx = dynamic_cast<NilIdentifier*>(rhs)) {
+						(void)lhsx; (void) rhsx; // avoid compiler warning about unused vars.
 						return true;
 					} else { return false; }
 				}
