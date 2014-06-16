@@ -43,10 +43,10 @@ class Obis {
 	size_t unparse(char *buffer, size_t n);
 	const std::string toString()  ;
 
-	const bool operator==(const Obis &rhs);
+	bool operator==(const Obis &rhs) const;
 
-	const bool isManufacturerSpecific() const;
-	const bool isNull() const;
+	bool isManufacturerSpecific() const;
+	bool isNull() const;
 
 	private:
 	int parse(const char *str);

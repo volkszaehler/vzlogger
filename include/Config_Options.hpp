@@ -66,15 +66,15 @@ public:
 	const int &verbosity() const { return _verbosity; }
 	const int &comet_timeout() const { return _comet_timeout; }
 	const int &buffer_length() const { return _buffer_length; }
-	const int retry_pause() const { return _retry_pause; }
+	int retry_pause() const { return _retry_pause; }
 
-	const bool channel_index() const { return _channel_index; }
-	const bool daemon()    const { return _daemon; }
-	const bool foreground()const { return _foreground; }
-	const bool local()     const { return _local; }
-	const bool logging()   const { return _logging; }
+	bool channel_index() const { return _channel_index; }
+	bool daemon()    const { return _daemon; }
+	bool foreground()const { return _foreground; }
+	bool local()     const { return _local; }
+	bool logging()   const { return _logging; }
 
-	const bool doRegistration()   const { return _doRegistration; }
+	bool doRegistration()   const { return _doRegistration; }
 
 // setter
 	void config(const std::string &v) { _config = v; }
