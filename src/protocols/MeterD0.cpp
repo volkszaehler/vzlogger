@@ -57,6 +57,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		: Protocol("d0")
 		, _host("")
 		, _device("")
+        , _wait_sync_end (false)
 {
 	OptionList optlist;
 
@@ -202,6 +203,21 @@ MeterD0::MeterD0(std::list<Option> options)
 		throw;
 	}
 
+	try {
+		const char *waitsync = optlist.lookup_string(options, "wait_sync");
+		if(strcasecmp(waitsync,"end")==0) {
+			_wait_sync_end = true;
+		} else {
+			throw vz::VZException("Invalid wait_sync");
+		}
+	} catch( vz::OptionNotFoundException &e ) {
+        /* no fault. default is off */
+	} catch( vz::VZException &e ) {
+		print(log_error, "Failed to parse wait_sync", name().c_str());
+		throw;
+	}
+    
+
 }
 
 MeterD0::~MeterD0() {
@@ -287,6 +303,26 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 	byte=lastbyte=0;	
 	context = START;				/* start with context START */
 
+    if (_wait_sync_end){
+        /* wait once for the sync pattern ("!") at the end of a regular D0 message.
+         This is intended for D0 meters that start sending data automatically
+         (e.g. Hager EHZ361).
+         */
+        int skipped=0;
+        while(_wait_sync_end && ::read(_fd, &byte, 1)){
+            if (byte == '!'){
+                _wait_sync_end=false;
+                print(log_debug, "found wait_sync_end. skipped %d bytes.", name().c_str(), skipped);
+            }else{
+                skipped++;
+                if (skipped>D0_BUFFER_LENGTH){
+                    _wait_sync_end=false;
+                    print(log_error, "stopped searching for wait_sync_end after %d bytes without success!", name().c_str(), skipped);
+                }
+            }
+        }
+    }
+    
 	while (::read(_fd, &byte, 1)) {
 		lastbyte=byte;
 //		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
