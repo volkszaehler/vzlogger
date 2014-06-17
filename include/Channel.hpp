@@ -55,14 +55,14 @@ class Channel {
 
 	void cancel() { if(running()) pthread_cancel(_thread); }
 	
-	const bool running() const { return _thread_running; }
+	bool running() const { return _thread_running; }
 	
 	const char* name()                  { return _name.c_str(); }
 	std::list<Option> &options()        { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {
 		if(_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
-	const double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
+	double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
 	
 	const char* uuid()                  { return _uuid.c_str(); }
 	const std::string apiProtocol()     { return _apiProtocol; }
@@ -72,8 +72,8 @@ class Channel {
 	char *dump(char *dump, size_t len)  { return _buffer->dump(dump, len); }
 	Buffer::Ptr buffer()                { return _buffer; }
 	
-	const size_t size() { return _buffer->size(); }  
-	const size_t keep() { return _buffer->keep(); }  
+	size_t size() const { return _buffer->size(); }  
+	size_t keep() const { return _buffer->keep(); }  
 
 	inline void notify() {
 		_buffer->lock();
