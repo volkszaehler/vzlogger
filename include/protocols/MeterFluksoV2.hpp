@@ -46,7 +46,7 @@ public:
 	int _fd;	/* file descriptor of fifo */
 
 	//const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
-	const char *_DEFAULT_FIFO;
+	// const char *_DEFAULT_FIFO;
 };
 
 #endif /* _FLUKSOV2_H_ */
