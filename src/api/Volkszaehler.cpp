@@ -218,17 +218,17 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 		json_obj = json_object_object_get(json_obj, "exception");
 
 		if (json_obj) {
-      const std::string err_type(json_object_get_string(json_object_object_get(json_obj,  "type")));
-      const std::string err_message( json_object_get_string(json_object_object_get(json_obj,  "message")));
+			const std::string err_type(json_object_get_string(json_object_object_get(json_obj,  "type")));
+			const std::string err_message( json_object_get_string(json_object_object_get(json_obj,  "message")));
 
-      snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
-// evaulate error 
-      if( err_type == "PDOException") {
-        if( err_message.find("Duplicate entry") ) {
-          print(log_warning, "middle says duplicated value. removing first entry!", channel()->name());
-          _values.pop_front();
-        }
-      }
+			snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
+			// evaluate error 
+			if( err_type == "UniqueConstraintViolationException") {
+				if( err_message.find("Duplicate entry") ) {
+					print(log_warning, "middle says duplicated value. removing first entry!", channel()->name());
+					_values.pop_front();
+				}
+			}
 		}
 		else {
 			strncpy(err, "missing exception", n);
@@ -271,8 +271,8 @@ int vz::api::curl_custom_debug_callback(
 
 			case CURLINFO_SSL_DATA_OUT:
 			case CURLINFO_DATA_OUT:	
-        data[size]=0;
-        print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
+				data[size]=0;
+				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
 				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", ch->name(), data);
 				break;
 
