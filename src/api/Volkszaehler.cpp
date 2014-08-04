@@ -43,14 +43,14 @@ extern Config_Options options;
 
 vz::api::Volkszaehler::Volkszaehler(
 	Channel::Ptr ch,
-  std::list<Option> pOptions
+	std::list<Option> pOptions
 	) 
-		: ApiIF(ch)
-    , _last_timestamp(0)
+	: ApiIF(ch)
+	, _last_timestamp(0)
 {
 	OptionList optlist;
 	char url[255], agent[255];
-  unsigned short curlTimeout = 30; // 30 seconds
+	unsigned short curlTimeout = 30; // 30 seconds
 
 /* parse options */
 	try {
@@ -64,9 +64,9 @@ vz::api::Volkszaehler::Volkszaehler(
 	try {
 		curlTimeout = optlist.lookup_int(pOptions, "timeout");
 	} catch ( vz::OptionNotFoundException &e ) {
-// use default value instead
-    curlTimeout = 30; // 30 seconds
-  } catch ( vz::VZException &e ) {
+	// use default value instead
+		curlTimeout = 30; // 30 seconds
+	} catch ( vz::VZException &e ) {
 		throw;
 	}
 
@@ -90,11 +90,11 @@ vz::api::Volkszaehler::Volkszaehler(
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
 
-  // signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
-  curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
+	// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
+	curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
 
-  // set timeout to 5 sec. required if next router has an ip-change.
-  curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, curlTimeout);
+	// set timeout to 5 sec. required if next router has an ip-change.
+	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, curlTimeout);
 }
 
 vz::api::Volkszaehler::~Volkszaehler() 
@@ -145,13 +145,12 @@ void vz::api::Volkszaehler::send()
 			char err[255];
 			api_parse_exception(response, err, 255);
 			print(log_error, "CURL Error from middleware: %s", channel()->name(), err);
-    }
+		}
 	}
 
 	/* householding */
 	free(response.data);
 	json_object_put(json_obj);
-
 
 	if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
@@ -175,13 +174,13 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-    timestamp = round(it->tvtod() * 1000);
-    print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
-    if(_last_timestamp < timestamp ) {
-      _values.push_back(*it);
-      _last_timestamp = timestamp;
-    }
-    it->mark_delete();
+		timestamp = round(it->tvtod() * 1000);
+		print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
+		if(_last_timestamp < timestamp ) {
+			_values.push_back(*it);
+			_last_timestamp = timestamp;
+		}
+		it->mark_delete();
 	}
 	buf->unlock();
 	buf->clean();
@@ -241,7 +240,6 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 	json_object_put(json_obj);
 	json_tokener_free(json_tok);
 }
-
 
 
 int vz::api::curl_custom_debug_callback(
