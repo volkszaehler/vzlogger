@@ -117,7 +117,7 @@ void * reading_thread(void *arg) {
 						(*ch)->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
 					}
 				} // channel loop
-			} while((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
+			} while ((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
 			for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 
@@ -158,8 +158,8 @@ void * reading_thread(void *arg) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
 				sleep(mtr->interval());
 			}
-		} while (options.daemon() || options.local() || options.logging() );
-	} catch(std::exception &e) {
+		} while (options.daemon() || options.local() || options.logging());
+	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Reading-THREAD - reading Got an exception : %s", mtr->name(), e.what());
@@ -203,7 +203,7 @@ void * logging_thread(void *arg) {
 
 			api->send();
 		}
-		catch(std::exception &e) {
+		catch (std::exception &e) {
 			print(log_error, "logging thread failed due to: %s", ch->name(), e.what());
 		}
 

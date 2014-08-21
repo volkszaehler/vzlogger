@@ -43,7 +43,6 @@ Config_Options::Config_Options()
 		, _buffer_length(600)
 		, _retry_pause(15)
 		, _daemon(false)
-		, _foreground(false)
 		, _local(false)
 		, _logging(true)
 {
@@ -61,7 +60,6 @@ Config_Options::Config_Options(
 		, _buffer_length(600)
 		, _retry_pause(15)
 		, _daemon(false)
-		, _foreground(false)
 		, _local(false)
 		, _logging(true)
 {
@@ -117,9 +115,6 @@ void Config_Options::config_parse(
 
 			if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
 				_daemon = json_object_get_boolean(value);
-			}
-			else if (strcmp(key, "foreground") == 0 && type == json_type_boolean) {
-				_foreground = json_object_get_boolean(value);
 			}
 			else if (strcmp(key, "log") == 0 && type == json_type_string) {
 				_log = strdup(json_object_get_string(value));

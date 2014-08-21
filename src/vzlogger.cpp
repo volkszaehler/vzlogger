@@ -321,7 +321,7 @@ void register_device() {
 		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 			it->registration();
 		}
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "Registration failed for %s", "", e.what());
 	}
 }
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
 	//mappings = (MapContainer::Ptr)(new MapContainer());
 	try {
 		options.config_parse(mappings);
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
@@ -371,14 +371,13 @@ int main(int argc, char *argv[]) {
 		return (0);
 	}
 
-	//
+	// @todo: why is logging disabled when local interface present?
 	options.logging((!options.local() || options.daemon()));
 
-	print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
-				options.daemon(), options.local());
+	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
 
 	// daemonize if requested or local interface
-	if (!options.foreground() && (options.daemon() || options.local())) {
+	if (options.daemon() || options.local()) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
@@ -424,7 +423,7 @@ int main(int argc, char *argv[]) {
 				);
 		}
 #endif /* LOCAL_SUPPORT */
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "Startup failed: %s", "", e.what());
 		exit(1);
 	}
@@ -438,7 +437,7 @@ int main(int argc, char *argv[]) {
 				if (ret) gStop = true;
 			}
 		} while (!gStop);
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "MainLOOP failed for %s", "", e.what());
 	}
 	print(log_debug, "Server stopped.", "");
