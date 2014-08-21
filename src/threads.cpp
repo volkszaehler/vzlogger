@@ -50,7 +50,7 @@ void * reading_thread(void *arg) {
 	details = meter_get_details(mtr->protocolId());
 
 	/* allocate memory for readings */
-	for(size_t i=0; i< details->max_readings; i++) {
+	for (size_t i=0; i< details->max_readings; i++) {
 		Reading rd(mtr->identifier());
 		rds.push_back(rd);
 	}
@@ -90,13 +90,13 @@ void * reading_thread(void *arg) {
 //				}
 
 				/* insert readings into channel queues */
-				for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 					Reading *add = NULL;
 
 					//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
 
 					for (size_t i = 0; i < n; i++) {
-						if ( *rds[i].identifier().get() == *(*ch)->identifier().get()) {
+						if (*rds[i].identifier().get() == *(*ch)->identifier().get()) {
 							//print(log_debug, "found channel", mtr->name());
 							if ((*ch)->tvtod() < rds[i].tvtod()) {
 								(*ch)->last(&rds[i]);
@@ -119,7 +119,7 @@ void * reading_thread(void *arg) {
 				} // channel loop
 			} while((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
-			for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+			for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 
 				/* aggregate buffer values if aggmode != NONE */
 				(*ch)->buffer()->aggregate(mtr->aggtime(), mtr->aggFixedInterval());
@@ -187,7 +187,7 @@ void * logging_thread(void *arg) {
 
 // create configured api-interface
 	vz::ApiIF::Ptr api;
-	if( ch->apiProtocol() == "mysmartgrid") {
+	if (ch->apiProtocol() == "mysmartgrid") {
 		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
 		print(log_debug, "Using MSG-Api.", ch->name());
 	} else {

@@ -122,8 +122,8 @@ Option::operator bool() const {
 
 //Option& OptionList::lookup(List<Option> options, char *key) {
 const Option &OptionList::lookup(std::list<Option> options, const std::string &key) {
-	for(const_iterator it = options.begin(); it != options.end(); it++) {
-		if ( it->key() == key ) {
+	for (const_iterator it = options.begin(); it != options.end(); it++) {
+		if (it->key() == key ) {
 			return (*it);
 		}
 	}
@@ -158,7 +158,7 @@ const double OptionList::lookup_double(std::list<Option> options, const char *ke
 void OptionList::dump(std::list<Option> options) {
 	std::cout<< "OptionList dump\n" ;
 
-	for(const_iterator it = options.begin(); it != options.end(); it++) {
+	for (const_iterator it = options.begin(); it != options.end(); it++) {
 		std::cout << (*it) << std::endl;
 	}
 }

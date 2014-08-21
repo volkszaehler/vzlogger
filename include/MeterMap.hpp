@@ -77,7 +77,7 @@ public:
  */
 	void registration();
 
-/** 
+/**
  *  Accessor to the channel list
  */
 	inline void push_back(Channel::Ptr channel) { _channels.push_back(channel); }
@@ -96,8 +96,8 @@ private:
 };
 
 /**
-	 This container is intend to keep the list of all configured meters. 
-*/
+ * This container is intend to keep the list of all configured meters.
+ */
 class MapContainer {
 public:
 	typedef vz::shared_ptr<MapContainer> Ptr;
@@ -111,15 +111,15 @@ public:
         print(log_debug, "terminating on signal %d.", (char*)0, sig);
 		print(log_info, "Closing connections to terminate", (char*)0);
 
-		for(iterator it = _mappings.begin(); it!=_mappings.end(); it++) {
+		for (iterator it = _mappings.begin(); it!=_mappings.end(); it++) {
 			it->cancel();
 		}
 	}
 
-/** 
+/**
  *  Accessor to the MeterMap (meter and its channels) list
  */
-	inline void push_back(const MeterMap &map) { _mappings.push_back(map); } 
+	inline void push_back(const MeterMap &map) { _mappings.push_back(map); }
 	inline iterator begin()  { return _mappings.begin(); }
 	inline iterator end()    { return _mappings.end(); }
 	inline const size_t size() const { return _mappings.size(); }

@@ -111,7 +111,7 @@ Obis::Obis(
 	_obisId._raw[3]=d;
 	_obisId._raw[4]=e;
 	_obisId._raw[5]=f;
-	
+
 }
 
 Obis::Obis(const char *strClear) {
@@ -122,7 +122,7 @@ Obis::Obis(const char *strClear) {
 	//else {
 	//	memcpy(_obisId._raw, raw, 6);
 	//}
-	if(parse(strClear) != SUCCESS) {
+	if (parse(strClear) != SUCCESS) {
 		// check alias
 		if (lookup_alias(strClear) == SUCCESS) {
 		} else {

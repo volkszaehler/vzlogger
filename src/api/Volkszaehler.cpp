@@ -44,7 +44,7 @@ extern Config_Options options;
 vz::api::Volkszaehler::Volkszaehler(
 	Channel::Ptr ch,
 	std::list<Option> pOptions
-	) 
+	)
 	: ApiIF(ch)
 	, _last_timestamp(0)
 {
@@ -97,11 +97,11 @@ vz::api::Volkszaehler::Volkszaehler(
 	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, curlTimeout);
 }
 
-vz::api::Volkszaehler::~Volkszaehler() 
+vz::api::Volkszaehler::~Volkszaehler()
 {
 }
 
-void vz::api::Volkszaehler::send() 
+void vz::api::Volkszaehler::send()
 {
 	CURLresponse response;
 	json_object *json_obj;
@@ -116,7 +116,7 @@ void vz::api::Volkszaehler::send()
 
 	json_obj = api_json_tuples(channel()->buffer());
 	json_str = json_object_to_json_string(json_obj);
-	if(json_str == NULL || strcmp(json_str, "null")==0) {
+	if (json_str == NULL || strcmp(json_str, "null")==0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		return;
 	}
@@ -176,7 +176,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	for (it = buf->begin(); it != buf->end(); it++) {
 		timestamp = round(it->tvtod() * 1000);
 		print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
-		if(_last_timestamp < timestamp ) {
+		if (_last_timestamp < timestamp ) {
 			_values.push_back(*it);
 			_last_timestamp = timestamp;
 		}
@@ -185,7 +185,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	buf->unlock();
 	buf->clean();
 
-	if( _values.size() < 1 ) {
+	if (_values.size() < 1 ) {
 		return NULL;
 	}
 
@@ -194,7 +194,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod() * 1000; 
+		double timestamp = it->tvtod() * 1000;
 		double value = it->value();
 
 		json_object_array_add(json_tuple, json_object_new_double(timestamp));
@@ -221,9 +221,9 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 			const std::string err_message( json_object_get_string(json_object_object_get(json_obj,  "message")));
 
 			snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
-			// evaluate error 
-			if( err_type == "UniqueConstraintViolationException") {
-				if( err_message.find("Duplicate entry") ) {
+			// evaluate error
+			if (err_type == "UniqueConstraintViolationException") {
+				if (err_message.find("Duplicate entry") ) {
 					print(log_warning, "middle says duplicated value. removing first entry!", channel()->name());
 					_values.pop_front();
 				}
@@ -268,7 +268,7 @@ int vz::api::curl_custom_debug_callback(
 				break;
 
 			case CURLINFO_SSL_DATA_OUT:
-			case CURLINFO_DATA_OUT:	
+			case CURLINFO_DATA_OUT:
 				data[size]=0;
 				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
 				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", ch->name(), data);

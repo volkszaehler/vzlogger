@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2011, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
- * 
+ *
  * "connection" sets the maximum value
  */
 /*
@@ -80,7 +80,7 @@ int MeterRandom::close() {
 }
 
 ssize_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
-	if(rds.size() < 1) return -1;
+	if (rds.size() < 1) return -1;
 
 	double step = ltqnorm((float) rand() / RAND_MAX);
 	double newval = _last + step;

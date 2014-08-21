@@ -108,7 +108,7 @@ void Config_Options::config_parse(
 	fclose(file);
 	json_tokener_free(json_tok);
 
-	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?"); 
+	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?");
 
 	try {
 		/* parse options */
@@ -210,7 +210,7 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 				meter_get_details(metermap.meter()->protocolId())->name);
 
 	/* init channels */
-	for(std::list<Json>::iterator it=json_channels.begin();
+	for (std::list<Json>::iterator it=json_channels.begin();
 			it!= json_channels.end(); it++) {
 		config_parse_channel(*it, metermap);
 	}
@@ -259,11 +259,11 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-  // check if identifier is set. If not, use default
-  if( id_str == NULL ) {
+	// check if identifier is set. If not, use default
+	if (id_str == NULL ) {
 		print(log_error, "Identifier is not set. Set it to default value 'NilItentifier'.", NULL);
-    id_str = "NilItentifier";
-  }
+		id_str = "NilItentifier";
+	}
 	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
@@ -292,16 +292,16 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 int config_validate_uuid(const char *uuid) {
 	for (const char *p = uuid; *p; p++) {
 		switch (p - uuid) {
-				case 8:
-				case 13:
-				case 18:
-				case 23:
-					if (*p != '-') return FALSE;
-					else break;
+			case 8:
+			case 13:
+			case 18:
+			case 23:
+				if (*p != '-') return FALSE;
+				else break;
 
-				default:
-					if (!isxdigit(*p)) return FALSE;
-					else break;
+			default:
+				if (!isxdigit(*p)) return FALSE;
+				else break;
 		}
 	}
 	return TRUE;

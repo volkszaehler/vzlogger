@@ -37,7 +37,7 @@ vz::api::CurlIF::CurlIF()
 
 vz::api::CurlIF::~CurlIF() {
 	curl_easy_cleanup(_curl);
-	if(_headers != NULL) curl_slist_free_all(_headers);
+	if (_headers != NULL) curl_slist_free_all(_headers);
 }
 
 void vz::api::CurlIF::addHeader(const std::string value)
@@ -45,12 +45,12 @@ void vz::api::CurlIF::addHeader(const std::string value)
 	_headers = curl_slist_append(_headers, value.c_str());
 }
 void vz::api::CurlIF::clearHeader() {
-	if(_headers != NULL) 
+	if (_headers != NULL)
 		curl_slist_free_all(_headers);
 	_headers=NULL;
 }
 void vz::api::CurlIF::commitHeader() {
-	if( _headers != NULL )
+	if (_headers != NULL )
 		curl_easy_setopt(handle(), CURLOPT_HTTPHEADER, _headers);
 }
 

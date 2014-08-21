@@ -55,7 +55,7 @@ MeterS0::MeterS0(std::list<Option> options)
 		print(log_error, "Failed to parse resolution", "");
 		throw;
 	}
-	if(_resolution < 1) throw vz::VZException("Resolution must be greater than 0.");
+	if (_resolution < 1) throw vz::VZException("Resolution must be greater than 0.");
 }
 
 MeterS0::~MeterS0() {
@@ -113,15 +113,15 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	tcflush(_fd, TCIOFLUSH);
 
 	/* blocking until one character/pulse is read */
-	if( ::read(_fd, buf, 8) < 1) return 0;
+	if (::read(_fd, buf, 8) < 1) return 0;
 	gettimeofday(&time1, NULL);
-	if( ::read(_fd, buf, 8) < 1) return 0;
+	if (::read(_fd, buf, 8) < 1) return 0;
 	gettimeofday(&time2, NULL);
 
 	double t1 = time1.tv_sec + time1.tv_usec / 1e6;
 	double t2 = time2.tv_sec + time2.tv_usec / 1e6;
 	double value = ( 3600000 ) / ( (t2-t1) * _resolution ) ;
-	
+
 	/* store current timestamp */
 	rds[0].identifier(new StringIdentifier("Power"));
 	rds[0].time(time2);

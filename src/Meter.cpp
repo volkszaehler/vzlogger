@@ -123,7 +123,7 @@ Meter::Meter(std::list<Option> pOptions) :
 		const meter_details_t *details = meter_get_details(_protocol_id);
 		if (details->periodic == true && _interval < 0) {
 			print(log_error, "Interval has to be set and positive!", name());
-		} 
+		}
 	} catch( vz::VZException &e ) {
 		std::stringstream oss;
 		oss << e.what();
@@ -183,7 +183,7 @@ Meter::~Meter() {
 }
 
 void Meter::open() {
-	if( _protocol->open() < 0) {
+	if (_protocol->open() < 0) {
 		print(log_error, "Cannot open meter", name());
 		throw vz::ConnectionException("Meteropen failed.");
 	}

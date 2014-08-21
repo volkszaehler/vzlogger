@@ -210,10 +210,10 @@ void daemonize() {
 
 	/* handle standart I/O */
 	i = open("/dev/null", O_RDWR);
-	if(dup(i)<0) {}
-	if(dup(i)<0) {}
+	if (dup(i)<0) {}
+	if (dup(i)<0) {}
 
-	if(chdir("/")<0) {} /* change working directory */
+	if (chdir("/")<0) {} /* change working directory */
 	umask(0022);
 
 	/* ignore signals from parent tty */
@@ -309,7 +309,7 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 }
 
 /*---------------------------------------------------------------------*/
-/** 
+/**
  * @brief send api-device registration message
  **/
 /*---------------------------------------------------------------------*/
@@ -318,7 +318,7 @@ void register_device() {
 // using global variable:  options	 global application options */
 	try {
 		/* open connection meters & start threads */
-		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 			it->registration();
 		}
 	} catch ( std::exception &e) {
@@ -365,8 +365,8 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-  // Register vzlogger
-	if( options.doRegistration()) {
+ 	// Register vzlogger
+	if (options.doRegistration()) {
 		register_device();
 		return (0);
 	}
@@ -377,6 +377,7 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
 				options.daemon(), options.local());
 
+	// daemonize if requested or local interface
 	if (!options.foreground() && (options.daemon() || options.local())) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
@@ -406,7 +407,7 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "===> Start meters.", "");
 	try {
 		/* open connection meters & start threads */
-		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 			it->start();
 		}
 
@@ -432,9 +433,9 @@ int main(int argc, char *argv[]) {
 	try {
 		do {
 			/* wait for all threads to terminate */
-			for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 				bool ret = it->stopped();
-				if(ret) gStop = true;
+				if (ret) gStop = true;
 			}
 		} while (!gStop);
 	} catch ( std::exception &e) {

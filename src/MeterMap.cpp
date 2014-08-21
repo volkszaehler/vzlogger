@@ -46,14 +46,14 @@ extern Config_Options options;	/* global application options */
 	 If the meter is enabled, start the meter and all its channels.
 */
 void MeterMap::start() {
-	if(_meter->isEnabled()) {
+	if (_meter->isEnabled()) {
 		_meter->open();
 		print(log_info, "Meter connection established", _meter->name());
 		pthread_create(&_thread, NULL, &reading_thread, (void *) this);
 		print(log_debug, "Meter thread started", _meter->name());
 
 		print(log_debug, "meter is opened. Start channels.", _meter->name());
-		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
 			/* set buffer length for perriodic meters */
 			if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
 				(*it)->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
@@ -72,12 +72,12 @@ void MeterMap::start() {
 
 }
 bool MeterMap::stopped() {
-	if(_meter->isEnabled()  && running() ) {
-		if( pthread_join(_thread, NULL) == 0 ) {
+	if (_meter->isEnabled()  && running() ) {
+		if (pthread_join(_thread, NULL) == 0 ) {
 			_thread_running = false;
 
 			// join channel-threads
-			for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+			for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
 				(*it)->cancel();
 				(*it)->join();
 			}
@@ -88,8 +88,8 @@ bool MeterMap::stopped() {
 }
 
 void MeterMap::cancel() {
-	if(_meter->isEnabled() && running() ) {
-		for(iterator it = _channels.begin(); it!=_channels.end(); it++) {
+	if (_meter->isEnabled() && running() ) {
+		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
 			(*it)->cancel();
 			(*it)->join();
 		}
@@ -104,13 +104,13 @@ void MeterMap::cancel() {
 void MeterMap::registration() {
 	//Channel::Ptr ch;
 
-	if( !_meter->isEnabled()) {
+	if (!_meter->isEnabled()) {
 		return;
 	}
-	for(iterator ch = _channels.begin(); ch!=_channels.end(); ch++) {
+	for (iterator ch = _channels.begin(); ch!=_channels.end(); ch++) {
     // create configured api-interface
 		vz::ApiIF::Ptr api;
-		if( (*ch)->apiProtocol() == "mysmartgrid") {
+		if ((*ch)->apiProtocol() == "mysmartgrid") {
 			api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(*ch, (*ch)->options()));
 			print(log_debug, "Using MSG-Api.", (*ch)->name());
 		} else {

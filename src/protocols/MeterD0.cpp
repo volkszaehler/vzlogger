@@ -46,7 +46,7 @@
 
 #include "Obis.hpp"
 
-MeterD0::MeterD0(std::list<Option> options) 
+MeterD0::MeterD0(std::list<Option> options)
 		: Protocol("d0")
 		, _host("")
 		, _device("")
@@ -72,7 +72,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		hex = optlist.lookup_string(options, "pullseq");
 		int n=hex.size();
 		int i;
-		for(i=0;i<n;i=i+2) {
+		for (i=0;i<n;i=i+2) {
 			char hs[3];
 			strncpy(hs,hex.c_str()+i,2);
 			char hx[2];
@@ -125,13 +125,13 @@ MeterD0::MeterD0(std::list<Option> options)
 	try {
 		const char *parity = optlist.lookup_string(options, "parity");
 		/* find constant for termios structure */
-		if(strcasecmp(parity,"8n1")==0) {
+		if (strcasecmp(parity,"8n1")==0) {
 			_parity=parity_8n1;
-		} else if(strcasecmp(parity,"7n1")==0) {
+		} else if (strcasecmp(parity,"7n1")==0) {
 			_parity=parity_7n1;
-		} else if(strcasecmp(parity,"7e1")==0) {
+		} else if (strcasecmp(parity,"7e1")==0) {
 			_parity=parity_7e1;
-		} else if(strcasecmp(parity,"7o1")==0) {
+		} else if (strcasecmp(parity,"7o1")==0) {
 			_parity=parity_7o1;
 		} else {
 			throw vz::VZException("Invalid parity");
@@ -191,7 +191,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 														 61: L3 Active power+
 														 71: L3 Current
 														 72: L3 Voltage
-														 96.1.255: Metering point ID 256 (electricity related) 
+														 96.1.255: Metering point ID 256 (electricity related)
 														 96.5.5: Meter started status flag
 														 D: types
 														 E: further processing or classification of quantities
@@ -202,10 +202,10 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 	char baudrate;			/* 1 byte for */
 	char byte;			/* we parse our input byte wise */
-	int byte_iterator; 
+	int byte_iterator;
 	size_t number_of_tuples;
 
-	if(_pull.size()) {
+	if (_pull.size()) {
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
@@ -234,11 +234,11 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 						byte_iterator = 0;	/* reset byte counter */
 
 						context = BAUDRATE;	/* set new context: VENDOR -> BAUDRATE */
-					} 
+					}
 					break;
 
 				case BAUDRATE:			/* BAUDRATE consists of 1 char only */
-					baudrate = byte;	
+					baudrate = byte;
 					context = IDENTIFICATION;	/* set new context: BAUDRATE -> IDENTIFICATION */
 					byte_iterator = 0;
 					break;
@@ -250,7 +250,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 						byte_iterator = 0;
 					}
 					else {
-						if(!isprint(byte)) {
+						if (!isprint(byte)) {
 							print(log_error, "====> binary character '%x'", name().c_str(), byte);
 							//error_flag=true;
 						}
@@ -263,7 +263,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 				case START_LINE:
 					break;
 				case OBIS_CODE:
-					if ((byte != '\n') && (byte != '\r')) 
+					if ((byte != '\n') && (byte != '\r'))
 					{
 						if (byte == '(') {
 							obis_code[byte_iterator] = '\0';
@@ -304,7 +304,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 				case END_LINE:
 					if (byte == '\r' || byte == '\n') {
 						/* free slots available and sain content? */
-						if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && 
+						if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) &&
 								(strlen(value) > 0)) {
 							print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
 							rds[number_of_tuples].value(strtof(value, NULL));
@@ -322,7 +322,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 					break;
 
 				case END:
-					if(error_flag) {
+					if (error_flag) {
 						print(log_error, "reading binary values.", name().c_str());
 						goto error;
 					}

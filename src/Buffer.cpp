@@ -48,18 +48,18 @@ void Buffer::push(const Reading &rd) {
 }
 
 void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
-	if(_aggmode == NONE) return;
-	
+	if (_aggmode == NONE) return;
+
 	lock();
-	if(_aggmode == MAXIMUM) {
+	if (_aggmode == MAXIMUM) {
 		Reading *latest=NULL;
 		double aggvalue=DBL_MIN;
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(!latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (!latest) {
 					latest=&*it;
 				} else {
-					if(it->tvtod() > latest->tvtod()) {
+					if (it->tvtod() > latest->tvtod()) {
 						latest=&*it;
 					}
 				}
@@ -67,9 +67,9 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				print(log_debug, "%f @ %f", "MAX",it->value(),it->tvtod());
 			}
 		}
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(&*it==latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (&*it==latest) {
 					it->value(aggvalue);
 					print(log_debug, "RESULT %f @ %f", "MAX",it->value(),it->tvtod());
 				} else {
@@ -77,16 +77,16 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				}
 			}
 		}
-	} else if(_aggmode == AVG) {
+	} else if (_aggmode == AVG) {
 		Reading *latest=NULL;
 		double aggvalue=0;
 		int aggcount=0;
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(!latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (!latest) {
 					latest=&*it;
 				} else {
-					if(it->tvtod() > latest->tvtod()) {
+					if (it->tvtod() > latest->tvtod()) {
 						latest=&*it;
 					}
 				}
@@ -96,9 +96,9 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				aggcount++;
 			}
 		}
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(&*it==latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (&*it==latest) {
 					it->value(aggvalue/aggcount);
 					print(log_debug, "[%d] RESULT %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
 				} else {
@@ -106,15 +106,15 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				}
 			}
 		}
-	} else if(_aggmode == SUM) {
+	} else if (_aggmode == SUM) {
 		Reading *latest=NULL;
 		double aggvalue=0;
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(!latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (!latest) {
 					latest=&*it;
 				} else {
-					if(it->tvtod() > latest->tvtod()) {
+					if (it->tvtod() > latest->tvtod()) {
 						latest=&*it;
 					}
 				}
@@ -122,9 +122,9 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				print(log_debug, "%f @ %f", "SUM",it->value(),it->tvtod());
 			}
 		}
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
-				if(&*it==latest) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
+				if (&*it==latest) {
 					it->value(aggvalue);
 					print(log_debug, "RESULT %f @ %f", "SUM",it->value(),it->tvtod());
 				} else {
@@ -136,8 +136,8 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 	/* fix timestamp if aggFixedInterval set */
 	if ((aggFixedInterval==true) && (aggtime>0)) {
 		struct timeval tv;
-		for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if(! it->deleted()) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (! it->deleted()) {
 				tv.tv_usec = 0;
 				tv.tv_sec = aggtime * (long int)(it->tvtod() / aggtime);
 				it->time(tv);
@@ -152,8 +152,8 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 
 void Buffer::clean() {
 	lock();
-	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
-		if(it->deleted()) {
+	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+		if (it->deleted()) {
 			it = _sent.erase(it);
 			it--;
 		}
@@ -165,7 +165,7 @@ void Buffer::clean() {
 
 void Buffer::undelete() {
 	lock();
-	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 		it->reset();
 	}
 	unlock();
@@ -187,7 +187,7 @@ char * Buffer::dump(char *dump, size_t len) {
 	dump[pos++] = '{';
 
 	lock();
-	for(iterator it = _sent.begin(); it!= _sent.end(); it++) {
+	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 		if (pos < len) {
 			pos += snprintf(dump+pos, len-pos, "%.4f", it->value());
 		}
@@ -208,7 +208,7 @@ char * Buffer::dump(char *dump, size_t len) {
 		dump[pos] = '\0'; /* zero terminated string */
 	}
 	unlock();
-	
+
 	return (pos < len) ? dump : NULL; /* buffer full? */
 }
 
