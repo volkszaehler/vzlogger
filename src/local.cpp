@@ -58,7 +58,7 @@ int handle_request(
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
 	try {
-		print(log_info, "Local request received: method=%s url=%s mode=%s", 
+		print(log_info, "Local request received: method=%s url=%s mode=%s",
 					"http", method, url, mode);
 
 		if (strcmp(method, "GET") == 0) {
@@ -85,8 +85,8 @@ int handle_request(
 				}
 			}
 
-			for(MapContainer::iterator mapping = mappings->begin(); mapping!=mappings->end(); mapping++) {
-				for(MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+			for (MapContainer::iterator mapping = mappings->begin(); mapping!=mappings->end(); mapping++) {
+				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 //foreach(mapping->channels, ch, channel_t) {
 					if (strcmp((*ch)->uuid(), uuid) == 0 || show_all) {
 						response_code = MHD_HTTP_OK;
@@ -140,7 +140,7 @@ int handle_request(
 
 			MHD_add_response_header(response, "Content-type", "text/text");
 		}
-	} catch ( std::exception &e){
+	} catch (std::exception &e) {
 	}
 
 	status = MHD_queue_response(connection, response_code, response);

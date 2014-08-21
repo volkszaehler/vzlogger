@@ -39,7 +39,7 @@ MeterFile::MeterFile(std::list<Option> options)
 
 	try {
 		_path = optlist.lookup_string(options, "path");
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Missing path or invalid type", name().c_str());
 		throw;
 	}
@@ -89,9 +89,9 @@ MeterFile::MeterFile(std::list<Option> options)
 
 		print(log_debug, "Parsed format string \"%s\" => \"%s\"", name().c_str(), config_format, scanf_format);
 		_format = scanf_format;
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_format = ""; /* use default format */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse format", name().c_str());
 		throw;
 	}
@@ -100,12 +100,12 @@ MeterFile::MeterFile(std::list<Option> options)
 	/* or do we read from a logfile (append) */
 	try {
 		_rewind = optlist.lookup_bool(options, "rewind");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_rewind = FALSE; /* do not rewind file by default */
-	} catch( vz::InvalidTypeException &e ) {
+	} catch (vz::InvalidTypeException &e) {
 		print(log_error, "Invalid type for 'rewind'", name().c_str());
 		throw;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse 'rewind'", name().c_str());
 		throw;
 	}
@@ -132,12 +132,12 @@ int MeterFile::close() {
 }
 
 ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
-	
+
 	// TODO use inotify to block eading until file changes
 
 	char line[256], *endptr;
 	char string[256];
-	
+
 	/* reset file pointer to beginning of file */
 	if (_rewind) {
 		rewind(_fd);
@@ -145,7 +145,7 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 
 	unsigned int i = 0;
 	print(log_debug, "MeterFile::read: %d, %d", "", rds.size(), n);
-	
+
 	while (fgets(line, 256, _fd) && i < n) {
 		char *nl;
 		if ((nl = strrchr(line, '\n'))) *nl = '\0'; /* remove trailing newline */
@@ -156,11 +156,11 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 
 			/* at least the value has to been read */
 			double value;
-	
+
 			print(log_debug, "MeterFile::read: '%s'", "", line);
 			int found = sscanf(line, format(), &value, string, &timestamp);
 			print(log_debug, "MeterFile::read: %f, %s, %ld", "", value, string, timestamp);
-	
+
 
 			rds[i].value(value);
 			ReadingIdentifier *rid(new StringIdentifier(string));

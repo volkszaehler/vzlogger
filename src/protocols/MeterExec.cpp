@@ -30,23 +30,23 @@
 #include "Options.hpp"
 #include <VZException.hpp>
 
-MeterExec::MeterExec(std::list<Option> options) 
+MeterExec::MeterExec(std::list<Option> options)
 		: Protocol("exec")
 {
 	OptionList optlist;
 
 	try {
 		_command = optlist.lookup_string(options, "command");
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Missing command or invalid type", "");
 		throw;
 	}
 
 	try {
 		_format = optlist.lookup_string(options, "format");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_format = NULL; /* use default format */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse format", "");
 		throw;
 	}

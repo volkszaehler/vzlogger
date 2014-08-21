@@ -7,7 +7,7 @@ endif(POLICY CMP0011)
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 3)
-set(VZLOGGER_SUB_VERSION   6)
+set(VZLOGGER_SUB_VERSION   7)
 set(VERSION_SEP "-")
 set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MINOR_VERSION}")
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
@@ -114,10 +114,10 @@ message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
 message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 
-if( NOT SML_FOUND) 
+if( NOT SML_FOUND)
   message(FATAL_ERROR "libsml ist required.
 Install libsml or call cmake -DSML_HOME=path_to_sml_install")
-endif( NOT SML_FOUND) 
+endif( NOT SML_FOUND)
 if( NOT MICROHTTPD_FOUND )
   message(FATAL_ERROR "microhttpd ist required.
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")

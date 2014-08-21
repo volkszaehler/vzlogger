@@ -62,21 +62,21 @@ Channel::Channel(
 	try {
 /* aggmode */
 		const char *aggmode_str = optlist.lookup_string(pOptions, "aggmode");
-		if(strcasecmp(aggmode_str,"max")==0 ) {
+		if (strcasecmp(aggmode_str,"max")==0 ) {
 			_buffer->set_aggmode(Buffer::MAXIMUM);
-		} else if( strcasecmp(aggmode_str,"avg")==0 ) {
+		} else if (strcasecmp(aggmode_str,"avg")==0 ) {
 			_buffer->set_aggmode(Buffer::AVG);
-		} else if( strcasecmp(aggmode_str,"sum")==0 ) {
+		} else if (strcasecmp(aggmode_str,"sum")==0 ) {
 			_buffer->set_aggmode(Buffer::SUM);
-		} else if( strcasecmp(aggmode_str,"none")==0 ) {
+		} else if (strcasecmp(aggmode_str,"none")==0 ) {
 			_buffer->set_aggmode(Buffer::NONE);
 		} else {
 			throw vz::VZException("Aggmode unknown.");
 		}
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_buffer->set_aggmode(Buffer::NONE);
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Missing or invalid aggmode (%s)", name(), oss.str().c_str());

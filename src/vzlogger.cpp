@@ -62,7 +62,6 @@ const struct option long_options[] = {
 	{"config", 	required_argument,	0,	'c'},
 	{"log",		required_argument,	0,	'o'},
 	{"daemon", 	required_argument,	0,	'd'},
-	{"foreground", 	required_argument,	0,	'f'},
 #ifdef LOCAL_SUPPORT
 	{"httpd", 	no_argument,		0,	'l'},
 	{"httpd-port",	required_argument,	0,	'p'},
@@ -210,10 +209,10 @@ void daemonize() {
 
 	/* handle standart I/O */
 	i = open("/dev/null", O_RDWR);
-	if(dup(i)<0) {}
-	if(dup(i)<0) {}
+	if (dup(i)<0) {}
+	if (dup(i)<0) {}
 
-	if(chdir("/")<0) {} /* change working directory */
+	if (chdir("/")<0) {} /* change working directory */
 	umask(0022);
 
 	/* ignore signals from parent tty */
@@ -271,10 +270,6 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 					options->daemon(1);
 					break;
 
-				case 'f':
-					options->foreground(1);
-					break;
-
 				case 'c': /* config file */
 					options->config(optarg);
 					break;
@@ -309,7 +304,7 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 }
 
 /*---------------------------------------------------------------------*/
-/** 
+/**
  * @brief send api-device registration message
  **/
 /*---------------------------------------------------------------------*/
@@ -318,10 +313,10 @@ void register_device() {
 // using global variable:  options	 global application options */
 	try {
 		/* open connection meters & start threads */
-		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 			it->registration();
 		}
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "Registration failed for %s", "", e.what());
 	}
 }
@@ -358,26 +353,25 @@ int main(int argc, char *argv[]) {
 	//mappings = (MapContainer::Ptr)(new MapContainer());
 	try {
 		options.config_parse(mappings);
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
 		return EXIT_FAILURE;
 	}
 
-  // Register vzlogger
-	if( options.doRegistration()) {
+	// Register vzlogger
+	if (options.doRegistration()) {
 		register_device();
 		return (0);
 	}
 
-	//
+	// @todo clarify why no logging in local mode
 	options.logging((!options.local() || options.daemon()));
 
-	print(log_debug, "foreground=%d, daemon=%d, local=%d", "main", options.foreground(),
-				options.daemon(), options.local());
+	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
 
-	if (!options.foreground() && (options.daemon() || options.local())) {
+	if (options.daemon() || options.local()) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
@@ -406,7 +400,7 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "===> Start meters.", "");
 	try {
 		/* open connection meters & start threads */
-		for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 			it->start();
 		}
 
@@ -423,7 +417,7 @@ int main(int argc, char *argv[]) {
 				);
 		}
 #endif /* LOCAL_SUPPORT */
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "Startup failed: %s", "", e.what());
 		exit(1);
 	}
@@ -432,12 +426,12 @@ int main(int argc, char *argv[]) {
 	try {
 		do {
 			/* wait for all threads to terminate */
-			for(MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
 				bool ret = it->stopped();
-				if(ret) gStop = true;
+				if (ret) gStop = true;
 			}
 		} while (!gStop);
-	} catch ( std::exception &e) {
+	} catch (std::exception &e) {
 		print(log_error, "MainLOOP failed for %s", "", e.what());
 	}
 	print(log_debug, "Server stopped.", "");

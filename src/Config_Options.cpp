@@ -43,7 +43,6 @@ Config_Options::Config_Options()
 		, _buffer_length(600)
 		, _retry_pause(15)
 		, _daemon(false)
-		, _foreground(false)
 		, _local(false)
 		, _logging(true)
 {
@@ -53,7 +52,7 @@ Config_Options::Config_Options()
 Config_Options::Config_Options(
 	const std::string filename
 	)
-		: _config(filename)
+	: _config(filename)
 		, _log("")
 		, _port(8080)
 		, _verbosity(0)
@@ -61,7 +60,6 @@ Config_Options::Config_Options(
 		, _buffer_length(600)
 		, _retry_pause(15)
 		, _daemon(false)
-		, _foreground(false)
 		, _local(false)
 		, _logging(true)
 {
@@ -108,7 +106,7 @@ void Config_Options::config_parse(
 	fclose(file);
 	json_tokener_free(json_tok);
 
-	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?"); 
+	if (json_cfg==NULL) throw vz::VZException("configuration file incomplete, missing closing braces/parens?");
 
 	try {
 		/* parse options */
@@ -117,9 +115,6 @@ void Config_Options::config_parse(
 
 			if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
 				_daemon = json_object_get_boolean(value);
-			}
-			else if (strcmp(key, "foreground") == 0 && type == json_type_boolean) {
-				_foreground = json_object_get_boolean(value);
 			}
 			else if (strcmp(key, "log") == 0 && type == json_type_string) {
 				_log = strdup(json_object_get_string(value));
@@ -167,7 +162,7 @@ void Config_Options::config_parse(
 							NULL, key, json_object_get_string(value), option_type_str[type]);
 			}
 		}
-	} catch (std::exception &e ) {
+	} catch (std::exception &e) {
 		json_object_put(json_cfg); /* free allocated memory */
 		std::stringstream oss;
 		oss << e.what();
@@ -210,7 +205,7 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 				meter_get_details(metermap.meter()->protocolId())->name);
 
 	/* init channels */
-	for(std::list<Json>::iterator it=json_channels.begin();
+	for (std::list<Json>::iterator it=json_channels.begin();
 			it!= json_channels.end(); it++) {
 		config_parse_channel(*it, metermap);
 	}
@@ -260,7 +255,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		throw vz::VZException("Invalid UUID.");
 	}
   // check if identifier is set. If not, use default
-  if( id_str == NULL ) {
+  if (id_str == NULL ) {
 		print(log_error, "Identifier is not set. Set it to default value 'NilItentifier'.", NULL);
     id_str = "NilItentifier";
   }
@@ -276,7 +271,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	ReadingIdentifier::Ptr id;
 	try {
 		id = reading_id_parse(mapping.meter()->protocolId(), (const char *)id_str);
-	} catch ( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Invalid id: %s due to: '%s'", NULL, id_str, oss.str().c_str());
