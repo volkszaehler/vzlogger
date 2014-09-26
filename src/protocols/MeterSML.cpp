@@ -54,7 +54,7 @@
 
 #define SML_BUFFER_LEN 8096
 
-MeterSML::MeterSML(std::list<Option> options) 
+MeterSML::MeterSML(std::list<Option> options)
 		: Protocol("sml")
 		, _host("")
 		, _device("")
@@ -65,14 +65,14 @@ MeterSML::MeterSML(std::list<Option> options)
 	/* connection */
 	try {
 		_host = optlist.lookup_string(options, "host");
-	} catch ( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		try {
 			_device = optlist.lookup_string(options, "device");
-		} catch ( vz::VZException &e ){
+		} catch (vz::VZException &e){
 			print(log_error, "Missing device or host", name().c_str());
 			throw ;
 		}
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
 	}
@@ -81,7 +81,7 @@ MeterSML::MeterSML(std::list<Option> options)
 		hex = optlist.lookup_string(options, "pullseq");
 		int n=hex.size();
 		int i;
-		for(i=0;i<n;i=i+2) {
+		for (i=0;i<n;i=i+2) {
 			char hs[3];
 			strncpy(hs,hex.c_str()+i,2);
 			char hx[2];
@@ -89,7 +89,7 @@ MeterSML::MeterSML(std::list<Option> options)
 			_pull.append(hx,1);
 		}
 		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_pull = "";
 	}
@@ -123,10 +123,10 @@ MeterSML::MeterSML(std::list<Option> options)
 					print(log_error, "Invalid baudrate: %i", name().c_str(), baudrate);
 					throw vz::VZException("Invalid baudrate");
 		}
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_baudrate = B9600;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse the baudrate", name().c_str());
 		throw;
 	}
@@ -135,21 +135,21 @@ MeterSML::MeterSML(std::list<Option> options)
 	try {
 		const char *parity = optlist.lookup_string(options, "parity");
 		/* find constant for termios structure */
-		if(strcasecmp(parity,"8n1")==0) {
+		if (strcasecmp(parity,"8n1")==0) {
 			_parity=parity_8n1;
-		} else if(strcasecmp(parity,"7n1")==0) {
+		} else if (strcasecmp(parity,"7n1")==0) {
 			_parity=parity_7n1;
-		} else if(strcasecmp(parity,"7e1")==0) {
+		} else if (strcasecmp(parity,"7e1")==0) {
 			_parity=parity_7e1;
-		} else if(strcasecmp(parity,"7o1")==0) {
+		} else if (strcasecmp(parity,"7o1")==0) {
 			_parity=parity_7o1;
 		} else {
 			throw vz::VZException("Invalid parity");
 		}
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_parity = parity_8n1;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse the parity", name().c_str());
 		throw;
 	}
@@ -166,7 +166,7 @@ MeterSML::~MeterSML() {
 }
 
 int MeterSML::open() {
-	
+
 	if (_device != "") {
 		_fd = _openDevice(&_old_tio, _baudrate);
 	}
@@ -174,7 +174,7 @@ int MeterSML::open() {
 		char *addr = strdup(host());
 		const char *node = strsep(&addr, ":");
 		const char *service = strsep(&addr, ":");
-		if(node == NULL && service == NULL) return -1;
+		if (node == NULL && service == NULL) return -1;
 		_fd = _openSocket(node, service);
 		free(addr);
 	}
@@ -200,7 +200,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_get_list_response *body;
 	sml_list *entry;
 
-	if(_pull.size()) {
+	if (_pull.size()) {
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
@@ -208,7 +208,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	/* wait until a we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
 
-	if(bytes < 16 ) {
+	if (bytes < 16 ) {
 		print(log_error, "short message from sml_transport_read len=%d", name().c_str(), bytes);
 		return(0);
 	}
@@ -241,7 +241,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 void MeterSML::_parse(sml_list *entry, Reading *rd) {
 	//int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
-	
+
 	rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
 
 	Obis obis((unsigned char)entry->obj_name->str[0],
@@ -252,7 +252,7 @@ void MeterSML::_parse(sml_list *entry, Reading *rd) {
 						(unsigned char)entry->obj_name->str[5]);
 	ReadingIdentifier *rid(new ObisIdentifier(obis));
 	rd->identifier(rid);
-	
+
 	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
 	struct timeval tv;
 	if (entry->val_time) { /* use time from meter */

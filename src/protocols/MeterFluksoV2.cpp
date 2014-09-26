@@ -42,9 +42,9 @@ MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
 
 	try {
 		_fifo = optlist.lookup_string(options, "fifo");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse fifo", name().c_str());
 		throw;
 	}
@@ -58,7 +58,7 @@ MeterFluksoV2::~MeterFluksoV2() {
 int MeterFluksoV2::open() {
 
 	/* open port */
-	_fd = ::open(_fifo, O_RDONLY); 
+	_fd = ::open(_fifo, O_RDONLY);
 
 	if (_fd < 0) {
 		print(log_error, "open(%s): %s", name().c_str(), _fifo, strerror(errno));
@@ -74,7 +74,7 @@ int MeterFluksoV2::close() {
 }
 
 
-ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) { 
+ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 
 	size_t i = 0;		/* number of readings */
 	ssize_t bytes = 0;	/* read_line() return code */
@@ -99,14 +99,14 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 
 		/* consumption - gets negative channel id as identifier! */
-		ReadingIdentifier *rid1(new ChannelIdentifier(-channel)); 
+		ReadingIdentifier *rid1(new ChannelIdentifier(-channel));
 		rds[i].time(time);
 		rds[i].identifier(rid1);
 		rds[i].value(atoi(strsep(&cursor, " \t")));
 		i++;
 
 		/* power - gets positive channel id as identifier! */
-		ReadingIdentifier *rid2(new ChannelIdentifier(channel)); 
+		ReadingIdentifier *rid2(new ChannelIdentifier(channel));
 		rds[i].time(time);
 		rds[i].identifier(rid2);
 		rds[i].value(atoi(strsep(&cursor, " \t")));

@@ -4,8 +4,8 @@
 AC_PREREQ([2.65])
 
 # update version here!
-AC_INIT([vzlogger], [0.3.3], [http://bugs.volkszaehler.org])
-AM_INIT_AUTOMAKE([vzlogger], [0.3.3])
+AC_INIT([vzlogger], [0.3.7], [http://bugs.volkszaehler.org])
+AM_INIT_AUTOMAKE([vzlogger], [0.3.7])
 
 AC_CONFIG_SRCDIR([src/Meter.cpp])
 AC_CONFIG_HEADERS([config.h])
