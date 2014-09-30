@@ -58,6 +58,10 @@ if( ENABLE_SML )
   endif(SML_FOUND)
 endif( ENABLE_SML )
 
+if(ENABLE_DEBUG)
+  set(CMAKE_CXX_FLAGS "-g3")
+endif(ENABLE_DEBUG)
+
 if(ENABLE_LOCAL)
   include(FindMicroHttpd)
   if(MICROHTTPD_FOUND)
