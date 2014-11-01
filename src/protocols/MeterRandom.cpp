@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2011, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
- * 
+ *
  * "connection" sets the maximum value
  */
 /*
@@ -46,18 +46,18 @@ MeterRandom::MeterRandom(std::list<Option> options)
 
 	try {
 		_min = optlist.lookup_double(options, "min");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_min = 0;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
 		throw;
 	}
 
 	try {
 		_max = optlist.lookup_double(options, "max");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_max = 0;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
 		throw;
 	}
@@ -80,7 +80,7 @@ int MeterRandom::close() {
 }
 
 ssize_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
-	if(rds.size() < 1) return -1;
+	if (rds.size() < 1) return -1;
 
 	double step = ltqnorm((float) rand() / RAND_MAX);
 	double newval = _last + step;

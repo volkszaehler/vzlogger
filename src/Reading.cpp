@@ -175,23 +175,23 @@ bool ReadingIdentifier::operator==( ReadingIdentifier &cmp) {
 }
 
 bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs) {
-	if(ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
-		if(ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
+	if (ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
+		if (ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
 			return *lhsx == *rhsx;
 		} else { return false; }
-	} else 
-		if( StringIdentifier* lhsx = dynamic_cast<StringIdentifier*>(rhs)) {
-			if(StringIdentifier* rhsx = dynamic_cast<StringIdentifier*>(lhs)) {
+	} else
+		if (StringIdentifier* lhsx = dynamic_cast<StringIdentifier*>(rhs)) {
+			if (StringIdentifier* rhsx = dynamic_cast<StringIdentifier*>(lhs)) {
 				return *lhsx == *rhsx;
 			} else { return false; }
-		} else 
-			if(ChannelIdentifier* lhsx = dynamic_cast<ChannelIdentifier*>(lhs)) {
-				if(ChannelIdentifier* rhsx = dynamic_cast<ChannelIdentifier*>(rhs)) {
+		} else
+			if (ChannelIdentifier* lhsx = dynamic_cast<ChannelIdentifier*>(lhs)) {
+				if (ChannelIdentifier* rhsx = dynamic_cast<ChannelIdentifier*>(rhs)) {
 					return *lhsx == *rhsx;
 				} else { return false; }
 			}  else
-				if(NilIdentifier* lhsx = dynamic_cast<NilIdentifier*>(lhs)) {
-					if(NilIdentifier* rhsx = dynamic_cast<NilIdentifier*>(rhs)) {
+				if (NilIdentifier* lhsx = dynamic_cast<NilIdentifier*>(lhs)) {
+					if (NilIdentifier* rhsx = dynamic_cast<NilIdentifier*>(rhs)) {
 						(void)lhsx; (void) rhsx; // avoid compiler warning about unused vars.
 						return true;
 					} else { return false; }

@@ -48,7 +48,7 @@ void test_buffer() {
 
 	int p=0;
 	for (Buffer::iterator it = buf.begin(); it != buf.end(); ++it) {
-		if( p > 3) it->mark_delete();
+		if (p > 3) it->mark_delete();
 		p++;
 		printf("%d %f %d\n",p, it->value(),it->deleted());
 	}

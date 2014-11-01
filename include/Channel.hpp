@@ -47,23 +47,23 @@ class Channel {
 		pthread_create(&_thread, NULL, &logging_thread, (void *) this);
 		_thread_running = true;
 	}
-	
+
 	void join() {
 		pthread_join(_thread, NULL);
 		_thread_running = false;
 	}
 
-	void cancel() { if(running()) pthread_cancel(_thread); }
-	
+	void cancel() { if (running()) pthread_cancel(_thread); }
+
 	bool running() const { return _thread_running; }
-	
+
 	const char* name()                  { return _name.c_str(); }
 	std::list<Option> &options()        { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {
-		if(_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
+		if (_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
 	double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
-	
+
 	const char* uuid()                  { return _uuid.c_str(); }
 	const std::string apiProtocol()     { return _apiProtocol; }
 
@@ -71,9 +71,9 @@ class Channel {
 	void push(const Reading &rd)        { _buffer->push(rd); }
 	char *dump(char *dump, size_t len)  { return _buffer->dump(dump, len); }
 	Buffer::Ptr buffer()                { return _buffer; }
-	
-	size_t size() const { return _buffer->size(); }  
-	size_t keep() const { return _buffer->keep(); }  
+
+	size_t size() const { return _buffer->size(); }
+	size_t keep() const { return _buffer->keep(); }
 
 	inline void notify() {
 		_buffer->lock();
@@ -88,17 +88,17 @@ class Channel {
 		_buffer->clear_newValues();
 		_buffer->unlock();
 	}
-	
+
 	private:
 	static int instances;
 	bool _thread_running;   /**< flag if thread is started */
-	
+
 	int id;		       		  /**< only for internal usage & debugging */
 	std::string _name;    /**< name of the channel */
 	std::list<Option> _options;
-	
+
 	Buffer::Ptr _buffer;		/**< circular queue to buffer readings */
-	
+
 	ReadingIdentifier::Ptr _identifier;	/**< channel identifier (OBIS, string) */
 	Reading *_last;			       /**< most recent reading */
 

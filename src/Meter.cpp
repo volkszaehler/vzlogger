@@ -83,7 +83,7 @@ Meter::Meter(std::list<Option> pOptions) :
 //return ERR; /* skipping this meter */
 			throw vz::VZException("Protocol not found.");
 		}
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Missing protocol or invalid type (%s)", name(), oss.str().c_str());
@@ -94,9 +94,9 @@ Meter::Meter(std::list<Option> pOptions) :
 /* interval */
 		Option interval_opt = optlist.lookup(pOptions, "interval");
 		_interval = (int)(interval_opt);
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_interval = -1; /* indicates unknown interval */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Invalid type for interval", name());
 		throw;
 	}
@@ -104,17 +104,17 @@ Meter::Meter(std::list<Option> pOptions) :
 /* aggregation time */
 		Option interval_opt = optlist.lookup(pOptions, "aggtime");
 		_aggtime = (int)(interval_opt);
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_aggtime = -1; /* indicates no aggregation */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Invalid type for aggtime", name());
 		throw;
 	}
 	try {
 		_aggFixedInterval = optlist.lookup_bool(pOptions, "aggfixedinterval");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_aggFixedInterval = false;
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Invalid type for aggfixedinterval", name());
 		throw;
 	}
@@ -123,8 +123,8 @@ Meter::Meter(std::list<Option> pOptions) :
 		const meter_details_t *details = meter_get_details(_protocol_id);
 		if (details->periodic == true && _interval < 0) {
 			print(log_error, "Interval has to be set and positive!", name());
-		} 
-	} catch( vz::VZException &e ) {
+		}
+	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_error, "Missing protocol or invalid type (%s)", name(), oss.str().c_str());
@@ -166,9 +166,9 @@ Meter::Meter(std::list<Option> pOptions) :
 	try {
 /* interval */
 		_enable = optlist.lookup_bool(pOptions, "enabled");
-	} catch( vz::OptionNotFoundException &e ) {
+	} catch (vz::OptionNotFoundException &e) {
 		_enable=false; /* bye default meter is disabled */
-	} catch( vz::VZException &e ) {
+	} catch (vz::VZException &e) {
 		print(log_error, "Invalid type for enable", name());
 		throw;
 	}
@@ -183,7 +183,7 @@ Meter::~Meter() {
 }
 
 void Meter::open() {
-	if( _protocol->open() < 0) {
+	if (_protocol->open() < 0) {
 		print(log_error, "Cannot open meter", name());
 		throw vz::ConnectionException("Meteropen failed.");
 	}
