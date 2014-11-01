@@ -447,7 +447,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 							(strlen(value) > 0)) {
 						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
 						rds[number_of_tuples].value(strtod(value, NULL));
-						if ((obis_code[0]=='1')||(obis_code[0]=='2')||(obis_code[0]=='C')) {
+						if ((obis_code[0]=='1') || (obis_code[0]=='2')) { // removed || (obis_code[0]=='C')  to fix crash on Landis & Gyr E350
 							/*print(log_debug, "DEBUG END_LINE Obis code = %s value %s ",name().c_str(), obis_code, value);*/
 							Obis obis(obis_code);
 							ReadingIdentifier *rid(new ObisIdentifier(obis));
