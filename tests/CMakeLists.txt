@@ -6,7 +6,9 @@ include_directories(
 file(GLOB test_sources *.cpp)
 
 add_executable(vzlogger_unit_tests ${test_sources})
+
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
     ${GTEST_LIBS_DIR}/libgtest_main.a
+    ${JSON_LIBRARY}
     pthread)
