@@ -242,7 +242,7 @@ int MeterD0::close() {
 	return ::close(_fd);
 }
 
-ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
+ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, ACK, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
@@ -279,6 +279,8 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 	int byte_iterator;
 	char endseq[2+1]; /* Endsequence ! not ?! */
 	size_t number_of_tuples;
+	int bytes_read;
+	time_t start_time, end_time;
 	struct termios tio;
 	int baudrate_connect,baudrate_read;// Baudrates for switching
 
@@ -293,11 +295,11 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 		cfsetospeed(&tio, baudrate_connect);
 		/* apply new configuration */
 		tcsetattr(_fd, TCSANOW, &tio);
-
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
-
+	
+	time(&start_time);
 
 	byte_iterator = number_of_tuples = baudrate = 0;
 	byte = lastbyte = 0;
@@ -322,8 +324,35 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 			}
 		}
 	}
-
-	while (::read(_fd, &byte, 1)) {
+	
+	while (1)
+	{
+		// check for timeout
+		time(&end_time);
+		if (difftime(end_time, start_time) > 10)
+		{
+			print(log_error, "nothing received for more than 10 seconds", name().c_str());
+			break;
+		}
+		
+		// now read a single byte
+		bytes_read = ::read(_fd, &byte, 1);
+		if (bytes_read == 0 || (bytes_read == -1 && errno == EAGAIN))
+		{
+			// wait 5ms and read again
+			usleep(5000);
+			continue;
+		}
+		else if (bytes_read == -1)
+		{
+			print(log_error, "error reading a byte (%d)", name().c_str(), errno);
+			break;
+		}
+		
+		// reset timeout if we are making progress
+		if (context != START)
+			time(&start_time);
+	
 		lastbyte=byte;
 //		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
 		if ((byte == '/') && (byte_iterator = 0)) context = VENDOR; /* Slash can also be in OBIS String of TD-3511 meter */
