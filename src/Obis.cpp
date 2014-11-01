@@ -192,7 +192,7 @@ int Obis::parse(const char *str) {
 }
 
 int Obis::lookup_alias(const char *alias) {
-	for (const obis_alias_t *it = aliases; it != NULL; it++) {
+	for (const obis_alias_t *it = aliases; !it->id.isNull(); it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*this = it->id;
 			return SUCCESS;
