@@ -247,34 +247,34 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, ACK, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
 	bool error_flag = false;
-	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
+	char vendor[3+1];			/* 3 upper case vendor + '\0' termination */
 	char identification[16+1];	/* 16 meter specific + '\0' termination */
 	char obis_code[16+1];		/* A-B:C.D.E*F
-														 fields A, B, E, F are optional
-														 fields C & D are mandatory
-														 A: energy type; 1: energy
-														 B: channel number; 0: no channel specified
-														 C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
-														 1:  Totel Active power+
-														 21: L1 Active power+
-														 31: L1 Current
-														 32: L1 Voltage
-														 41: L2 Active power+
-														 51: L2 Current
-														 52: L2 Voltage
-														 61: L3 Active power+
-														 71: L3 Current
-														 72: L3 Voltage
-														 96.1.255: Metering point ID 256 (electricity related)
-														 96.5.5: Meter started status flag
-														 D: types
-														 E: further processing or classification of quantities
-														 F: storage of data
-														 see DIN-EN-62056-61 */
-	char value[32+1];		/* value, i.e. the actual reading */
-	char unit[16+1];		/* the unit of the value, e.g. kWh, V, ... */
+								   fields A, B, E, F are optional
+								   fields C & D are mandatory
+								   A: energy type; 1: energy
+								   B: channel number; 0: no channel specified
+								   C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
+								   1:  Totel Active power+
+								   21: L1 Active power+
+								   31: L1 Current
+								   32: L1 Voltage
+								   41: L2 Active power+
+								   51: L2 Current
+								   52: L2 Voltage
+								   61: L3 Active power+
+								   71: L3 Current
+								   72: L3 Voltage
+								   96.1.255: Metering point ID 256 (electricity related)
+								   96.5.5: Meter started status flag
+								   D: types
+								   E: further processing or classification of quantities
+								   F: storage of data
+								   see DIN-EN-62056-61 */
+	char value[32+1];			/* value, i.e. the actual reading */
+	char unit[16+1];			/* the unit of the value, e.g. kWh, V, ... */
 
-	char baudrate;			/* 1 byte for */
+	char baudrate;				/* 1 byte for */
 	char byte,lastbyte;			/* we parse our input byte wise */
 	int byte_iterator;
 	char endseq[2+1]; /* Endsequence ! not ?! */
@@ -285,7 +285,7 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 	baudrate_connect=_baudrate;
 	baudrate_read=_baudrate_read;
-	tcgetattr(_fd, &tio) ;
+	tcgetattr(_fd, &tio);
 
 	if (_pull.size()) {
 		tcflush(_fd, TCIOFLUSH);
@@ -300,16 +300,16 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 
 	byte_iterator = number_of_tuples = baudrate = 0;
-	byte=lastbyte = 0;
+	byte = lastbyte = 0;
 	context = START;				/* start with context START */
 
-	if (_wait_sync_end){
+	if (_wait_sync_end) {
 		/* wait once for the sync pattern ("!") at the end of a regular D0 message.
-		 This is intended for D0 meters that start sending data automatically
-		 (e.g. Hager EHZ361).
-		 */
+		   This is intended for D0 meters that start sending data automatically
+		   (e.g. Hager EHZ361).
+		*/
 		int skipped = 0;
-		while(_wait_sync_end && ::read(_fd, &byte, 1)) {
+		while (_wait_sync_end && ::read(_fd, &byte, 1)) {
 			if (byte == '!') {
 				_wait_sync_end=false;
 				print(log_debug, "found wait_sync_end. skipped %d bytes.", name().c_str(), skipped);
