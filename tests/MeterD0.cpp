@@ -184,7 +184,7 @@ TEST(MeterD0, LandisGyr_basic) {
 	// check whether pullseq is remaining in the fifo:
 	char buf[100];
 	ssize_t len = read(fd, buf, sizeof(buf));
-	ASSERT_EQ(strlen("/?!\r\n"), len) << "buf=[" << buf << "]";
+	ASSERT_EQ((ssize_t)strlen("/?!\r\n"), len) << "buf=[" << buf << "]";
 
 	// check obis data:
 	ReadingIdentifier *p = rds[0].identifier().get();
