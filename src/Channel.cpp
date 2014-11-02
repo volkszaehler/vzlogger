@@ -52,7 +52,7 @@ Channel::Channel(
 {
 	id = instances++;
 
-// set channel name
+	// set channel name
 	std::stringstream oss;
 	oss<<"chn"<< id;
 	_name=oss.str();
@@ -60,15 +60,15 @@ Channel::Channel(
 	OptionList optlist;
 
 	try {
-/* aggmode */
+		/* aggmode */
 		const char *aggmode_str = optlist.lookup_string(pOptions, "aggmode");
-		if (strcasecmp(aggmode_str,"max")==0 ) {
-			_buffer->set_aggmode(Buffer::MAXIMUM);
-		} else if (strcasecmp(aggmode_str,"avg")==0 ) {
+		if (strcasecmp(aggmode_str, "max") == 0 ) {
+			_buffer->set_aggmode(Buffer::MAX);
+		} else if (strcasecmp(aggmode_str, "avg") == 0 ) {
 			_buffer->set_aggmode(Buffer::AVG);
-		} else if (strcasecmp(aggmode_str,"sum")==0 ) {
+		} else if (strcasecmp(aggmode_str, "sum") == 0 ) {
 			_buffer->set_aggmode(Buffer::SUM);
-		} else if (strcasecmp(aggmode_str,"none")==0 ) {
+		} else if (strcasecmp(aggmode_str, "none") == 0 ) {
 			_buffer->set_aggmode(Buffer::NONE);
 		} else {
 			throw vz::VZException("Aggmode unknown.");

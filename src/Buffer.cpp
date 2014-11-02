@@ -51,7 +51,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 	if (_aggmode == NONE) return;
 
 	lock();
-	if (_aggmode == MAXIMUM) {
+	if (_aggmode == MAX) {
 		Reading *latest=NULL;
 		double aggvalue=DBL_MIN;
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
