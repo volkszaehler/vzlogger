@@ -352,21 +352,18 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		}
 
 		lastbyte=byte;
-//		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
-		if ((byte == '/') && (byte_iterator = 0)) context = VENDOR; /* Slash can also be in OBIS String of TD-3511 meter */
-		else if (byte == '?' or byte == '!') context = END; /* "!" is the identifier for the END */
-//		else if (byte == '!') context = END;	/* "!" is the identifier for the END */
-
+		if ((byte == '/') && (byte_iterator == 0)) context = VENDOR; /* Slash can also be in OBIS String of TD-3511 meter */
+		else if ((byte == '?') || (byte == '!')) context = END; /* "!" is the identifier for the END */
 		switch (context) {
 			case START:			/* strip the initial "/" */
-				if  (byte != '\r' &&  byte != '\n') { /*allow extra new line at the start */
+				if  ((byte != '\r') &&  (byte != '\n')) { /*allow extra new line at the start */
 					byte_iterator = number_of_tuples = 0;        /* start */
 					context = VENDOR;        /* set new context: START -> VENDOR */
 				}
 				break;
 
 			case VENDOR:			/* VENDOR has 3 Bytes */
-				if  (byte == '\r' or  byte == '\n' or byte == '/' ) {
+				if  ((byte == '\r') || (byte == '\n') || (byte == '/') ) {
 					byte_iterator = number_of_tuples = 0;
 					break;
 				}
@@ -389,7 +386,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case IDENTIFICATION:		/* IDENTIFICATION has 16 bytes */
-				if (byte == '\r' || byte == '\n') { /* detect line end */
+				if ((byte == '\r') || (byte == '\n')) { /* detect line end */
 					identification[byte_iterator] = '\0'; /* termination */
 					print(log_debug, "Pull answer (vendor=%s, baudrate=%c, identification=%s)",
 							name().c_str(),  vendor, baudrate, identification);
@@ -442,7 +439,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 			case VALUE:
 				/*print(log_debug, "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);*/
-				if (byte == '*' || byte == ')') {
+				if ((byte == '*') || (byte == ')')) {
 					value[byte_iterator] = '\0';
 					byte_iterator = 0;
 
@@ -468,7 +465,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case END_LINE:
-				if (byte == '\r' || byte == '\n') {
+				if ((byte == '\r') || (byte == '\n')) {
 					/* free slots available and sain content? */
 					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) &&
 							(strlen(value) > 0)) {
@@ -484,39 +481,46 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 							number_of_tuples++;
 						}
 					}
+                    byte_iterator = 0;
 					context = OBIS_CODE;
 				}
 				break;
 
 			case END:
-				/*print(log_debug, "DEBUG END1 %c %i ", name().c_str(), byte, byte_iterator);*/
-				endseq[byte_iterator++] = byte;
-				/*print(log_debug, "DEBUG END2 byte: %c  iterator: %i ", name().c_str(), byte, byte_iterator);*/
-				if (endseq[0] == '?' ) {
-					/* endseq[byte_iterator++] = byte;*/
-					/* context = END; */
-					/*print(log_debug, "DEBUG END3 byte: %x endseq: %x ", name().c_str(), byte, endseq);*/
-					if (endseq[1] == '!') {
-						/*Pullseq /?! was displayed again. Go on with VENDOR*/
-						context = VENDOR;
-						endseq[byte_iterator] = '\0';
-						print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
-						byte_iterator = 0;
-						endseq[0] = 0;
-						endseq[1] = 0;
-						endseq[2] = 0;
-					}
-					break;
-				}
-
-				if (error_flag) {
-					print(log_error, "reading binary values.", name().c_str());
-					goto error;
-				}
-
-				print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-					name().c_str(), number_of_tuples, vendor, baudrate, identification);
-				return number_of_tuples;
+                /*print(log_debug, "DEBUG END1 %c %i ", name().c_str(), byte, byte_iterator);*/
+                endseq[byte_iterator++] = byte;
+                /*print(log_debug, "DEBUG END2 byte: %c  iterator: %i ", name().c_str(), byte, byte_iterator);*/
+                if(endseq[0] == '?' ) {
+                    /* endseq[byte_iterator++] = byte;*/
+                    /* context = END; */
+                    /*print(log_debug, "DEBUG END3 byte: %x endseq: %x ", name().c_str(), byte, endseq);*/
+                    if (byte_iterator > 1){
+                        if(endseq[1] == '!') {
+                            /*Pullseq /?! was displayed again. Go on with VENDOR*/
+                            context = VENDOR;
+                            endseq[byte_iterator] = '\0';
+                            print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
+                            byte_iterator = 0;
+                            endseq[0] = 0;
+                            endseq[1] = 0;
+                            endseq[2] = 0;
+                        }else{
+                            // how to handle this? we get stuck in this state!
+                            // we received something else than /?!
+                            // let's set an error
+                            error_flag = true;
+                        }
+                    }
+                    break;
+                } // else we assume endseq[0] == '!'
+                if(error_flag) {
+                    print(log_error, "reading binary values.", name().c_str());
+                    goto error;
+                }
+                
+                print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
+                      name().c_str(), number_of_tuples, vendor, baudrate, identification);
+                return number_of_tuples;
 		}/* end switch*/
 	}/* end while*/
 
