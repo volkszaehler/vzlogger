@@ -242,50 +242,52 @@ int MeterD0::close() {
 	return ::close(_fd);
 }
 
-ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
+ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, ACK, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
 	bool error_flag = false;
-	char vendor[3+1];		/* 3 upper case vendor + '\0' termination */
+	char vendor[3+1];			/* 3 upper case vendor + '\0' termination */
 	char identification[16+1];	/* 16 meter specific + '\0' termination */
 	char obis_code[16+1];		/* A-B:C.D.E*F
-														 fields A, B, E, F are optional
-														 fields C & D are mandatory
-														 A: energy type; 1: energy
-														 B: channel number; 0: no channel specified
-														 C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
-														 1:  Totel Active power+
-														 21: L1 Active power+
-														 31: L1 Current
-														 32: L1 Voltage
-														 41: L2 Active power+
-														 51: L2 Current
-														 52: L2 Voltage
-														 61: L3 Active power+
-														 71: L3 Current
-														 72: L3 Voltage
-														 96.1.255: Metering point ID 256 (electricity related)
-														 96.5.5: Meter started status flag
-														 D: types
-														 E: further processing or classification of quantities
-														 F: storage of data
-														 see DIN-EN-62056-61 */
-	char value[32+1];		/* value, i.e. the actual reading */
-	char unit[16+1];		/* the unit of the value, e.g. kWh, V, ... */
+								   fields A, B, E, F are optional
+								   fields C & D are mandatory
+								   A: energy type; 1: energy
+								   B: channel number; 0: no channel specified
+								   C: data items; 0-89 in COSEM context: IEC 62056-62, Clause D.1; 96: General service entries
+								   1:  Totel Active power+
+								   21: L1 Active power+
+								   31: L1 Current
+								   32: L1 Voltage
+								   41: L2 Active power+
+								   51: L2 Current
+								   52: L2 Voltage
+								   61: L3 Active power+
+								   71: L3 Current
+								   72: L3 Voltage
+								   96.1.255: Metering point ID 256 (electricity related)
+								   96.5.5: Meter started status flag
+								   D: types
+								   E: further processing or classification of quantities
+								   F: storage of data
+								   see DIN-EN-62056-61 */
+	char value[32+1];			/* value, i.e. the actual reading */
+	char unit[16+1];			/* the unit of the value, e.g. kWh, V, ... */
 
-	char baudrate;			/* 1 byte for */
+	char baudrate;				/* 1 byte for */
 	char byte,lastbyte;			/* we parse our input byte wise */
 	int byte_iterator;
 	char endseq[2+1]; /* Endsequence ! not ?! */
 	size_t number_of_tuples;
+	int bytes_read;
+	time_t start_time, end_time;
 	struct termios tio;
 	int baudrate_connect,baudrate_read;// Baudrates for switching
 
 
 	baudrate_connect=_baudrate;
 	baudrate_read=_baudrate_read;
-	tcgetattr(_fd, &tio) ;
+	tcgetattr(_fd, &tio);
 
 	if (_pull.size()) {
 		tcflush(_fd, TCIOFLUSH);
@@ -293,79 +295,106 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 		cfsetospeed(&tio, baudrate_connect);
 		/* apply new configuration */
 		tcsetattr(_fd, TCSANOW, &tio);
-
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
 
+	time(&start_time);
 
 	byte_iterator = number_of_tuples = baudrate = 0;
-	byte=lastbyte = 0;
+	byte = lastbyte = 0;
 	context = START;				/* start with context START */
 
-	if (_wait_sync_end){
+	if (_wait_sync_end) {
 		/* wait once for the sync pattern ("!") at the end of a regular D0 message.
-		 This is intended for D0 meters that start sending data automatically
-		 (e.g. Hager EHZ361).
-		 */
+		   This is intended for D0 meters that start sending data automatically
+		   (e.g. Hager EHZ361).
+		*/
 		int skipped = 0;
-		while(_wait_sync_end && ::read(_fd, &byte, 1)) {
+		while (_wait_sync_end && ::read(_fd, &byte, 1)) {
 			if (byte == '!') {
-				_wait_sync_end=false;
+				_wait_sync_end = false;
 				print(log_debug, "found wait_sync_end. skipped %d bytes.", name().c_str(), skipped);
 			} else {
 				skipped++;
 				if (skipped > D0_BUFFER_LENGTH) {
-					_wait_sync_end=false;
+					_wait_sync_end = false;
 					print(log_error, "stopped searching for wait_sync_end after %d bytes without success!", name().c_str(), skipped);
 				}
 			}
 		}
 	}
 
-	while (::read(_fd, &byte, 1)) {
-		lastbyte=byte;
-		if ((byte == '/') && (byte_iterator == 0)) context = VENDOR; /* Slash can also be in OBIS String of TD-3511 meter */
-		else if ((byte == '?') || (byte == '!')) context = END; /* "!" is the identifier for the END */
+	while (1) {
+		// check for timeout
+		time(&end_time);
+		if (difftime(end_time, start_time) > 10) {
+			print(log_error, "nothing received for more than 10 seconds", name().c_str());
+			break;
+		}
+
+		// now read a single byte
+		bytes_read = ::read(_fd, &byte, 1);
+		if (bytes_read == 0 || (bytes_read == -1 && errno == EAGAIN)) {
+			// wait 5ms and read again
+			usleep(5000);
+			continue;
+		}
+		else if (bytes_read == -1) {
+			print(log_error, "error reading a byte (%d)", name().c_str(), errno);
+			break;
+		}
+
+		// reset timeout if we are making progress
+		if (context != START) {
+			time(&start_time);
+		}
+
+		lastbyte = byte;
+		if ((byte == '/') && (byte_iterator == 0)) {
+			context = VENDOR;	// Slash can also be in OBIS String of TD-3511 meter
+		}
+		else if ((byte == '?') || (byte == '!')) {
+			context = END; 		// "!" is the identifier for the END
+		}
+
 		switch (context) {
-			case START:			/* strip the initial "/" */
-				if  ((byte != '\r') &&  (byte != '\n')) { /*allow extra new line at the start */
-					byte_iterator = number_of_tuples = 0;        /* start */
-					context = VENDOR;        /* set new context: START -> VENDOR */
+			case START:										// strip the initial "/"
+				if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line at the start
+					byte_iterator = number_of_tuples = 0;	// start
+					context = VENDOR;						// set new context: START -> VENDOR
 				}
 				break;
 
-			case VENDOR:			/* VENDOR has 3 Bytes */
-				if  ((byte == '\r') || (byte == '\n') || (byte == '/') ) {
+			case VENDOR:									// VENDOR has 3 Bytes
+				if ((byte == '\r') || (byte == '\n') || (byte == '/')) {
 					byte_iterator = number_of_tuples = 0;
 					break;
 				}
-				/*print(log_debug, "DEBUG Vendor2 byte= %c hex= %x byteIterator= %i ",name().c_str(), byte, byte, byte_iterator);*/
+				/*print(log_debug, "DEBUG Vendor2 byte= %c hex= %x byteIterator= %i ",name().c_str(), byte, byte, byte_iterator)*/
 
-				if (!isalpha(byte)) goto error; /* Vendor ID needs to be alpha */
-				vendor[byte_iterator++] = byte;	/* read next byte */
-				if (byte_iterator >= 3) {	/* stop after 3rd byte */
-					vendor[byte_iterator] = '\0'; /* termination */
-					byte_iterator = 0;	/* reset byte counter */
-
-					context = BAUDRATE;	/* set new context: VENDOR -> BAUDRATE */
+				if (!isalpha(byte)) goto error;				// Vendor ID needs to be alpha
+				vendor[byte_iterator++] = byte;				// read next byte
+				if (byte_iterator >= 3) {					// after 3rd byte
+					vendor[byte_iterator] = '\0';			// termination
+					byte_iterator = 0;						// reset byte counter
+					context = BAUDRATE;						// set new context: VENDOR -> BAUDRATE
 				}
 				break;
 
-			case BAUDRATE:			/* BAUDRATE consists of 1 char only */
+			case BAUDRATE:									// BAUDRATE consists of 1 char only
 				baudrate = byte;
-				context = IDENTIFICATION;	/* set new context: BAUDRATE -> IDENTIFICATION */
 				byte_iterator = 0;
+				context = IDENTIFICATION;					// set new context: BAUDRATE -> IDENTIFICATION
 				break;
 
-			case IDENTIFICATION:		/* IDENTIFICATION has 16 bytes */
-				if ((byte == '\r') || (byte == '\n')) { /* detect line end */
-					identification[byte_iterator] = '\0'; /* termination */
+			case IDENTIFICATION:							// IDENTIFICATION has 16 bytes
+				if ((byte == '\r') || (byte == '\n')) { 	// line end
+					identification[byte_iterator] = '\0';	// termination
 					print(log_debug, "Pull answer (vendor=%s, baudrate=%c, identification=%s)",
 							name().c_str(),  vendor, baudrate, identification);
-					//context = OBIS_CODE;	/* set new context: IDENTIFICATION -> OBIS_CODE */
-					context = ACK;
 					byte_iterator = 0;
+					context = ACK;							// set new context: IDENTIFICATION -> ACK (old: OBIS_CODE)
 				}
 				else {
 					if (!isprint(byte)) {
@@ -383,13 +412,14 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 				if (_ack.size()) {
 					//tcflush(_fd, TCIOFLUSH);
 					//usleep (500000);
-					if (baudrate_read!=baudrate_connect) {
+					if (baudrate_read != baudrate_connect) {
 						cfsetispeed(&tio, baudrate_read);
 						tcsetattr(_fd, TCSANOW, &tio);
 					}
-					int wlen=write(_fd,_ack.c_str(),_ack.size());
-					tcdrain(_fd);// Warte bis Ausgang gesendet
-					print(log_debug,"sending ack sequenz send (len:%d is:%d,%s).",name().c_str(),_ack.size(),wlen,_ack.c_str());
+					int wlen = write(_fd,_ack.c_str(),_ack.size());
+					tcdrain(_fd);							// Wait until sent
+					print(log_debug, "Sending ack sequence send (len:%d is:%d,%s).",
+							name().c_str(),_ack.size(),wlen,_ack.c_str());
 				}
 				context = OBIS_CODE;
 				break;
@@ -398,9 +428,8 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 				break;
 
 			case OBIS_CODE:
-				print(log_debug, "DEBUG OBIS_CODE byte %c hex= %X ",name().c_str(), byte, byte);
-				if ((byte != '\n') && (byte != '\r') && (byte != 0x02))// STX ausklammern
-				{
+				print(log_debug, "DEBUG OBIS_CODE byte %c hex= %X ", name().c_str(), byte, byte);
+				if ((byte != '\n') && (byte != '\r') && (byte != 0x02)) {	// exclude STX
 					if (byte == '(') {
 						obis_code[byte_iterator] = '\0';
 						byte_iterator = 0;
@@ -431,7 +460,6 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 				if (byte == ')') {
 					unit[byte_iterator] = '\0';
 					byte_iterator = 0;
-
 					context = END_LINE;
 				}
 				else unit[byte_iterator++] = byte;
@@ -439,12 +467,13 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 
 			case END_LINE:
 				if ((byte == '\r') || (byte == '\n')) {
-					/* free slots available and sain content? */
-					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) &&
-							(strlen(value) > 0)) {
-						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)", name().c_str(), obis_code, value, unit);
+					// free slots available and sane content?
+					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) {
+						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
+								name().c_str(), obis_code, value, unit);
 						rds[number_of_tuples].value(strtod(value, NULL));
-						if ((obis_code[0]=='1')||(obis_code[0]=='2')||(obis_code[0]=='C')) {
+
+						if ((obis_code[0] == '1') || (obis_code[0] == '2')) { // removed || (obis_code[0]=='C')  to fix crash on Landis & Gyr E350
 							/*print(log_debug, "DEBUG END_LINE Obis code = %s value %s ",name().c_str(), obis_code, value);*/
 							Obis obis(obis_code);
 							ReadingIdentifier *rid(new ObisIdentifier(obis));
@@ -454,51 +483,52 @@ ssize_t MeterD0::read(std::vector<Reading>&rds, size_t max_readings) {
 							number_of_tuples++;
 						}
 					}
-                    byte_iterator = 0;
+					byte_iterator = 0;
 					context = OBIS_CODE;
 				}
 				break;
 
 			case END:
-                /*print(log_debug, "DEBUG END1 %c %i ", name().c_str(), byte, byte_iterator);*/
-                endseq[byte_iterator++] = byte;
-                /*print(log_debug, "DEBUG END2 byte: %c  iterator: %i ", name().c_str(), byte, byte_iterator);*/
-                if(endseq[0] == '?' ) {
-                    /* endseq[byte_iterator++] = byte;*/
-                    /* context = END; */
-                    /*print(log_debug, "DEBUG END3 byte: %x endseq: %x ", name().c_str(), byte, endseq);*/
-                    if (byte_iterator > 1){
-                        if(endseq[1] == '!') {
-                            /*Pullseq /?! was displayed again. Go on with VENDOR*/
-                            context = VENDOR;
-                            endseq[byte_iterator] = '\0';
-                            print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
-                            byte_iterator = 0;
-                            endseq[0] = 0;
-                            endseq[1] = 0;
-                            endseq[2] = 0;
-                        }else{
-                            // how to handle this? we get stuck in this state!
-                            // we received something else than /?!
-                            // let's set an error
-                            error_flag = true;
-                        }
-                    }
-                    break;
-                } // else we assume endseq[0] == '!'
-                if(error_flag) {
-                    print(log_error, "reading binary values.", name().c_str());
-                    goto error;
-                }
-                
-                print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-                      name().c_str(), number_of_tuples, vendor, baudrate, identification);
-                return number_of_tuples;
+				/*print(log_debug, "DEBUG END1 %c %i ", name().c_str(), byte, byte_iterator);*/
+				endseq[byte_iterator++] = byte;
+				/*print(log_debug, "DEBUG END2 byte: %c  iterator: %i ", name().c_str(), byte, byte_iterator);*/
+				if(endseq[0] == '?' ) {
+					/* endseq[byte_iterator++] = byte;*/
+					/* context = END; */
+					/*print(log_debug, "DEBUG END3 byte: %x endseq: %x ", name().c_str(), byte, endseq);*/
+					if (byte_iterator > 1) {
+						if (endseq[1] == '!') {
+							/*Pullseq /?! was displayed again. Go on with VENDOR*/
+							context = VENDOR;
+							endseq[byte_iterator] = '\0';
+							print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
+							byte_iterator = 0;
+							endseq[0] = 0;
+							endseq[1] = 0;
+							endseq[2] = 0;
+						} else {
+							// how to handle this? we get stuck in this state!
+							// we received something else than /?!
+							// let's set an error
+							error_flag = true;
+						}
+					}
+					break;
+				} // else we assume endseq[0] == '!'
+				if (error_flag) {
+					print(log_error, "reading binary values.", name().c_str());
+					goto error;
+				}
+
+				print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
+						name().c_str(), number_of_tuples, vendor, baudrate, identification);
+				return number_of_tuples;
 		}/* end switch*/
 	}/* end while*/
 
 	// Read terminated
-	print(log_error, "read timed out!, context: %i, bytes read: %i, last byte 0x%x", name().c_str(),context,byte_iterator,lastbyte);
+	print(log_error, "read timed out!, context: %i, bytes read: %i, last byte 0x%x",
+			name().c_str(),context,byte_iterator,lastbyte);
 	return 0;
 
 error:
@@ -604,13 +634,13 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 		tio.c_cflag |= CS7;
 		break;
 	}
-/* Set return rules for read to prevent endless waiting*/
-	tio.c_cc[VTIME]    = 50;     /* inter-character timer  50*0.1s*/
-		tio.c_cc[VMIN]     = 0;     /* VTIME is timeout counter */
-	   /*
-		  now clean the modem line and activate the settings for the port
-		*/
-		tcflush(fd, TCIOFLUSH);
+	/* Set return rules for read to prevent endless waiting*/
+	tio.c_cc[VTIME]	= 50;	/* inter-character timer  50*0.1s*/
+	tio.c_cc[VMIN]	= 0;	/* VTIME is timeout counter */
+	/*
+	  now clean the modem line and activate the settings for the port
+	*/
+	tcflush(fd, TCIOFLUSH);
 	/* set baudrate */
 	cfsetispeed(&tio, baudrate);
 	cfsetospeed(&tio, baudrate);
