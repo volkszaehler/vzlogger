@@ -101,10 +101,13 @@ myconfigure_file(
   )
 
 add_subdirectory(src)
+add_subdirectory(gmock)
+add_subdirectory(tests)
 
 # enable unit testing
 include(CTest)
 enable_testing()
+add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
 
 ### print some output for the user
 message("")
