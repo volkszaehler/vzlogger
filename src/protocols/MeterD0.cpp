@@ -298,7 +298,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
-	
+
 	time(&start_time);
 
 	byte_iterator = number_of_tuples = baudrate = 0;
@@ -324,35 +324,33 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 			}
 		}
 	}
-	
+
 	while (1)
 	{
 		// check for timeout
 		time(&end_time);
-		if (difftime(end_time, start_time) > 10)
-		{
+		if (difftime(end_time, start_time) > 10) {
 			print(log_error, "nothing received for more than 10 seconds", name().c_str());
 			break;
 		}
-		
+
 		// now read a single byte
 		bytes_read = ::read(_fd, &byte, 1);
-		if (bytes_read == 0 || (bytes_read == -1 && errno == EAGAIN))
-		{
+		if (bytes_read == 0 || (bytes_read == -1 && errno == EAGAIN)) {
 			// wait 5ms and read again
 			usleep(5000);
 			continue;
 		}
-		else if (bytes_read == -1)
-		{
+		else if (bytes_read == -1) {
 			print(log_error, "error reading a byte (%d)", name().c_str(), errno);
 			break;
 		}
-		
+
 		// reset timeout if we are making progress
-		if (context != START)
+		if (context != START) {
 			time(&start_time);
-	
+		}
+
 		lastbyte=byte;
 //		if (byte == '/') context = START; 	/* reset to START if "/" reoccurs */
 		if ((byte == '/') && (byte_iterator = 0)) context = VENDOR; /* Slash can also be in OBIS String of TD-3511 meter */
