@@ -52,7 +52,7 @@ static const meter_details_t protocols[] = {
 	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
 	METER_DETAIL(fluksov2, Fluksov2,"Read from Flukso's onboard SPI fifo",16,false),
 	METER_DETAIL(s0, S0,"S0-meter directly connected to RS232",2,false),
-	METER_DETAIL(d0, D0,"DLMS/IEC 62056-21 plaintext protocol",32,false),
+	METER_DETAIL(d0, D0,"DLMS/IEC 62056-21 plaintext protocol",400,false),
 #ifdef SML_SUPPORT
 	METER_DETAIL(sml, Sml,"Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
 #endif /* SML_SUPPORT */
