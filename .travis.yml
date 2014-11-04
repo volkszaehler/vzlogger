@@ -4,6 +4,9 @@ compiler:
     - clang 
     - gcc
 
+env:
+  - CTEST_OUTPUT_ON_FAILURE=1
+
 notifications:
     mail: "volkszaehler-dev@lists.volkszaehler.org"
     irc: "chat.freenode.net#volkszaehler.org"
