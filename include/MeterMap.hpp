@@ -53,7 +53,9 @@ public:
 	typedef std::vector<Channel::Ptr>::iterator iterator;
 	typedef std::vector<Channel::Ptr>::const_iterator const_iterator;
 
-	MeterMap(std::list<Option> options) : _meter(new Meter(options)){_thread_running=false;}
+	MeterMap(std::list<Option> options) : _meter(new Meter(options)){
+		_thread_running = false;
+	}
 	~MeterMap() {};
 	Meter::Ptr meter() { return _meter; }
 
@@ -91,8 +93,8 @@ private:
 	Meter::Ptr _meter;
 	std::vector<Channel::Ptr> _channels;
 
-	bool _thread_running;   /**< flag if thread is started */
-	pthread_t _thread;      /**< Thread data for meter (reading) */
+	bool _thread_running;   // flag if thread is started
+	pthread_t _thread;      // Thread data for meter (reading)
 };
 
 /**

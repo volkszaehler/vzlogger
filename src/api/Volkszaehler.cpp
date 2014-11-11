@@ -52,7 +52,7 @@ vz::api::Volkszaehler::Volkszaehler(
 	char url[255], agent[255];
 	unsigned short curlTimeout = 30; // 30 seconds
 
-/* parse options */
+	// parse options
 	try {
 		_middleware = optlist.lookup_string(pOptions, "middleware");
 	} catch (vz::OptionNotFoundException &e) {
@@ -64,15 +64,14 @@ vz::api::Volkszaehler::Volkszaehler(
 	try {
 		curlTimeout = optlist.lookup_int(pOptions, "timeout");
 	} catch (vz::OptionNotFoundException &e) {
-	// use default value instead
-		curlTimeout = 30; // 30 seconds
+		curlTimeout = 30; // 30 seconds default
 	} catch (vz::VZException &e) {
 		throw;
 	}
 
-/* prepare header, uuid & url */
-	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());     /* build user agent */
-	sprintf(url, "%s/data/%s.json", middleware().c_str(), channel()->uuid());                        /* build url */
+	// prepare header, uuid & url
+	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	// build user agent
+	sprintf(url, "%s/data/%s.json", middleware().c_str(), channel()->uuid());	// build url
 
 	_api.headers = NULL;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
@@ -110,7 +109,7 @@ void vz::api::Volkszaehler::send()
 	long int http_code;
 	CURLcode curl_code;
 
-	/* initialize response */
+	// initialize response
 	response.data = NULL;
 	response.size = 0;
 
@@ -130,14 +129,14 @@ void vz::api::Volkszaehler::send()
 	curl_code = curl_easy_perform(curl());
 	curl_easy_getinfo(curl(), CURLINFO_RESPONSE_CODE, &http_code);
 
-	/* check response */
-	if (curl_code == CURLE_OK && http_code == 200) { /* everything is ok */
+	// check response
+	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
 		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
 		_values.clear();
-		//clear buffer-readings
-//channel()->buffer.sent = last->next;
+		// clear buffer-readings
+		//channel()->buffer.sent = last->next;
 	}
-	else { /* error */
+	else { // error
 		if (curl_code != CURLE_OK) {
 			print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
 		}
@@ -148,7 +147,7 @@ void vz::api::Volkszaehler::send()
 		}
 	}
 
-	/* householding */
+	// householding
 	free(response.data);
 	json_object_put(json_obj);
 
@@ -224,13 +223,13 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 			// evaluate error
 			if (err_type == "UniqueConstraintViolationException") {
 				if (err_message.find("Duplicate entry") ) {
-					print(log_warning, "middle says duplicated value. removing first entry!", channel()->name());
+					print(log_warning, "Middleware says duplicated value. Removing first entry!", channel()->name());
 					_values.pop_front();
 				}
 			}
 		}
 		else {
-			strncpy(err, "missing exception", n);
+			strncpy(err, "Missing exception", n);
 		}
 	}
 	else {
@@ -252,12 +251,12 @@ int vz::api::curl_custom_debug_callback(
 	Channel *ch = static_cast<Channel *> (arg);
 	char *end = strchr(data, '\n');
 
-	if (data == end) return 0; /* skip empty line */
+	if (data == end) return 0; // skip empty line
 
 	switch (type) {
 			case CURLINFO_TEXT:
 			case CURLINFO_END:
-				if (end) *end = '\0'; /* terminate without \n */
+				if (end) *end = '\0'; // terminate without \n
 				print((log_level_t)(log_debug+5), "CURL: %.*s", ch->name(), (int) size, data);
 				break;
 
@@ -287,7 +286,7 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 	CURLresponse *response = static_cast<CURLresponse *>(data);
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
-	if (response->data == NULL) { /* out of memory! */
+	if (response->data == NULL) { // out of memory!
 		print(log_error, "Cannot allocate memory", NULL);
 		exit(EXIT_FAILURE);
 	}

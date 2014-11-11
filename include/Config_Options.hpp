@@ -58,7 +58,7 @@ public:
 	void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
 	void config_parse_channel(Json& jso, MeterMap &metermap);
 
-// getter
+	// getter
 	const std::string &config() const { return _config; }
 	const std::string &log() const { return _log; }
 	FILE *logfd() { return _logfd; }
@@ -75,7 +75,7 @@ public:
 
 	bool doRegistration()   const { return _doRegistration; }
 
-// setter
+	// setter
 	void config(const std::string &v) { _config = v; }
 	void log(const std::string &v)    { _log = v; }
 	void logfd(FILE *fd)              { _logfd = fd; }
@@ -85,25 +85,26 @@ public:
 	void daemon(const bool v)    { _daemon = v; }
 	void local(const bool v)     { _local = v; }
 	void logging(const bool v)    { _logging = v; }
+
 	void doRegistration(const bool v)    { _doRegistration = v; }
 
 private:
-	std::string _config;		/* filename of configuration */
-	std::string _log;		/* filename for logging */
+	std::string _config;	// filename of configuration
+	std::string _log;		// filename for logging
 	FILE *_logfd;
 
-	int _port;		/* TCP port for local interface */
-	int _verbosity;		/* verbosity level */
-	int _comet_timeout;	/* in seconds;  */
-	int _buffer_length;	/* in seconds; how long to buffer readings for local interfalce */
-	int _retry_pause;	/* in seconds; how long to pause after an unsuccessful HTTP request */
+	int _port;				// TCP port for local interface
+	int _verbosity;			// verbosity level
+	int _comet_timeout;		// in seconds; 
+	int _buffer_length;		// in seconds; how long to buffer readings for local interfalce
+	int _retry_pause;		// in seconds; how long to pause after an unsuccessful HTTP request
 
-	/* boolean bitfields, padding at the end of struct */
-	int _channel_index:1;	/* give a index of all available channels via local interface */
-	int _daemon:1;		/* run in background */
-	int _local:1;		/* enable local interface */
-	int _logging:1;		/* start logging threads, depends on local & daemon */
-	int _doRegistration:1;		/* start logging threads, depends on local & daemon */
+	// boolean bitfields, padding at the end of struct
+	int _channel_index:1;	// give a index of all available channels via local interface
+	int _daemon:1;			// run in background
+	int _local:1;			// enable local interface
+	int _logging:1;			// start logging threads, depends on local & daemon
+	int _doRegistration:1;	// start logging threads, depends on local & daemon
 };
 
 /**
