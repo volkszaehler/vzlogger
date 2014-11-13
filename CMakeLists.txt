@@ -7,7 +7,7 @@ endif(POLICY CMP0011)
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 3)
-set(VZLOGGER_SUB_VERSION   8)
+set(VZLOGGER_SUB_VERSION   9)
 set(VERSION_SEP "-")
 set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MINOR_VERSION}")
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
@@ -101,10 +101,13 @@ myconfigure_file(
   )
 
 add_subdirectory(src)
+add_subdirectory(gtest)
+add_subdirectory(tests)
 
 # enable unit testing
 include(CTest)
 enable_testing()
+add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
 
 ### print some output for the user
 message("")

@@ -159,7 +159,7 @@ int Obis::parse(const char *str) {
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
 
-		if (isdigit(byte)) {
+		if (isxdigit(byte)) {
 			num = (num * 10) + (byte - '0'); /* parse digits */
 		}
 		else {
