@@ -41,7 +41,7 @@ class Buffer {
 	typedef std::list<Reading>::iterator iterator;
 	typedef std::list<Reading>::const_iterator const_iterator;
 
-	enum aggmode { NONE,MAXIMUM,AVG,SUM };
+	enum aggmode { NONE, MAX, AVG, SUM };
 
 	Buffer();
 	virtual ~Buffer();

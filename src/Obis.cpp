@@ -159,7 +159,7 @@ int Obis::parse(const char *str) {
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
 
-		if (isdigit(byte)) {
+		if (isxdigit(byte)) {
 			num = (num * 10) + (byte - '0'); /* parse digits */
 		}
 		else {
@@ -192,7 +192,7 @@ int Obis::parse(const char *str) {
 }
 
 int Obis::lookup_alias(const char *alias) {
-	for (const obis_alias_t *it = aliases; it != NULL; it++) {
+	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isNull(); it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*this = it->id;
 			return SUCCESS;

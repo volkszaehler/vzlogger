@@ -10,4 +10,5 @@ add_executable(vzlogger_unit_tests ${test_sources})
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
     ${GMOCK_LIBS_DIR}/libgmock.a
+    ${JSON_LIBRARY}
     pthread)
