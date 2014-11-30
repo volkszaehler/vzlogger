@@ -101,13 +101,19 @@ myconfigure_file(
   )
 
 add_subdirectory(src)
-add_subdirectory(gtest)
-add_subdirectory(tests)
-
+find_package(Subversion)
+if(Subversion_FOUND)
+  add_subdirectory(gtest)
+  add_subdirectory(tests)
+else()
+  message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
+endif()
 # enable unit testing
 include(CTest)
 enable_testing()
-add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
+if(Subversion_FOUND)
+  add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
+endif()
 
 ### print some output for the user
 message("")
