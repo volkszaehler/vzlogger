@@ -1,5 +1,6 @@
 #ifndef _config_hpp_in_
 #define _config_hpp_in_
+
 /* Local interface */
 #cmakedefine LOCAL_SUPPORT 1
 
@@ -7,7 +8,7 @@
 #define PACKAGE "vzlogger"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "http://bugs.volkszaehler.org"
+#define PACKAGE_BUGREPORT "https://github.com/volkszaehler/vzlogger/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "vzlogger"
@@ -19,7 +20,7 @@
 #define PACKAGE_TARNAME "vzlogger"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL ""
+#define PACKAGE_URL "https://github.com/volkszaehler/vzlogger"
 
 /* Define to the version of this package. */
 #cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
