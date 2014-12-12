@@ -51,9 +51,10 @@
 #endif /* LOCAL_SUPPORT */
 
 
-MapContainer mappings;	/* mapping between meters and channels */
-Config_Options options;	/* global application options */
+MapContainer mappings;		// mapping between meters and channels
+Config_Options options;		// global application options
 bool gStop = false;
+size_t gSkippedFailed = 0;	// disabled or failed meters
 
 /**
  * Command line options
@@ -160,7 +161,7 @@ void show_usage(char *argv[]) {
 
 	/* protocols */
 	printf("\n  following protocol types are supported:\n");
-	for (const meter_details_t *it = meter_get_protocols(); it->id >0; it++) {
+	for (const meter_details_t *it = meter_get_protocols(); it->id > 0; it++) {
 		printf("\t%-12s\t%s\n", it->name, it->desc);
 	}
 
@@ -309,11 +310,11 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
  **/
 /*---------------------------------------------------------------------*/
 void register_device() {
-// using global variable:  mappings	 mapping between meters and channels */
-// using global variable:  options	 global application options */
+	// using global variable:  mappings	 mapping between meters and channels */
+	// using global variable:  options	 global application options */
 	try {
 		/* open connection meters & start threads */
-		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
 			it->registration();
 		}
 	} catch (std::exception &e) {
@@ -321,6 +322,7 @@ void register_device() {
 	}
 }
 #ifndef NOMAIN
+
 /**
  * The application entrypoint
  */
@@ -360,6 +362,9 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	// make sure command line options override config settings, just re-parse
+	config_parse_cli(argc, argv, &options);
+
 	// Register vzlogger
 	if (options.doRegistration()) {
 		register_device();
@@ -376,7 +381,7 @@ int main(int argc, char *argv[]) {
 		daemonize();
 	}
 	else {
-		print(log_info, "NOT Daemonize process...", (char*)0);
+		print(log_info, "Not daemonizing process...", (char*)0);
 	}
 
 	/* open logfile */
@@ -393,19 +398,28 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (mappings.size() <= 0) {
-		print(log_error, "No meters found!", (char*)0);
+		print(log_error, "No meters found - quitting!", (char*)0);
 		return EXIT_FAILURE;
 	}
 
-	print(log_debug, "===> Start meters.", "");
+	print(log_debug, "===> Start meters", "");
 	try {
-		/* open connection meters & start threads */
-		for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+		// open connection meters & start threads
+		for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
 			it->start();
+			if (!it->running()) {
+				gSkippedFailed++;
+			}
+		}
+
+		// quit if not at least one meter is enabled and working
+		if (mappings.size() - gSkippedFailed <= 0) {
+			print(log_error, "No functional meters found - quitting!", (char*)0);
+			return EXIT_FAILURE;
 		}
 
 #ifdef LOCAL_SUPPORT
-		/* start webserver for local interface */
+		// start webserver for local interface
 		if (options.local()) {
 			print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
 			httpd_handle = MHD_start_daemon(
@@ -426,13 +440,13 @@ int main(int argc, char *argv[]) {
 	try {
 		do {
 			/* wait for all threads to terminate */
-			for (MapContainer::iterator it = mappings.begin(); it!=mappings.end(); it++) {
+			for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
 				bool ret = it->stopped();
 				if (ret) gStop = true;
 			}
 		} while (!gStop);
 	} catch (std::exception &e) {
-		print(log_error, "MainLOOP failed for %s", "", e.what());
+		print(log_error, "Main loop failed for %s", "", e.what());
 	}
 	print(log_debug, "Server stopped.", "");
 

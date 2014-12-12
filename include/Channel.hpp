@@ -83,7 +83,7 @@ class Channel {
 	inline void wait() {
 		_buffer->lock();
 		while(!_buffer->newValues() ) {
-			_buffer->wait(&condition); /* sleep until new data has been read */
+			_buffer->wait(&condition); 	// sleep until new data has been read
 		}
 		_buffer->clear_newValues();
 		_buffer->unlock();
@@ -91,22 +91,22 @@ class Channel {
 
 	private:
 	static int instances;
-	bool _thread_running;   /**< flag if thread is started */
+	bool _thread_running;   	// flag if thread is started
 
-	int id;		       		  /**< only for internal usage & debugging */
-	std::string _name;    /**< name of the channel */
+	int id;		 				// only for internal usage & debugging
+	std::string _name;    		// name of the channel
 	std::list<Option> _options;
 
-	Buffer::Ptr _buffer;		/**< circular queue to buffer readings */
+	Buffer::Ptr _buffer;		// circular queue to buffer readings
 
-	ReadingIdentifier::Ptr _identifier;	/**< channel identifier (OBIS, string) */
-	Reading *_last;			       /**< most recent reading */
+	ReadingIdentifier::Ptr _identifier;	// channel identifier (OBIS, string)
+	Reading *_last;			 	// most recent reading
 
-	pthread_cond_t condition;	 /**< pthread syncronization to notify logging thread and local webserver */
-	pthread_t _thread;		     /**< pthread for asynchronus logging */
+	pthread_cond_t condition;	// pthread syncronization to notify logging thread and local webserver
+	pthread_t _thread;			// pthread for asynchronus logging
 
-	std::string _uuid;		   	 /**< unique identifier for middleware */
-	std::string _apiProtocol;  /**< protocol of api to use for logging */
+	std::string _uuid;			// unique identifier for middleware
+	std::string _apiProtocol;	// protocol of api to use for logging
 };
 
 #endif /* _CHANNEL_H_ */

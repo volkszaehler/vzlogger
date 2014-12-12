@@ -45,16 +45,16 @@
 int Meter::instances=0;
 
 static const meter_details_t protocols[] = {
-/*     aliasdescriptionmax_rdsperiodic
-			 ===============================================================================================*/
-	METER_DETAIL( file, File,"Read from file or fifo",32,true),
-//METER_DETAIL(exec, "Parse program output",32,true),
+/*  aliasdescriptionmax_rdsperiodic
+	===============================================================================================*/
+	METER_DETAIL(file, File, "Read from file or fifo",32,true),
+	// METER_DETAIL(exec, "Parse program output",32,true),
 	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
-	METER_DETAIL(fluksov2, Fluksov2,"Read from Flukso's onboard SPI fifo",16,false),
-	METER_DETAIL(s0, S0,"S0-meter directly connected to RS232",2,false),
-	METER_DETAIL(d0, D0,"DLMS/IEC 62056-21 plaintext protocol",400,false),
+	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo",16,false),
+	METER_DETAIL(s0, S0, "S0-meter directly connected to RS232",2,false),
+	METER_DETAIL(d0, D0, "DLMS/IEC 62056-21 plaintext protocol",400,false),
 #ifdef SML_SUPPORT
-	METER_DETAIL(sml, Sml,"Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
+	METER_DETAIL(sml, Sml, "Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
 #endif /* SML_SUPPORT */
 //{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL,NULL, 0,false),
@@ -66,15 +66,15 @@ Meter::Meter(std::list<Option> pOptions) :
 	id = instances++;
 	OptionList optlist;
 
-// set meter name
+	// set meter name
 	std::stringstream oss;
 	oss<<"mtr"<< id;
-	_name=oss.str();
+	_name = oss.str();
 
-//optlist.dump(pOptions);
+	//optlist.dump(pOptions);
 
 	try {
-/* protocol */
+		// protocol
 		const char *protocol_str = optlist.lookup_string(pOptions, "protocol");
 		print(log_debug, "Creating new meter with protocol %s.", name(), protocol_str);
 
@@ -91,7 +91,7 @@ Meter::Meter(std::list<Option> pOptions) :
 	}
 
 	try {
-/* interval */
+		// interval
 		Option interval_opt = optlist.lookup(pOptions, "interval");
 		_interval = (int)(interval_opt);
 	} catch (vz::OptionNotFoundException &e) {
@@ -101,7 +101,7 @@ Meter::Meter(std::list<Option> pOptions) :
 		throw;
 	}
 	try {
-/* aggregation time */
+		// aggregation time
 		Option interval_opt = optlist.lookup(pOptions, "aggtime");
 		_aggtime = (int)(interval_opt);
 	} catch (vz::OptionNotFoundException &e) {
@@ -131,49 +131,59 @@ Meter::Meter(std::list<Option> pOptions) :
 		throw;
 	}
 	switch(_protocol_id) {
-			case meter_protocol_file:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterFile(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
-				break;
-			case meter_protocol_exec:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterExec(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
-				break;
-			case meter_protocol_random:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterRandom(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new NilIdentifier());
-				break;
-			case meter_protocol_s0:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterS0(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
-				break;
-			case meter_protocol_d0:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterD0(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
-				break;
-			case  meter_protocol_sml:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterSML(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
-				break;
-			case meter_protocol_fluksov2:
-				_protocol = vz::protocol::Protocol::Ptr(new MeterFluksoV2(pOptions));
-				_identifier = ReadingIdentifier::Ptr(new ChannelIdentifier());
-				break;
-			default:
-				break;
+		case meter_protocol_file:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterFile(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+			break;
+		case meter_protocol_exec:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterExec(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+			break;
+		case meter_protocol_random:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterRandom(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new NilIdentifier());
+			break;
+		case meter_protocol_s0:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterS0(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+			break;
+		case meter_protocol_d0:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterD0(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+			break;
+		case  meter_protocol_sml:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterSML(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+			break;
+		case meter_protocol_fluksov2:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterFluksoV2(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new ChannelIdentifier());
+			break;
+		default:
+			break;
 	}
 
 	try {
-/* interval */
+		// enable
 		_enable = optlist.lookup_bool(pOptions, "enabled");
 	} catch (vz::OptionNotFoundException &e) {
-		_enable=false; /* bye default meter is disabled */
+		_enable = false; /* bye default meter is disabled */
 	} catch (vz::VZException &e) {
 		print(log_error, "Invalid type for enable", name());
 		throw;
 	}
 
-	print(log_debug, "Meter configured. %s", name(),_enable?"enabled":"disabled");
+	try {
+		// skip
+		_skip = optlist.lookup_bool(pOptions, "allowskip");
+	} catch (vz::OptionNotFoundException &e) {
+		_skip = false; /* by default meter will throw an exception if opening fails */
+	} catch (vz::VZException &e) {
+		print(log_error, "Invalid type for allowskip", name());
+		throw;
+	}
+
+	print(log_debug, "Meter configured, %s.", name(), _enable ? "enabled" : "disabled");
 }
 
 //Meter::Meter(const Meter *mtr) {
@@ -185,9 +195,8 @@ Meter::~Meter() {
 void Meter::open() {
 	if (_protocol->open() < 0) {
 		print(log_error, "Cannot open meter", name());
-		throw vz::ConnectionException("Meteropen failed.");
+		throw vz::ConnectionException("Meter open failed.");
 	}
-
 }
 
 int Meter::close() {
@@ -220,4 +229,3 @@ const meter_details_t * meter_get_details(meter_protocol_t protocol) {
 	}
 	return NULL;
 }
-

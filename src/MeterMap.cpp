@@ -43,18 +43,30 @@
 extern Config_Options options;	/* global application options */
 
 /**
-	 If the meter is enabled, start the meter and all its channels.
+	If the meter is enabled, start the meter and all its channels.
 */
 void MeterMap::start() {
 	if (_meter->isEnabled()) {
-		_meter->open();
+		try {
+			_meter->open();
+		}
+		catch(vz::ConnectionException &e) {
+			if (_meter->skip()) {
+				print(log_warning, "Skipping meter %s", NULL, _meter->name());
+				return;
+			}
+			else {
+				throw;
+			}
+		}
+
 		print(log_info, "Meter connection established", _meter->name());
 		pthread_create(&_thread, NULL, &reading_thread, (void *) this);
 		print(log_debug, "Meter thread started", _meter->name());
 
-		print(log_debug, "meter is opened. Start channels.", _meter->name());
+		print(log_debug, "Meter is opened. Starting channels.", _meter->name());
 		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
-			/* set buffer length for perriodic meters */
+			// set buffer length for perriodic meters
 			if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
 				(*it)->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
 			}
@@ -69,8 +81,8 @@ void MeterMap::start() {
 		print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
 					_meter->protocol()->name().c_str());
 	}
-
 }
+
 bool MeterMap::stopped() {
 	if (_meter->isEnabled()  && running() ) {
 		if (pthread_join(_thread, NULL) == 0 ) {
@@ -89,7 +101,7 @@ bool MeterMap::stopped() {
 
 void MeterMap::cancel() {
 	if (_meter->isEnabled() && running() ) {
-		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
+		for (iterator it = _channels.begin(); it != _channels.end(); it++) {
 			(*it)->cancel();
 			(*it)->join();
 		}
@@ -107,8 +119,8 @@ void MeterMap::registration() {
 	if (!_meter->isEnabled()) {
 		return;
 	}
-	for (iterator ch = _channels.begin(); ch!=_channels.end(); ch++) {
-    // create configured api-interface
+	for (iterator ch = _channels.begin(); ch != _channels.end(); ch++) {
+		// create configured api-interface
 		vz::ApiIF::Ptr api;
 		if ((*ch)->apiProtocol() == "mysmartgrid") {
 			api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(*ch, (*ch)->options()));
@@ -118,7 +130,6 @@ void MeterMap::registration() {
 			print(log_debug, "Using default api:", (*ch)->name());
 		}
 
-		//
 		api->register_device();
 	}
 	printf("..done\n");
