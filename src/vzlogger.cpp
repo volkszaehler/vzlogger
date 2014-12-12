@@ -80,8 +80,7 @@ const struct option long_options[] = {
 const char *long_options_descs[] = {
 	"configuration file",
 	"log file",
-	"run as periodically",
-	"do not run in background",
+	"run in background",
 #ifdef LOCAL_SUPPORT
 	"activate local interface (tiny HTTPd which serves live readings)",
 	"TCP port for HTTPd",
