@@ -36,6 +36,10 @@
 #include <VZException.hpp>
 
 #define DC 0xff // wildcard, dont care
+#define SC_C 96 // special character "C" has obis code 96 according to http://www.mayor.de/lian98/doc.de/pdf/vdew-lh-lastgangzaehler-2127b3.pdf
+#define SC_F 97
+#define SC_L 98
+#define SC_P 99
 
 //const Obis::aliases[] = {
 static obis_alias_t aliases[] = {
@@ -159,8 +163,20 @@ int Obis::parse(const char *str) {
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
 
-		if (isxdigit(byte)) {
-			num = (num * 10) + (byte - '0'); /* parse digits */
+		if (isdigit(byte)) {
+				num = (num * 10) + (byte - '0'); /* parse digits */
+		}
+		else if (byte == 'C') {
+				num = SC_C;
+		}
+		else if (byte == 'F') {
+				num = SC_F;
+		}
+		else if (byte == 'L') {
+				num = SC_L;
+		}
+		else if (byte == 'P') {
+				num = SC_P;
 		}
 		else {
 			if (byte == '-' && field < A) {		/* end of field A */
