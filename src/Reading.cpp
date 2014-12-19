@@ -255,7 +255,7 @@ size_t ChannelIdentifier::unparse(char *buffer, size_t n) {
 }
 
 size_t NilIdentifier::unparse(char *buffer, size_t n) {
-	return snprintf(buffer, n, "NilItentifier");
+	return snprintf(buffer, n, "NilIdentifier");
 //buffer[0] = '\0';
 	//return strlen(buffer);
 }

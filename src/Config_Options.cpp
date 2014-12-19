@@ -234,7 +234,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		else if (strcmp(key, "identifier") == 0 && type == json_type_string) {
 			id_str = json_object_get_string(value);
 		}
-		else if (strcmp(key, "protocol") == 0 && type == json_type_string) {
+		else if (strcmp(key, "api") == 0 && type == json_type_string) {
 			apiProtocol_str = json_object_get_string(value);
 		}
 		else { /* all other options will be passed to meter_init() */
@@ -254,11 +254,11 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		print(log_error, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
-  // check if identifier is set. If not, use default
-  if (id_str == NULL ) {
-		print(log_error, "Identifier is not set. Set it to default value 'NilItentifier'.", NULL);
-    id_str = "NilItentifier";
-  }
+	// check if identifier is set. If not, use default
+	if (id_str == NULL ) {
+		print(log_error, "Identifier is not set. Set it to default value 'NilIdentifier'.", NULL);
+		id_str = "NilIdentifier";
+	}
 	//if (middleware == NULL) {
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
@@ -279,7 +279,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	}
 
 	Channel::Ptr ch(new Channel(options, apiProtocol_str, uuid, id));
-	print(log_info, "New channel initialized (uuid=...%s protocol=%s id=%s)", ch->name(),
+	print(log_info, "New channel initialized (uuid=...%s api=%s id=%s)", ch->name(),
 				uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
 	mapping.push_back(ch);
 }

@@ -32,6 +32,7 @@
 #include <ApiIF.hpp>
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/Null.hpp>
 
 extern Config_Options options;
 
@@ -138,7 +139,7 @@ void * reading_thread(void *arg) {
 					char *dump = (char*)malloc(dump_len);
 
 					if (dump == NULL) {
-						print(log_error, "cannot allocate buffer", (*ch)->name());
+						print(log_error, "Cannot allocate buffer", (*ch)->name());
 					}
 
 					while (dump == NULL || (*ch)->dump(dump, dump_len) == NULL) {
@@ -162,11 +163,11 @@ void * reading_thread(void *arg) {
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Reading-THREAD - reading Got an exception : %s", mtr->name(), e.what());
+		print(log_error, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
 		pthread_exit(0);
 	}
 
-	print(log_debug, "Stop reading.! ", mtr->name());
+	print(log_debug, "Stopped reading. ", mtr->name());
 	//pthread_cleanup_pop(1);
 
 	pthread_exit(0);
@@ -185,14 +186,20 @@ void * logging_thread(void *arg) {
 	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
 				ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
 
-// create configured api-interface
+	// create configured api interfaces
+	// NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
 	vz::ApiIF::Ptr api;
 	if (ch->apiProtocol() == "mysmartgrid") {
 		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
-		print(log_debug, "Using MSG-Api.", ch->name());
+		print(log_debug, "Using MySmartGrid api.", ch->name());
+	}
+	else if (ch->apiProtocol() == "null") {
+		api =  vz::ApiIF::Ptr(new vz::api::Null(ch, ch->options()));
+		print(log_debug, "Using null api- meter data available via local httpd if enabled.", ch->name());
 	} else {
+		// default == volkszaehler
 		api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch, ch->options()));
-		print(log_debug, "Using default api:", ch->name());
+		print(log_debug, "Using default volkszaehler api.", ch->name());
 	}
 
 	//pthread_cleanup_push(&logging_thread_cleanup, &api);
@@ -204,12 +211,12 @@ void * logging_thread(void *arg) {
 			api->send();
 		}
 		catch (std::exception &e) {
-			print(log_error, "logging thread failed due to: %s", ch->name(), e.what());
+			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
 	} while (options.logging());
 
-	print(log_debug, "Stop logging.! (daemon=%d)", ch->name(), options.daemon());
+	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
 	//pthread_cleanup_pop(1);
 

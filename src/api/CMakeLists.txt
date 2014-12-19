@@ -4,6 +4,7 @@
 set(api_srcs
   Volkszaehler.cpp
   MySmartGrid.cpp
+  Null.cpp
   CurlIF.cpp
   CurlCallback.cpp
   CurlResponse.cpp
