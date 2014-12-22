@@ -17,8 +17,8 @@ set(PACKAGE_STRING "${PROJECT_NAME} ${VZLOGGER_RPM_VERSION}")
 set(VERSION "${VZLOGGER_RPM_VERSION}")
 set(CMAKE_VERBOSE_MAKEFILE 1)
 
-# debug build, on by default
-ADD_DEFINITIONS(-g3)
+# uncomment for debug build
+#ADD_DEFINITIONS(-g3)
 
 ###########################################################
 # Where are the additional libraries installed? Note: provide includes
