@@ -71,8 +71,9 @@ protected:
 	 *
 	 * @param list the list entry
 	 * @param rd the reading to store to
+	 * @return true if it is a valid entry
 	 */
-	void _parse(sml_list *list, Reading *rd);
+	bool _parse(sml_list *list, Reading *rd);
 
 	/**
 	 * Open serial port by device

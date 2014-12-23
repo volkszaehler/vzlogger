@@ -47,6 +47,7 @@ class Obis {
 
 	bool isManufacturerSpecific() const;
 	bool isNull() const;
+	bool isValid() const;
 
 	private:
 	int parse(const char *str);

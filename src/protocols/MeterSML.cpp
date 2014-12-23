@@ -225,8 +225,8 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 			entry = body->val_list;
 
 			/* iterating through linked list */
-			for (m = 0; m < n && entry != NULL; m++) {
-				_parse(entry, &rds[m]);
+			for (; m < n && entry != NULL;) {
+				if (_parse(entry, &rds[m])) m++;
 				entry = entry->next;
 			}
 		}
@@ -235,14 +235,12 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	/* free the malloc'd memory */
 	sml_file_free(file);
 
-	return m+1;
+	return m; // return number of successful readings
 }
 
-void MeterSML::_parse(sml_list *entry, Reading *rd) {
+bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 	//int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
-
-	rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
 
 	Obis obis((unsigned char)entry->obj_name->str[0],
 						(unsigned char)entry->obj_name->str[1],
@@ -250,19 +248,34 @@ void MeterSML::_parse(sml_list *entry, Reading *rd) {
 						(unsigned char)entry->obj_name->str[3],
 						(unsigned char)entry->obj_name->str[4],
 						(unsigned char)entry->obj_name->str[5]);
-	ReadingIdentifier *rid(new ObisIdentifier(obis));
-	rd->identifier(rid);
+	if (obis.isValid() && entry->value != NULL){
+		// some entries might contain a string so check type and use proper rd->value(...) call
+		// if the entry does contain a string we can either throw it away or try to convert it to
+		// a value. We throw it away for now as its octet encoded and would need some conversion
+		if (entry->value->type == SML_TYPE_OCTET_STRING){
+			// ignore value for now (entry->value->data.bytes points to something like "3032323830383136"
+			// we don't even create a reading for this:
+			return false;
+		}else{
+			rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
+		}
 
-	// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
-	struct timeval tv;
-	if (entry->val_time) { /* use time from meter */
-		tv.tv_sec = *entry->val_time->data.timestamp;
-		tv.tv_usec = 0;
+		ReadingIdentifier *rid(new ObisIdentifier(obis));
+		rd->identifier(rid);
+
+		// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
+		struct timeval tv;
+		if (entry->val_time) { /* use time from meter */
+			tv.tv_sec = *entry->val_time->data.timestamp;
+			tv.tv_usec = 0;
+		}
+		else {
+			gettimeofday(&tv, NULL); /* use local time */
+		}
+		rd->time(tv);
+		return true;
 	}
-	else {
-		gettimeofday(&tv, NULL); /* use local time */
-	}
-	rd->time(tv);
+	return false;
 }
 
 int MeterSML::_openSocket(const char *node, const char *service) {

@@ -11,4 +11,6 @@ target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
     ${GTEST_LIBS_DIR}/libgtest_main.a
     ${JSON_LIBRARY}
+    ${SML_LIBRARY}
+    ${LIBUUID}
     pthread)
