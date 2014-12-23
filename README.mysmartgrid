@@ -10,13 +10,13 @@ To generate the Unique Ids one can use the command uuidgen
 General channel parameters:
 ===========================
 
-"protocol" can be: "vz" to use the Volkzaehler API
-                 "mysmartgrid" to use the MySmartGrid API
+"api"        can be "volkszaehler" to use the Volkzaehler API (default)
+             "mysmartgrid" to use the MySmartGrid API
 "middleware" defines the specific server url
 "uuid"       defines the Unique ID of the sensor.
 
 example:
-    "protocol"   : "mysmartgrid",
+    "api"        : "mysmartgrid",
     "middleware" : "https://api.mysmartgrid.de:8443",
     "uuid"       : "e0c9dd9a-8f3c-4fc4-8a99-f2393ca60924",
 

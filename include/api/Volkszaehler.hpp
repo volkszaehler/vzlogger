@@ -60,13 +60,13 @@ namespace vz {
 
 			Volkszaehler(Channel::Ptr ch, std::list<Option> options);
 			~Volkszaehler();
-    
+
 			void send();
 
 			void register_device();
 
 			const std::string middleware() const { return _middleware; }
-      
+
 		private:
 			std::string _middleware;
 
@@ -93,9 +93,9 @@ namespace vz {
           // Volatil
 			std::list<Reading> _values;
           uint64_t _last_timestamp; /**< remember last timestamp */
-          
+
 		}; //class Volkszaehler
-  
+
     /**
      * Reformat CURLs debugging output
      */

@@ -39,6 +39,7 @@
 #include <Config_Options.hpp>
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/Null.hpp>
 
 extern Config_Options options;	/* global application options */
 
@@ -84,8 +85,8 @@ void MeterMap::start() {
 }
 
 bool MeterMap::stopped() {
-	if (_meter->isEnabled()  && running() ) {
-		if (pthread_join(_thread, NULL) == 0 ) {
+	if (_meter->isEnabled()  && running()) {
+		if (pthread_join(_thread, NULL) == 0) {
 			_thread_running = false;
 
 			// join channel-threads
@@ -100,7 +101,7 @@ bool MeterMap::stopped() {
 }
 
 void MeterMap::cancel() {
-	if (_meter->isEnabled() && running() ) {
+	if (_meter->isEnabled() && running()) {
 		for (iterator it = _channels.begin(); it != _channels.end(); it++) {
 			(*it)->cancel();
 			(*it)->join();
@@ -120,14 +121,19 @@ void MeterMap::registration() {
 		return;
 	}
 	for (iterator ch = _channels.begin(); ch != _channels.end(); ch++) {
-		// create configured api-interface
+		// create configured api interfaces
+		// NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
 		vz::ApiIF::Ptr api;
 		if ((*ch)->apiProtocol() == "mysmartgrid") {
 			api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(*ch, (*ch)->options()));
-			print(log_debug, "Using MSG-Api.", (*ch)->name());
+			print(log_debug, "Using MySmartGrid api.", (*ch)->name());
+		}
+		else if ((*ch)->apiProtocol() == "null") {
+			api =  vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
+			print(log_debug, "Using null api- meter data available via local httpd if enabled.", (*ch)->name());
 		} else {
 			api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(*ch, (*ch)->options()));
-			print(log_debug, "Using default api:", (*ch)->name());
+			print(log_debug, "Using default volkszaehler api.", (*ch)->name());
 		}
 
 		api->register_device();
