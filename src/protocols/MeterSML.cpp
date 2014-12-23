@@ -201,14 +201,14 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_list *entry;
 
 	if (_pull.size()) {
-		int wlen=write(_fd,_pull.c_str(),_pull.size());
-		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
+		int wlen = write(_fd,_pull.c_str(),_pull.size());
+		print(log_debug,"sending pullsequenz send (len:%d is:%d).", name().c_str(), _pull.size(), wlen);
 	}
 
-	/* wait until a we receive a new datagram from the meter (blocking read) */
+	/* wait until we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
 
-	if (bytes < 16 ) {
+	if (bytes < 16) {
 		print(log_error, "short message from sml_transport_read len=%d", name().c_str(), bytes);
 		return(0);
 	}
