@@ -36,6 +36,10 @@
 #include <VZException.hpp>
 
 #define DC 0xff // wildcard, dont care
+#define SC_C 96 // special character "C" has obis code 96 according to http://www.mayor.de/lian98/doc.de/pdf/vdew-lh-lastgangzaehler-2127b3.pdf
+#define SC_F 97
+#define SC_L 98
+#define SC_P 99
 
 //const Obis::aliases[] = {
 static obis_alias_t aliases[] = {
@@ -159,8 +163,20 @@ int Obis::parse(const char *str) {
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
 
-		if (isxdigit(byte)) {
-			num = (num * 10) + (byte - '0'); /* parse digits */
+		if (isdigit(byte)) {
+				num = (num * 10) + (byte - '0'); /* parse digits */
+		}
+		else if (byte == 'C') {
+				num = SC_C;
+		}
+		else if (byte == 'F') {
+				num = SC_F;
+		}
+		else if (byte == 'L') {
+				num = SC_L;
+		}
+		else if (byte == 'P') {
+				num = SC_P;
 		}
 		else {
 			if (byte == '-' && field < A) {		/* end of field A */
@@ -259,6 +275,36 @@ bool Obis::isManufacturerSpecific() const {
 		(_obisId.groups.quantities >= 128 && _obisId.groups.quantities <= 254) ||
 		(_obisId.groups.storage >= 128 && _obisId.groups.storage <= 254)
 		);
+}
+
+bool Obis::isValid() const {
+	// check validity according to V2.2 from 1.4.2013:
+	// This is just a basic sanity check as the OBIS are not strictly defined.
+
+	// A: 0..9
+	switch (_obisId._raw[0]){
+	case 0: // abstract objects
+	case 1: // electr.
+	case 2: // not def?
+	case 3: // not def?
+	case 4: // Heizkostenvert.
+	case 5: // Kaelte
+	case 6: // Waerme
+	case 7: // Gas
+	case 8: // water (cold)
+	case 9: // water (warm)
+		break;
+	default:
+		return false;
+	}
+
+	// B 0 - 64
+	if (_obisId._raw[1]>64) return false;
+
+	// don't check C, D, E yet, has many special values
+	// F 0..99 or ff
+	if ((_obisId._raw[5] != 0xff) && (_obisId._raw[5]>99)) return false;
+	return true;
 }
 
 /*
