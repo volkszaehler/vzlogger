@@ -244,7 +244,6 @@ void quit(int sig) {
  * @return int 0 on succes, <0 on error
  */
 int config_parse_cli(int argc, char * argv[], Config_Options * options) {
-	options->local(1);
 	while (1) {
 		int c = getopt_long(argc, argv, "c:o:p:lhrVdfv:", long_options, NULL);
 
@@ -380,7 +379,7 @@ int main(int argc, char *argv[]) {
 		daemonize();
 	}
 	else {
-		print(log_info, "Not daemonizing process...", (char*)0);
+		print(log_info, "Process not  daemonized...", (char*)0);
 	}
 
 	/* open logfile */
