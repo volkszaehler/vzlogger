@@ -212,3 +212,39 @@ TEST(MeterD0, LandisGyr_basic) {
 	EXPECT_EQ(0, unlink(tempfilename));
 }
 
+TEST(MeterD0, SLB_DC3_basic)
+{
+	/* problem from http://volkszaehler.org/pipermail/volkszaehler-users/2014-December/005065.html
+	 * meter uses EDIS not OBIS. See here for difference: http://www.emsycon.de/downloads/Note0503_683.pdf
+[Dec 23 11:59:07][d0]   Pull answer (vendor=SLB, baudrate=4, identification=\@DC341TMPBF2ZAK)
+[Dec 23 11:59:11][d0]   Sending ack sequence send (len:6 is:6,041
+).
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte  hex= 2
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte F hex= 46
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte . hex= 2E
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte F hex= 46
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte ( hex= 28
+[Dec 23 11:59:11][d0]   Parsed reading (OBIS code=F.F, value=00000000, unit=)
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte
+ hex= A
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte 0 hex= 30
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte . hex= 2E
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte 0 hex= 30
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte . hex= 2E
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte 0 hex= 30
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte ( hex= 28
+[Dec 23 11:59:11][d0]   Parsed reading (OBIS code=0.0.0, value=02538883, unit=)
+[Dec 23 11:59:11][d0]   DEBUG OBIS_CODE byte
+ hex= A
+
+	 *
+	 */
+
+	// for this meter it's important to have no wildcard logic as
+	// otherwise the history data confuse the real data
+	// let's check a simple case for now:
+	ASSERT_EQ(Obis("1.8.0"), Obis(255,255,1,8,0,255));
+	ASSERT_FALSE(Obis("1.8.0*1")==Obis("1.8.0"));
+	ASSERT_EQ(Obis("1.8.0*1"), Obis(255,255,1,8,0,1));
+
+}

@@ -35,7 +35,7 @@
 #include "common.h"
 #include <VZException.hpp>
 
-#define DC 0xff // wildcard, dont care
+#define DC 0xff // not specified/not given
 #define SC_C 96 // special character "C" has obis code 96 according to http://www.mayor.de/lian98/doc.de/pdf/vdew-lh-lastgangzaehler-2127b3.pdf
 #define SC_F 97
 #define SC_L 98
@@ -43,10 +43,10 @@
 
 //const Obis::aliases[] = {
 static obis_alias_t aliases[] = {
-/*   A    B    C    D    E    F    alias		description
-		 ====================================================================*/
+//   A    B    C    D    E    F    alias		description
+//   ====================================================================
 
-/* general */
+// general
 	{Obis(  1,   0,   1,   7,  DC,  DC), "power",		"Wirkleistung  (Summe)"},
 	{Obis(  1,   0,  21,   7,  DC,  DC), "power-l1",		"Wirkleistung  (Phase 1)"},
 	{Obis(  1,   0,  41,   7,  DC,  DC), "power-l2",		"Wirkleistung  (Phase 2)"},
@@ -71,29 +71,29 @@ static obis_alias_t aliases[] = {
 	{Obis(  1,   0,   1,   8,	DC, DC), "counter",		"Zaehlerstand Wirkleistung"},
 	{Obis(  1,   0,   2,   8,  DC, DC), "counter-out",	"Zaehlerstand Lieferg."},
 
-/* Easymeter */
+// Easymeter
 
-/* ESYQ3B (Easymeter Q3B) */
+// ESYQ3B (Easymeter Q3B)
 	{Obis(  1,   0,   1,   8,   1,  DC), "esy-counter-t1",	"Active Power Counter Tariff 1"},
 	{Obis(  1,   0,   1,   8,   2,  DC), "esy-counter-t2",	"Active Power Counter Tariff 2"},
 //{Obis(129, 129, 199, 130,   3,  DC), "",		""}, // ???
 
-/* ESYQ3D (Easymeter Q3D) */
+// ESYQ3D (Easymeter Q3D)
 //{Obis(  0,   0,   0,   0,   0,  DC), "",		""}, // ???
 
-/* HAG eHZ010C_EHZ1WA02 (Hager eHz) */
+// HAG eHZ010C_EHZ1WA02 (Hager eHz)
 	{Obis(  1,   0,   0,   0,   0,  DC), "hag-id",		"Eigentumsnr."},
-	{Obis(  1,   0,  96,  50,   0,   0), "hag-status",	"Netz Status"},			/* bitcodiert: Drehfeld, Anlaufschwelle, Energierichtung */
-	{Obis(  1,   0,  96,  50,   0,   1), "hag-frequency",	"Netz Periode"},		/* hexadezimal (Einheit 1/100 ms) */
-	{Obis(  1,   0,  96,  50,   0,   2), "hag-temp",		"aktuelle Chiptemperatur"},	/* hexadezimal, Einheit °C */
+	{Obis(  1,   0,  96,  50,   0,   0), "hag-status",	"Netz Status"},			// bitcodiert: Drehfeld, Anlaufschwelle, Energierichtung
+	{Obis(  1,   0,  96,  50,   0,   1), "hag-frequency",	"Netz Periode"},		// hexadezimal (Einheit 1/100 ms)
+	{Obis(  1,   0,  96,  50,   0,   2), "hag-temp",		"aktuelle Chiptemperatur"},	// hexadezimal, Einheit °C
 	{Obis(  1,   0,  96,  50,   0,   3), "hag-temp-min",	"minimale Chiptemperatur"},
 	{Obis(  1,   0,  96,  50,   0,   4), "hag-temp-avg",	"gemittelte Chiptemperatur"},
 	{Obis(  1,   0,  96,  50,   0,   5), "hag-temp-max",	"maximale Chiptemperatur"},
 	{Obis(  1,   0,  96,  50,   0,   6), "hag-check",		"Kontrollnr."},
 	{Obis(  1,   0,  96,  50,   0,   7), "hag-diag",		"Diagnose"},
 
-//{} /* stop condition for iterator */
-	{Obis(  0,   0,  0,  0,   0,   0), NULL,		NULL},
+//{} stop condition for iterator
+	{Obis(  DC,   DC,  DC,  DC,   DC,   DC), NULL,		NULL},
 };
 
 
@@ -119,13 +119,6 @@ Obis::Obis(
 }
 
 Obis::Obis(const char *strClear) {
-	//if (raw == NULL) {
-	// TODO why not initialize with DC fields to accept all readings?
-	//memset(_obisId._raw, 0, 6); /* initialize with zeros */
-	//}
-	//else {
-	//	memcpy(_obisId._raw, raw, 6);
-	//}
 	if (parse(strClear) != SUCCESS) {
 		// check alias
 		if (lookup_alias(strClear) == SUCCESS) {
@@ -136,79 +129,95 @@ Obis::Obis(const char *strClear) {
 }
 
 Obis::Obis(){
-	_obisId._raw[0]=0;
-	_obisId._raw[1]=0;
-	_obisId._raw[2]=0;
-	_obisId._raw[3]=0;
-	_obisId._raw[4]=0;
-	_obisId._raw[5]=0;
+	// to be more consistent we initialize with DC/255.
+	_obisId._raw[0]=DC;
+	_obisId._raw[1]=DC;
+	_obisId._raw[2]=DC;
+	_obisId._raw[3]=DC;
+	_obisId._raw[4]=DC;
+	_obisId._raw[5]=DC;
 }
 
 
 int Obis::parse(const char *str) {
 	enum { A = 0, B, C, D, E, F };
 
-	char byte; 	/* currently processed byte */
+	char byte; 	// currently processed byte
 	int num;
 	int field;
 	int len = strlen(str);
+	int digit=0;
+	bool has_sc=false;
 
 	num = byte = 0;
 	field = -1;
-	memset(&_obisId._raw, 0xff, 6); /* initialize as wildcard */
+	memset(&_obisId._raw, DC, 6); // initialize as "not given"
 
-	/* format: "A-B:C.D.E[*&]F" */
-	/* fields A, B, E, F are optional */
-	/* fields C & D are mandatory */
+	// format: "A-B:C.D.E[*&]F"
+	// fields A, B, E, F are optional
+	// fields C & D are mandatory
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
+		digit++; // count number of digits for this field
 
 		if (isdigit(byte)) {
-				num = (num * 10) + (byte - '0'); /* parse digits */
+				if (has_sc) return ERR; // no F1,... allowed.
+				num = (num * 10) + (byte - '0'); // parse digits
 		}
 		else if (byte == 'C') {
 				num = SC_C;
+				has_sc = true;
+				if (digit>1) return ERR; // no CC, FF,... allowed, not even " C" (space and special char)
 		}
 		else if (byte == 'F') {
 				num = SC_F;
+				has_sc = true;
+				if (digit>1) return ERR;
 		}
 		else if (byte == 'L') {
 				num = SC_L;
+				has_sc = true;
+				if (digit>1) return ERR;
 		}
 		else if (byte == 'P') {
+				has_sc = true;
 				num = SC_P;
+				if (digit>1) return ERR;
 		}
 		else {
-			if (byte == '-' && field < A) {		/* end of field A */
+			if (byte == '-' && field < A) {		// end of field A
 				field = A;
 			}
-			else if (byte == ':' && field < B) {	/* end of field B */
+			else if (byte == ':' && field < B) {	// end of field B
 				field = B;
 			}
-			else if (byte == '.' && field < D) {	/* end of field C & D*/
+			else if (byte == '.' && field < D) {	// end of field C & D
 				field = (field < C) ? C : D;
 			}
-			else if ((byte == '*' || byte == '&') && field == D) { /* end of field E, start of field F */
+			else if ((byte == '*' || byte == '&') && field == D) { // end of field E, start of field F
 				field = E;
 			}
 			else {
 				return ERR;
 			}
 
+			if ((num<0) || (num>255)) return ERR; // sanity check
 			_obisId._raw[field] = num;
 			num = 0;
+			digit = 0;
+			has_sc = false;
 		}
 	}
 
-	/* set last field */
+	// set last field
 	_obisId._raw[++field] = num;
 
-	/* fields C & D are mandatory */
+	// fields C & D are mandatory
 	return (field < D) ? ERR : SUCCESS;
 }
 
 int Obis::lookup_alias(const char *alias) {
-	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isNull(); it++) {
+	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isAllNotGiven(); it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*this = it->id;
 			return SUCCESS;
@@ -241,8 +250,8 @@ size_t Obis::unparse(char *buffer, size_t n) {
 
 bool Obis::operator==(const Obis &rhs) const {
 	for (int i = 0; i < 6; i++) {
-		if (_obisId._raw[i] == rhs._obisId._raw[i] || _obisId._raw[i] == 0xff || rhs._obisId._raw[i] == 0xff ) {
-			continue; /* skip on wildcard or equal */
+		if (_obisId._raw[i] == rhs._obisId._raw[i] ) { // DC/255/0xff not treated as wildcard anymore
+			continue; // skip equal
 		}
 		else if (_obisId._raw[i] < rhs._obisId._raw[i]) {
 			return 0;
@@ -252,18 +261,11 @@ bool Obis::operator==(const Obis &rhs) const {
 		}
 	}
 
-	return 1; /* equal */
+	return 1; // equal
 }
 
-bool Obis::isNull() const {
-	return !(
-		_obisId._raw[0] ||
-		_obisId._raw[1] ||
-		_obisId._raw[2] ||
-		_obisId._raw[3] ||
-		_obisId._raw[4] ||
-		_obisId._raw[5]
-		);
+bool Obis::isAllNotGiven() const {
+	return *this == Obis(); // compare this one with empty one from default constructor
 }
 
 bool Obis::isManufacturerSpecific() const {
@@ -307,21 +309,4 @@ bool Obis::isValid() const {
 	return true;
 }
 
-/*
-	bool ObisIdentifier::operator==(ReadingIdentifier &cmp) {
-	return (obis_compare(a.obis, b.obis) == 0);
-	}
-
-	void ObisIdentifier::parse(const char *string) {
-	if (obis_parse(string, &id->obis) != SUCCESS) {
-	if (obis_lookup_alias(string, &id->obis) != SUCCESS) {
-	throw new Exception("Failed to parse OBIS id");
-	}
-	}
-	}
-
-	size_t ObisIdentifier::unparse(char *buffer, size_t n) {
-	return obis_unparse(id.obis, buffer, n);
-	}
-*/
 

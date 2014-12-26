@@ -33,8 +33,8 @@
 class Obis {
 	public:
 	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
-	Obis(const char *strClear);
-	Obis();
+	Obis(const char *strClear); /* attention: no hex codes inside the strings! Only special characters "C, F, L, P" allowed. */
+	Obis(); // initializes to "not given" = all DC/255.
 
 	//static Obis lookup(const char *alias);
 
@@ -46,7 +46,7 @@ class Obis {
 	bool operator==(const Obis &rhs) const;
 
 	bool isManufacturerSpecific() const;
-	bool isNull() const;
+	bool isAllNotGiven() const; // check whether all are not given (=DC/255)
 	bool isValid() const;
 
 	private:
