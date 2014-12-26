@@ -35,7 +35,7 @@
 #include "common.h"
 #include <VZException.hpp>
 
-#define DC 0xff // wildcard, dont care
+#define DC 0xff // not specified/not given
 #define SC_C 96 // special character "C" has obis code 96 according to http://www.mayor.de/lian98/doc.de/pdf/vdew-lh-lastgangzaehler-2127b3.pdf
 #define SC_F 97
 #define SC_L 98
@@ -93,7 +93,7 @@ static obis_alias_t aliases[] = {
 	{Obis(  1,   0,  96,  50,   0,   7), "hag-diag",		"Diagnose"},
 
 //{} /* stop condition for iterator */
-	{Obis(  0,   0,  0,  0,   0,   0), NULL,		NULL},
+	{Obis(  DC,   DC,  DC,  DC,   DC,   DC), NULL,		NULL},
 };
 
 
@@ -119,13 +119,6 @@ Obis::Obis(
 }
 
 Obis::Obis(const char *strClear) {
-	//if (raw == NULL) {
-	// TODO why not initialize with DC fields to accept all readings?
-	//memset(_obisId._raw, 0, 6); /* initialize with zeros */
-	//}
-	//else {
-	//	memcpy(_obisId._raw, raw, 6);
-	//}
 	if (parse(strClear) != SUCCESS) {
 		// check alias
 		if (lookup_alias(strClear) == SUCCESS) {
@@ -136,12 +129,13 @@ Obis::Obis(const char *strClear) {
 }
 
 Obis::Obis(){
-	_obisId._raw[0]=0;
-	_obisId._raw[1]=0;
-	_obisId._raw[2]=0;
-	_obisId._raw[3]=0;
-	_obisId._raw[4]=0;
-	_obisId._raw[5]=0;
+	// to be more consistent we initialize with DC/255.
+	_obisId._raw[0]=255;
+	_obisId._raw[1]=255;
+	_obisId._raw[2]=255;
+	_obisId._raw[3]=255;
+	_obisId._raw[4]=255;
+	_obisId._raw[5]=255;
 }
 
 
@@ -152,31 +146,43 @@ int Obis::parse(const char *str) {
 	int num;
 	int field;
 	int len = strlen(str);
+	int digit=0;
+	bool has_sc=false;
 
 	num = byte = 0;
 	field = -1;
-	memset(&_obisId._raw, 0xff, 6); /* initialize as wildcard */
+	memset(&_obisId._raw, 0xff, 6); /* initialize as "not given" */
 
 	/* format: "A-B:C.D.E[*&]F" */
 	/* fields A, B, E, F are optional */
 	/* fields C & D are mandatory */
 	for (int i = 0; i < len; i++) {
 		byte = str[i];
+		digit++; // count number of digits for this field
 
 		if (isdigit(byte)) {
+				if (has_sc) return ERR; // no F1,... allowed.
 				num = (num * 10) + (byte - '0'); /* parse digits */
 		}
 		else if (byte == 'C') {
 				num = SC_C;
+				has_sc = true;
+				if (digit>1) return ERR; // no CC, FF,... allowed, not even " C" (space and special char)
 		}
 		else if (byte == 'F') {
 				num = SC_F;
+				has_sc = true;
+				if (digit>1) return ERR;
 		}
 		else if (byte == 'L') {
 				num = SC_L;
+				has_sc = true;
+				if (digit>1) return ERR;
 		}
 		else if (byte == 'P') {
+				has_sc = true;
 				num = SC_P;
+				if (digit>1) return ERR;
 		}
 		else {
 			if (byte == '-' && field < A) {		/* end of field A */
@@ -195,8 +201,11 @@ int Obis::parse(const char *str) {
 				return ERR;
 			}
 
+			if ((num<0) || (num>255)) return ERR; // sanity check
 			_obisId._raw[field] = num;
 			num = 0;
+			digit = 0;
+			has_sc = false;
 		}
 	}
 
@@ -208,7 +217,7 @@ int Obis::parse(const char *str) {
 }
 
 int Obis::lookup_alias(const char *alias) {
-	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isNull(); it++) {
+	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isAllNotGiven(); it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*this = it->id;
 			return SUCCESS;
@@ -241,8 +250,8 @@ size_t Obis::unparse(char *buffer, size_t n) {
 
 bool Obis::operator==(const Obis &rhs) const {
 	for (int i = 0; i < 6; i++) {
-		if (_obisId._raw[i] == rhs._obisId._raw[i] || _obisId._raw[i] == 0xff || rhs._obisId._raw[i] == 0xff ) {
-			continue; /* skip on wildcard or equal */
+		if (_obisId._raw[i] == rhs._obisId._raw[i] ) { // DC/255/0xff not treated as wildcard anymore
+			continue; /* skip equal */
 		}
 		else if (_obisId._raw[i] < rhs._obisId._raw[i]) {
 			return 0;
@@ -255,15 +264,8 @@ bool Obis::operator==(const Obis &rhs) const {
 	return 1; /* equal */
 }
 
-bool Obis::isNull() const {
-	return !(
-		_obisId._raw[0] ||
-		_obisId._raw[1] ||
-		_obisId._raw[2] ||
-		_obisId._raw[3] ||
-		_obisId._raw[4] ||
-		_obisId._raw[5]
-		);
+bool Obis::isAllNotGiven() const {
+	return operator==(Obis()); // compare this one with empty one
 }
 
 bool Obis::isManufacturerSpecific() const {

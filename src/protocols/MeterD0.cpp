@@ -468,12 +468,15 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 						if ((obis_code[0] == '1') || (obis_code[0] == '2')) { // removed || (obis_code[0]=='C')  to fix crash on Landis & Gyr E350
 							/*print(log_debug, "DEBUG END_LINE Obis code = %s value %s ",name().c_str(), obis_code, value);*/
-							Obis obis(obis_code);
-							ReadingIdentifier *rid(new ObisIdentifier(obis));
-							rds[number_of_tuples].identifier(rid);
-							rds[number_of_tuples].time();
-							byte_iterator = 0;
-							number_of_tuples++;
+							try {
+								Obis obis(obis_code);
+								ReadingIdentifier *rid(new ObisIdentifier(obis));
+								rds[number_of_tuples].identifier(rid);
+								rds[number_of_tuples].time();
+								number_of_tuples++;
+							} catch (vz::VZException &e) {
+								print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
+							}
 						}
 					}
 					byte_iterator = 0;
