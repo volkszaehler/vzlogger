@@ -13,6 +13,8 @@ TEST(Obis, Obis_basic) {
 
 	// 2nd constructor:
 	Obis o2(0x1, 0x2, 0x3, 0x4, 0x5, 0x6);
+	ASSERT_FALSE(o1 == o2);
+	ASSERT_FALSE(o2.isAllNotGiven());
 	ASSERT_EQ(o2, o2); // check comparison op.
 	// 3rd constructor:
 	Obis o3("1-2:3.4.5*6");
