@@ -240,9 +240,12 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 	enum { START, VENDOR, BAUDRATE, IDENTIFICATION, ACK, START_LINE, OBIS_CODE, VALUE, UNIT, END_LINE, END } context;
 
 	bool error_flag = false;
-	char vendor[3+1];			/* 3 upper case vendor + '\0' termination */
-	char identification[16+1];	/* 16 meter specific + '\0' termination */
-	char obis_code[16+1];		/* A-B:C.D.E*F
+	const int VENDOR_LEN = 3;
+	char vendor[VENDOR_LEN +1];			/* 3 upper case vendor + '\0' termination */
+	const int IDENTIFICATION_LEN = 16;
+	char identification[IDENTIFICATION_LEN +1];	/* 16 meter specific + '\0' termination */
+	const int OBIS_LEN = 16;
+	char obis_code[OBIS_LEN +1];		/* A-B:C.D.E*F
 								   fields A, B, E, F are optional
 								   fields C & D are mandatory
 								   A: energy type; 1: energy
@@ -264,8 +267,10 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 								   E: further processing or classification of quantities
 								   F: storage of data
 								   see DIN-EN-62056-61 */
-	char value[32+1];			/* value, i.e. the actual reading */
-	char unit[16+1];			/* the unit of the value, e.g. kWh, V, ... */
+	const int VALUE_LEN = 32;
+	char value[VALUE_LEN+1];			/* value, i.e. the actual reading */
+	const int UNIT_LEN = 16;
+	char unit[UNIT_LEN+1];			/* the unit of the value, e.g. kWh, V, ... */
 
 	char baudrate;				/* 1 byte for */
 	char byte,lastbyte;			/* we parse our input byte wise */
@@ -368,7 +373,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 				if (!isalpha(byte)) goto error;				// Vendor ID needs to be alpha
 				vendor[byte_iterator++] = byte;				// read next byte
-				if (byte_iterator >= 3) {					// after 3rd byte
+				if (byte_iterator >= VENDOR_LEN) {					// after 3rd byte
 					vendor[byte_iterator] = '\0';			// termination
 					byte_iterator = 0;						// reset byte counter
 					context = BAUDRATE;						// set new context: VENDOR -> BAUDRATE
@@ -395,7 +400,11 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						//error_flag=true;
 					}
 					else {
-						identification[byte_iterator++] = byte;
+						if (byte_iterator<IDENTIFICATION_LEN)
+							identification[byte_iterator++] = byte;
+						else
+							print(log_error, "Too much data for identification (byte=0x%X)",
+									name().c_str(), byte);
 					}
 					//break;
 				}
@@ -428,12 +437,18 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						byte_iterator = 0;
 						context = VALUE;
 					}
-					else obis_code[byte_iterator++] = byte;
+					else {
+						if (byte_iterator < OBIS_LEN)
+							obis_code[byte_iterator++] = byte;
+						else
+							print(log_error, "Too much data for obis_code (byte=0x%X)",
+															name().c_str(), byte);
+					}
 				}
 				break;
 
 			case VALUE:
-				/*print(log_debug, "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);*/
+				print(log_debug, "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);
 				if ((byte == '*') || (byte == ')')) {
 					value[byte_iterator] = '\0';
 					byte_iterator = 0;
@@ -446,7 +461,13 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						context = UNIT;
 					}
 				}
-				else value[byte_iterator++] = byte;
+				else {
+					if (byte_iterator < VALUE_LEN)
+						value[byte_iterator++] = byte;
+					else
+						print(log_error, "Too much data for value (byte=0x%X)",
+															name().c_str(), byte);
+				}
 				break;
 
 			case UNIT:
@@ -455,7 +476,13 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					byte_iterator = 0;
 					context = END_LINE;
 				}
-				else unit[byte_iterator++] = byte;
+				else {
+					if (byte_iterator < UNIT_LEN)
+						unit[byte_iterator++] = byte;
+					else
+						print(log_error, "Too much data for unit (byte=0x%X)",
+															name().c_str(), byte);
+				}
 				break;
 
 			case END_LINE:
