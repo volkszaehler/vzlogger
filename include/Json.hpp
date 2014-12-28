@@ -1,7 +1,7 @@
 #ifndef _Json_hpp_
 #define _Json_hpp_
 
-#include <json/json.h>
+#include <json-c/json.h>
 #include <shared_ptr.hpp>
 
 

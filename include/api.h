@@ -28,7 +28,7 @@
 
 #include <stddef.h>
 #include <curl/curl.h>
-#include <json/json.h>
+#include <json-c/json.h>
 #include <sys/time.h>
 
 #include "buffer.h"
