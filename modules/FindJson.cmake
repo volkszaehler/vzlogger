@@ -12,7 +12,7 @@ IF (NOT WIN32)
   include(FindPkgConfig)
   if ( PKG_CONFIG_FOUND )
 
-     pkg_check_modules (PC_JSON json>=0.9)
+     pkg_check_modules (PC_JSON json>=0.12)
 
      set(JSON_DEFINITIONS ${PC_JSON_CFLAGS_OTHER})
   endif(PKG_CONFIG_FOUND)
@@ -70,7 +70,7 @@ ENDIF( JSON_HOME )
 
 message("Jsoon search: '${_json_INCLUDE_SEARCH_DIRS}' ${CMAKE_INCLUDE_PATH}")
 # find the include files
-FIND_PATH(JSON_INCLUDE_DIR json/json.h
+FIND_PATH(JSON_INCLUDE_DIR json-c/json.h
    HINTS
      ${_json_INCLUDE_SEARCH_DIRS}
      ${PC_JSON_INCLUDEDIR}
@@ -82,7 +82,7 @@ FIND_PATH(JSON_INCLUDE_DIR json/json.h
 IF(WIN32)
   SET(JSON_LIBRARY_NAMES ${JSON_LIBRARY_NAMES} libjson.lib)
 ELSE(WIN32)
-  SET(JSON_LIBRARY_NAMES ${JSON_LIBRARY_NAMES} libjson.a)
+  SET(JSON_LIBRARY_NAMES ${JSON_LIBRARY_NAMES} libjson-c.a)
 ENDIF(WIN32)
 FIND_LIBRARY(JSON_LIBRARY NAMES ${JSON_LIBRARY_NAMES}
   HINTS

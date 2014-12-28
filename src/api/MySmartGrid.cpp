@@ -332,16 +332,19 @@ void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 																			_response->get_response().size());
 
 	if (json_tok->err == json_tokener_success) {
-		struct json_object *json_obj = json_object_object_get(json_obj_in, "exception");
-
-		if (json_obj) {
+		struct json_object *json_obj;
+		bool found = json_object_object_get_ex(json_obj_in, "exception", &json_obj);
+		if (found && json_obj) {
+		  struct json_object *j2=0, *j3=0;
+		  (void)json_object_object_get_ex(json_obj, "type", &j2); // we rely on ..._get_string to handle null
+		  (void)json_object_object_get_ex(json_obj, "message", &j3); // we rely on ..._get_string to handle null
 			snprintf(err, n, "%s: %s",
-							 json_object_get_string(json_object_object_get(json_obj,  "type")),
-							 json_object_get_string(json_object_object_get(json_obj,  "message"))
+							 json_object_get_string(j2),
+							 json_object_get_string(j3)
 							 );
 		} else {
-			json_obj = json_object_object_get(json_obj_in, "response");
-			if (json_obj) {
+			bool found = json_object_object_get_ex(json_obj_in, "response", &json_obj);
+			if (found && json_obj) {
 				snprintf(err, n, "Server-Error: %s", json_object_get_string(json_obj));
 			} else {
 				print(log_debug, "CURL - Resp: '%s'", channel()->name(), _response->get_response().c_str());
@@ -350,7 +353,7 @@ void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 		}
 	}
 	else {
-		strncpy(err, json_tokener_errors[json_tok->err], n);
+		strncpy(err, json_tokener_error_desc(json_tok->err), n);
 	}
 
 	json_object_put(json_obj_in);

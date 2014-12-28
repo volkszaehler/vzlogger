@@ -12,8 +12,21 @@ notifications:
     irc: "chat.freenode.net#volkszaehler.org"
 
 before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update -qq
-  - sudo apt-get install -y libjson0-dev libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime
+# install json-c
+  - sudo apt-get install build-essential
+  - sudo apt-get install wget
+  - sudo apt-get install libtool
+  - git clone -b json-c-0.12 https://github.com/json-c/json-c
+  - cd json-c
+  - sh autogen.sh
+  - ./configure
+  - make
+  - sudo make install
+  - cd ..
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime
 # -- get libsml --
   - git clone https://github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
   - cd libsml 
