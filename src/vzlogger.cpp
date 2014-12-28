@@ -49,7 +49,7 @@
 #ifdef LOCAL_SUPPORT
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
-
+#include "gitSha1.h"
 
 MapContainer mappings;		// mapping between meters and channels
 Config_Options options;		// global application options
@@ -279,6 +279,7 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 
 				case 'V':
 					printf("%s\n", VERSION);
+					printf(" based on git version: %s\n", g_GIT_SHALONG);
 					exit(EXIT_SUCCESS);
 					break;
 
