@@ -91,7 +91,7 @@ using namespace vz::api;
 	//ASSERT_STREQ("'UniqueConstraintViolationException': '2 Duplicate entry'", err);	
 	Volkszaehler_Test::values(v).push_front(Reading());
 	Volkszaehler_Test::api_parse_exception(v, resp, err, n);
-	ASSERT_EQ(0, Volkszaehler_Test::values(v).size());
+	ASSERT_TRUE(0 == Volkszaehler_Test::values(v).size());
 	ASSERT_STREQ("'UniqueConstraintViolationException': '2 Duplicate entry'", err);	
 	
 	delete [] err;
