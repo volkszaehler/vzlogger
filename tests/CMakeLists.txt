@@ -13,4 +13,7 @@ target_link_libraries(vzlogger_unit_tests
     ${JSON_LIBRARY}
     ${SML_LIBRARY}
     ${LIBUUID}
+    dl
     pthread)
+target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES})
+

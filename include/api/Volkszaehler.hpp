@@ -84,7 +84,8 @@ namespace vz {
       /**
        * Parses JSON encoded exception and stores describtion in err
        */
-			void api_parse_exception(CURLresponse response, char *err, size_t n);
+       	friend class Volkszaehler_Test;
+       	void api_parse_exception(CURLresponse response, char *err, size_t n);
 
 
 		private:
