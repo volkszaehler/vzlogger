@@ -65,6 +65,7 @@ if(ENABLE_LOCAL)
   include(FindMicroHttpd)
   if(MICROHTTPD_FOUND)
     set(MICROHTTPD_SUPPORT 1)
+    set(LOCAL_SUPPORT 1)
   endif(MICROHTTPD_FOUND)
 endif(ENABLE_LOCAL)
 
