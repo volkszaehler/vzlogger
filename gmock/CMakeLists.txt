@@ -3,7 +3,7 @@ project(gmock_builder C CXX)
 include(ExternalProject)
 
 ExternalProject_Add(googlemock
-    SVN_REPOSITORY http://googlemock.googlecode.com/svn/trunk
+    SVN_REPOSITORY http://googlemock.googlecode.com/svn/tags/release-1.7.0/
     CMAKE_ARGS
      PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
 # Disable install step
