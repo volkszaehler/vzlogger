@@ -26,6 +26,12 @@ ADD_DEFINITIONS(-g3)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 include (UseCodeCoverage)
 
+# get git sha1 as additional version:
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+git_describe(GIT_SHALONG --always --abbrev=10 --long --all --dirty )
+
+
 message("Compiling for target '${TARGET}'")
 if( TARGET )
   if( ${TARGET} STREQUAL "ar71xx")

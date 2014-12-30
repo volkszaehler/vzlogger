@@ -16,11 +16,13 @@ else(ENABLE_LOCAL)
   set(local_srcs "")
 endif(ENABLE_LOCAL)
 
+configure_file("${CMAKE_SOURCE_DIR}/src/gitSha1.cpp.in" "${CMAKE_BINARY_DIR}/gitSha1.cpp" @ONLY)
 
 set(vzlogger_srcs
   vzlogger.cpp 
   ltqnorm.cpp
   Meter.cpp
+  ${CMAKE_BINARY_DIR}/gitSha1.cpp
 )
 
 set(libvz_srcs 

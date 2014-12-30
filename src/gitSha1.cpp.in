@@ -1,0 +1,6 @@
+#include "gitSha1.h"
+#define GIT_SHA1 "@GIT_SHA1@"
+#define GIT_SHALONG "@GIT_SHALONG@"
+const char g_GIT_SHA1[] = GIT_SHA1;
+const char g_GIT_SHALONG[] = GIT_SHALONG;
+
