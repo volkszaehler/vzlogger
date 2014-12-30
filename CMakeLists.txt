@@ -128,7 +128,7 @@ message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 
 if( NOT SML_FOUND)
-  message(FATAL_ERROR "libsml ist required.
+  message(WARNING "libsml ist required.
 Install libsml or call cmake -DSML_HOME=path_to_sml_install")
 endif( NOT SML_FOUND)
 if( NOT MICROHTTPD_FOUND )
