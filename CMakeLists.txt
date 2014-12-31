@@ -111,9 +111,10 @@ myconfigure_file(
   )
 
 add_subdirectory(src)
+
 find_package(Subversion)
 if(Subversion_FOUND)
-  add_subdirectory(gtest)
+  add_subdirectory(gmock)
   add_subdirectory(tests)
 else()
   message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
