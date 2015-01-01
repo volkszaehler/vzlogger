@@ -113,11 +113,28 @@ myconfigure_file(
 add_subdirectory(src)
 
 find_package(Subversion)
-if(Subversion_FOUND)
+
+set(ENABLE_GOOGLEMOCK TRUE)
+#disable unit tests on gcc4.6 (problems with googlemock 1.7)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # require at least gcc 4.8
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
+       OUTPUT_VARIABLE GOOGLETEST_GCC_COMPILER_VERSION)
+# on travis-ci the CMAKE_CXX_COMPILER_VERSION is empty!    message(WARNING "Using compiler: ${CMAKE_CXX_COMPILER_VERSION} ${GOOGLETEST_GCC_COMPILER_VERSION}") 
+    if (GOOGLETEST_GCC_COMPILER_VERSION VERSION_LESS 4.8)
+        message(WARNING "Disabled googlemock/-test tests due to GCC version < 4.8!")
+	set(ENABLE_GOOGLEMOCK FALSE)
+    endif()
+endif()
+
+
+if(Subversion_FOUND AND ENABLE_GOOGLEMOCK)
   add_subdirectory(gmock)
   add_subdirectory(tests)
 else()
-  message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
+  if (ENABLE_GOOGLEMOCK)
+   message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
+  endif()
 endif()
 # enable unit testing
 include(CTest)
