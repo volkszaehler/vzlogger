@@ -93,8 +93,9 @@ IF(WIN32)
   include(FindCURL_WIN32)
 else(WIN32)
   #  add_definitions(-DCURL_STATICLIB)
-  include(FindCurl)
+  include(FindCURL)
   include(FindGnutls)
+  include(FindOpenSSL) # needed by MySmartGrid API...
 endif(WIN32)
 
 find_library(LIBUUID uuid)
