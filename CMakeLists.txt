@@ -152,14 +152,14 @@ message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
 message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 
-if( NOT SML_FOUND)
+if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.
 Install libsml or call cmake -DSML_HOME=path_to_sml_install")
-endif( NOT SML_FOUND)
-if( NOT MICROHTTPD_FOUND )
+endif( ENABLE_SML AND NOT SML_FOUND)
+if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
   message(FATAL_ERROR "microhttpd ist required.
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
-endif( NOT MICROHTTPD_FOUND )
+endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
 INSTALL(FILES README INSTALL COPYING DESTINATION
