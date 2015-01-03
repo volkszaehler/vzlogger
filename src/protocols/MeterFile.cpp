@@ -44,7 +44,7 @@ MeterFile::MeterFile(std::list<Option> options)
 		throw;
 	}
 
-	/* a optional format string for scanf() */
+	// a optional format string for scanf()
 	try {
 		const char *config_format = optlist.lookup_string(options, "format");
 
@@ -52,24 +52,24 @@ MeterFile::MeterFile(std::list<Option> options)
 		 * Compiling the provided format string in a format string for scanf
 		 * by replacing the following tokens
 		 *
-		 * "$v" => "%1$f" (value)
+		 * "$v" => "%1$lf" (value)
 		 * "$i" => "%2$ms" (identifier)		(memory gets allocated by sscanf())
-		 * "$t" => "%3$f" (timestamp)
+		 * "$t" => "%3$lf" (timestamp)
 		 */
 
 		int config_len = strlen(config_format);
-		int scanf_len = config_len + 8; /* adding extra space for longer conversion specification in scanf_format */
+		int scanf_len = config_len + 15; // adding extra space for longer conversion specification in scanf_format
 
-		char *scanf_format = (char *)malloc(scanf_len); /* the scanf format string */
+		char *scanf_format = (char *)malloc(scanf_len); // the scanf format string
 
-		int i = 0; /* index in config_format string */
-		int j = 0; /* index in scanf_format string */
+		int i = 0; // index in config_format string
+		int j = 0; // index in scanf_format string
 		while (i <= config_len && j <= scanf_len) {
 			switch (config_format[i]) {
 					case '$':
-						if (i+1 < config_len) { /* introducing a token */
+						if (i+1 < config_len) { // introducing a token
 							switch (config_format[i+1]) {
-									case 'v': j += sprintf(scanf_format+j, "%%1$f"); break;
+									case 'v': j += sprintf(scanf_format+j, "%%1$lf"); break;
 									case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
 									case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
 							}
@@ -78,10 +78,10 @@ MeterFile::MeterFile(std::list<Option> options)
 						break;
 
 					case '%':
-						scanf_format[j++] = '%'; /* add double %% to escape a conversion identifier */
-
+						scanf_format[j++] = '%'; // add double %% to escape a conversion identifier
+						// nobreak;
 					default:
-						scanf_format[j++] = config_format[i]; /* just copying */
+						scanf_format[j++] = config_format[i]; // just copying
 			}
 
 			i++;
@@ -90,18 +90,18 @@ MeterFile::MeterFile(std::list<Option> options)
 		print(log_debug, "Parsed format string \"%s\" => \"%s\"", name().c_str(), config_format, scanf_format);
 		_format = scanf_format;
 	} catch (vz::OptionNotFoundException &e) {
-		_format = ""; /* use default format */
+		_format = ""; // use default format
 	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse format", name().c_str());
 		throw;
 	}
 
-	/* should we start each time at the beginning of the file? */
-	/* or do we read from a logfile (append) */
+	// should we start each time at the beginning of the file?
+	// or do we read from a logfile (append)
 	try {
 		_rewind = optlist.lookup_bool(options, "rewind");
 	} catch (vz::OptionNotFoundException &e) {
-		_rewind = FALSE; /* do not rewind file by default */
+		_rewind = FALSE; // do not rewind file by default
 	} catch (vz::InvalidTypeException &e) {
 		print(log_error, "Invalid type for 'rewind'", name().c_str());
 		throw;
@@ -133,12 +133,12 @@ int MeterFile::close() {
 
 ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 
-	// TODO use inotify to block eading until file changes
+	// TODO use inotify to block reading until file changes
 
 	char line[256], *endptr;
-	char string[256];
+	char *string=0;
 
-	/* reset file pointer to beginning of file */
+	// reset file pointer to beginning of file
 	if (_rewind) {
 		rewind(_fd);
 	}
@@ -146,38 +146,45 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 	unsigned int i = 0;
 	print(log_debug, "MeterFile::read: %d, %d", "", rds.size(), n);
 
-	while (fgets(line, 256, _fd) && i < n) {
+	while (i<n && fgets(line, 256, _fd)) {
 		char *nl;
-		if ((nl = strrchr(line, '\n'))) *nl = '\0'; /* remove trailing newline */
+		if ((nl = strrchr(line, '\n'))) *nl = '\0'; // remove trailing newlines
 		if ((nl = strrchr(line, '\r'))) *nl = '\0';
 
 		if (_format != "") {
-			double timestamp;
+			double timestamp=-1.0;
 
-			/* at least the value has to been read */
-			double value;
+			// at least the value has to been read
+			double value=0.0;
 
 			print(log_debug, "MeterFile::read: '%s'", "", line);
-			int found = sscanf(line, format(), &value, string, &timestamp);
-			print(log_debug, "MeterFile::read: %f, %s, %ld", "", value, string, timestamp);
+			int found = sscanf(line, format(), &value, &string, &timestamp);
+			print(log_debug, "MeterFile::read: %lf, %s, %lf", "", value, string? string : "<null>", timestamp);
 
 
 			rds[i].value(value);
-			ReadingIdentifier *rid(new StringIdentifier(string));
+			ReadingIdentifier *rid(new StringIdentifier(string ? string : "<null>"));
 			rds[i].identifier(rid);
-			if (found >= 1) { // TODO free() space allocated for identifier string
-				rds[i].dtotv(timestamp); /* convert double to timeval */
-				i++; /* read successfully */
+			if (found >= 1) {
+				if (timestamp >=0.0)
+					rds[i].time(rds[i].dtotv(timestamp)); // convert double to timevals
+				else
+					rds[i].time(); // use current timestamp
+				i++; // read successfully
+			}
+			if (string){
+				free(string);
+				string = 0;
 			}
 		}
-		else { /* just reading a value per line */
+		else { // just reading a value per line
 			rds[i].value(strtod(line, &endptr));
 			rds[i].time();
 			ReadingIdentifier* rid(new StringIdentifier(""));
 			rds[i].identifier(rid);
 
 			if (endptr != line) {
-				i++; /* read successfully */
+				i++; // read successfully
 			}
 		}
 	}
