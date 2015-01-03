@@ -71,14 +71,14 @@ Reading::Reading(
 }
 
 double Reading::tvtod() const {
-	return _time.tv_sec + _time.tv_usec / 1e6;
+	return (double)_time.tv_sec + ((double)_time.tv_usec / 1e6);
 }
 
-double Reading::tvtod(struct timeval tv) const {
-	return tv.tv_sec + tv.tv_usec / 1e6;
+double Reading::tvtod(struct timeval const &tv) const {
+	return (double)tv.tv_sec + ((double)tv.tv_usec / 1e6);
 }
 
-struct timeval Reading::dtotv(double ts) {
+struct timeval Reading::dtotv(double const &ts) const {
 	double integral;
 	double fraction = modf(ts, &integral);
 
@@ -170,28 +170,28 @@ size_t Reading::unparse(
 #endif
 }
 
-bool ReadingIdentifier::operator==( ReadingIdentifier &cmp) {
+bool ReadingIdentifier::operator==( ReadingIdentifier const &cmp) const {
 	return this->compare(this, &cmp);
 }
 
-bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs) {
-	if (ObisIdentifier* lhsx = dynamic_cast<ObisIdentifier*>(lhs)) {
-		if (ObisIdentifier* rhsx = dynamic_cast<ObisIdentifier*>(rhs)) {
+bool ReadingIdentifier::compare( ReadingIdentifier const *lhs,  ReadingIdentifier const *rhs) const {
+	if (ObisIdentifier const* lhsx = dynamic_cast<ObisIdentifier const*>(lhs)) {
+		if (ObisIdentifier const* rhsx = dynamic_cast<ObisIdentifier const*>(rhs)) {
 			return *lhsx == *rhsx;
 		} else { return false; }
 	} else
-		if (StringIdentifier* lhsx = dynamic_cast<StringIdentifier*>(rhs)) {
-			if (StringIdentifier* rhsx = dynamic_cast<StringIdentifier*>(lhs)) {
+		if (StringIdentifier const* lhsx = dynamic_cast<StringIdentifier const*>(lhs)) {
+			if (StringIdentifier const* rhsx = dynamic_cast<StringIdentifier const*>(rhs)) {
 				return *lhsx == *rhsx;
 			} else { return false; }
 		} else
-			if (ChannelIdentifier* lhsx = dynamic_cast<ChannelIdentifier*>(lhs)) {
-				if (ChannelIdentifier* rhsx = dynamic_cast<ChannelIdentifier*>(rhs)) {
+			if (ChannelIdentifier const* lhsx = dynamic_cast<ChannelIdentifier const*>(lhs)) {
+				if (ChannelIdentifier const* rhsx = dynamic_cast<ChannelIdentifier const*>(rhs)) {
 					return *lhsx == *rhsx;
 				} else { return false; }
 			}  else
-				if (NilIdentifier* lhsx = dynamic_cast<NilIdentifier*>(lhs)) {
-					if (NilIdentifier* rhsx = dynamic_cast<NilIdentifier*>(rhs)) {
+				if (NilIdentifier const* lhsx = dynamic_cast<NilIdentifier const*>(lhs)) {
+					if (NilIdentifier const* rhsx = dynamic_cast<NilIdentifier const*>(rhs)) {
 						(void)lhsx; (void) rhsx; // avoid compiler warning about unused vars.
 						return true;
 					} else { return false; }
@@ -203,12 +203,12 @@ bool ReadingIdentifier::compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs
 size_t ObisIdentifier::unparse(char *buffer, size_t n) {
 	return _obis.unparse(buffer, n);
 }
-bool ObisIdentifier::operator==(ObisIdentifier &cmp) {
+bool ObisIdentifier::operator==(ObisIdentifier const &cmp) const {
 	return (_obis == cmp.obis());
 }
 
 /* StringIdentifier */
-bool StringIdentifier::operator==(StringIdentifier &cmp) {
+bool StringIdentifier::operator==(StringIdentifier const &cmp) const{
 	return (_string == cmp._string);
 }
 
@@ -227,7 +227,7 @@ size_t StringIdentifier::unparse(char *buffer, size_t n) {
 }
 
 /* ChannelIdentifier */
-bool ChannelIdentifier::operator==(ChannelIdentifier &cmp) {
+bool ChannelIdentifier::operator==(ChannelIdentifier const &cmp) const {
 	return (_channel == cmp._channel);
 }
 

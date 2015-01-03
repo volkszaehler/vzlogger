@@ -45,8 +45,8 @@ public:
 	virtual ~ReadingIdentifier(){};
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-	virtual bool operator==( ReadingIdentifier &cmp);
-	bool compare( ReadingIdentifier *lhs,  ReadingIdentifier *rhs);
+	virtual bool operator==( ReadingIdentifier const &cmp) const;
+	bool compare( ReadingIdentifier const *lhs,  ReadingIdentifier const *rhs) const;
 
 	virtual const std::string toString()  = 0;
 
@@ -68,7 +68,7 @@ public:
 	virtual ~ObisIdentifier(){};
 
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(ObisIdentifier &cmp);
+	bool operator==(ObisIdentifier const &cmp) const;
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "ObisItentifier:" << _obis.toString();
@@ -92,7 +92,7 @@ public:
 
 	void parse(const char *buffer);
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(StringIdentifier &cmp);
+	bool operator==(StringIdentifier const &cmp) const;
 	const std::string toString()  {
 		std::ostringstream oss;
 		oss << "StringItentifier:";
@@ -111,7 +111,7 @@ public:
 
 	void parse(const char *string);
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(ChannelIdentifier &cmp);
+	bool operator==(ChannelIdentifier const &cmp) const;
 	const std::string toString()  {
 		std::ostringstream oss;
 		oss << "ChannelItentifier:";
@@ -126,7 +126,7 @@ class NilIdentifier : public ReadingIdentifier {
 public:
 	NilIdentifier() {}
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(NilIdentifier &cmp);
+	bool operator==(NilIdentifier const &cmp) const;
 	const std::string toString()  {
 		std::ostringstream oss;
 		oss << "NilIdentifier";
@@ -152,10 +152,10 @@ public:
 	double value() const  { return _value; }
 
 	double tvtod() const;
-	double tvtod(struct timeval tv) const;
+	double tvtod(struct timeval const &tv) const;
 	void time() { gettimeofday(&_time, NULL); }
-	void time(struct timeval &v) { _time = v; }
-	struct timeval dtotv(double ts);
+	void time(struct timeval const &v) { _time = v; }
+	struct timeval dtotv(double const &ts) const; // doesn't set the time, just returns a timeval!
 
 	void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
 	const ReadingIdentifier::Ptr identifier() { return _identifier; }
