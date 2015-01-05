@@ -149,8 +149,12 @@ message("")
 message("        ***** Configuration parameters *****")
 message("             prefix: ${CMAKE_INSTALL_PREFIX}")
 message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
+if (ENABLE_SML AND NOT SML_FOUND)
 message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
+endif (ENABLE_SML AND NOT SML_FOUND)
+if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
+endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND)
 
 if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.
