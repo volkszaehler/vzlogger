@@ -26,6 +26,12 @@ ADD_DEFINITIONS(-g3)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 include (UseCodeCoverage)
 
+# get git sha1 as additional version:
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+git_describe(GIT_SHALONG --always --abbrev=10 --long --all --dirty )
+
+
 message("Compiling for target '${TARGET}'")
 if( TARGET )
   if( ${TARGET} STREQUAL "ar71xx")
@@ -87,8 +93,9 @@ IF(WIN32)
   include(FindCURL_WIN32)
 else(WIN32)
   #  add_definitions(-DCURL_STATICLIB)
-  include(FindCurl)
+  include(FindCURL)
   include(FindGnutls)
+  include(FindOpenSSL) # needed by MySmartGrid API...
 endif(WIN32)
 
 find_library(LIBUUID uuid)
@@ -105,12 +112,30 @@ myconfigure_file(
   )
 
 add_subdirectory(src)
+
 find_package(Subversion)
-if(Subversion_FOUND)
-  add_subdirectory(gtest)
+
+set(ENABLE_GOOGLEMOCK TRUE)
+#disable unit tests on gcc4.6 (problems with googlemock 1.7)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # require at least gcc 4.8
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
+       OUTPUT_VARIABLE GOOGLETEST_GCC_COMPILER_VERSION)
+# on travis-ci the CMAKE_CXX_COMPILER_VERSION is empty!    message(WARNING "Using compiler: ${CMAKE_CXX_COMPILER_VERSION} ${GOOGLETEST_GCC_COMPILER_VERSION}") 
+    if (GOOGLETEST_GCC_COMPILER_VERSION VERSION_LESS 4.8)
+        message(WARNING "Disabled googlemock/-test tests due to GCC version < 4.8!")
+	set(ENABLE_GOOGLEMOCK FALSE)
+    endif()
+endif()
+
+
+if(Subversion_FOUND AND ENABLE_GOOGLEMOCK)
+  add_subdirectory(gmock)
   add_subdirectory(tests)
 else()
-  message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
+  if (ENABLE_GOOGLEMOCK)
+   message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
+  endif()
 endif()
 # enable unit testing
 include(CTest)
@@ -132,14 +157,14 @@ endif(SML_FOUND)
 
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 
-if( NOT SML_FOUND)
+if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.
 Install libsml or call cmake -DSML_HOME=path_to_sml_install")
-endif( NOT SML_FOUND)
-if( NOT MICROHTTPD_FOUND )
+endif( ENABLE_SML AND NOT SML_FOUND)
+if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
   message(FATAL_ERROR "microhttpd ist required.
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
-endif( NOT MICROHTTPD_FOUND )
+endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
 INSTALL(FILES README INSTALL COPYING DESTINATION

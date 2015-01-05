@@ -16,11 +16,13 @@ else(ENABLE_LOCAL)
   set(local_srcs "")
 endif(ENABLE_LOCAL)
 
+configure_file("${CMAKE_SOURCE_DIR}/src/gitSha1.cpp.in" "${CMAKE_BINARY_DIR}/gitSha1.cpp" @ONLY)
 
 set(vzlogger_srcs
   vzlogger.cpp 
   ltqnorm.cpp
   Meter.cpp
+  ${CMAKE_BINARY_DIR}/gitSha1.cpp
 )
 
 set(libvz_srcs 
@@ -59,7 +61,7 @@ if( TARGET )
     target_link_libraries(vzlogger dl)
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
-target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES})
+target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 # add programs to the install target 
 INSTALL(PROGRAMS 
