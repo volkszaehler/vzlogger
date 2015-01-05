@@ -5,6 +5,9 @@ include_directories(
 
 # all *.cpp files here will be used.
 file(GLOB test_sources *.cpp)
+if(NOT SML_FOUND)
+  list(REMOVE_ITEM test_sources MeterSML.cpp)
+endif(SML_FOUND)
 
 add_executable(vzlogger_unit_tests ${test_sources})
 
