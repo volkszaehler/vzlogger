@@ -124,7 +124,12 @@ message("")
 message("        ***** Configuration parameters *****")
 message("             prefix: ${CMAKE_INSTALL_PREFIX}")
 message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
-message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
+if(SML_FOUND)
+  message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
+else(SML_FOUND)
+  message("             sml: NOT FOUND")
+endif(SML_FOUND)
+
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 
 if( NOT SML_FOUND)

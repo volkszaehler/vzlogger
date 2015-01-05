@@ -11,6 +11,8 @@ target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
     ${GTEST_LIBS_DIR}/libgtest_main.a
     ${JSON_LIBRARY}
-    ${SML_LIBRARY}
     ${LIBUUID}
     pthread)
+if(SML_FOUND)
+  target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})
+endif(SML_FOUND)
