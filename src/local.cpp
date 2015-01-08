@@ -23,7 +23,7 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <json/json.h>
+#include <json-c/json.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>

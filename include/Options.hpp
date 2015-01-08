@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <list>
-#include <json/json.h>
+#include <json-c/json.h>
 
 class Option {
 

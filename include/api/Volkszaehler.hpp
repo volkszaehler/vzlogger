@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 #include <curl/curl.h>
-#include <json/json.h>
+#include <json-c/json.h>
 
 #include <ApiIF.hpp>
 #include <Options.hpp>
