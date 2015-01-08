@@ -30,7 +30,7 @@
 
 #include <stddef.h>
 #include <curl/curl.h>
-#include <json/json.h>
+#include <json-c/json.h>
 #include <sys/time.h>
 #include <math.h>
 #include <unistd.h>
@@ -213,27 +213,32 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 	json_obj = json_tokener_parse_ex(json_tok, response.data, response.size);
 
 	if (json_tok->err == json_tokener_success) {
-		json_obj = json_object_object_get(json_obj, "exception");
-
-		if (json_obj) {
-			const std::string err_type(json_object_get_string(json_object_object_get(json_obj,  "type")));
-			const std::string err_message( json_object_get_string(json_object_object_get(json_obj,  "message")));
-
-			snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
-			// evaluate error
-			if (err_type == "UniqueConstraintViolationException") {
-				if (err_message.find("Duplicate entry") ) {
-					print(log_warning, "Middleware says duplicated value. Removing first entry!", channel()->name());
-					_values.pop_front();
-				}
-			}
-		}
-		else {
-			strncpy(err, "Missing exception", n);
-		}
+	  bool found = json_object_object_get_ex(json_obj, "exception", &json_obj);
+	  if (found && json_obj) {
+		struct json_object *j2;
+		std::string err_type;
+		if (json_object_object_get_ex(json_obj, "type", &j2)){
+			err_type = json_object_get_string(j2);
+		  }
+		  std::string err_message;
+		  if (json_object_object_get_ex(json_obj, "message", &j2)){
+			err_message = json_object_get_string(j2);
+		  }
+		  snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
+		  // evaluate error
+		  if (err_type == "UniqueConstraintViolationException") {
+			  if (err_message.find("Duplicate entry") ) {
+				  print(log_warning, "Middleware says duplicated value. Removing first entry!", channel()->name());
+				  _values.pop_front();
+			  }
+		  }
+	  }
+	  else {
+		  strncpy(err, "Missing exception", n);
+	  }
 	}
 	else {
-		strncpy(err, json_tokener_errors[json_tok->err], n);
+		strncpy(err, json_tokener_error_desc(json_tok->err), n);
 	}
 
 	json_object_put(json_obj);

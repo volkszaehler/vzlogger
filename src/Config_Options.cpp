@@ -97,7 +97,7 @@ void Config_Options::config_parse(
 		json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 		if (json_tok->err > 1) {
-			print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_errors[json_tok->err], json_tok->char_offset);
+			print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
 			throw vz::VZException("Parse configuaration failed.");
 		}
 	}
