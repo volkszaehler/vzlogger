@@ -230,7 +230,7 @@ MeterD0::~MeterD0() {
 
 int MeterD0::open() {
 
-	if (_dump_file.length()){
+	if (_dump_file.length()) {
 		if (_dump_fd) (void)fclose(_dump_fd);
 		_dump_fd = fopen(_dump_file.c_str(), "a"); 
 		if (!_dump_fd) print(log_error, "Failed to open dump_file %s (%d)", name().c_str(), 
@@ -385,7 +385,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 			context = VENDOR;	// Slash can also be in OBIS String of TD-3511 meter
 		}
 		else if ((byte == '?') || (byte == '!')) {
-			if (context != END){
+			if (context != END) {
 				context = END; 		// "!" is the identifier for the END
 				byte_iterator = 0;
 			}
@@ -393,7 +393,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 		switch (context) {
 			case START:										// strip the initial "/"
-				if (byte == '/'){ // if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line at the start
+				if (byte == '/') { // if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line at the start
 					byte_iterator = number_of_tuples = 0;	// start
 					context = VENDOR;						// set new context: START -> VENDOR
 				} // else ignore the other chars. -> Wait for / (!? is checked above already)
@@ -534,32 +534,32 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 			// d) 0x0d 0x0a ? -> ignore, so stay in END state.
 			// above is new! Previous versions ended on all but ? ("assuming !")
 			
-			if (byte == '!'){
-				if (byte_iterator == 0){
+			if (byte == '!') {
+				if (byte_iterator == 0) {
 					// case a) ! as end ind.
 					// fallthrough to return number of tuples below.
-				}else{
+				} else {
 					// can only be case b) ?!. 
-					if (endseq[0] == '?'){
+					if (endseq[0] == '?') {
 						context = VENDOR;
 						byte_iterator = 0;
 						break;
-					}else{
+					} else {
 						error_flag = true; // state machine logic error!
 						print(log_debug, "DEBUG END b2 byte: %x byte_it: %d ", name().c_str(), byte, byte_iterator);
 					}
 				}
-			}else
-			if (byte == '?'){
-				if (byte_iterator == 0){
+			} else
+			if (byte == '?') {
+				if (byte_iterator == 0) {
 					// can be start of case b, store it
 					endseq[byte_iterator++] = byte;
 					break;
-				}else{
+				} else {
 					// we simply keep the state. so we accept ??! as well
 					break;
 				}
-			}else
+			} else
 			{ // any other char than ! or ?:
 				if (byte_iterator>0) byte_iterator = 0; // reset ? reminder
 				break; // but stay in this state and accept that char! (here we ended before!)
@@ -580,7 +580,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		if (END_LINE == context) { // add the data already here (so after the closing bracket) but before any \r\n
 			// free slots available and sane content?
 			if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) {
-				switch (obis_code[0]){ // let's check sanity of first char. we can't use isValid() as here we get incomplete obis_codes as well (e.g. 1.8.0 -> 255-255:1.8.0)
+				switch (obis_code[0]) { // let's check sanity of first char. we can't use isValid() as here we get incomplete obis_codes as well (e.g. 1.8.0 -> 255-255:1.8.0)
 				case '0': // nobreak;
 				case '1': // nobreak;
 				case '2': // nobreak;
@@ -771,14 +771,14 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 
 	static char str_dump[3*16 + 2 + 18]; // we output 3 chars per byte plus whitespace plus the char itself, 16 chars max in one row
 
-	if (_dump_pos==0){
+	if (_dump_pos==0) {
 		memset(str_dump, ' ', sizeof(str_dump)-1);
 		str_dump[sizeof(str_dump)-1] = '\n'; // yes I know that the string is not zero terminated! (no problem here)
 	}
 	
-	if (mode != _old_mode){
+	if (mode != _old_mode) {
 		// dump out str?
-		if (_dump_pos){
+		if (_dump_pos) {
 			fwrite(str_dump, 1, sizeof(str_dump), _dump_fd);
 			_dump_pos=0;
 			memset(str_dump, ' ', sizeof(str_dump)-1);
@@ -786,7 +786,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 	
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
 		const char *s;
-		switch (mode){
+		switch (mode) {
 			case CTRL: s = ctrl_start; break;
 			case DUMP_IN: s = dump_in_start; break;
 			case DUMP_OUT: s = dump_out_start; break;
@@ -794,7 +794,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		}
 		fwrite(s, 1, strlen(s), _dump_fd);
 	}
-	switch(mode){
+	switch(mode) {
 	case CTRL: fwrite(buf, 1, len, _dump_fd); break;
 	case DUMP_IN:
 	case DUMP_OUT:
@@ -803,11 +803,11 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		const int strsize = sizeof(str_dump);
 		
 		// dump out in hex format: 16 bytes as xx yy ... zz	printable chars
-		for (size_t i=0; i<len; ++i){
+		for (size_t i=0; i<len; ++i) {
 			(void)hex_byte_pack(stro+(_dump_pos*3), buf[i]);
 			stro[(3*16+2)+_dump_pos] = isprint(buf[i])?buf[i] : ' ';
 			++_dump_pos;
-			if (_dump_pos>15){
+			if (_dump_pos>15) {
 				fwrite(stro, 1, strsize, _dump_fd);
 				_dump_pos=0;
 				memset(stro, ' ', strsize-1);
