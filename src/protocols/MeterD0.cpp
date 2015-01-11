@@ -30,6 +30,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -37,7 +38,7 @@
 #include <ctype.h>
 #include <sys/time.h>
 
-/* socket */
+// socket
 #include <netdb.h>
 #include <sys/socket.h>
 
@@ -51,10 +52,13 @@ MeterD0::MeterD0(std::list<Option> options)
 		, _host("")
 		, _device("")
 		, _wait_sync_end (false)
+		, _dump_fd(0)
+		, _old_mode(NONE)
+		, _dump_pos(0)
 {
 	OptionList optlist;
 
-	/* connection */
+	// connection
 	try {
 		_host = optlist.lookup_string(options, "host");
 	} catch (vz::OptionNotFoundException &e) {
@@ -68,6 +72,13 @@ MeterD0::MeterD0(std::list<Option> options)
 		print(log_error, "Missing device or host", name().c_str());
 		throw;
 	}
+	
+	try{
+		_dump_file = optlist.lookup_string(options, "dump_file");
+	} catch (vz::OptionNotFoundException &e) {
+		// default keep disabled
+	}
+	
 	try {
 		std::string hex;
 		hex = optlist.lookup_string(options, "pullseq");
@@ -82,7 +93,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		}
 		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_pull = "";
 	}
 	try {
@@ -99,15 +110,15 @@ MeterD0::MeterD0(std::list<Option> options)
 		}
 		print(log_debug,"ackseq len:%d found %s, %x",name().c_str(),_ack.size(),_ack.c_str(),_ack.c_str()[0]);
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_ack = "";
 	}
 
-	/* baudrate */
-	int baudrate = 9600; /* default to avoid compiler warning */
+	// baudrate
+	int baudrate = 9600; // default to avoid compiler warning
 	try {
 		baudrate = optlist.lookup_int(options, "baudrate");
-		/* find constant for termios structure */
+		// find constant for termios structure
 		switch (baudrate) {
 				case 50: _baudrate = B50; break;
 				case 75: _baudrate = B75; break;
@@ -132,7 +143,7 @@ MeterD0::MeterD0(std::list<Option> options)
 					throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_baudrate = B9600;
 	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse the baudrate", name().c_str());
@@ -140,7 +151,7 @@ MeterD0::MeterD0(std::list<Option> options)
 	}
 	try {
 		baudrate = optlist.lookup_int(options, "baudrate_read");
-		/* find constant for termios structure */
+		// find constant for termios structure
 		switch (baudrate) {
 				case 50:   _baudrate_read = B50; break;
 				case 75:   _baudrate_read = B75; break;
@@ -165,7 +176,7 @@ MeterD0::MeterD0(std::list<Option> options)
 					throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_baudrate_read = _baudrate;
 	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse the baudrate_read", name().c_str());
@@ -176,7 +187,7 @@ MeterD0::MeterD0(std::list<Option> options)
 	_parity=parity_7e1;
 	try {
 		const char *parity = optlist.lookup_string(options, "parity");
-		/* find constant for termios structure */
+		// find constant for termios structure
 		if (strcasecmp(parity,"8n1") == 0) {
 			_parity = parity_8n1;
 		} else if (strcasecmp(parity,"7n1") == 0) {
@@ -189,7 +200,7 @@ MeterD0::MeterD0(std::list<Option> options)
 			throw vz::VZException("Invalid parity");
 		}
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_parity = parity_7e1;
 	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse the parity", name().c_str());
@@ -204,7 +215,7 @@ MeterD0::MeterD0(std::list<Option> options)
 			throw vz::VZException("Invalid wait_sync");
 		}
 	} catch (vz::OptionNotFoundException &e) {
-		/* no fault. default is off */
+		// no fault. default is off
 	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse wait_sync", name().c_str());
 		throw;
@@ -214,9 +225,19 @@ MeterD0::MeterD0(std::list<Option> options)
 }
 
 MeterD0::~MeterD0() {
+	if (_dump_fd) (void)fclose(_dump_fd);
 }
 
 int MeterD0::open() {
+
+	if (_dump_file.length()) {
+		if (_dump_fd) (void)fclose(_dump_fd);
+		_dump_fd = fopen(_dump_file.c_str(), "a"); 
+		if (!_dump_fd) print(log_error, "Failed to open dump_file %s (%d)", name().c_str(), 
+			_dump_file.c_str(), errno);
+		dump_file(CTRL, "opened");
+	}
+
 	if (_device != "") {
 		_fd = _openDevice(&_oldtio, _baudrate);
 	}
@@ -232,6 +253,11 @@ int MeterD0::open() {
 }
 
 int MeterD0::close() {
+	dump_file(CTRL, "closed\n"); // here we add a \n as this will be the last data
+	if (_dump_fd) {
+		(void)fclose(_dump_fd);
+		_dump_fd=0;
+	}
 	return ::close(_fd);
 }
 
@@ -241,9 +267,9 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 	bool error_flag = false;
 	const int VENDOR_LEN = 3;
-	char vendor[VENDOR_LEN +1];			/* 3 upper case vendor + '\0' termination */
+	char vendor[VENDOR_LEN +1];			// 3 upper case vendor + '\0' termination
 	const int IDENTIFICATION_LEN = 16;
-	char identification[IDENTIFICATION_LEN +1];	/* 16 meter specific + '\0' termination */
+	char identification[IDENTIFICATION_LEN +1];	// 16 meter specific + '\0' termination
 	const int OBIS_LEN = 16;
 	char obis_code[OBIS_LEN +1];		/* A-B:C.D.E*F
 								   fields A, B, E, F are optional
@@ -268,32 +294,35 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 								   F: storage of data
 								   see DIN-EN-62056-61 */
 	const int VALUE_LEN = 32;
-	char value[VALUE_LEN+1];			/* value, i.e. the actual reading */
+	char value[VALUE_LEN+1];			// value, i.e. the actual reading
 	const int UNIT_LEN = 16;
-	char unit[UNIT_LEN+1];			/* the unit of the value, e.g. kWh, V, ... */
+	char unit[UNIT_LEN+1];			// the unit of the value, e.g. kWh, V, ...
 
-	char baudrate;				/* 1 byte for */
-	char byte,lastbyte;			/* we parse our input byte wise */
+	char baudrate;				// 1 byte for
+	char byte,lastbyte;			// we parse our input byte wise
 	int byte_iterator;
-	char endseq[2+1];			/* Endsequence ! not ?! */
+	char endseq[2+1];			// Endsequence ! not ?!
 	size_t number_of_tuples;
 	int bytes_read;
 	time_t start_time, end_time;
 	struct termios tio;
 	int baudrate_connect,baudrate_read;	// Baudrates for switching
 
+	dump_file(CTRL, "read");
 
 	baudrate_connect=_baudrate;
 	baudrate_read=_baudrate_read;
 	tcgetattr(_fd, &tio);
 
 	if (_pull.size()) {
+		dump_file(CTRL, "TCIOFLUSH and cfsetiospeed");
 		tcflush(_fd, TCIOFLUSH);
 		cfsetispeed(&tio, baudrate_connect);
 		cfsetospeed(&tio, baudrate_connect);
-		/* apply new configuration */
+		// apply new configuration
 		tcsetattr(_fd, TCSANOW, &tio);
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
+		dump_file(DUMP_OUT, _pull.c_str(), wlen >0 ? wlen : 0);
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
 	}
 
@@ -310,6 +339,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		*/
 		int skipped = 0;
 		while (_wait_sync_end && ::read(_fd, &byte, 1)) {
+			dump_file(byte);
 			if (byte == '!') {
 				_wait_sync_end = false;
 				print(log_debug, "found wait_sync_end. skipped %d bytes.", name().c_str(), skipped);
@@ -328,6 +358,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		time(&end_time);
 		if (difftime(end_time, start_time) > 10) {
 			print(log_error, "nothing received for more than 10 seconds", name().c_str());
+			dump_file(CTRL, "timeout!");
 			break;
 		}
 
@@ -342,7 +373,8 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 			print(log_error, "error reading a byte (%d)", name().c_str(), errno);
 			break;
 		}
-
+		dump_file(byte);
+		
 		// reset timeout if we are making progress
 		if (context != START) {
 			time(&start_time);
@@ -353,15 +385,18 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 			context = VENDOR;	// Slash can also be in OBIS String of TD-3511 meter
 		}
 		else if ((byte == '?') || (byte == '!')) {
-			context = END; 		// "!" is the identifier for the END
+			if (context != END) {
+				context = END; 		// "!" is the identifier for the END
+				byte_iterator = 0;
+			}
 		}
 
 		switch (context) {
 			case START:										// strip the initial "/"
-				if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line at the start
+				if (byte == '/') { // if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line at the start
 					byte_iterator = number_of_tuples = 0;	// start
 					context = VENDOR;						// set new context: START -> VENDOR
-				}
+				} // else ignore the other chars. -> Wait for / (!? is checked above already)
 				break;
 
 			case VENDOR:									// VENDOR has 3 Bytes
@@ -369,7 +404,6 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					byte_iterator = number_of_tuples = 0;
 					break;
 				}
-				/*print(log_debug, "DEBUG Vendor2 byte= %c hex= %x byteIterator= %i ",name().c_str(), byte, byte, byte_iterator)*/
 
 				if (!isalpha(byte)) goto error;				// Vendor ID needs to be alpha
 				vendor[byte_iterator++] = byte;				// read next byte
@@ -417,8 +451,10 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					if (baudrate_read != baudrate_connect) {
 						cfsetispeed(&tio, baudrate_read);
 						tcsetattr(_fd, TCSANOW, &tio);
+						dump_file(CTRL, "cfsetispeed");
 					}
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
+					dump_file(DUMP_OUT, _ack.c_str(), wlen);
 					tcdrain(_fd);							// Wait until sent
 					print(log_debug, "Sending ack sequence send (len:%d is:%d,%s).",
 							name().c_str(),_ack.size(),wlen,_ack.c_str());
@@ -486,82 +522,110 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case END_LINE:
-				if ((byte == '\r') || (byte == '\n')) {
-					// free slots available and sane content?
-					if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) {
-						print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
-								name().c_str(), obis_code, value, unit);
-						rds[number_of_tuples].value(strtod(value, NULL));
-
-						if ((obis_code[0] == '1') || (obis_code[0] == '2')) { // removed || (obis_code[0]=='C')  to fix crash on Landis & Gyr E350
-							/*print(log_debug, "DEBUG END_LINE Obis code = %s value %s ",name().c_str(), obis_code, value);*/
-							try {
-								Obis obis(obis_code);
-								ReadingIdentifier *rid(new ObisIdentifier(obis));
-								rds[number_of_tuples].identifier(rid);
-								rds[number_of_tuples].time();
-								number_of_tuples++;
-							} catch (vz::VZException &e) {
-								print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
-							}
-						}
-					}
-					byte_iterator = 0;
-					context = OBIS_CODE;
-				}
+				print(log_error, "logical error in state machine. reached END_LINE", name().c_str());
+				goto error; // this should never happen
 				break;
 
 			case END:
-				/*print(log_debug, "DEBUG END1 %c %i ", name().c_str(), byte, byte_iterator);*/
-				endseq[byte_iterator++] = byte;
-				/*print(log_debug, "DEBUG END2 byte: %c  iterator: %i ", name().c_str(), byte, byte_iterator);*/
-				if (endseq[0] == '?' ) {
-					/*print(log_debug, "DEBUG END3 byte: %x endseq: %x ", name().c_str(), byte, endseq);*/
-					if (byte_iterator > 1) {
-						if (endseq[1] == '!') {
-							/*Pullseq /?! was displayed again. Go on with VENDOR*/
-							context = VENDOR;
-							endseq[byte_iterator] = '\0';
-							print(log_debug, "DEBUG END4 goto VENDOR", name().c_str());
-							byte_iterator = 0;
-							endseq[0] = 0;
-							endseq[1] = 0;
-							endseq[2] = 0;
-						} else {
-							// how to handle this? we get stuck in this state!
-							// we received something else than /?!
-							// let's set an error
-							error_flag = true;
-						}
+			// here we stay until we receive either:
+			// a) ! as end indicator
+			// b) ?! as pull seq indicator -> wait for VENDOR
+			// c) how to handle ? with something else? -> ignore (so ??! will be accepted as b) 
+			// d) 0x0d 0x0a ? -> ignore, so stay in END state.
+			// above is new! Previous versions ended on all but ? ("assuming !")
+			
+			if (byte == '!') {
+				if (byte_iterator == 0) {
+					// case a) ! as end ind.
+					// fallthrough to return number of tuples below.
+				} else {
+					// can only be case b) ?!. 
+					if (endseq[0] == '?') {
+						context = VENDOR;
+						byte_iterator = 0;
+						break;
+					} else {
+						error_flag = true; // state machine logic error!
+						print(log_debug, "DEBUG END b2 byte: %x byte_it: %d ", name().c_str(), byte, byte_iterator);
 					}
-					break;
-				} // else we assume endseq[0] == '!'
-
-				if (error_flag) {
-					print(log_error, "reading binary values.", name().c_str());
-					goto error;
 				}
+			} else
+			if (byte == '?') {
+				if (byte_iterator == 0) {
+					// can be start of case b, store it
+					endseq[byte_iterator++] = byte;
+					break;
+				} else {
+					// we simply keep the state. so we accept ??! as well
+					break;
+				}
+			} else
+			{ // any other char than ! or ?:
+				if (byte_iterator>0) byte_iterator = 0; // reset ? reminder
+				break; // but stay in this state and accept that char! (here we ended before!)
+				// TODO Think about a timeout here?
+			}
+			
 
-				print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-						name().c_str(), number_of_tuples, vendor, baudrate, identification);
-				return number_of_tuples;
-		}/* end switch*/
-	}/* end while*/
+			if (error_flag) {
+				print(log_error, "reading binary values.", name().c_str());
+				goto error;
+			}
+
+			print(log_debug, "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
+					name().c_str(), number_of_tuples, vendor, baudrate, identification);
+			return number_of_tuples;
+		}// end switch
+		
+		if (END_LINE == context) { // add the data already here (so after the closing bracket) but before any \r\n
+			// free slots available and sane content?
+			if ((number_of_tuples < max_readings) && (strlen(obis_code) > 0) && (strlen(value) > 0)) {
+				switch (obis_code[0]) { // let's check sanity of first char. we can't use isValid() as here we get incomplete obis_codes as well (e.g. 1.8.0 -> 255-255:1.8.0)
+				case '0': // nobreak;
+				case '1': // nobreak;
+				case '2': // nobreak;
+				case 'C': // nobreak;
+				case 'F':
+					print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
+									name().c_str(), obis_code, value, unit);
+					rds[number_of_tuples].value(strtod(value, NULL));
+
+					try {
+						Obis obis(obis_code);
+						ReadingIdentifier *rid(new ObisIdentifier(obis));
+						rds[number_of_tuples].identifier(rid);
+						rds[number_of_tuples].time();
+						number_of_tuples++;
+					} catch (vz::VZException &e) {
+						print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
+					}
+				break;
+				default:
+					print(log_debug, "Ignored reading (OBIS code=%s, value=%s, unit=%s)",
+									name().c_str(), obis_code, value, unit);
+				break;
+				}
+			}
+			byte_iterator = 0;
+			context = OBIS_CODE;
+		}
+		
+	}// end while
 
 	// Read terminated
 	print(log_error, "read timed out!, context: %i, bytes read: %i, last byte 0x%x",
 			name().c_str(),context,byte_iterator,lastbyte);
-	return 0;
+	return number_of_tuples; // in any case return the number of readings. there might be some valid ones.
 
 error:
 	print(log_error, "Something unexpected happened: %s:%i!", name().c_str(), __FUNCTION__, __LINE__);
-	return 0;
+	return number_of_tuples; // return number of good readings so far.
 }
 
 int MeterD0::_openSocket(const char *node, const char *service) {
 	struct sockaddr_in sin;
 	struct addrinfo *ais;
-	int fd; /* file descriptor */
+	int fd; // file descriptor
 	int res;
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
@@ -593,33 +657,33 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 		return ERR;
 	}
 
-	/* get old configuration */
+	// get old configuration
 	tcgetattr(fd, &tio) ;
 
-	/* backup old configuration to restore it when closing the meter connection */
+	// backup old configuration to restore it when closing the meter connection
 	memcpy(old_tio, &tio, sizeof(struct termios));
 	/*
 	initialize all control characters
 	default values can be found in /usr/include/termios.h, and are given
 	in the comments, but we don't need them here
 	*/
-	tio.c_cc[VINTR]    = 0;     /* Ctrl-c */
-	tio.c_cc[VQUIT]    = 0;     /* Ctrl-\ */
-	tio.c_cc[VERASE]   = 0;     /* del */
-	tio.c_cc[VKILL]    = 0;     /* @ */
-	tio.c_cc[VEOF]     = 4;     /* Ctrl-d */
-	tio.c_cc[VTIME]    = 0;     /* inter-character timer unused */
-	tio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
-	tio.c_cc[VSWTC]    = 0;     /* '\0' */
-	tio.c_cc[VSTART]   = 0;     /* Ctrl-q */
-	tio.c_cc[VSTOP]    = 0;     /* Ctrl-s */
-	tio.c_cc[VSUSP]    = 0;     /* Ctrl-z */
-	tio.c_cc[VEOL]     = 0;     /* '\0' */
-	tio.c_cc[VREPRINT] = 0;     /* Ctrl-r */
-	tio.c_cc[VDISCARD] = 0;     /* Ctrl-u */
-	tio.c_cc[VWERASE]  = 0;     /* Ctrl-w */
-	tio.c_cc[VLNEXT]   = 0;     /* Ctrl-v */
-	tio.c_cc[VEOL2]    = 0;     /* '\0' */
+	tio.c_cc[VINTR]    = 0;     // Ctrl-c
+	tio.c_cc[VQUIT]    = 0;     // Ctrl-<backslash>
+	tio.c_cc[VERASE]   = 0;     // del
+	tio.c_cc[VKILL]    = 0;     // @
+	tio.c_cc[VEOF]     = 4;     // Ctrl-d
+	tio.c_cc[VTIME]    = 0;     // inter-character timer unused
+	tio.c_cc[VMIN]     = 1;     // blocking read until 1 character arrives
+	tio.c_cc[VSWTC]    = 0;     // '\0'
+	tio.c_cc[VSTART]   = 0;     // Ctrl-q
+	tio.c_cc[VSTOP]    = 0;     // Ctrl-s
+	tio.c_cc[VSUSP]    = 0;     // Ctrl-z
+	tio.c_cc[VEOL]     = 0;     // '\0'
+	tio.c_cc[VREPRINT] = 0;     // Ctrl-r
+	tio.c_cc[VDISCARD] = 0;     // Ctrl-u
+	tio.c_cc[VWERASE]  = 0;     // Ctrl-w
+	tio.c_cc[VLNEXT]   = 0;     // Ctrl-v
+	tio.c_cc[VEOL2]    = 0;     // '\0'
 
 	tio.c_iflag &= ~(BRKINT | INLCR | IMAXBEL | IXOFF| IXON);
 	tio.c_oflag &= ~(OPOST | ONLCR);
@@ -656,19 +720,105 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 		tio.c_cflag |= CS7;
 		break;
 	}
-	/* Set return rules for read to prevent endless waiting*/
-	tio.c_cc[VTIME]	= 50;	/* inter-character timer  50*0.1s*/
-	tio.c_cc[VMIN]	= 0;	/* VTIME is timeout counter */
-	/*
-	  now clean the modem line and activate the settings for the port
-	*/
+	// Set return rules for read to prevent endless waiting
+	tio.c_cc[VTIME]	= 50;	// inter-character timer  50*0.1
+	tio.c_cc[VMIN]	= 0;	// VTIME is timeout counter
+	// now clean the modem line and activate the settings for the port
+	
 	tcflush(fd, TCIOFLUSH);
-	/* set baudrate */
+	// set baudrate
 	cfsetispeed(&tio, baudrate);
 	cfsetospeed(&tio, baudrate);
 
-	/* apply new configuration */
+	// apply new configuration
 	tcsetattr(fd, TCSANOW, &tio);
 
 	return fd;
 }
+
+void MeterD0::dump_file(DUMP_MODE ctrl, const char* str)
+{
+	if (_dump_fd) dump_file(ctrl, str, strlen(str));
+}
+
+// hexdump helper from linux kernel. (Linux/include/linkux/kernel.h)
+// copyright see kernel.org (gpl2)
+// only used as a speedup. can be easily replaced by sprintf...%02x...
+// snip start
+
+const char hex_asc[] = "0123456789abcdef";
+#define hex_asc_lo(x)   hex_asc[((x) & 0x0f)]
+#define hex_asc_hi(x)   hex_asc[((x) & 0xf0) >> 4]
+
+static inline char *hex_byte_pack(char *buf, char byte)
+{
+	*buf++ = hex_asc_hi(byte);
+	*buf++ = hex_asc_lo(byte);
+	return buf;
+}
+
+// snip from kernel end
+
+// dump_file is not thread safe/reentrant capable! Not needed for meterD0
+void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
+{
+	if (!_dump_fd) return;
+	const char *ctrl_start="##### ";
+	const char *ctrl_end="\n";
+	
+	const char *dump_out_start= "<<<<<\n";
+	const char *dump_in_start=">>>>>\n";
+
+	static char str_dump[3*16 + 2 + 18]; // we output 3 chars per byte plus whitespace plus the char itself, 16 chars max in one row
+
+	if (_dump_pos==0) {
+		memset(str_dump, ' ', sizeof(str_dump)-1);
+		str_dump[sizeof(str_dump)-1] = '\n'; // yes I know that the string is not zero terminated! (no problem here)
+	}
+	
+	if (mode != _old_mode) {
+		// dump out str?
+		if (_dump_pos) {
+			fwrite(str_dump, 1, sizeof(str_dump), _dump_fd);
+			_dump_pos=0;
+			memset(str_dump, ' ', sizeof(str_dump)-1);
+		}
+	
+		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
+		const char *s;
+		switch (mode) {
+			case CTRL: s = ctrl_start; break;
+			case DUMP_IN: s = dump_in_start; break;
+			case DUMP_OUT: s = dump_out_start; break;
+			default: s = ctrl_start; break;
+		}
+		fwrite(s, 1, strlen(s), _dump_fd);
+	}
+	switch(mode) {
+	case CTRL: fwrite(buf, 1, len, _dump_fd); break;
+	case DUMP_IN:
+	case DUMP_OUT:
+	{
+		char *stro = &str_dump[0];
+		const int strsize = sizeof(str_dump);
+		
+		// dump out in hex format: 16 bytes as xx yy ... zz	printable chars
+		for (size_t i=0; i<len; ++i) {
+			(void)hex_byte_pack(stro+(_dump_pos*3), buf[i]);
+			stro[(3*16+2)+_dump_pos] = isprint(buf[i])?buf[i] : ' ';
+			++_dump_pos;
+			if (_dump_pos>15) {
+				fwrite(stro, 1, strsize, _dump_fd);
+				_dump_pos=0;
+				memset(stro, ' ', strsize-1);
+			}		
+		}
+	}
+	break;	
+	default: break;
+	}
+		
+	if (mode == CTRL) _old_mode = NONE; else // output CTRL messages on a single line each
+		_old_mode = mode;
+}
+
