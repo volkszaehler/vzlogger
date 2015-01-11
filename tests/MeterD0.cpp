@@ -17,12 +17,12 @@ void print(log_level_t l, char const*s1, char const*s2, ...)
 {
 	if (l!= log_debug)
 	{
-		fprintf(stderr, "\n  %s:", s2);
+		fprintf(stdout, "\n  %s:", s2);
 		va_list argp;
 		va_start(argp, s2);
-		vfprintf(stderr, s1, argp);
+		vfprintf(stdout, s1, argp);
 		va_end(argp);
-		fprintf(stderr, "\n");
+		fprintf(stdout, "\n");
 	}
 }
 
@@ -31,6 +31,34 @@ int writes(int fd, const char *str)
 	EXPECT_NE((char*)0, str);
 	int len = strlen(str);
 	return write(fd, str, len);
+}
+
+TEST(MeterD0, basic_dump_fd) {
+
+	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
+	char tempfilename[L_tmpnam+1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	std::list<Option> options;
+	options.push_back(Option("device", tempfilename));
+	options.push_back(Option("dump_file", (char*)dumpName.c_str()));
+	options.push_back(Option("pullseq", (char*) "4041424344"));
+	MeterD0 m(options);
+	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
+	int fd = open(tempfilename, O_RDWR);
+	ASSERT_NE(fd, -1);
+	ASSERT_EQ(SUCCESS, m.open());
+	std::vector<Reading> rds;
+	rds.resize(1);
+	// can't test for timeout here as the fdset... don't work for pipes. EXPECT_EQ(0, m.read(rds, 10)); // check for timeout
+	writes(fd, "/HAG5eHZ010C_EHZ1vA02\r\n");
+	writes(fd, "1-0:1.8.0*255(000001.2963)\r\n"); // works only with \r\n error (see ack handling)
+	writes(fd, "!\n");
+	EXPECT_EQ(1, m.read(rds, 1));
+	
+	ASSERT_EQ(0, m.close());
+	EXPECT_EQ(0, close(fd));
+	EXPECT_EQ(0, unlink(tempfilename));
+//	EXPECT_EQ(0, unlink(dumpName.c_str()));
 }
 
 TEST(MeterD0, HagerEHZ_basic) {
@@ -178,31 +206,30 @@ TEST(MeterD0, LandisGyr_basic) {
 	writes(fd, "2.8.0(004329.6*kWh)\r\n");
 	writes(fd, "!");
 
-	// now read one readings
-
-	EXPECT_EQ(6, m.read(rds, 10));
+	// now perform one read call
+	EXPECT_EQ(8, m.read(rds, 10));
 	// check whether pullseq is remaining in the fifo:
 	char buf[100];
 	ssize_t len = read(fd, buf, sizeof(buf));
 	ASSERT_EQ((ssize_t)strlen("/?!\r\n"), len) << "buf=[" << buf << "]";
 
 	// check obis data:
-	ReadingIdentifier *p = rds[0].identifier().get();
-	double value = rds[0].value();
+	ReadingIdentifier *p = rds[2].identifier().get();
+	double value = rds[2].value();
 	EXPECT_EQ(1846.0, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier*>(p);
 	ASSERT_NE((ObisIdentifier*)0, o);
 	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 1, 255)==(o->obis()));
 
-	o = dynamic_cast<ObisIdentifier*>(rds[1].identifier().get());
+	o = dynamic_cast<ObisIdentifier*>(rds[3].identifier().get());
 	ASSERT_NE((ObisIdentifier*)0, o);
-	value = rds[1].value();
+	value = rds[3].value();
 	EXPECT_EQ(0.0, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 2, 0xff)==(o->obis()));
 
-	o = dynamic_cast<ObisIdentifier*>(rds[2].identifier().get());
+	o = dynamic_cast<ObisIdentifier*>(rds[4].identifier().get());
 	ASSERT_NE((ObisIdentifier*)0, o);
-	value = rds[2].value();
+	value = rds[4].value();
 	EXPECT_EQ(4329.6, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 2, 8, 1, 0xff)==(o->obis()));
 
@@ -211,6 +238,84 @@ TEST(MeterD0, LandisGyr_basic) {
 	EXPECT_EQ(0, close(fd));
 	EXPECT_EQ(0, unlink(tempfilename));
 }
+
+int writes_hex(int fd, const char *str);
+
+TEST(MeterD0, ACE3000_basic) {
+	char tempfilename[L_tmpnam+1];
+	char str_pullseq[12] = "2f3f210d0a";
+	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	std::list<Option> options;
+	options.push_back(Option("device", tempfilename));
+	options.push_back(Option("pullseq", str_pullseq));
+	MeterD0 m(options);
+	ASSERT_STREQ(m.device(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
+	int fd = open(tempfilename, O_RDWR);
+	ASSERT_NE(fd, -1);
+	ASSERT_EQ(SUCCESS, m.open());
+
+	// now we can simulate some input by simply writing into fd
+	std::vector<Reading> rds;
+	rds.resize(5);
+
+	// write one good data set
+	/*
+	multiple <0x7f> ... garbage?
+	/?!                 <-- Wiederholung der gesendeten Pullsequenz
+	/ACE03k260V01.19    <-- Antwort mit Herstellerkennung, mögliche Baudrate und Typ
+	F.F(00)             <-- Fehlercode
+	C.1(1126120053322353)  <-- Zählernummer ?
+	C.5.0(00)           <-- ?
+	1.8.0(013925.5*)    <-- Summe Zählerstand Energielieferung
+	Y<0x02><0x02><0x01><0x00>!<0x0d><0x0a><0x03>F<0x7f>    <-- Endesequenz and garbage?
+	*/
+	// without splitting the MeterD0::read source/logic (or multithreading) we can't
+	// wait for the pullseq before we put the data. Thus we just put the data in the buffer
+	// and check afterwards whether a pullseq was send as well.
+
+
+	writes_hex(fd, "7f7f7f7f7f2f3f210d0a2f414345305c336b3236305630312e31390d0a");
+	writes_hex(fd, "02462e46283030290d0a432e31283131323631");
+	writes_hex(fd, "3230303533333232333533290d0a");
+	writes_hex(fd, "432e352e30283030290d0a"); // C.5.0(00)
+	writes_hex(fd, "312e382e30283031333932352e352a29590202010021"); // 1.8.0(01392.5*) ... !
+	writes_hex(fd, "0d0a03467f"); // (newline and <ETX> <BCC =0x46> garbage...) TODO add BCC check (according to DIN 66219 / IEC 1155, if STX/ETX there should be BCC as well. BCC = xor all from STX (not incl.) to ETX (incl.))
+
+	// now perform one read call:
+	EXPECT_EQ(4, m.read(rds, 4));
+	// check whether garbage (after !) and pullseq is remaining in the fifo:
+	// will be ignored on next read call TODO add check
+	char buf[100];
+	ssize_t len = read(fd, buf, sizeof(buf));
+	ASSERT_EQ((ssize_t)strlen("\x0d\x0a\x03\x46\x7f/?!\r\n"), len) << "buf=[" << buf << "]";
+
+	// check obis data:
+	ReadingIdentifier *p = rds[3].identifier().get();
+	double value = rds[3].value();
+	EXPECT_EQ(13925.5, value);
+	ObisIdentifier *o = dynamic_cast<ObisIdentifier*>(p);
+	ASSERT_NE((ObisIdentifier*)0, o);
+	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 0, 255)==(o->obis()));
+
+	o = dynamic_cast<ObisIdentifier*>(rds[1].identifier().get());
+	ASSERT_NE((ObisIdentifier*)0, o);
+	value = rds[1].value();
+	EXPECT_EQ(1126120053322353.0, value);
+	EXPECT_TRUE(Obis(0xff, 0xff, 96, 1, 0xff, 0xff)==(o->obis()));
+
+	o = dynamic_cast<ObisIdentifier*>(rds[0].identifier().get());
+	ASSERT_NE((ObisIdentifier*)0, o);
+	value = rds[0].value();
+	EXPECT_EQ(0.0, value);
+	EXPECT_TRUE(Obis(0xff, 0xff, 97, 97, 0xff, 0xff)==(o->obis()));
+
+	EXPECT_EQ(0, m.close());
+
+	EXPECT_EQ(0, close(fd));
+	EXPECT_EQ(0, unlink(tempfilename));
+}
+
 
 TEST(MeterD0, SLB_DC3_basic)
 {

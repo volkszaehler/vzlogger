@@ -50,6 +50,7 @@ public:
 private:
 	std::string _host;
 	std::string _device;
+	std::string _dump_file;
 	int _baudrate;
 	int _baudrate_read;
 
@@ -60,6 +61,7 @@ private:
 
 
 	int _fd; /* file descriptor of port */
+	FILE *_dump_fd;
 	struct termios _oldtio; /* required to reset port */
 
 	/**
@@ -71,6 +73,13 @@ private:
 	 */
 	int _openSocket(const char *node, const char *service);
 	int _openDevice(struct termios *old_tio, speed_t baudrate);
+	
+	enum DUMP_MODE {NONE, CTRL, DUMP_IN, DUMP_OUT};
+	DUMP_MODE _old_mode;
+	int _dump_pos;
+	void dump_file(DUMP_MODE mode, const char* str);
+	void dump_file(DUMP_MODE mode, const char* buf, size_t len);
+	void dump_file(const char &c){ dump_file(DUMP_IN, &c, 1);};
 };
 
 #endif /* _D0_H_ */
