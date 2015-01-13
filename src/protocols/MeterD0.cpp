@@ -446,18 +446,19 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 			case ACK:
 				if (_ack.size()) {
-					//tcflush(_fd, TCIOFLUSH);
-					//usleep (500000);
-					if (baudrate_read != baudrate_connect) {
-						cfsetispeed(&tio, baudrate_read);
-						tcsetattr(_fd, TCSANOW, &tio);
-						dump_file(CTRL, "cfsetispeed");
-					}
+					// we have to send the ack with the old baudrate and change after successfull transmission:
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
 					dump_file(DUMP_OUT, _ack.c_str(), wlen);
-					tcdrain(_fd);							// Wait until sent
+					tcdrain(_fd); // Wait until sent
 					print(log_debug, "Sending ack sequence send (len:%d is:%d,%s).",
 							name().c_str(),_ack.size(),wlen,_ack.c_str());
+
+					//usleep (500000); // let's hope that tcdrain works even with usb serial adapters. TODO make delay config option
+					if (baudrate_read != baudrate_connect) {
+						cfsetispeed(&tio, baudrate_read);
+						tcsetattr(_fd, TCSADRAIN, &tio); // TCSADRAIN should not be needed (TCSANOW might be sufficient)
+						dump_file(CTRL, "cfsetispeed");
+					}
 				}
 				context = OBIS_CODE;
 				break;
