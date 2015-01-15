@@ -82,8 +82,8 @@ ENDIF(NOT WIN32)
 # libjson
 include(FindJson)
 if( NOT JSON_FOUND)
-  message(FATAL_ERROR "libjson ist required.
-Install json or call cmake -DJSON_HOME=path_to_json_install")
+  message(FATAL_ERROR "libjson-c is required.
+Install json-c or call cmake -DJSON_HOME=path_to_json_install")
 endif( NOT JSON_FOUND)
 include_directories(${JSON_INCLUDE_DIR})
 

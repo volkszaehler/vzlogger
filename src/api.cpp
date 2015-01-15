@@ -175,7 +175,7 @@ void api_parse_exception(CURLresponse response, char *err, size_t n) {
     }
   }
   else {
-    strncpy(err, json_tokener_errors[json_tok->err], n);
+    strncpy(err, json_tokener_error_desc(json_tok->err), n);
   }
 
 	json_object_put(json_obj);
