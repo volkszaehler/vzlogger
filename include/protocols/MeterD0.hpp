@@ -57,7 +57,9 @@ private:
 	parity_type_t _parity;
 	std::string _pull;
 	std::string _ack;
-    bool _wait_sync_end;
+	bool _wait_sync_end;
+	int _timeout_s_read;
+	int _delay_ms_baudrate_change;
 
 
 	int _fd; /* file descriptor of port */

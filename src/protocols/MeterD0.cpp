@@ -52,6 +52,8 @@ MeterD0::MeterD0(std::list<Option> options)
 		, _host("")
 		, _device("")
 		, _wait_sync_end (false)
+		, _timeout_s_read (10)
+		, _delay_ms_baudrate_change (0)
 		, _dump_fd(0)
 		, _old_mode(NONE)
 		, _dump_pos(0)
@@ -221,6 +223,23 @@ MeterD0::MeterD0(std::list<Option> options)
 		throw;
 	}
 
+    try {
+        _timeout_s_read = optlist.lookup_int(options, "timeout_s_read");
+    } catch (vz::OptionNotFoundException &e){
+        // use default: 10s from constructor
+    } catch (vz::VZException &e){
+        print(log_error, "Fauled to parse timeout_s_read", name().c_str());
+        throw;
+    }
+
+    try {
+		_delay_ms_baudrate_change = optlist.lookup_int(options, "delay_ms_baudrate_change");
+    } catch (vz::OptionNotFoundException &e){
+        // use default: (disabled) from constructor
+    } catch (vz::VZException &e){
+		print(log_error, "Fauled to parse delay_ms_baudrate_change", name().c_str());
+        throw;
+    }
 
 }
 
@@ -356,8 +375,8 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 	while (1) {
 		// check for timeout
 		time(&end_time);
-		if (difftime(end_time, start_time) > 10) {
-			print(log_error, "nothing received for more than 10 seconds", name().c_str());
+		if (difftime(end_time, start_time) > _timeout_s_read) {
+			print(log_error, "nothing received for more than %d seconds", name().c_str(), _timeout_s_read);
 			dump_file(CTRL, "timeout!");
 			break;
 		}
@@ -449,15 +468,19 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					// we have to send the ack with the old baudrate and change after successfull transmission:
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
 					dump_file(DUMP_OUT, _ack.c_str(), wlen);
-					tcdrain(_fd); // Wait until sent
+					if (!_delay_ms_baudrate_change) tcdrain(_fd); // if no delay is defined we use tcdrain Wait until sent
 					print(log_debug, "Sending ack sequence send (len:%d is:%d,%s).",
 							name().c_str(),_ack.size(),wlen,_ack.c_str());
 
-					//usleep (500000); // let's hope that tcdrain works even with usb serial adapters. TODO make delay config option
+					if (_delay_ms_baudrate_change) usleep (_delay_ms_baudrate_change*1000);
 					if (baudrate_read != baudrate_connect) {
 						cfsetispeed(&tio, baudrate_read);
+						cfsetospeed(&tio, baudrate_read); // we set this as well. might not be needed but adapters might not support different speed setups.
 						tcsetattr(_fd, TCSADRAIN, &tio); // TCSADRAIN should not be needed (TCSANOW might be sufficient)
-						dump_file(CTRL, "cfsetispeed");
+						if (_delay_ms_baudrate_change)
+							dump_file(CTRL, "usleep cfsetispeed");
+						else
+							dump_file(CTRL, "tcdrain cfsetispeed");
 					}
 				}
 				context = OBIS_CODE;
