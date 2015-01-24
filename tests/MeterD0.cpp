@@ -42,6 +42,7 @@ TEST(MeterD0, basic_dump_fd) {
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("dump_file", (char*)dumpName.c_str()));
 	options.push_back(Option("pullseq", (char*) "4041424344"));
+	options.push_back(Option("ackseq", (char*) "063030300d0a"));
 	MeterD0 m(options);
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
@@ -50,7 +51,7 @@ TEST(MeterD0, basic_dump_fd) {
 	std::vector<Reading> rds;
 	rds.resize(1);
 	// can't test for timeout here as the fdset... don't work for pipes. EXPECT_EQ(0, m.read(rds, 10)); // check for timeout
-	writes(fd, "/HAG5eHZ010C_EHZ1vA02\r\n");
+	writes(fd, "/HAg5eHZ010C_EHZ1vA02\r\n"); // small (HA)g to set reaction time to 20ms
 	writes(fd, "1-0:1.8.0*255(000001.2963)\r\n"); // works only with \r\n error (see ack handling)
 	writes(fd, "!\n");
 	EXPECT_EQ(1, m.read(rds, 1));

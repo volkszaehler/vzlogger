@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
+#include <time.h>
 #include <sys/time.h>
 
 // socket
@@ -54,6 +55,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		, _wait_sync_end (false)
 		, _read_timeout_s (10)
 		, _baudrate_change_delay_ms (0)
+		, _reaction_time_ms (200) // default to 200ms
 		, _dump_fd(0)
 		, _old_mode(NONE)
 		, _dump_pos(0)
@@ -428,6 +430,12 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				if (!isalpha(byte)) goto error;				// Vendor ID needs to be alpha
 				vendor[byte_iterator++] = byte;				// read next byte
 				if (byte_iterator >= VENDOR_LEN) {					// after 3rd byte
+					// check for reaction time indicator: (3rd letter lower case)
+					if (islower(vendor[2]))
+						_reaction_time_ms = 20; // lower case indicates 20ms
+					else
+						_reaction_time_ms = 200; // upper case indicates 200ms
+
 					vendor[byte_iterator] = '\0';			// termination
 					byte_iterator = 0;						// reset byte counter
 					context = BAUDRATE;						// set new context: VENDOR -> BAUDRATE
@@ -447,6 +455,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 							name().c_str(),  vendor, baudrate, identification);
 					byte_iterator = 0;
 					context = ACK;							// set new context: IDENTIFICATION -> ACK (old: OBIS_CODE)
+					// warning we send the ACK only after receiving of next char. This works only as the ID is ended by \r \n
 				}
 				else {
 					if (!isprint(byte)) {
@@ -466,6 +475,9 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 
 			case ACK:
 				if (_ack.size()) {
+					// first delay according to min reaction time:
+					usleep (_reaction_time_ms * 1000 );
+
 					// we have to send the ack with the old baudrate and change after successfull transmission:
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
 					dump_file(DUMP_OUT, _ack.c_str(), wlen);
@@ -791,8 +803,8 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 	const char *ctrl_start="##### ";
 	const char *ctrl_end="\n";
 	
-	const char *dump_out_start= "<<<<<\n";
-	const char *dump_in_start=">>>>>\n";
+	const char *dump_out_start= "<<<<< ";
+	const char *dump_in_start=">>>>> ";
 
 	static char str_dump[3*16 + 2 + 18]; // we output 3 chars per byte plus whitespace plus the char itself, 16 chars max in one row
 
@@ -810,17 +822,37 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		}
 	
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
-		const char *s;
+		const char *s, *e;
 		switch (mode) {
-			case CTRL: s = ctrl_start; break;
-			case DUMP_IN: s = dump_in_start; break;
-			case DUMP_OUT: s = dump_out_start; break;
+			case CTRL: s = ctrl_start; e = 0; break;
+			case DUMP_IN: s = dump_in_start; e = ctrl_end; break;
+			case DUMP_OUT: s = dump_out_start; e = ctrl_end; break;
 			default: s = ctrl_start; break;
 		}
 		fwrite(s, 1, strlen(s), _dump_fd);
+		// output timestamp:
+		struct timespec ts;
+		if (!clock_gettime(CLOCK_MONOTONIC_RAW, &ts)){
+			static struct timespec ts_last={0,0};
+			long delta = (ts.tv_sec * 1000000000L) + ts.tv_nsec;
+			delta -= ts_last.tv_nsec;
+			delta -= ts_last.tv_sec * 1000000000L;
+			delta /= 1000000L; // change into ms
+			if (ts_last.tv_sec==0)delta=0;
+			ts_last = ts;
+			char tbuf[30];
+			int l = snprintf(tbuf, sizeof(tbuf), "%2ld.%.9lds (%6ld ms) ", ts.tv_sec % 100, ts.tv_nsec, delta );
+			fwrite(tbuf, 1, l, _dump_fd);
+		}
+		if (e)
+			fwrite(e, 1, strlen(e), _dump_fd);
 	}
 	switch(mode) {
-	case CTRL: fwrite(buf, 1, len, _dump_fd); break;
+	case CTRL:
+		{
+			fwrite(buf, 1, len, _dump_fd);
+		}
+		break;
 	case DUMP_IN:
 	case DUMP_OUT:
 	{

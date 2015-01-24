@@ -60,7 +60,7 @@ private:
 	bool _wait_sync_end;
 	int _read_timeout_s;
 	int _baudrate_change_delay_ms;
-
+	int _reaction_time_ms; // reaction time t_r according to 62056-21
 
 	int _fd; /* file descriptor of port */
 	FILE *_dump_fd;
