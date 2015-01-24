@@ -52,6 +52,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		: Protocol("d0")
 		, _host("")
 		, _device("")
+		, _auto_ack (false)
 		, _wait_sync_end (false)
 		, _read_timeout_s (10)
 		, _baudrate_change_delay_ms (0)
@@ -103,16 +104,21 @@ MeterD0::MeterD0(std::list<Option> options)
 	try {
 		std::string hex;
 		hex = optlist.lookup_string(options, "ackseq");
-		int n=hex.size();
-		int i;
-		for (i=0;i<n;i=i+2) {
-			char hs[3];
-			strncpy(hs,hex.c_str()+i,2);
-			char hx[2];
-			hx[0]=strtol(hs,NULL,16);
-			_ack.append(hx,1);
+		if (!hex.compare("auto")){
+			_auto_ack = true;
+			print(log_debug, "using autoack", name().c_str());
+		}else{
+			int n=hex.size();
+			int i;
+			for (i=0;i<n;i=i+2) {
+				char hs[3];
+				strncpy(hs,hex.c_str()+i,2);
+				char hx[2];
+				hx[0]=strtol(hs,NULL,16);
+				_ack.append(hx,1);
+			}
+			print(log_debug,"ackseq len:%d found %s, %x",name().c_str(),_ack.size(),_ack.c_str(),_ack.c_str()[0]);
 		}
-		print(log_debug,"ackseq len:%d found %s, %x",name().c_str(),_ack.size(),_ack.c_str(),_ack.c_str()[0]);
 	} catch (vz::OptionNotFoundException &e) {
 		// using default value if not specified
 		_ack = "";
@@ -443,7 +449,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case BAUDRATE:									// BAUDRATE consists of 1 char only
-				baudrate = byte;
+				baudrate = byte; // with _auto_ack we could check here whether the baudrate changed and set _ack to ""
 				byte_iterator = 0;
 				context = IDENTIFICATION;					// set new context: BAUDRATE -> IDENTIFICATION
 				break;
@@ -474,9 +480,49 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case ACK:
-				if (_ack.size()) {
+				if (_auto_ack || _ack.size()) {
 					// first delay according to min reaction time:
 					usleep (_reaction_time_ms * 1000 );
+
+					if (!_ack.size()){
+						// calculate the ack seq based on IEC62056-21 mode C data readout:
+						// assuming a meter doesn't change at runtime the baudrate
+						_ack = "\x06\x30\x30\x30\x0d\x0a"; // 063030300d0a
+						// now change based on baudrate:
+						char c=0;
+						switch (baudrate){
+						case '1': // 600
+							baudrate_read = B600;
+							c = baudrate;
+							break;
+						case '2': // 1200
+							baudrate_read = B1200;
+							c = baudrate;
+							break;
+						case '3': // 2400
+							baudrate_read = B2400;
+							c = baudrate;
+							break;
+						case '4': // 4800
+							baudrate_read = B4800;
+							c = baudrate;
+							break;
+						case '5': // 9600
+							baudrate_read = B9600;
+							c = baudrate;
+							break;
+						case '6': // 19200
+							baudrate_read = B19200;
+							c = baudrate;
+							break;
+						case '0': // 300 nobreak;
+						default:
+							baudrate_read = 300;  // don't set c
+							break;
+						}
+						if (c!=0)
+							_ack[2] = c;
+					}
 
 					// we have to send the ack with the old baudrate and change after successfull transmission:
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
