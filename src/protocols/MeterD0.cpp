@@ -822,7 +822,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		}
 	
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
-		const char *s, *e;
+		const char *s=0, *e=0;
 		switch (mode) {
 			case CTRL: s = ctrl_start; e = 0; break;
 			case DUMP_IN: s = dump_in_start; e = ctrl_end; break;
