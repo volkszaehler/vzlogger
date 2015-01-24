@@ -58,8 +58,8 @@ private:
 	std::string _pull;
 	std::string _ack;
 	bool _wait_sync_end;
-	int _timeout_s_read;
-	int _delay_ms_baudrate_change;
+	int _read_timeout_s;
+	int _baudrate_change_delay_ms;
 
 
 	int _fd; /* file descriptor of port */

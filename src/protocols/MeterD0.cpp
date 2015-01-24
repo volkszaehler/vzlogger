@@ -52,8 +52,8 @@ MeterD0::MeterD0(std::list<Option> options)
 		, _host("")
 		, _device("")
 		, _wait_sync_end (false)
-		, _timeout_s_read (10)
-		, _delay_ms_baudrate_change (0)
+		, _read_timeout_s (10)
+		, _baudrate_change_delay_ms (0)
 		, _dump_fd(0)
 		, _old_mode(NONE)
 		, _dump_pos(0)
@@ -224,20 +224,20 @@ MeterD0::MeterD0(std::list<Option> options)
 	}
 
     try {
-        _timeout_s_read = optlist.lookup_int(options, "timeout_s_read");
+		_read_timeout_s = optlist.lookup_int(options, "read_timeout");
     } catch (vz::OptionNotFoundException &e){
         // use default: 10s from constructor
     } catch (vz::VZException &e){
-        print(log_error, "Fauled to parse timeout_s_read", name().c_str());
+		print(log_error, "Failed to parse read_timeout", name().c_str());
         throw;
     }
 
     try {
-		_delay_ms_baudrate_change = optlist.lookup_int(options, "delay_ms_baudrate_change");
+		_baudrate_change_delay_ms = optlist.lookup_int(options, "baudrate_change_delay");
     } catch (vz::OptionNotFoundException &e){
         // use default: (disabled) from constructor
     } catch (vz::VZException &e){
-		print(log_error, "Fauled to parse delay_ms_baudrate_change", name().c_str());
+		print(log_error, "Failed to parse baudrate_change_delay", name().c_str());
         throw;
     }
 
@@ -340,7 +340,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 		cfsetospeed(&tio, baudrate_connect);
 		// apply new configuration
 		tcsetattr(_fd, TCSANOW, &tio);
-		if (_delay_ms_baudrate_change) usleep (_delay_ms_baudrate_change*1000); // give some time for baudrate change to be applied
+		if (_baudrate_change_delay_ms) usleep (_baudrate_change_delay_ms * 1000); // give some time for baudrate change to be applied
 		int wlen=write(_fd,_pull.c_str(),_pull.size());
 		dump_file(DUMP_OUT, _pull.c_str(), wlen >0 ? wlen : 0);
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).",name().c_str(),_pull.size(),wlen);
@@ -376,8 +376,8 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 	while (1) {
 		// check for timeout
 		time(&end_time);
-		if (difftime(end_time, start_time) > _timeout_s_read) {
-			print(log_error, "nothing received for more than %d seconds", name().c_str(), _timeout_s_read);
+		if (difftime(end_time, start_time) > _read_timeout_s) {
+			print(log_error, "nothing received for more than %d seconds", name().c_str(), _read_timeout_s);
 			dump_file(CTRL, "timeout!");
 			break;
 		}
@@ -469,16 +469,16 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					// we have to send the ack with the old baudrate and change after successfull transmission:
 					int wlen = write(_fd,_ack.c_str(),_ack.size());
 					dump_file(DUMP_OUT, _ack.c_str(), wlen);
-					if (!_delay_ms_baudrate_change) tcdrain(_fd); // if no delay is defined we use tcdrain Wait until sent
+					if (!_baudrate_change_delay_ms) tcdrain(_fd); // if no delay is defined we use tcdrain Wait until sent
 					print(log_debug, "Sending ack sequence send (len:%d is:%d,%s).",
 							name().c_str(),_ack.size(),wlen,_ack.c_str());
 
-					if (_delay_ms_baudrate_change) usleep (_delay_ms_baudrate_change*1000);
+					if (_baudrate_change_delay_ms) usleep (_baudrate_change_delay_ms * 1000);
 					if (baudrate_read != baudrate_connect) {
 						cfsetispeed(&tio, baudrate_read);
 						cfsetospeed(&tio, baudrate_read); // we set this as well. might not be needed but adapters might not support different speed setups.
 						tcsetattr(_fd, TCSADRAIN, &tio); // TCSADRAIN should not be needed (TCSANOW might be sufficient)
-						if (_delay_ms_baudrate_change)
+						if (_baudrate_change_delay_ms)
 							dump_file(CTRL, "usleep cfsetispeed");
 						else
 							dump_file(CTRL, "tcdrain cfsetispeed");
