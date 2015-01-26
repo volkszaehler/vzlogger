@@ -520,6 +520,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 							baudrate_read = 300;  // don't set c
 							break;
 						}
+						_baudrate_read = baudrate_read; // store in member variable as well overriding the option parameter
 						if (c!=0)
 							_ack[2] = c;
 					}
