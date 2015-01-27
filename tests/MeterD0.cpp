@@ -62,6 +62,43 @@ TEST(MeterD0, basic_dump_fd) {
 //	EXPECT_EQ(0, unlink(dumpName.c_str()));
 }
 
+TEST(MeterD0, basic_dump_fd_autoack) {
+
+	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
+	char tempfilename[L_tmpnam+1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	std::list<Option> options;
+	options.push_back(Option("device", tempfilename));
+	options.push_back(Option("dump_file", (char*)dumpName.c_str()));
+	options.push_back(Option("pullseq", (char*) "2F3F210D0A"));
+	options.push_back(Option("ackseq", (char*) "auto"));
+	options.push_back(Option("baudrate", 300));
+	MeterD0 m(options);
+	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
+	int fd = open(tempfilename, O_RDWR);
+	ASSERT_NE(fd, -1);
+	ASSERT_EQ(SUCCESS, m.open());
+	std::vector<Reading> rds;
+	rds.resize(1);
+	// can't test for timeout here as the fdset... don't work for pipes. EXPECT_EQ(0, m.read(rds, 10)); // check for timeout
+	writes(fd, "/HAg5eHZ010C_EHZ1vA02\r\n"); // small (HA)g to set reaction time to 20ms
+	writes(fd, "1-0:1.8.0*255(000001.2963)\r\n"); // works only with \r\n error (see ack handling)
+	writes(fd, "!");
+	EXPECT_EQ(1, m.read(rds, 1));
+
+	// now read from fd and check for pullseq and proper ackseq:
+	char buf[100];
+	ssize_t len = read(fd, buf, sizeof(buf));
+	EXPECT_EQ((ssize_t)strlen("/?!\r\n\x06\x30\x35\x30\x0d\x0a"), len) << "buf=[" << buf << "]";
+
+
+	ASSERT_EQ(0, m.close());
+	EXPECT_EQ(0, close(fd));
+	EXPECT_EQ(0, unlink(tempfilename));
+//	EXPECT_EQ(0, unlink(dumpName.c_str()));
+}
+
+
 TEST(MeterD0, HagerEHZ_basic) {
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);

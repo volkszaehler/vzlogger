@@ -57,6 +57,7 @@ private:
 	parity_type_t _parity;
 	std::string _pull;
 	std::string _ack;
+	bool _auto_ack;
 	bool _wait_sync_end;
 	int _read_timeout_s;
 	int _baudrate_change_delay_ms;
