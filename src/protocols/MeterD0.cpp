@@ -104,10 +104,10 @@ MeterD0::MeterD0(std::list<Option> options)
 	try {
 		std::string hex;
 		hex = optlist.lookup_string(options, "ackseq");
-		if (!hex.compare("auto")){
+		if (!hex.compare("auto")) {
 			_auto_ack = true;
 			print(log_debug, "using autoack", name().c_str());
-		}else{
+		} else {
 			int n=hex.size();
 			int i;
 			for (i=0;i<n;i=i+2) {
@@ -233,18 +233,18 @@ MeterD0::MeterD0(std::list<Option> options)
 
     try {
 		_read_timeout_s = optlist.lookup_int(options, "read_timeout");
-    } catch (vz::OptionNotFoundException &e){
+	} catch (vz::OptionNotFoundException &e) {
         // use default: 10s from constructor
-    } catch (vz::VZException &e){
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse read_timeout", name().c_str());
         throw;
     }
 
     try {
 		_baudrate_change_delay_ms = optlist.lookup_int(options, "baudrate_change_delay");
-    } catch (vz::OptionNotFoundException &e){
+	} catch (vz::OptionNotFoundException &e) {
         // use default: (disabled) from constructor
-    } catch (vz::VZException &e){
+	} catch (vz::VZException &e) {
 		print(log_error, "Failed to parse baudrate_change_delay", name().c_str());
         throw;
     }
@@ -484,13 +484,13 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					// first delay according to min reaction time:
 					usleep (_reaction_time_ms * 1000 );
 
-					if (!_ack.size()){
+					if (!_ack.size()) {
 						// calculate the ack seq based on IEC62056-21 mode C data readout:
 						// assuming a meter doesn't change at runtime the baudrate
 						_ack = "\x06\x30\x30\x30\x0d\x0a"; // 063030300d0a
 						// now change based on baudrate:
 						char c=0;
-						switch (baudrate){
+						switch (baudrate) {
 						case '1': // 600
 							baudrate_read = B600;
 							c = baudrate;
@@ -879,7 +879,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		fwrite(s, 1, strlen(s), _dump_fd);
 		// output timestamp:
 		struct timespec ts;
-		if (!clock_gettime(CLOCK_MONOTONIC_RAW, &ts)){
+		if (!clock_gettime(CLOCK_MONOTONIC_RAW, &ts)) {
 			static struct timespec ts_last={0,0};
 			long delta = (ts.tv_sec * 1000000000L) + ts.tv_nsec;
 			delta -= ts_last.tv_nsec;
