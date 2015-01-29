@@ -40,6 +40,7 @@
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
 #include <api/Null.hpp>
+#include "threads.h"
 
 extern Config_Options options;	/* global application options */
 
@@ -94,6 +95,7 @@ bool MeterMap::stopped() {
 				(*it)->cancel();
 				(*it)->join();
 			}
+			_meter->close();
 			return true;
 		}
 	}
@@ -109,7 +111,7 @@ void MeterMap::cancel() {
 		pthread_cancel(_thread);
 		pthread_join(_thread, NULL);
 		_thread_running = false;
-
+		_meter->close();
 		//_channels.clear();
 	}
 }

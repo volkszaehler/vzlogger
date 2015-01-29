@@ -206,7 +206,7 @@ char * Buffer::dump(char *dump, size_t len) {
 	if (pos+1 < len) {
 		dump[pos++] = '}';
 		dump[pos] = '\0'; /* zero terminated string */
-	}
+	} else { unlock(); return NULL; } // otherwise unterminated string
 	unlock();
 
 	return (pos < len) ? dump : NULL; /* buffer full? */

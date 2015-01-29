@@ -128,6 +128,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 
+# enable unit testing
+include(CTest)
+enable_testing()
 
 if(Subversion_FOUND AND ENABLE_GOOGLEMOCK)
   add_subdirectory(gmock)
@@ -137,9 +140,6 @@ else()
    message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
   endif()
 endif()
-# enable unit testing
-include(CTest)
-enable_testing()
 if(Subversion_FOUND)
   add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
 endif()

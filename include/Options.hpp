@@ -18,7 +18,7 @@ public:
 	} type_t;
 
 	Option(const char *key, struct json_object *jso);
-	Option(const char *key, char *value);
+	Option(const char *key, const char *value);
 	Option(const char *key, int value);
 	Option(const char *key, double value);
 	Option(const char *key, bool value);
