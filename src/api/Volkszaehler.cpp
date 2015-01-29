@@ -164,7 +164,6 @@ void vz::api::Volkszaehler::register_device() {
 
 json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 
-	json_object *json_tuples = json_object_new_array();
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", channel()->name(), buf->size());
@@ -188,6 +187,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 		return NULL;
 	}
 
+	json_object *json_tuples = json_object_new_array();
 	for (it = _values.begin(); it != _values.end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
 

@@ -53,7 +53,7 @@ Option::Option(const char *pKey, struct json_object *jso)
 	_type = (type_t)json_object_get_type(jso);
 }
 
-Option::Option(const char *pKey, char *pValue)
+Option::Option(const char *pKey, const char *pValue)
 		: _key(pKey)
 		, _type(type_string)
 		, _value_string(pValue)

@@ -173,6 +173,7 @@ void vz::api::MySmartGrid::send()
 	json_str = json_object_to_json_string(json_obj);
 	if (json_str == NULL || strcmp(json_str, "null")==0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
+		json_object_put(json_obj); // TODO untested!
 		return;
 	}
 

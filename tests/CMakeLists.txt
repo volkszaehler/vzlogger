@@ -23,3 +23,5 @@ target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRAR
 if(SML_FOUND)
   target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})
 endif(SML_FOUND)
+
+add_subdirectory(mocks)

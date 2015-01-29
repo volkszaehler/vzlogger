@@ -44,16 +44,16 @@ public:
 //	Meter(const Meter *mtr);
 	virtual ~Meter();
 
-	void open();
-	int close();
-	size_t read(std::vector<Reading> &rds, size_t n);
+	virtual void open();
+	virtual int close();
+	virtual size_t read(std::vector<Reading> &rds, size_t n);
 
 	// setter
 	void interval(const int i) { _interval = i; }
 
 	// getter
 	const char *name() const { return _name.c_str(); }
-	bool isEnabled() const { return _enable; }
+	virtual bool isEnabled() const { return _enable; }
 
 	meter_protocol_t protocolId() const { return _protocol_id; }
 	vz::protocol::Protocol::Ptr protocol() const { return _protocol; }
