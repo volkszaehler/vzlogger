@@ -9,7 +9,7 @@ if(NOT SML_FOUND)
   list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif(NOT SML_FOUND)
 
-add_executable(vzlogger_unit_tests ${test_sources})
+add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp)
 
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a

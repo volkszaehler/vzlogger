@@ -23,6 +23,7 @@ set(vzlogger_srcs
   ltqnorm.cpp
   Meter.cpp
   ${CMAKE_BINARY_DIR}/gitSha1.cpp
+  CurlSessionProvider.cpp
 )
 
 set(libvz_srcs 

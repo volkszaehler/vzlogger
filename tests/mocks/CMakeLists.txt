@@ -21,6 +21,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/api/CurlIF.cpp
 	../../src/api/CurlCallback.cpp
 	../../src/api/CurlResponse.cpp
+	../../src/CurlSessionProvider.cpp
 )
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
