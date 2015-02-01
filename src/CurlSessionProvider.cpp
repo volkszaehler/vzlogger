@@ -8,6 +8,7 @@
  */
 
 #include <assert.h>
+#include <time.h>
 #include "CurlSessionProvider.hpp"
 
 CurlSessionProvider::CurlSessionProvider()
@@ -19,7 +20,10 @@ CurlSessionProvider::CurlSessionProvider()
 CurlSessionProvider::~CurlSessionProvider()
 {
     // curl_easy_cleanup for each CURL*
-    pthread_mutex_lock(&_map_mutex);
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME , &ts);
+    ts.tv_sec+=1;
+    pthread_mutex_timedlock(&_map_mutex, &ts); // try max 1s to acquire the lock. There might have been another thread pthread_cancelled while owning the lock.
     for (map_it it = _easy_handle_map.begin(); it!=_easy_handle_map.end(); ++it)
     {
         CurlUsage cu = (*it).second;
