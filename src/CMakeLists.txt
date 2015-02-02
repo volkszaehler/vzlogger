@@ -47,7 +47,7 @@ target_link_libraries(vzlogger ${JSON_LIBRARY})
 if(SML_FOUND)
   target_link_libraries(vzlogger ${SML_LIBRARY})
 endif(SML_FOUND)
-
+target_link_libraries(vzlogger ${OCR_LIBRARIES})
 target_link_libraries(vzlogger ${MICROHTTPD_LIBRARY})
 target_link_libraries(vzlogger ${LIBGCRYPT})
 target_link_libraries(vzlogger pthread m ${LIBUUID})

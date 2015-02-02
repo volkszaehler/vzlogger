@@ -39,5 +39,16 @@ before_install:
   - sudo cp sml.pc /usr/lib/pkgconfig/.
   - cd ..
 
+# -- install leptonica
+  - sudo apt-get install libpng-dev libtiff-dev
+  - wget http://www.leptonica.org/source/leptonica-1.71.tar.gz
+  - tar -zxvf leptonica-1.71.tar.gz
+  - cd leptonica-1.71
+  - ./configure --disable-programs
+  - make
+  - sudo make install
+  - sudo ldconfig
+  - cd ..
+
 script:
   - cmake . -DSML_HOME=/usr/local/src/libsml/sml && make && make test

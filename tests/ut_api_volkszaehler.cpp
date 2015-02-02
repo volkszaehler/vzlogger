@@ -21,7 +21,16 @@ class Volkszaehler_Test
 }
 }
 
-Config_Options options; // this is dangerous! Needs a mocked class as this can throw exceptions!
+Config_Options options("etc/vzlogger.conf");
+
+TEST(api_Volkszaehler, config_options){
+	MapContainer mappings;
+#ifdef OCR_SUPPORT
+	options.config_parse(mappings); // let's see whether we can parse the provided example config
+#else
+	ASSERT_THROW(options.config_parse(mappings), vz::VZException); // the default config should fail due to missing Protocol ocr. There might be another failure...
+#endif
+}
 
 TEST(api_Volkszaehler, api_parse_exception) {
 using namespace vz::api;

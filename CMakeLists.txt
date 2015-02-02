@@ -56,6 +56,13 @@ OPTION(ENABLE_LOCAL
 OPTION(WITH_READER
   "compile reader to for testing your meters (def=yes)])"
   On)
+OPTION(ENABLE_OCR
+	"enable support for OCR image/processing meter (def=yes)"
+	On)
+
+OPTION(ENABLE_OCR_TESSERACT
+	"enable support for OCR text recognition meter (def=no)"
+	Off)
 
 # find dependencies
 # libsml
@@ -74,6 +81,27 @@ if(ENABLE_LOCAL)
     set(LOCAL_SUPPORT 1)
   endif(MICROHTTPD_FOUND)
 endif(ENABLE_LOCAL)
+
+if( ENABLE_OCR OR ENABLE_OCR_TESSERACT )
+	include(FindLeptonica)
+	if (NOT LEPTONICA_FOUND)
+		message( STATUS "Leptonica not found. Disabling ENABLE_OCR" )
+		set(ENABLE_OCR false)
+		set(ENABLE_OCR_TESSERACT false)
+	else ()
+		message("OCR Meter enabled")
+		# TODO install tesseract
+		# and set include_directories appropriate
+		if (ENABLE_OCR_TESSERACT)
+			set(OCR_LIBRARIES ${LEPTONICA_LIBRARIES} tesseract)
+			set(OCR_TESSERACT_SUPPORT 1)
+		else ()
+			set( OCR_LIBRARIES ${LEPTONICA_LIBRARIES})
+		endif( ENABLE_OCR_TESSERACT)
+		include_directories(${LEPTONICA_INCLUDE_DIRS})
+		set(OCR_SUPPORT 1)
+	endif( NOT LEPTONICA_FOUND )
+endif( ENABLE_OCR OR ENABLE_OCR_TESSERACT )
 
 IF(NOT WIN32)
   include(FindThreads)
