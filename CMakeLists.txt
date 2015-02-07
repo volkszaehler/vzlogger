@@ -57,12 +57,12 @@ OPTION(WITH_READER
   "compile reader to for testing your meters (def=yes)])"
   On)
 OPTION(ENABLE_OCR
-	"enable support for OCR image/processing meter (def=yes)"
-	On)
+	"enable support for OCR image/processing meter (def=off)"
+	OFF)
 
 OPTION(ENABLE_OCR_TESSERACT
-	"enable support for OCR text recognition meter (def=no)"
-	Off)
+	"enable support for OCR text recognition meter (def=off)"
+	OFF)
 
 # find dependencies
 # libsml

@@ -51,4 +51,4 @@ before_install:
   - cd ..
 
 script:
-  - cmake . -DSML_HOME=/usr/local/src/libsml/sml && make && make test
+  - cmake . -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
