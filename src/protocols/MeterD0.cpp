@@ -550,7 +550,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case OBIS_CODE:
-				print(log_debug, "DEBUG OBIS_CODE byte %c hex= %X ", name().c_str(), byte, byte);
+				print((log_level_t)(log_debug+5), "DEBUG OBIS_CODE byte %c hex= %X ", name().c_str(), byte, byte);
 				if ((byte != '\n') && (byte != '\r') && (byte != 0x02)) {	// exclude STX
 					if (byte == '(') {
 						obis_code[byte_iterator] = '\0';
@@ -568,7 +568,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case VALUE:
-				print(log_debug, "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);
+				print(((log_level_t)(log_debug+5)), "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);
 				if ((byte == '*') || (byte == ')')) {
 					value[byte_iterator] = '\0';
 					byte_iterator = 0;
