@@ -69,8 +69,9 @@ namespace vz {
 
 		private:
 			std::string _middleware;
+			unsigned int _curlTimeout;
+			std::string _url;
 
-			CURL *curl() { return _api.curl; }
 			/**
 			 * Create JSON object of tuples
 			 *
