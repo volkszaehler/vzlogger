@@ -45,7 +45,14 @@ CURL *CurlSessionProvider::get_easy_session(std::string key, int timeout) // thi
     if (it!= _easy_handle_map.end()){
         CurlUsage &cur = (*it).second;
         pthread_mutex_unlock(&_map_mutex); // we unlock here already but access the current element anyhow assuming an insert doesnt invalidate the reference
-        assert(0 == pthread_mutex_lock(&cur.mutex));
+		int err;
+		do {
+			timespec abs_time;
+			clock_gettime(CLOCK_REALTIME , &abs_time);
+			abs_time.tv_sec += 1;
+			pthread_testcancel(); // to check whether the thread shall end here!
+			err = pthread_mutex_timedlock(&cur.mutex, &abs_time);
+		} while ((err == EAGAIN) || (err == ETIMEDOUT));
         assert(!cur.inUse);
         cur.inUse = true;
         toRet = cur.eh;
@@ -57,8 +64,8 @@ CURL *CurlSessionProvider::get_easy_session(std::string key, int timeout) // thi
         pthread_mutex_lock(&cu.mutex);
         _easy_handle_map.insert(std::make_pair(key, cu));
         toRet = cu.eh;
+		pthread_mutex_unlock(&_map_mutex);
     }
-    pthread_mutex_unlock(&_map_mutex);
 
     return toRet;
 }
