@@ -171,17 +171,6 @@ void Buffer::undelete() {
 	unlock();
 }
 
-
-void Buffer::shrink(/*size_t keep*/) {
-	lock();
-
-//	while(size > keep && begin() != sent) {
-//		pop();
-//	}
-
-	unlock();
-}
-
 char * Buffer::dump(char *dump, size_t len) {
 	size_t pos = 0;
 	dump[pos++] = '{';
