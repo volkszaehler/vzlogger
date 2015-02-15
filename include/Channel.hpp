@@ -64,7 +64,7 @@ class Channel {
 		if (_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
 	double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
 
-	const char* uuid()                  { return _uuid.c_str(); }
+	const char* uuid() const            { return _uuid.c_str(); }
 	const std::string apiProtocol()     { return _apiProtocol; }
 
 	void last(Reading *rd)              { _last = rd;}
@@ -73,7 +73,6 @@ class Channel {
 	Buffer::Ptr buffer()                { return _buffer; }
 
 	size_t size() const { return _buffer->size(); }
-	size_t keep() const { return _buffer->keep(); }
 
 	inline void notify() {
 		_buffer->lock();

@@ -28,7 +28,6 @@ public:
 	MOCK_METHOD0( notify, void ());
 	MOCK_METHOD2( dump, char* (char *dump, size_t len));
 	MOCK_CONST_METHOD0( size, size_t ());
-	MOCK_CONST_METHOD0( keep, size_t ());
 	MOCK_METHOD0( wait, void ());
 	MOCK_METHOD0( uuid, const char* ());
 

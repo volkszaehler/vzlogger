@@ -43,6 +43,10 @@ int handle_request(
 	void **con_cls
 );
 
+class Channel;
+void shrink_localbuffer(); // remove old data in the local buffer
+void add_ch_to_localbuffer(Channel &ch);
+
 #endif /* _LOCAL_H_ */
 
 

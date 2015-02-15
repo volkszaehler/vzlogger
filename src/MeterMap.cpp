@@ -68,10 +68,6 @@ void MeterMap::start() {
 
 		print(log_debug, "Meter is opened. Starting channels.", _meter->name());
 		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
-			// set buffer length for perriodic meters
-			if (meter_get_details(_meter->protocolId())->periodic && options.local()) {
-				(*it)->buffer()->keep(ceil(options.buffer_length() / (double) _meter->interval()));
-			}
 
 			if (options.logging()) {
 				(*it)->start();
