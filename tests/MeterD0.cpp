@@ -391,3 +391,70 @@ TEST(MeterD0, SLB_DC3_basic)
 	ASSERT_EQ(Obis("1.8.0*1"), Obis(255,255,1,8,0,1));
 
 }
+
+TEST( MeterD0, LuG_E350 )
+{
+	char tempfilename[L_tmpnam+1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	std::list<Option> options;
+	options.push_back(Option("device", tempfilename));
+	MeterD0 m(options);
+	ASSERT_STREQ(m.device(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
+	int fd = open(tempfilename, O_RDWR);
+	ASSERT_NE(fd, -1);
+	ASSERT_EQ(SUCCESS, m.open());
+
+	// now we can simulate some input by simply writing into fd
+	std::vector<Reading> rds;
+	rds.resize(25);
+
+	// write data set
+	// without splitting the MeterD0::read source/logic (or multithreading) we can't
+	// wait for the pullseq before we put the data. Thus we just put the data in the buffer
+	// and check afterwards whether a pullseq was send as well.
+
+	writes_hex(fd, "2f4c475a345a4d4631303041432e4d32370a0a"); //  /LGZ4ZMF100AC.M27
+	writes_hex(fd, "02462e46283030290a0a302e30282020"); //    F.F(00)  0.0(
+	writes_hex(fd, "2020202020203138343338363336290a"); //         18438636)
+	writes_hex(fd, "0a432e312e3028313834333836333629"); //    C.1.0(18438636)
+	writes_hex(fd, "0a0a432e312e31282020202020202020"); //     C.1.1(
+	writes_hex(fd, "290a0a312e382e31283030303030302e"); //   )  1.8.1(000000.
+	writes_hex(fd, "3030302a6b5768290a0a312e382e3228"); //   000*kWh)  1.8.2(
+	writes_hex(fd, "3030303231392e3235312a6b5768290a"); //   000219.251*kWh)
+	writes_hex(fd, "0a322e382e31283030303030302e3030"); //    2.8.1(000000.00
+	writes_hex(fd, "302a6b5768290a0a322e382e32283030"); //   0*kWh)  2.8.2(00
+	writes_hex(fd, "303030302e3030302a6b5768290a0a31"); //   0000.000*kWh)  1
+	writes_hex(fd, "2e382e30283030303231392e3235322a"); //   .8.0(000219.252*
+	writes_hex(fd, "6b5768290a0a322e382e302830303030"); //   kWh)  2.8.0(0000
+	writes_hex(fd, "30302e3030302a6b5768290a0a31352e"); //   00.000*kWh)  15.
+	writes_hex(fd, "382e30283030303231392e3235322a6b"); //   8.0(000219.252*k
+	writes_hex(fd, "5768290a0a432e372e30283030303429"); //   Wh)  C.7.0(0004)
+	writes_hex(fd, "0a0a33322e37283233332a56290a0a35"); //     32.7(233*V)  5
+	writes_hex(fd, "322e37283233332a56290a0a37322e37"); //   2.7(233*V)  72.7
+	writes_hex(fd, "283233342a56290a0a33312e37283030"); //   (234*V)  31.7(00
+	writes_hex(fd, "322e33302a41290a0a35312e37283030"); //   2.30*A)  51.7(00
+	writes_hex(fd, "322e33322a41290a0a37312e37283030"); //   2.32*A)  71.7(00
+	writes_hex(fd, "322e39372a41290a0a31362e37283030"); //   2.97*A)  16.7(00
+	writes_hex(fd, "312e36362a6b57290a0a38322e382e31"); //   1.66*kW)  82.8.1
+	writes_hex(fd, "2830303030290a0a38322e382e322830"); //   (0000)  82.8.2(0
+	writes_hex(fd, "303030290a0a302e322e30284d323729"); //   000)  0.2.0(M27)
+	writes_hex(fd, "0a0a432e352e302831343230290a0a21"); //     C.5.0(1420)  !
+
+	// now perform one read call:
+	EXPECT_EQ(23, m.read(rds, 23));
+
+	// check obis data: (here just the last one)
+	ReadingIdentifier *p = rds[22].identifier().get();
+	double value = rds[22].value();
+	EXPECT_EQ(1420.0, value);
+	ObisIdentifier *o = dynamic_cast<ObisIdentifier*>(p);
+	ASSERT_NE((ObisIdentifier*)0, o);
+	EXPECT_TRUE(Obis("C.5.0")==(o->obis()));
+
+	EXPECT_EQ(0, m.close());
+
+	EXPECT_EQ(0, close(fd));
+	EXPECT_EQ(0, unlink(tempfilename));
+
+}
