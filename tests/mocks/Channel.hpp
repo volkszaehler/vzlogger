@@ -30,6 +30,7 @@ public:
 	MOCK_CONST_METHOD0( size, size_t ());
 	MOCK_METHOD0( wait, void ());
 	MOCK_METHOD0( uuid, const char* ());
+	MOCK_CONST_METHOD0( duplicates, int ());
 
 	ReadingIdentifier::Ptr &real_id() {return mock_id;}
 	ReadingIdentifier::Ptr mock_id;

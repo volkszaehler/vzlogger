@@ -88,6 +88,8 @@ class Channel {
 		_buffer->unlock();
 	}
 
+	int duplicates() const { return _duplicates; }
+
 	private:
 	static int instances;
 	bool _thread_running;   	// flag if thread is started
@@ -106,6 +108,7 @@ class Channel {
 
 	std::string _uuid;			// unique identifier for middleware
 	std::string _apiProtocol;	// protocol of api to use for logging
+	int _duplicates;			// how to handle duplicate values (see conf)
 };
 
 #endif /* _CHANNEL_H_ */
