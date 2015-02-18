@@ -167,6 +167,9 @@ public:
  */
     size_t unparse(/*meter_protocol_t protocol,*/ char *buffer, size_t n);
 
+    bool operator==(const Reading &rhs) const {return (_deleted == rhs._deleted) && (_value == rhs._value) &&
+                (_time.tv_sec == rhs._time.tv_sec) && (_time.tv_usec == rhs._time.tv_usec);}
+
 protected:
 	bool   _deleted;
 	double _value;

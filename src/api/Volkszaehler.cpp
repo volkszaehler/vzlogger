@@ -206,7 +206,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 				} else { // one reading sent already. compare
 					// a) timestamp
 					// b) duplicate value
-					if ((timestamp > (_last_timestamp + duplicates_ms)) ||
+					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
 							(r.value() != _lastReadingSent->value())) {
 						// send the last ignored first iff value changed:
 						if (_lastReadingIgnored) {
