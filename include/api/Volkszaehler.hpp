@@ -76,8 +76,6 @@ namespace vz {
 			 * Create JSON object of tuples
 			 *
 			 * @param buf	the buffer our readings are stored in (required for mutex)
-			 * @param first	the first tuple of our linked list which should be encoded
-			 * @param last	the last tuple of our linked list which should be encoded
 			 * @return the json_object (has to be free'd)
 			 */
 			json_object * api_json_tuples(Buffer::Ptr buf);
@@ -95,6 +93,9 @@ namespace vz {
           // Volatil
 			std::list<Reading> _values;
           uint64_t _last_timestamp; /**< remember last timestamp */
+          // duplicate support:
+          Reading *_lastReadingSent;
+          Reading *_lastReadingIgnored;
 
 		}; //class Volkszaehler
 
