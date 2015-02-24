@@ -668,6 +668,13 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				case '0': // nobreak;
 				case '1': // nobreak;
 				case '2': // nobreak;
+				case '3': // nobreak;
+				case '4': // nobreak;
+				case '5': // nobreak;
+				case '6': // nobreak;
+				case '7': // nobreak;
+				case '8': // nobreak;
+				case '9': // nobreak;
 				case 'C': // nobreak;
 				case 'F':
 					print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
@@ -684,6 +691,8 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
 					}
 				break;
+				case 'L': // nobreak; // L, P not supported yet
+				case 'P': // nobreak;
 				default:
 					print(log_debug, "Ignored reading (OBIS code=%s, value=%s, unit=%s)",
 									name().c_str(), obis_code, value, unit);
