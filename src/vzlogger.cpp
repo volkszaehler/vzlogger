@@ -281,6 +281,7 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 				case 'V':
 					printf("%s\n", VERSION);
 					printf(" based on git version: %s\n", g_GIT_SHALONG);
+					printf(" last commit date: %s\n", g_GIT_LAST_COMMIT_DATE);
 					exit(EXIT_SUCCESS);
 					break;
 
