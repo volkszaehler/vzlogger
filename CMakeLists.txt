@@ -30,7 +30,7 @@ include (UseCodeCoverage)
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_describe(GIT_SHALONG --always --abbrev=10 --long --all --dirty )
-
+git_get_last_commit_date(GIT_LAST_COMMIT_DATE )
 
 message("Compiling for target '${TARGET}'")
 if( TARGET )
