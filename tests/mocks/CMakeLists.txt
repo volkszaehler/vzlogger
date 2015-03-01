@@ -1,5 +1,9 @@
 include_directories(BEFORE .)
 
+if(LOCAL_SUPPORT)
+  set(mock_local_srcs ../../src/local.cpp)
+endif(LOCAL_SUPPORT)
+
 add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Options.cpp
 	../../src/protocols/MeterD0.cpp
 	../../src/protocols/MeterFile.cpp
@@ -22,8 +26,9 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/api/CurlCallback.cpp
 	../../src/api/CurlResponse.cpp
 	../../src/CurlSessionProvider.cpp
-	../../src/local.cpp
+	${mock_local_srcs}
 )
+
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${MICROHTTPD_LIBRARY} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 target_link_libraries(mock_metermap 
