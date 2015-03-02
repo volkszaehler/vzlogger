@@ -13,7 +13,7 @@ To install, follow the detailed installation instructions at http://wiki.volksza
 If you're impatient you can quickstart using:
 
     sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool
-    wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/install.sh
+    wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
 
 If you have questions, contact the volkszaehler mailing lists:
