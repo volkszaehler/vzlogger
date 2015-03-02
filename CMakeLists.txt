@@ -168,7 +168,7 @@ Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
 endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
-INSTALL(FILES README INSTALL COPYING DESTINATION
+INSTALL(FILES README COPYING DESTINATION
   share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
 )
 
