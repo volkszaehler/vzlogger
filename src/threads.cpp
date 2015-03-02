@@ -33,7 +33,9 @@
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
 #include <api/Null.hpp>
+#ifdef LOCAL_SUPPORT
 #include "local.h"
+#endif
 
 extern Config_Options options;
 
@@ -126,12 +128,12 @@ void * reading_thread(void *arg) {
 
 				/* shrink buffer */
 				(*ch)->buffer()->clean();
-
+#ifdef LOCAL_SUPPORT
 				if (options.local()) {
 					shrink_localbuffer(); // remove old/outdated data in the local buffer
 					add_ch_to_localbuffer(*(*ch)); // add this ch data to the local buffer
 				}
-
+#endif
 				/* notify webserver and logging thread */
 				(*ch)->notify();
 
