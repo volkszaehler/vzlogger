@@ -52,9 +52,8 @@ shopt -s nocasematch
 
 ###############################
 # some defaults
-vzlogger_dir=vzlogger
-vzlogger_conf=/etc/vzlogger.conf
 lib_dir=libs
+vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
 
 ###############################
@@ -137,16 +136,25 @@ fi
 echo
 echo "checking for vzlogger folder"
 
-if git_is_repo . vzlogger; then
+if ! git_is_repo . vzlogger ; then
 	# move to parent folder
-	cd ..
+
+	if git_is_repo vzlogger ; then
+		cd vzlogger
+	else
+		if [ -d vzlogger ]; then
+			echo "directory ./vzlogger does not contain a recognized git repo"
+		fi
+
+		mkdir vzlogger
+		cd vzlogger
+	fi
 fi
 
 if [ -z "$1" ] || contains "$*" vzlogger; then
-	git_update "$vzlogger_dir" https://github.com/volkszaehler/vzlogger.git vzlogger
+	git_update . https://github.com/volkszaehler/vzlogger.git vzlogger
 fi
 
-pushd "$vzlogger_dir"
 
 ###############################
 echo
@@ -185,10 +193,8 @@ pushd "$lib_dir"
 		echo
 		echo "building and installing libjson"
 		pushd json-c
-			if [ ! -x ./configure ]; then
-				sh autogen.sh
-			fi
 			if [ ! -e Makefile ]; then
+				sh autogen.sh
 				./configure
 			else
 				if contains "$*" clean; then make clean; fi
@@ -226,9 +232,12 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		rm CMakeCache.txt
 	fi
 
+	echo
 	echo "building vzlogger"
 	cmake .
 	make
+
+	echo
 	echo "installing vzlogger"
 	sudo make install
 
@@ -244,7 +253,7 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo "make sure to restart vzlogger"
 	fi
 
-	if [ ! grep -q vzlogger /etc/inittab ]; then
+	if ! grep -q vzlogger /etc/inittab; then
 		echo
 		echo "could not find vzlogger in /etc/inittab"
 		echo "if you want vzlogger to start automatically add the following line to /etc/inittab"
@@ -252,5 +261,3 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo "activate using `init q`"
 	fi
 fi
-
-popd
