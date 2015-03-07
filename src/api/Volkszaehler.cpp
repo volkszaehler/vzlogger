@@ -49,7 +49,6 @@ vz::api::Volkszaehler::Volkszaehler(
 	: ApiIF(ch)
 	, _last_timestamp(0)
 	, _lastReadingSent (0)
-	, _lastReadingIgnored (0)
 {
 	OptionList optlist;
 	char agent[255];
@@ -88,7 +87,6 @@ vz::api::Volkszaehler::Volkszaehler(
 vz::api::Volkszaehler::~Volkszaehler()
 {
 	if (_lastReadingSent) delete _lastReadingSent;
-	if (_lastReadingIgnored) delete _lastReadingIgnored;
 }
 
 void vz::api::Volkszaehler::send()
@@ -196,36 +194,22 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 				const Reading &r = *it;
 				// duplicates should be ignored
 				// but send at least each <duplicates> seconds
-				// and if the value changes the last one ignored should be send as well (to keep the "waveform")
 
 				if (!_lastReadingSent) { // first one from the duplicate consideration -> send it
 					_lastReadingSent = new Reading(r);
 					_values.push_back(r);
 					_last_timestamp = timestamp;
-					if( _lastReadingIgnored != 0) print(log_error, "logical error! lastReadingIgnored !=0", channel()->name());
 				} else { // one reading sent already. compare
 					// a) timestamp
 					// b) duplicate value
 					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
 							(r.value() != _lastReadingSent->value())) {
-						// send the last ignored first iff value changed:
-						if (_lastReadingIgnored) {
-							if (r.value() != _lastReadingSent->value()) {
-								_values.push_back(*_lastReadingIgnored);
-							}
-							delete _lastReadingIgnored;
-							_lastReadingIgnored = 0;
-						}
 						// send the current one:
 						_values.push_back(r);
 						_last_timestamp = timestamp;
 						*_lastReadingSent = r;
 					} else {
-						// ignore it:
-						if (!_lastReadingIgnored)
-							_lastReadingIgnored = new Reading(r);
-						else
-							*_lastReadingIgnored = r;
+						// ignore it
 					}
 				}
 			}

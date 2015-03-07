@@ -199,13 +199,11 @@ using namespace vz::api;
 	ch->push(r3);
 
 	// now add one with a different value:
-	// then we should get r1, r2 and the new value r3:
+	// then we should get r1 and the new value r3:
 	j = Volkszaehler_Test::api_json_tuples(v, ch->buffer());
 	ASSERT_TRUE(j != 0);
-	ASSERT_TRUE(Volkszaehler_Test::values(v).size() == 3);
+	ASSERT_TRUE(Volkszaehler_Test::values(v).size() == 2);
 	ASSERT_EQ(Volkszaehler_Test::values(v).front(), r1);
-	Volkszaehler_Test::values(v).pop_front();
-	ASSERT_EQ(Volkszaehler_Test::values(v).front(), r2);
 	Volkszaehler_Test::values(v).pop_front();
 	ASSERT_EQ(Volkszaehler_Test::values(v).front(), r3);
 
@@ -257,16 +255,14 @@ using namespace vz::api;
 	ASSERT_TRUE( ch->buffer()->size() == 0);
 
 	// and try timeout and value change again
-	// expect ignored one and new value to be added:
+	// expect new value to be added:
 
 	t1.tv_sec += 10;
 	Reading r7(7.0, t1, pRid);
 	ch->push(r7);
 	j = Volkszaehler_Test::api_json_tuples(v, ch->buffer());
 	ASSERT_TRUE(j != 0);
-	ASSERT_TRUE(Volkszaehler_Test::values(v).size() == 2) << Volkszaehler_Test::values(v).size();
-	ASSERT_EQ(Volkszaehler_Test::values(v).front(), r6);
-	Volkszaehler_Test::values(v).pop_front();
+	ASSERT_TRUE(Volkszaehler_Test::values(v).size() == 1) << Volkszaehler_Test::values(v).size();
 	ASSERT_EQ(Volkszaehler_Test::values(v).front(), r7);
 	Volkszaehler_Test::values(v).pop_front();
 
