@@ -69,6 +69,9 @@ class Buffer {
 	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
 
 	private:
+	Buffer(const Buffer &); // don't allow copy constructor
+	Buffer & operator=(const Buffer &); // and no assignment op.
+
 	std::list<Reading> _sent;
 	bool _newValues;
 
@@ -77,6 +80,8 @@ class Buffer {
 	size_t _keep;	/**< number of readings to cache for local interface */
 
 	pthread_mutex_t _mutex;
+
+	Reading *_last_avg; // keeps value and time from last reading from aggregate call for aggmode AVG
 };
 
 #endif /* _BUFFER_H_ */
