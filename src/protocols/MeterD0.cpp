@@ -48,6 +48,8 @@
 
 #include "Obis.hpp"
 
+#define STX 0x02
+
 MeterD0::MeterD0(std::list<Option> options)
 		: Protocol("d0")
 		, _host("")
@@ -644,6 +646,17 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					break;
 				}
 			} else
+			if (byte == STX) {
+				// some meter seem to send ? STX ... as start package. (e.g. AS1440)
+				context = OBIS_CODE;
+				byte_iterator = 0;
+				break;
+			} else
+			if (byte == '/') { // go to vendor
+				context = VENDOR;
+				byte_iterator = 0;
+				break;
+			} else
 			{ // any other char than ! or ?:
 				if (byte_iterator>0) byte_iterator = 0; // reset ? reminder
 				break; // but stay in this state and accept that char! (here we ended before!)
@@ -869,6 +882,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		}
 	
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
+		fflush(_dump_fd); // flush on each mode change
 		const char *s=0, *e=0;
 		switch (mode) {
 			case CTRL: s = ctrl_start; e = 0; break;
@@ -881,10 +895,10 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		struct timespec ts;
 		if (!clock_gettime(CLOCK_MONOTONIC_RAW, &ts)) {
 			static struct timespec ts_last={0,0};
-			long delta = (ts.tv_sec * 1000000000L) + ts.tv_nsec;
-			delta -= ts_last.tv_nsec;
-			delta -= ts_last.tv_sec * 1000000000L;
-			delta /= 1000000L; // change into ms
+			long delta = (ts.tv_sec * 1000L) + (ts.tv_nsec/1000000L);
+			delta -= (ts_last.tv_nsec/1000000L);
+			delta -= ts_last.tv_sec * 1000L;
+			// delta /= 1000000L; // change into ms
 			if (ts_last.tv_sec==0)delta=0;
 			ts_last = ts;
 			char tbuf[30];
