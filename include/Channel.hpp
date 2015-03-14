@@ -64,7 +64,7 @@ class Channel {
 		if (_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
 	double tvtod() const          { return _last == NULL ? 0 : _last->tvtod(); }
 
-	const char* uuid()                  { return _uuid.c_str(); }
+	const char* uuid() const            { return _uuid.c_str(); }
 	const std::string apiProtocol()     { return _apiProtocol; }
 
 	void last(Reading *rd)              { _last = rd;}
@@ -73,7 +73,6 @@ class Channel {
 	Buffer::Ptr buffer()                { return _buffer; }
 
 	size_t size() const { return _buffer->size(); }
-	size_t keep() const { return _buffer->keep(); }
 
 	inline void notify() {
 		_buffer->lock();
@@ -88,6 +87,8 @@ class Channel {
 		_buffer->clear_newValues();
 		_buffer->unlock();
 	}
+
+	int duplicates() const { return _duplicates; }
 
 	private:
 	static int instances;
@@ -107,6 +108,7 @@ class Channel {
 
 	std::string _uuid;			// unique identifier for middleware
 	std::string _apiProtocol;	// protocol of api to use for logging
+	int _duplicates;			// how to handle duplicate values (see conf)
 };
 
 #endif /* _CHANNEL_H_ */

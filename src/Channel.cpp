@@ -49,6 +49,7 @@ Channel::Channel(
 		, _last(0)
 		, _uuid(uuid)
 		, _apiProtocol(apiProtocol)
+		, _duplicates (0)
 {
 	id = instances++;
 
@@ -60,7 +61,7 @@ Channel::Channel(
 	OptionList optlist;
 
 	try {
-		/* aggmode */
+		// aggmode
 		const char *aggmode_str = optlist.lookup_string(pOptions, "aggmode");
 		if (strcasecmp(aggmode_str, "max") == 0 ) {
 			_buffer->set_aggmode(Buffer::MAX);
@@ -74,7 +75,7 @@ Channel::Channel(
 			throw vz::VZException("Aggmode unknown.");
 		}
 	} catch (vz::OptionNotFoundException &e) {
-		/* using default value if not specified */
+		// using default value if not specified
 		_buffer->set_aggmode(Buffer::NONE);
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
@@ -83,9 +84,19 @@ Channel::Channel(
 		throw;
 	}
 
+	try {
+		_duplicates = optlist.lookup_int(pOptions, "duplicates");
+		if (_duplicates < 0) throw vz::VZException("duplicates < 0 not allowed");
+	} catch (vz::OptionNotFoundException &e) {
+		// using default value if not specified (from above)
+	} catch (vz::VZException &e) {
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "Invalid parameter duplicates (%s)", name(), oss.str().c_str());
+		throw;
+	}
 
-
-	pthread_cond_init(&condition, NULL); /* initialize thread syncronization helpers */
+	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
 }
 
 /**

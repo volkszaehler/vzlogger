@@ -34,7 +34,7 @@
 #include "Buffer.hpp"
 
 Buffer::Buffer() :
-		_keep(32)
+		_keep(32), _last_avg(0)
 {
 	_newValues=false;
 	pthread_mutex_init(&_mutex, NULL);
@@ -78,9 +78,17 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 			}
 		}
 	} else if (_aggmode == AVG) {
-		Reading *latest=NULL;
-		double aggvalue=0;
-		int aggcount=0;
+		// AVG needs to handle tuples with different distances properly:
+		// so we need to consider the last tuple from last aggregate call as well
+		// and use this value as the starting point.
+		// we assume buffer values are already sorted by time here! TODO: is this always true?
+		// otherwise a sort by time would be needed but this might conflict with _last_avg
+
+		Reading *latest = NULL;
+		double aggvalue = 0;
+		double aggtimespan = 0.0;
+		unsigned int aggcount = 0;
+		Reading *previous = _last_avg;
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if (! it->deleted()) {
 				if (!latest) {
@@ -90,16 +98,26 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 						latest=&*it;
 					}
 				}
-				aggvalue=aggvalue+it->value();
 				print(log_debug, "[%d] %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
-
+				if (previous) {
+					double timespan = it->tvtod() - previous->tvtod();
+					aggvalue += previous->value() * timespan; // timespan between prev. and this one
+					aggtimespan += timespan;
+				}
+				previous = &*it;
 				aggcount++;
 			}
 		}
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if (! it->deleted()) {
 				if (&*it==latest) {
-					it->value(aggvalue/aggcount);
+					// store the last value before we modify it.
+					if (!_last_avg) _last_avg = new Reading(*it);
+					else *_last_avg = *it;
+
+					if (aggtimespan>0.0)
+						it->value(aggvalue/aggtimespan);
+					// else keep current value (if no previous and just single value)
 					print(log_debug, "[%d] RESULT %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
 				} else {
 					it->mark_delete();
@@ -171,17 +189,6 @@ void Buffer::undelete() {
 	unlock();
 }
 
-
-void Buffer::shrink(/*size_t keep*/) {
-	lock();
-
-//	while(size > keep && begin() != sent) {
-//		pop();
-//	}
-
-	unlock();
-}
-
 char * Buffer::dump(char *dump, size_t len) {
 	size_t pos = 0;
 	dump[pos++] = '{';
@@ -214,6 +221,7 @@ char * Buffer::dump(char *dump, size_t len) {
 
 Buffer::~Buffer() {
 	pthread_mutex_destroy(&_mutex);
+	if (_last_avg) delete _last_avg;
 }
 
 /*

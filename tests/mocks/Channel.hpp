@@ -28,9 +28,9 @@ public:
 	MOCK_METHOD0( notify, void ());
 	MOCK_METHOD2( dump, char* (char *dump, size_t len));
 	MOCK_CONST_METHOD0( size, size_t ());
-	MOCK_CONST_METHOD0( keep, size_t ());
 	MOCK_METHOD0( wait, void ());
 	MOCK_METHOD0( uuid, const char* ());
+	MOCK_CONST_METHOD0( duplicates, int ());
 
 	ReadingIdentifier::Ptr &real_id() {return mock_id;}
 	ReadingIdentifier::Ptr mock_id;

@@ -40,7 +40,7 @@ Config_Options::Config_Options()
 		, _port(8080)
 		, _verbosity(0)
 		, _comet_timeout(30)
-		, _buffer_length(600)
+		, _buffer_length(-1)
 		, _retry_pause(15)
 		, _daemon(false)
 		, _local(false)
@@ -57,7 +57,7 @@ Config_Options::Config_Options(
 		, _port(8080)
 		, _verbosity(0)
 		, _comet_timeout(30)
-		, _buffer_length(600)
+		, _buffer_length(-1)
 		, _retry_pause(15)
 		, _daemon(false)
 		, _local(false)
@@ -142,6 +142,7 @@ void Config_Options::config_parse(
 					}
 					else if (strcmp(key, "buffer") == 0 && local_type == json_type_int) {
 						_buffer_length = json_object_get_int(local_value);
+						if (!_buffer_length) _buffer_length = -1; // 0 makes no sense, use size based mode with 1 element
 					}
 					else if (strcmp(key, "index") == 0 && local_type == json_type_boolean) {
 						_channel_index = json_object_get_boolean(local_value);

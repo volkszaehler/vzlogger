@@ -45,6 +45,7 @@
 #include "vzlogger.h"
 #include "Channel.hpp"
 #include "threads.h"
+#include "CurlSessionProvider.hpp"
 
 #ifdef LOCAL_SUPPORT
 #include "local.h"
@@ -280,6 +281,7 @@ int config_parse_cli(int argc, char * argv[], Config_Options * options) {
 				case 'V':
 					printf("%s\n", VERSION);
 					printf(" based on git version: %s\n", g_GIT_SHALONG);
+					printf(" last commit date: %s\n", g_GIT_LAST_COMMIT_DATE);
 					exit(EXIT_SUCCESS);
 					break;
 
@@ -343,7 +345,7 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGTERM, &action, NULL);	/* catch kill signal */
 
 	/* initialize ADTs and APIs */
-	curl_global_init(CURL_GLOBAL_ALL);
+//	curl_global_init(CURL_GLOBAL_ALL);
 
 	/* parse command line and file options */
 	// TODO command line should have a higher priority as file
@@ -364,11 +366,13 @@ int main(int argc, char *argv[]) {
 	// make sure command line options override config settings, just re-parse
 	config_parse_cli(argc, argv, &options);
 
+	curlSessionProvider = new CurlSessionProvider();
+
 	// Register vzlogger
 	if (options.doRegistration()) {
 		register_device();
 		return (0);
-	}
+	}	
 
 	// @todo clarify why no logging in local mode
 	options.logging((!options.local() || options.daemon()));
@@ -457,11 +461,16 @@ int main(int argc, char *argv[]) {
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
-	curl_global_cleanup();
+//curl_global_cleanup();
 
 	/* close logfile */
 	if (options.logfd()) {
 		fclose(options.logfd());
+	}
+
+	if (curlSessionProvider) {
+		delete curlSessionProvider;
+		curlSessionProvider = 0;
 	}
 
 	return EXIT_SUCCESS;

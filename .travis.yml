@@ -29,9 +29,9 @@ before_install:
   - cd ..
   - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime
 # -- get libsml --
-  - git clone https://github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
+  - git clone https://github.com/volkszaehler/libsml.git # or github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
   - cd libsml 
-  - git checkout develop # only dev branch seems to work
+  - # git checkout develop # only dev branch seems to work
   - make
 # -- install libsml --
   - sudo cp sml/lib/libsml.* /usr/lib/. 

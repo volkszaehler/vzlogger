@@ -23,7 +23,7 @@ if( NOT ENABLE_SML )
 list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif( NOT ENABLE_SML)
 
-add_executable(vzlogger_unit_tests ${test_sources})
+add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp)
 
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a

@@ -60,9 +60,6 @@ class Buffer {
 	inline bool newValues() const { return _newValues; }
 	inline void clear_newValues() { _newValues = false; }
 
-	inline size_t keep() const { return _keep; }
-	inline void keep(const size_t keep) { _keep = keep; }
-
 	inline void lock()   { pthread_mutex_lock(&_mutex); }
 	inline void unlock() { pthread_mutex_unlock(&_mutex); }
 	inline void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
@@ -72,6 +69,9 @@ class Buffer {
 	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
 
 	private:
+	Buffer(const Buffer &); // don't allow copy constructor
+	Buffer & operator=(const Buffer &); // and no assignment op.
+
 	std::list<Reading> _sent;
 	bool _newValues;
 
@@ -80,6 +80,8 @@ class Buffer {
 	size_t _keep;	/**< number of readings to cache for local interface */
 
 	pthread_mutex_t _mutex;
+
+	Reading *_last_avg; // keeps value and time from last reading from aggregate call for aggmode AVG
 };
 
 #endif /* _BUFFER_H_ */

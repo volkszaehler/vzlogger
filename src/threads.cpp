@@ -33,6 +33,9 @@
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
 #include <api/Null.hpp>
+#ifdef LOCAL_SUPPORT
+#include "local.h"
+#endif
 
 extern Config_Options options;
 
@@ -113,10 +116,6 @@ void * reading_thread(void *arg) {
 						}
 					}
 
-					/* update buffer length */
-					if (options.local()) {
-						(*ch)->buffer()->keep((mtr->interval() > 0) ? ceil(options.buffer_length() / mtr->interval()) : 0);
-					}
 				} // channel loop
 			} while((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
@@ -129,7 +128,12 @@ void * reading_thread(void *arg) {
 
 				/* shrink buffer */
 				(*ch)->buffer()->clean();
-
+#ifdef LOCAL_SUPPORT
+				if (options.local()) {
+					shrink_localbuffer(); // remove old/outdated data in the local buffer
+					add_ch_to_localbuffer(*(*ch)); // add this ch data to the local buffer
+				}
+#endif
 				/* notify webserver and logging thread */
 				(*ch)->notify();
 
@@ -148,8 +152,8 @@ void * reading_thread(void *arg) {
 						dump = (char*)malloc(dump_len);
 					}
 
-					print(log_debug, "Buffer dump (size=%i keep=%i): %s", (*ch)->name(),
-							(*ch)->size(), (*ch)->keep(), dump);
+					print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
+							(*ch)->size(), dump);
 
 					free(dump);
 				}

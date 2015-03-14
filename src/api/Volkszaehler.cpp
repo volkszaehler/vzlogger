@@ -38,6 +38,7 @@
 #include <VZException.hpp>
 #include "Config_Options.hpp"
 #include <api/Volkszaehler.hpp>
+#include "CurlSessionProvider.hpp"
 
 extern Config_Options options;
 
@@ -47,10 +48,10 @@ vz::api::Volkszaehler::Volkszaehler(
 	)
 	: ApiIF(ch)
 	, _last_timestamp(0)
+	, _lastReadingSent (0)
 {
 	OptionList optlist;
-	char url[255], agent[255];
-	unsigned short curlTimeout = 30; // 30 seconds
+	char agent[255];
 
 	// parse options
 	try {
@@ -62,42 +63,30 @@ vz::api::Volkszaehler::Volkszaehler(
 	}
 
 	try {
-		curlTimeout = optlist.lookup_int(pOptions, "timeout");
+		_curlTimeout = optlist.lookup_int(pOptions, "timeout");
 	} catch (vz::OptionNotFoundException &e) {
-		curlTimeout = 30; // 30 seconds default
+		_curlTimeout = 30; // 30 seconds default
 	} catch (vz::VZException &e) {
 		throw;
 	}
 
 	// prepare header, uuid & url
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	// build user agent
-	sprintf(url, "%s/data/%s.json", middleware().c_str(), channel()->uuid());	// build url
+	_url = _middleware;
+	_url.append("/data/");
+	_url.append(channel()->uuid());
+	_url.append(".json");
 
 	_api.headers = NULL;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
 
-	_api.curl = curl_easy_init();
-	if (!_api.curl) {
-		throw vz::VZException("CURL: cannot create handle.");
-	}
-
-	curl_easy_setopt(_api.curl, CURLOPT_URL, url);
-	curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
-	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
-	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
-	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
-
-	// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
-	curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
-
-	// set timeout to 5 sec. required if next router has an ip-change.
-	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, curlTimeout);
 }
 
 vz::api::Volkszaehler::~Volkszaehler()
 {
+	if (_lastReadingSent) delete _lastReadingSent;
 }
 
 void vz::api::Volkszaehler::send()
@@ -120,14 +109,34 @@ void vz::api::Volkszaehler::send()
 		return;
 	}
 
+	_api.curl = curlSessionProvider ? curlSessionProvider->get_easy_session(_middleware) : 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
+	if (!_api.curl) {
+		throw vz::VZException("CURL: cannot create handle.");
+	}
+	curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
+	curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
+	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
+
+	// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
+	curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
+
+	// set timeout to 5 sec. required if next router has an ip-change.
+	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curlTimeout);
+
+
 	print(log_debug, "JSON request body: %s", channel()->name(), json_str);
 
-	curl_easy_setopt(curl(), CURLOPT_POSTFIELDS, json_str);
-	curl_easy_setopt(curl(), CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
-	curl_easy_setopt(curl(), CURLOPT_WRITEDATA, (void *) &response);
+	curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, json_str);
+	curl_easy_setopt(_api.curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
+	curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, (void *) &response);
 
-	curl_code = curl_easy_perform(curl());
-	curl_easy_getinfo(curl(), CURLINFO_RESPONSE_CODE, &http_code);
+	curl_code = curl_easy_perform(_api.curl);
+	curl_easy_getinfo(_api.curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+	if (curlSessionProvider)
+		curlSessionProvider->return_session(_middleware, _api.curl);
 
 	// check response
 	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
@@ -168,15 +177,42 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 
 	print(log_debug, "==> number of tuples: %d", channel()->name(), buf->size());
 	uint64_t timestamp = 1;
+	const int duplicates = channel()->duplicates();
+	const int duplicates_ms = duplicates * 1000;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		timestamp = round(it->tvtod() * 1000);
+		timestamp = it->tvtod() * 1000; // round similar as timestamp send to middleware
 		print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
+		// we can only add/consider a timestamp if the ms resolution is different than from previous one:
 		if (_last_timestamp < timestamp ) {
-			_values.push_back(*it);
-			_last_timestamp = timestamp;
+			if (0 == duplicates) { // send all values
+				_values.push_back(*it);
+				_last_timestamp = timestamp;
+			} else {
+				const Reading &r = *it;
+				// duplicates should be ignored
+				// but send at least each <duplicates> seconds
+
+				if (!_lastReadingSent) { // first one from the duplicate consideration -> send it
+					_lastReadingSent = new Reading(r);
+					_values.push_back(r);
+					_last_timestamp = timestamp;
+				} else { // one reading sent already. compare
+					// a) timestamp
+					// b) duplicate value
+					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
+							(r.value() != _lastReadingSent->value())) {
+						// send the current one:
+						_values.push_back(r);
+						_last_timestamp = timestamp;
+						*_lastReadingSent = r;
+					} else {
+						// ignore it
+					}
+				}
+			}
 		}
 		it->mark_delete();
 	}

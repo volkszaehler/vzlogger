@@ -48,6 +48,8 @@
 
 #include "Obis.hpp"
 
+#define STX 0x02
+
 MeterD0::MeterD0(std::list<Option> options)
 		: Protocol("d0")
 		, _host("")
@@ -551,7 +553,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case OBIS_CODE:
-				print(log_debug, "DEBUG OBIS_CODE byte %c hex= %X ", name().c_str(), byte, byte);
+				print((log_level_t)(log_debug+5), "DEBUG OBIS_CODE byte %c hex= %X ", name().c_str(), byte, byte);
 				if ((byte != '\n') && (byte != '\r') && (byte != 0x02)) {	// exclude STX
 					if (byte == '(') {
 						obis_code[byte_iterator] = '\0';
@@ -569,7 +571,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case VALUE:
-				print(log_debug, "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);
+				print(((log_level_t)(log_debug+5)), "DEBUG VALUE byte= %c hex= %x ",name().c_str(), byte, byte);
 				if ((byte == '*') || (byte == ')')) {
 					value[byte_iterator] = '\0';
 					byte_iterator = 0;
@@ -645,6 +647,17 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 					break;
 				}
 			} else
+			if (byte == STX) {
+				// some meter seem to send ? STX ... as start package. (e.g. AS1440)
+				context = OBIS_CODE;
+				byte_iterator = 0;
+				break;
+			} else
+			if (byte == '/') { // go to vendor
+				context = VENDOR;
+				byte_iterator = 0;
+				break;
+			} else
 			{ // any other char than ! or ?:
 				if (byte_iterator>0) byte_iterator = 0; // reset ? reminder
 				break; // but stay in this state and accept that char! (here we ended before!)
@@ -669,6 +682,13 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				case '0': // nobreak;
 				case '1': // nobreak;
 				case '2': // nobreak;
+				case '3': // nobreak;
+				case '4': // nobreak;
+				case '5': // nobreak;
+				case '6': // nobreak;
+				case '7': // nobreak;
+				case '8': // nobreak;
+				case '9': // nobreak;
 				case 'C': // nobreak;
 				case 'F':
 					print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
@@ -685,6 +705,8 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
 					}
 				break;
+				case 'L': // nobreak; // L, P not supported yet
+				case 'P': // nobreak;
 				default:
 					print(log_debug, "Ignored reading (OBIS code=%s, value=%s, unit=%s)",
 									name().c_str(), obis_code, value, unit);
@@ -870,6 +892,7 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		}
 	
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
+		fflush(_dump_fd); // flush on each mode change
 		const char *s=0, *e=0;
 		switch (mode) {
 			case CTRL: s = ctrl_start; e = 0; break;
@@ -882,10 +905,10 @@ void MeterD0::dump_file(DUMP_MODE mode, const char* buf, size_t len)
 		struct timespec ts;
 		if (!clock_gettime(CLOCK_MONOTONIC_RAW, &ts)) {
 			static struct timespec ts_last={0,0};
-			long delta = (ts.tv_sec * 1000000000L) + ts.tv_nsec;
-			delta -= ts_last.tv_nsec;
-			delta -= ts_last.tv_sec * 1000000000L;
-			delta /= 1000000L; // change into ms
+			long delta = (ts.tv_sec * 1000L) + (ts.tv_nsec/1000000L);
+			delta -= (ts_last.tv_nsec/1000000L);
+			delta -= ts_last.tv_sec * 1000L;
+			// delta /= 1000000L; // change into ms
 			if (ts_last.tv_sec==0)delta=0;
 			ts_last = ts;
 			char tbuf[30];
