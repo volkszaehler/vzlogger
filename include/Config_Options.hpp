@@ -80,7 +80,7 @@ public:
 	void log(const std::string &v)    { _log = v; }
 	void logfd(FILE *fd)              { _logfd = fd; }
 	void port(const int v)      { _port = v; }
-	void verbosity(int v) { _verbosity = v; }
+	void verbosity(int v) { if (v>=0) _verbosity = v; }
 
 	void daemon(const bool v)    { _daemon = v; }
 	void local(const bool v)     { _local = v; }
