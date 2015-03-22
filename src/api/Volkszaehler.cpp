@@ -176,15 +176,15 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", channel()->name(), buf->size());
-	uint64_t timestamp = 1;
+	int64_t timestamp = 1;
 	const int duplicates = channel()->duplicates();
 	const int duplicates_ms = duplicates * 1000;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		timestamp = it->tvtod() * 1000; // round similar as timestamp send to middleware
-		print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
+		timestamp = it->time_ms();
+		print(log_debug, "compare: %lld %lld", channel()->name(), _last_timestamp, timestamp);
 		// we can only add/consider a timestamp if the ms resolution is different than from previous one:
 		if (_last_timestamp < timestamp ) {
 			if (0 == duplicates) { // send all values
@@ -227,13 +227,8 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	for (it = _values.begin(); it != _values.end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
 
-		// TODO use long int of new json-c version
-		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod() * 1000;
-		double value = it->value();
-
-		json_object_array_add(json_tuple, json_object_new_double(timestamp));
-		json_object_array_add(json_tuple, json_object_new_double(value));
+		json_object_array_add(json_tuple, json_object_new_int64(it->time_ms()));
+		json_object_array_add(json_tuple, json_object_new_double(it->value()));
 
 		json_object_array_add(json_tuples, json_tuple);
 	}

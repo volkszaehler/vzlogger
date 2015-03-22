@@ -92,7 +92,7 @@ namespace vz {
 
           // Volatil
 			std::list<Reading> _values;
-          uint64_t _last_timestamp; /**< remember last timestamp */
+		  int64_t _last_timestamp; /**< remember last timestamp */
           // duplicate support:
           Reading *_lastReadingSent;
 

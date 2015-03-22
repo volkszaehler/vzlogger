@@ -151,11 +151,12 @@ public:
 	void value(const double &v) { _value = v; }
 	double value() const  { return _value; }
 
-	double tvtod() const;
-	double tvtod(struct timeval const &tv) const;
+	int64_t time_ms() const { return ((int64_t) _time.tv_sec)*1e3 + (_time.tv_usec / 1e3); };
+	const long &time_s() const { return _time.tv_sec; }; // return only the seconds (always rounding down)
 	void time() { gettimeofday(&_time, NULL); }
 	void time(struct timeval const &v) { _time = v; }
-	struct timeval dtotv(double const &ts) const; // doesn't set the time, just returns a timeval!
+	// not needed yet: void time_from_ms( int64_t &ms );
+	void time_from_double( double const &d);
 
 	void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
 	const ReadingIdentifier::Ptr identifier() { return _identifier; }

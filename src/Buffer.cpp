@@ -59,19 +59,19 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				if (!latest) {
 					latest=&*it;
 				} else {
-					if (it->tvtod() > latest->tvtod()) {
+					if (it->time_ms() > latest->time_ms()) {
 						latest=&*it;
 					}
 				}
 				aggvalue=std::max(aggvalue,it->value());
-				print(log_debug, "%f @ %f", "MAX",it->value(),it->tvtod());
+				print(log_debug, "%f @ %lld", "MAX",it->value(),it->time_ms());
 			}
 		}
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if (! it->deleted()) {
 				if (&*it==latest) {
 					it->value(aggvalue);
-					print(log_debug, "RESULT %f @ %f", "MAX",it->value(),it->tvtod());
+					print(log_debug, "RESULT %f @ %lld", "MAX",it->value(),it->time_ms());
 				} else {
 					it->mark_delete();
 				}
@@ -94,13 +94,13 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				if (!latest) {
 					latest=&*it;
 				} else {
-					if (it->tvtod() > latest->tvtod()) {
+					if (it->time_ms() > latest->time_ms()) {
 						latest=&*it;
 					}
 				}
-				print(log_debug, "[%d] %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
+				print(log_debug, "[%d] %f @ %lld", "AVG",aggcount,it->value(),it->time_ms());
 				if (previous) {
-					double timespan = it->tvtod() - previous->tvtod();
+					double timespan = ((double)(it->time_ms() - previous->time_ms())) / 1000.0;
 					aggvalue += previous->value() * timespan; // timespan between prev. and this one
 					aggtimespan += timespan;
 				}
@@ -118,7 +118,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 					if (aggtimespan>0.0)
 						it->value(aggvalue/aggtimespan);
 					// else keep current value (if no previous and just single value)
-					print(log_debug, "[%d] RESULT %f @ %f", "AVG",aggcount,it->value(),it->tvtod());
+					print(log_debug, "[%d] RESULT %f @ %lld", "AVG",aggcount,it->value(),it->time_ms());
 				} else {
 					it->mark_delete();
 				}
@@ -132,19 +132,19 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				if (!latest) {
 					latest=&*it;
 				} else {
-					if (it->tvtod() > latest->tvtod()) {
+					if (it->time_ms() > latest->time_ms()) {
 						latest=&*it;
 					}
 				}
 				aggvalue=aggvalue+it->value();
-				print(log_debug, "%f @ %f", "SUM",it->value(),it->tvtod());
+				print(log_debug, "%f @ %lld", "SUM",it->value(),it->time_ms());
 			}
 		}
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if (! it->deleted()) {
 				if (&*it==latest) {
 					it->value(aggvalue);
-					print(log_debug, "RESULT %f @ %f", "SUM",it->value(),it->tvtod());
+					print(log_debug, "RESULT %f @ %lld", "SUM",it->value(),it->time_ms());
 				} else {
 					it->mark_delete();
 				}
@@ -157,7 +157,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
 			if (! it->deleted()) {
 				tv.tv_usec = 0;
-				tv.tv_sec = aggtime * (long int)(it->tvtod() / aggtime);
+				tv.tv_sec = aggtime * (long int)((it->time_ms()/1000) / aggtime);
 				it->time(tv);
 			}
 		}

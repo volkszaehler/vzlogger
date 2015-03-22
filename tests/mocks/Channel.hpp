@@ -22,7 +22,7 @@ public:
 	MOCK_METHOD0( apiProtocol, const std::string());
 	MOCK_METHOD0( buffer, Buffer::Ptr());
 	MOCK_METHOD0( identifier, ReadingIdentifier::Ptr());
-	MOCK_CONST_METHOD0( tvtod, double ());
+	MOCK_CONST_METHOD0( time_ms, int64_t ());
 	MOCK_METHOD1( last, void (Reading *rd));
 	MOCK_METHOD1( push, void (const Reading &rd));
 	MOCK_METHOD0( notify, void ());

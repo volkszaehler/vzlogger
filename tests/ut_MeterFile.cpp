@@ -159,10 +159,13 @@ TEST(MeterFile, reading_times)
 	t.tv_sec=1001;
 	t.tv_usec=1;
 	r.time(t);
-	ASSERT_TRUE(abs(1001.000001 - r.tvtod())<0.0001) << r.tvtod();
-	
-	r.time(r.dtotv(1002.00001));
-	ASSERT_TRUE(abs(1002.00001 - r.tvtod())<0.0001) << r.tvtod();	
+	ASSERT_EQ(1001000ll, r.time_ms()) << r.time_ms();
+	t.tv_usec = 1000;
+	r.time(t);
+	ASSERT_EQ(1001001ll, r.time_ms()) << r.time_ms();
+
+	r.time_from_double(1002.00001);
+	ASSERT_EQ(1002000ll, r.time_ms()) << r.time_ms();
 }
 
 TEST(MeterFile, format3) {
@@ -193,7 +196,7 @@ TEST(MeterFile, format3) {
 	ReadingIdentifier *p = rds[0].identifier().get();
 	double value = rds[0].value();
 	EXPECT_EQ(32552, value);
-	EXPECT_TRUE(abs(1001.2 -rds[0].tvtod())<0.01) << rds[0].tvtod();
+	EXPECT_EQ(1001200ll, rds[0].time_ms()) << rds[0].time_ms();
 
 	StringIdentifier *o = dynamic_cast<StringIdentifier*>(p);
 	ASSERT_NE((StringIdentifier*)0, o);
@@ -203,7 +206,7 @@ TEST(MeterFile, format3) {
 	p = rds[1].identifier().get();
 	o = dynamic_cast<StringIdentifier*>(p);
 	EXPECT_EQ(32552.5, value);
-	EXPECT_EQ(1002.5f, rds[1].tvtod());	
+	EXPECT_EQ(1002500ll, rds[1].time_ms());
 	ASSERT_NE((StringIdentifier*)0, o);
 	EXPECT_EQ(StringIdentifier("id2"), *o);
 
