@@ -23,13 +23,13 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// (?<identifier>[\w]+): (?<value>[\d]+[,|.]?[?:\d]+) (?<timestamp>\d{10})
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <regex>
-#include <string>
+#include <errno.h>
+// Regex is not working with gcc-4.6
+//#include <regex>
+//#include <string>
 
 #include "protocols/MeterExec.hpp"
 #include "Options.hpp"
@@ -76,6 +76,7 @@ MeterExec::MeterExec(std::list<Option> options)
 									case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
 									case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
 									// Regex is not working with gcc-4.6
+									// (?<identifier>[\w]+): (?<value>[\d]+[,|.]?[?:\d]+) (?<timestamp>\d{10})
 									//case 'v': j += sprintf(scanf_format+j, "([\\d]+[.|,]?[?:\\d]+)"); break;
 									//case 'i': j += sprintf(scanf_format+j, "([\\w]+)"); break;
 									//case 't': j += sprintf(scanf_format+j, "(\\d{10})"); break;
@@ -116,7 +117,7 @@ int MeterExec::open() {
 		return ERR;
 	}
 
-/*
+/* Pipe is closed after script complete
  	if (_pipe != NULL) {
 		pclose(_pipe);
 	}
@@ -153,7 +154,7 @@ ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 
 					print(log_debug, "MeterExec::read: Reading line: '%s'", name().c_str(), buffer);
 					int found = sscanf(buffer, format(), &value, &string, &timestamp);
-					print(log_debug, "MeterExec::read: (%i) input: %s, value: %lf, string: %s, timestamp: %lf", name().c_str(), found, value, string? string : "<null>", timestamp);
+					print(log_debug, "MeterExec::read: string: %s, value: %lf, timestamp: %lf", name().c_str(), string? string : "<null>", value, timestamp);
 					// Regex is not working with gcc-4.6
 					//std::smatch result;
 					//std::string input(buffer);
