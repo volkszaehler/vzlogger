@@ -1,0 +1,15 @@
+/*
+  use http://jeremydorn.com/json-editor/ as editor (paste below into schema)
+
+  todo: for some meter (with periodic=true, interval needs to be positive)
+  todo: for meter the option skip is actually called "allowskip"?
+  todo: dependency for aggmode!=none and aggtime             "dependencies": {
+                "aggmode": ["aggtime"],
+                "aggtime": ["aggmode"]
+            }
+    todo: "meters" can be called "sensors" as well
+    todo: add regex for uuid (see config_validate_uuid())
+    todo: enum for api (mysmartgrid, null, volkszaehler)
+    todo: enum for protocol (d0, sml, fluksov2, file, exec, s0)
+    todo: meterD0 needs device or host
+  */
