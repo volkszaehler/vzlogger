@@ -190,13 +190,28 @@
             ]
         },
 
+        "meterExec": {
+            "title": "meter extracting data from the output of a shell command/executable",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["exec"] },
+                        "command": { "type": "string", "description": "Command to be executed. Only possible if running as non root. Output will be parsed." },
+                        "format": { "type": "string", "description": "optional format string. Supports $v for value, $i for identifier and $t for timestamp. E.g. $i:$v. If empty just a value is read from each line of the file." }
+                    },
+                    "required": [ "command" ]
+                }
+
+            ]
+        },
+
         "meterFluksoV2": {
             "title": "fluksov2 meter",
             "allOf": [
                 { "$ref": "#/definitions/meter" },
                 { "properties": {
                         "protocol": { "type": "string", "enum": ["fluksov2"] },
-                        "fifo": { "type": "string", "description": "fifo to be used. E.g. /var/spid/delta/out" }
+                        "fifo": { "type": "string", "description": "fifo to be used.", "default": "/var/run/spid/delta/out" }
                     },
                     "required": [ "fifo" ]
                 }
@@ -221,6 +236,7 @@
                     {"$ref": "#/definitions/meterSML"},
                     {"$ref": "#/definitions/meterRandom"},
                     {"$ref": "#/definitions/meterFile"},
+                    {"$ref": "#/definitions/meterExec"},
                     {"$ref": "#/definitions/meterFluksoV2"}
                 ]}
         }

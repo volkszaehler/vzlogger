@@ -9,7 +9,5 @@
             }
     todo: "meters" can be called "sensors" as well
     todo: add regex for uuid (see config_validate_uuid())
-    todo: enum for api (mysmartgrid, null, volkszaehler)
-    todo: enum for protocol (d0, sml, fluksov2, file, exec, s0)
     todo: meterD0 needs device or host
   */
