@@ -148,6 +148,21 @@
             ]
         },
 
+        "meterRandom": {
+            "title": "example meter returning random values",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["random"] },
+                        "min": { "type": "number", "description": "minimum value (floating point) that will be returned. E.g. 0.0" },
+                        "max": { "type": "number", "description": "maximum value (floating point) that will be returned. E.g. 10.0" }
+                    }
+                }
+
+            ]
+        },
+
+
         "channels": {
             "type": "array",
             "items": { "oneOf": [
@@ -161,7 +176,8 @@
             "items": { "oneOf": [
                     {"$ref": "#/definitions/meterS0"},
                     {"$ref": "#/definitions/meterD0"},
-                    {"$ref": "#/definitions/meterSML"}
+                    {"$ref": "#/definitions/meterSML"},
+                    {"$ref": "#/definitions/meterRandom"}
                 ]}
         }
 
