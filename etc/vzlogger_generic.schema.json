@@ -190,6 +190,20 @@
             ]
         },
 
+        "meterFluksoV2": {
+            "title": "fluksov2 meter",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["fluksov2"] },
+                        "fifo": { "type": "string", "description": "fifo to be used. E.g. /var/spid/delta/out" }
+                    },
+                    "required": [ "fifo" ]
+                }
+
+            ]
+        },
+
         "channels": {
             "type": "array",
             "items": { "oneOf": [
@@ -206,7 +220,8 @@
                     {"$ref": "#/definitions/meterD0"},
                     {"$ref": "#/definitions/meterSML"},
                     {"$ref": "#/definitions/meterRandom"},
-                    {"$ref": "#/definitions/meterFile"}
+                    {"$ref": "#/definitions/meterFile"},
+                    {"$ref": "#/definitions/meterFluksoV2"}
                 ]}
         }
 
