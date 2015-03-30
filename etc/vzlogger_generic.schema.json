@@ -96,6 +96,18 @@
             "required": [  ]
         },
 
+        "meterInvalid": {
+            "title": "invalid config for a meter. Choose any of the supported ones.",
+          "allOf": [
+            { "$ref": "#/definitions/meter" },
+            { "properties": {
+                "protocol": { "type": "string", "enum": ["invalid"] }
+            }
+            }
+          ]
+        },
+
+
         "meterS0": {
             "title": "S0 based meter",
           "allOf": [
@@ -162,6 +174,21 @@
             ]
         },
 
+        "meterFile": {
+            "title": "meter extracting data from a given file",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["file"] },
+                        "path": { "type": "string", "description": "file incl. path to be used for data extraction" },
+                        "format": { "type": "string", "description": "optional format string. Supports $v for value, $i for identifier and $t for timestamp. E.g. $i:$v. If empty just a value is read from each line of the file." },
+                        "rewind": { "type": "boolean", "description": "rewind the file handle at each read?", "default": false }
+                    },
+                    "required": [ "path" ]
+                }
+
+            ]
+        },
 
         "channels": {
             "type": "array",
@@ -174,10 +201,12 @@
             "type": "array",
             "minItems": 1,
             "items": { "oneOf": [
+                    {"$ref": "#/definitions/meterInvalid"},
                     {"$ref": "#/definitions/meterS0"},
                     {"$ref": "#/definitions/meterD0"},
                     {"$ref": "#/definitions/meterSML"},
-                    {"$ref": "#/definitions/meterRandom"}
+                    {"$ref": "#/definitions/meterRandom"},
+                    {"$ref": "#/definitions/meterFile"}
                 ]}
         }
 
