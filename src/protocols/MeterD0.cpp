@@ -223,6 +223,9 @@ MeterD0::MeterD0(std::list<Option> options)
 		const char *waitsync = optlist.lookup_string(options, "wait_sync");
 		if (strcasecmp(waitsync,"end")==0) {
 			_wait_sync_end = true;
+		} else
+		if (strcasecmp(waitsync, "off")==0) {
+			_wait_sync_end = false;
 		} else {
 			throw vz::VZException("Invalid wait_sync");
 		}

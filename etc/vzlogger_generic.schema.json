@@ -1,0 +1,278 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions" : {
+
+        "local": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "id": "/local/enabled",
+                    "type": "boolean",
+                    "description": "should we start the local HTTPd for serving live readings?"
+                },
+                "port": {
+                    "id": "/local/port",
+                    "type": "integer",
+                    "default": 8080,
+                    "description": "the TCP port for the local HTTPd"
+                },
+                "index": {
+                    "id": "/local/index",
+                    "type": "boolean",
+                    "description": "should we provide a index listing of available channels if no UUID was requested?"
+                },
+                "timeout": {
+                    "id": "/local/timeout",
+                    "type": "integer"
+                },
+                "buffer": {
+                    "id": "/local/buffer",
+                    "type": "integer"
+                }
+            },
+            "required": [ "enabled" ]
+        },
+
+        "channel": {
+            "type": "object",
+            "title": "channel",
+            "properties": {
+                "uuid": { "type": "string", "description": "uuid of this channel towards the middleware" },
+                "identifier": { "type": "string", "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0" },
+                "api": {
+                    "type": "string",
+                    "enum": ["volkszaehler", "mysmartgrid", "null"],
+                    "default": "volkszaehler",
+                    "description": "middleware api to be used. Defaults to volkszaehler.org"
+                },
+                "aggmode": {
+                    "type": "string",
+                    "enum": ["avg", "max", "sum", "none"],
+                    "description": "Mittelwert fuer Leistung, MAX fuer Zaehler, SUM fuer Counter",
+                    "default": "none"
+                },
+                "duplicates": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0,
+                    "description": "default 0 (send duplicate values), >0 = send duplicate values only each <duplicates> seconds. Activate only for abs. counter values (Zaehlerstaende) and not for impulses!"
+                }
+            },
+            "required": ["uuid", "identifier"]
+        },
+
+        "meter": {
+            "type": "object",
+            "title": "meter",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "enable or disable this meter. Disabled meter will be ignored.",
+                    "default": false
+                },
+                "allowskip": {
+                    "type": "boolean",
+                    "description": "if enabled, errors when opening meter will lead to meter being ignored",
+                    "default": false
+                },
+                "interval": {
+                    "type": "integer",
+                    "description": "delay in secs between queries to the meter",
+                    "default": -1
+                },
+                "aggtime": {
+                    "type": "integer",
+                    "description": "aggregate all signals and give one update to middleware every <aggtime> seconds",
+                    "default": -1
+                },
+                "aggfixedinterval": {
+                    "type": "boolean",
+                    "description": "round all timestamps to middleware to nearest aggtime",
+                    "default": false
+                },
+                "channels": {"$ref": "#/definitions/channels"}
+            },
+            "required": [  ]
+        },
+
+        "meterInvalid": {
+            "title": "invalid config for a meter. Choose any of the supported ones.",
+          "allOf": [
+            { "$ref": "#/definitions/meter" },
+            { "properties": {
+                "protocol": { "type": "string", "enum": ["invalid"] }
+            }
+            }
+          ]
+        },
+
+
+        "meterS0": {
+            "title": "S0 based meter",
+          "allOf": [
+            { "$ref": "#/definitions/meter" },
+            { "properties": {
+                "protocol": { "type": "string", "enum": ["s0"] },
+                "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" }
+            },
+            "required": [ "protocol", "device" ]
+            }
+          ]
+        },
+
+        "meterD0": {
+            "title": "D0 based meter",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["d0"] },
+                        "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" },
+                        "host": { "type": "string", "description": "ip addr of the meter (if not directly connected)" },
+                        "dump_file": { "type": "string", "description": "path/filename of the file for the serial dump" },
+                        "pullseq": { "type": "string", "description": "todo with default" },
+                        "ackseq": { "type": "string", "description": "todo", "default": "auto" },
+                        "baudrate": { "type": "integer", "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400], "default": 300, "description": "todo" },
+                        "baudrate_read":  { "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400], "default": 300, "description": "todo" },
+                        "parity": { "type": "string", "enum": ["8n1", "7n1", "7e1", "7o1"], "default": "7e1", "description": "parity used for serial communication" },
+                        "wait_sync": { "enum": ["end", "off"], "default": "off", "description": "todo"},
+                        "read_timeout": { "type": "integer", "default": 10, "description": "todo"},
+                        "baudrate_change_delay": {"type": "integer", "default": 0, "description": "todo"}
+                    }
+                }
+            ]
+        },
+
+        "meterSML": {
+            "title": "SML based meter",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["sml"] },
+                        "host": { "type": "string", "description": "ip addr of the meter (if not directly connected)" },
+                        "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" },
+                        "pullseq": { "type": "string", "description": "sequence in hex to send to the meter before each read call" },
+                        "baudrate": { "type": "integer", "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400], "default": 9600, "description": "baudrate for serial communication" },
+                        "parity": { "type": "string", "enum": ["8n1", "7n1", "7e1", "7o1"], "default": "8n1", "description": "parity used for serial communication"}
+                    }
+                }
+
+            ]
+        },
+
+        "meterRandom": {
+            "title": "example meter returning random values",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["random"] },
+                        "min": { "type": "number", "description": "minimum value (floating point) that will be returned. E.g. 0.0" },
+                        "max": { "type": "number", "description": "maximum value (floating point) that will be returned. E.g. 10.0" }
+                    }
+                }
+
+            ]
+        },
+
+        "meterFile": {
+            "title": "meter extracting data from a given file",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["file"] },
+                        "path": { "type": "string", "description": "file incl. path to be used for data extraction" },
+                        "format": { "type": "string", "description": "optional format string. Supports $v for value, $i for identifier and $t for timestamp. E.g. $i:$v. If empty just a value is read from each line of the file." },
+                        "rewind": { "type": "boolean", "description": "rewind the file handle at each read?", "default": false }
+                    },
+                    "required": [ "path" ]
+                }
+
+            ]
+        },
+
+        "meterExec": {
+            "title": "meter extracting data from the output of a shell command/executable",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["exec"] },
+                        "command": { "type": "string", "description": "Command to be executed. Only possible if running as non root. Output will be parsed." },
+                        "format": { "type": "string", "description": "optional format string. Supports $v for value, $i for identifier and $t for timestamp. E.g. $i:$v. If empty just a value is read from each line of the file." }
+                    },
+                    "required": [ "command" ]
+                }
+
+            ]
+        },
+
+        "meterFluksoV2": {
+            "title": "fluksov2 meter",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["fluksov2"] },
+                        "fifo": { "type": "string", "description": "fifo to be used.", "default": "/var/run/spid/delta/out" }
+                    },
+                    "required": [ "fifo" ]
+                }
+
+            ]
+        },
+
+        "channels": {
+            "type": "array",
+            "items": { "oneOf": [
+                    {"$ref": "#/definitions/channel"}
+                ]}
+        },
+
+        "meters": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "oneOf": [
+                    {"$ref": "#/definitions/meterInvalid"},
+                    {"$ref": "#/definitions/meterS0"},
+                    {"$ref": "#/definitions/meterD0"},
+                    {"$ref": "#/definitions/meterSML"},
+                    {"$ref": "#/definitions/meterRandom"},
+                    {"$ref": "#/definitions/meterFile"},
+                    {"$ref": "#/definitions/meterExec"},
+                    {"$ref": "#/definitions/meterFluksoV2"}
+                ]}
+        }
+
+    },
+
+  "type": "object",
+  "properties": {
+    "retry": {
+      "id": "/retry",
+      "type": "integer",
+      "description": "How long to sleep between failed requests, in seconds"
+    },
+    "daemon": {
+      "id": "/daemon",
+      "type": "boolean",
+      "default": "true",
+      "description": "Enable daemon mode"
+    },
+    "verbosity": {
+      "id": "/verbosity",
+      "type": "integer",
+      "enum":[0, 5, 10, 15], "description":"log_error or log_warning",
+      "default": 0,
+      "description": "0 = log_error or log-warning, 5 = log_info, 10 = log-debug, 15 = log_finest"
+    },
+    "log": {
+      "id": "/log",
+      "type": "string",
+      "description": "path to log file"
+    },
+    "local": { "$ref": "#/definitions/local" },
+    "meters": { "$ref": "#/definitions/meters" }
+  },
+  "required": [
+    "daemon",
+    "log"
+  ]
+}
