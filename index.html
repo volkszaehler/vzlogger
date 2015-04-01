@@ -21,7 +21,10 @@
 -->
     <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'>
 
-    <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
+    <style>
+        [class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}
+        .dev {display:none;}
+    </style>
     <script src='//code.jquery.com/jquery-2.1.3.min.js'></script>
     <script src='js/jsoneditor.min.js'></script>
     <script src='js/xregexp-min.js'></script>
@@ -90,8 +93,6 @@
 </div>
 <script>
 (function() {
-    var schema = {};
-
     // Divs/textareas on the page
     var $schema = document.getElementById('schema');
     var $output = document.getElementById('output');
@@ -110,7 +111,7 @@
 
         if(jsoneditor) jsoneditor.destroy();
         jsoneditor = new JSONEditor($editor,{
-            schema: schema,
+            schema: JSON.parse($schema.value),
             startval: startval
         });
         window.jsoneditor = jsoneditor;
@@ -144,7 +145,7 @@
     // Update the schema when the button is clicked
     $set_schema_button.addEventListener('click',function() {
         try {
-            schema = JSON.parse($schema.value);
+            JSON.parse($schema.value);
         }
         catch(e) {
             alert('Invalid Schema: '+e.message);
@@ -181,14 +182,12 @@
 	// disable_array_delete: Disable array delete buttons
     JSONEditor.defaults.options.disable_properties = true;
 
-    // reload();
-
     // load schema
     var localhost = (document.location.host == 'localhost');
     var api = 'https://api.github.com/repos/volkszaehler/vzlogger';
-    var schemaUrl = localhost ? 'schema.json' 
+    var schemaUrl = localhost ? 'schema.json'
         : api + '/contents/etc/vzlogger_generic.schema.json?ref=master';
-    var configUrl = localhost ? 'vzlogger.conf' 
+    var configUrl = localhost ? 'vzlogger.conf'
         : api + '/contents/etc/vzlogger.conf?ref=master';
 
     $.when(
