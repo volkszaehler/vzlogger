@@ -499,16 +499,16 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 
 	//print(log_debug, "MSG-API, buffer has %d element.", channel()->name(), buf->size());
 	if (_values.size() ) {
-		timestamp = _values.back().tvtod();
+		timestamp = _values.back().time_s();
 		value     = _values.back().value();
 	}
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		if (timestamp < (long)it->tvtod() /*&& value != (long)(it->value() * _scaler)*/ ) {
+		if (timestamp < it->time_s() /*&& value != (long)(it->value() * _scaler)*/ ) {
 			_values.push_back(*it);
-			timestamp = it->tvtod();
+			timestamp = it->time_s();
 			value     = it->value() * _scaler;
 		}
 		it->mark_delete();
@@ -519,7 +519,7 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 	//print(log_debug, "Valuescounter: %d", channel()->name(), _values.size());
 
 	for (it = _values.begin(); it != _values.end(); it++) {
-		timestamp = it->tvtod();
+		timestamp = it->time_s();
 		value     = it->value() * _scaler;
 		print(log_debug, "==> %ld, %lf - %ld", channel()->name(), timestamp, it->value(), value);
 	}
@@ -533,7 +533,7 @@ json_object * vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		long timestamp = it->tvtod();
+		long timestamp = it->time_s();
 		long value = it->value() * _scaler;
 
 		if (_first_counter < 1 ) {
