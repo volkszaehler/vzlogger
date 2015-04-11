@@ -64,14 +64,21 @@ if( ENABLE_SML )
   if(SML_FOUND)
     set(SML_SUPPORT 1)
     include_directories(${SML_INCLUDE_DIR})
+  else
+    message(FATAL_ERROR "libsml is enabled but not found.
+Install libsml or call cmake -DSML_HOME=path_to_sml_install")
   endif(SML_FOUND)
 endif( ENABLE_SML )
 
+# microhttpd
 if(ENABLE_LOCAL)
   include(FindMicroHttpd)
   if(MICROHTTPD_FOUND)
     set(MICROHTTPD_SUPPORT 1)
     set(LOCAL_SUPPORT 1)
+  else
+    message(FATAL_ERROR "microhttpd is enabled but not found.
+Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
   endif(MICROHTTPD_FOUND)
 endif(ENABLE_LOCAL)
 
@@ -82,7 +89,7 @@ ENDIF(NOT WIN32)
 # libjson
 include(FindJson)
 if( NOT JSON_FOUND)
-  message(FATAL_ERROR "libjson ist required.
+  message(FATAL_ERROR "libjson is required.
 Install json or call cmake -DJSON_HOME=path_to_json_install")
 endif( NOT JSON_FOUND)
 include_directories(${JSON_INCLUDE_DIR})
@@ -149,21 +156,12 @@ message("")
 message("        ***** Configuration parameters *****")
 message("             prefix: ${CMAKE_INSTALL_PREFIX}")
 message("             json: -L${JSON_LIBRARY} -I${JSON_INCLUDE_DIR}")
-if (ENABLE_SML AND NOT SML_FOUND)
+if (ENABLE_SML)
 message("             sml:  -L${SML_LIBRARY} -I${SML_INCLUDE_DIR}")
-endif (ENABLE_SML AND NOT SML_FOUND)
-if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND)
+endif (ENABLE_SML)
+if( ENABLE_LOCAL)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
-endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND)
-
-if( ENABLE_SML AND NOT SML_FOUND)
-  message(WARNING "libsml was not found.
-Install libsml or call cmake -DSML_HOME=path_to_sml_install")
-endif( ENABLE_SML AND NOT SML_FOUND)
-if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
-  message(FATAL_ERROR "microhttpd ist required.
-Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
-endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
+endif( ENABLE_LOCAL)
 
 # add some files to the installation target
 INSTALL(FILES README INSTALL COPYING DESTINATION
