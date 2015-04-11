@@ -46,6 +46,26 @@
                     "default": "volkszaehler",
                     "description": "middleware api to be used. Defaults to volkszaehler.org"
                 },
+                "middleware": {
+                    "type" : "string",
+                    "default": "http://localhost/middleware.php",
+                    "description": "path/url to the api/middleware"
+                },
+                "secretKey": {
+                    "type": "string",
+                    "description": "secret key to use to talk to MySmartGrid api."
+                },
+                "type": {
+                    "type" : "string",
+                    "enum": ["device", "sensor"],
+                    "default": "device",
+                    "description": "type of connected meter. Only needed for MySmartGrid api."
+                },
+                "scaler": {
+                  "type": "integer",
+                    "default": 1,
+                    "description": "scaling factor to use. Only needed for MySmartGrid api."
+                },
                 "aggmode": {
                     "type": "string",
                     "enum": ["avg", "max", "sum", "none"],
