@@ -134,7 +134,8 @@
             { "$ref": "#/definitions/meter" },
             { "properties": {
                 "protocol": { "type": "string", "enum": ["s0"] },
-                "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" }
+                "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" },
+                "resolution": { "type": "integer", "default": 1000, "description": "number of impulses per kWh" }
             },
             "required": [ "protocol", "device" ]
             }
