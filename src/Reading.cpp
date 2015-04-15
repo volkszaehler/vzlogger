@@ -37,15 +37,17 @@ Reading::Reading()
 		: _deleted(false)
 		, _value(0)
 {
+	_time.tv_sec = 0;
+	_time.tv_usec = 0;
 }
 
 Reading::Reading(ReadingIdentifier::Ptr pIndentifier)
 		: _deleted(false)
 		, _value(0)
-								//    , time(0)
 		, _identifier(pIndentifier)
 {
-
+	_time.tv_sec = 0;
+	_time.tv_usec = 0;
 }
 Reading::Reading(
 	double pValue
@@ -67,26 +69,15 @@ Reading::Reading(
 		, _time(orig._time)
 		, _identifier (orig._identifier)
 {
-//	printf("+==>Copy: %f %f orig %f %f\n", tvtod(), _value, orig.tvtod(), orig._value);
 }
 
-double Reading::tvtod() const {
-	return (double)_time.tv_sec + ((double)_time.tv_usec / 1e6);
-}
-
-double Reading::tvtod(struct timeval const &tv) const {
-	return (double)tv.tv_sec + ((double)tv.tv_usec / 1e6);
-}
-
-struct timeval Reading::dtotv(double const &ts) const {
+void Reading::time_from_double(double const &ts)
+{
 	double integral;
 	double fraction = modf(ts, &integral);
 
-	struct timeval tv;
-	tv.tv_usec = (long int) (fraction * 1e6);
-	tv.tv_sec = (long int) integral;
-
-	return tv;
+	_time.tv_usec = (long int) (fraction * 1e6);
+	_time.tv_sec = (long int) integral;
 }
 
 ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string) {

@@ -49,7 +49,6 @@ vz::api::Volkszaehler::Volkszaehler(
 	: ApiIF(ch)
 	, _last_timestamp(0)
 	, _lastReadingSent (0)
-	, _lastReadingIgnored (0)
 {
 	OptionList optlist;
 	char agent[255];
@@ -88,7 +87,6 @@ vz::api::Volkszaehler::Volkszaehler(
 vz::api::Volkszaehler::~Volkszaehler()
 {
 	if (_lastReadingSent) delete _lastReadingSent;
-	if (_lastReadingIgnored) delete _lastReadingIgnored;
 }
 
 void vz::api::Volkszaehler::send()
@@ -178,15 +176,15 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	Buffer::iterator it;
 
 	print(log_debug, "==> number of tuples: %d", channel()->name(), buf->size());
-	uint64_t timestamp = 1;
+	int64_t timestamp = 1;
 	const int duplicates = channel()->duplicates();
 	const int duplicates_ms = duplicates * 1000;
 
 	// copy all values to local buffer queue
 	buf->lock();
 	for (it = buf->begin(); it != buf->end(); it++) {
-		timestamp = it->tvtod() * 1000; // round similar as timestamp send to middleware
-		print(log_debug, "compare: %llu %llu %f", channel()->name(), _last_timestamp, timestamp, it->tvtod() * 1000);
+		timestamp = it->time_ms();
+		print(log_debug, "compare: %lld %lld", channel()->name(), _last_timestamp, timestamp);
 		// we can only add/consider a timestamp if the ms resolution is different than from previous one:
 		if (_last_timestamp < timestamp ) {
 			if (0 == duplicates) { // send all values
@@ -196,36 +194,22 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 				const Reading &r = *it;
 				// duplicates should be ignored
 				// but send at least each <duplicates> seconds
-				// and if the value changes the last one ignored should be send as well (to keep the "waveform")
 
 				if (!_lastReadingSent) { // first one from the duplicate consideration -> send it
 					_lastReadingSent = new Reading(r);
 					_values.push_back(r);
 					_last_timestamp = timestamp;
-					if( _lastReadingIgnored != 0) print(log_error, "logical error! lastReadingIgnored !=0", channel()->name());
 				} else { // one reading sent already. compare
 					// a) timestamp
 					// b) duplicate value
 					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
 							(r.value() != _lastReadingSent->value())) {
-						// send the last ignored first iff value changed:
-						if (_lastReadingIgnored) {
-							if (r.value() != _lastReadingSent->value()) {
-								_values.push_back(*_lastReadingIgnored);
-							}
-							delete _lastReadingIgnored;
-							_lastReadingIgnored = 0;
-						}
 						// send the current one:
 						_values.push_back(r);
 						_last_timestamp = timestamp;
 						*_lastReadingSent = r;
 					} else {
-						// ignore it:
-						if (!_lastReadingIgnored)
-							_lastReadingIgnored = new Reading(r);
-						else
-							*_lastReadingIgnored = r;
+						// ignore it
 					}
 				}
 			}
@@ -243,13 +227,8 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	for (it = _values.begin(); it != _values.end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
 
-		// TODO use long int of new json-c version
-		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod() * 1000;
-		double value = it->value();
-
-		json_object_array_add(json_tuple, json_object_new_double(timestamp));
-		json_object_array_add(json_tuple, json_object_new_double(value));
+		json_object_array_add(json_tuple, json_object_new_int64(it->time_ms()));
+		json_object_array_add(json_tuple, json_object_new_double(it->value()));
 
 		json_object_array_add(json_tuples, json_tuple);
 	}

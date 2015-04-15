@@ -9,12 +9,12 @@ add_subdirectory(protocols)
 
 ## local interface support
 #####################################################################
-if(ENABLE_LOCAL)
+if(LOCAL_SUPPORT)
   set(local_srcs local.cpp)
   include_directories(${MICROHTTPD_INCLUDE_DIR})
-else(ENABLE_LOCAL)
+else(LOCAL_SUPPORT)
   set(local_srcs "")
-endif(ENABLE_LOCAL)
+endif(LOCAL_SUPPORT)
 
 configure_file("${CMAKE_SOURCE_DIR}/src/gitSha1.cpp.in" "${CMAKE_BINARY_DIR}/gitSha1.cpp" @ONLY)
 
@@ -35,7 +35,7 @@ set(libvz_srcs
   Options.cpp
   Reading.cpp
   exception.cpp
-  local.cpp 
+  ${local_srcs}
   MeterMap.cpp
   )
 
@@ -49,7 +49,10 @@ if(SML_FOUND)
   target_link_libraries(vzlogger ${SML_LIBRARY})
 endif(SML_FOUND)
 
+if(LOCAL_SUPPORT)
 target_link_libraries(vzlogger ${MICROHTTPD_LIBRARY})
+endif(LOCAL_SUPPORT)
+
 target_link_libraries(vzlogger ${LIBGCRYPT})
 target_link_libraries(vzlogger pthread m ${LIBUUID})
 target_link_libraries(vzlogger dl)

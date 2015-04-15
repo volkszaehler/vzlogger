@@ -43,8 +43,8 @@ extern Config_Options options;
 class ChannelData
 {
 public:
-	ChannelData(const double &t, const double &v) : _t(t), _v(v) {};
-	double _t;
+	ChannelData(const int64_t &t, const double &v) : _t(t), _v(v) {};
+	int64_t _t;
 	double _v;
 };
 
@@ -58,7 +58,7 @@ void shrink_localbuffer() // remove old data in the local buffer
 	if (options.buffer_length()>=0){ // time based localbuffer. keep buffer_length secs
 		Reading rnow;
 		rnow.time(); // sets to "now"
-		double minT = rnow.tvtod() - options.buffer_length(); // now - time to keep in buffer
+		int64_t minT = rnow.time_ms() - (1000*options.buffer_length()); // now - time to keep in buffer
 
 		pthread_mutex_lock(&localbuffer_mutex);
 
@@ -86,7 +86,7 @@ void add_ch_to_localbuffer(Channel &ch)
 	for (it = buf->begin(); it != buf->end(); ++it) {
 		Reading &r = *it;
 		if (!r.deleted()) {
-			l.push_back(ChannelData(r.tvtod(), r.value()));
+			l.push_back(ChannelData(r.time_ms(), r.value()));
 		}
 	}
 	if (options.buffer_length()<0) { // max size based localbuffer. keep max -buffer_length items
@@ -114,12 +114,8 @@ json_object * api_json_tuples(const char *uuid) {
 	for (LIST_ChannelData::const_iterator cit = l.cbegin(); cit != l.cend(); ++cit) {
 		struct json_object *json_tuple = json_object_new_array();
 
-		// return ms as in API  => * 1000
-		int64_t timestamp = cit->_t * 1000; // TODO add support for int64_t timestamps in Reading and use those values directly
-		double value = cit->_v;
-
-		json_object_array_add(json_tuple, json_object_new_int64(timestamp));
-		json_object_array_add(json_tuple, json_object_new_double(value));
+		json_object_array_add(json_tuple, json_object_new_int64(cit->_t));
+		json_object_array_add(json_tuple, json_object_new_double(cit->_v));
 
 		json_object_array_add(json_tuples, json_tuple);
 	}
@@ -195,7 +191,7 @@ int handle_request(
 						struct json_object *json_ch = json_object_new_object();
 
 						json_object_object_add(json_ch, "uuid", json_object_new_string((*ch)->uuid()));
-						json_object_object_add(json_ch, "last", json_object_new_int64((*ch)->tvtod()*1000)); // return here in ms as well
+						json_object_object_add(json_ch, "last", json_object_new_int64((*ch)->time_ms())); // return here in ms as well
 						json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter()->interval()));
 						json_object_object_add(json_ch, "protocol", json_object_new_string(meter_get_details(mapping->meter()->protocolId())->name));
 

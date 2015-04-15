@@ -154,20 +154,21 @@ if(SML_FOUND)
 else(SML_FOUND)
   message("             sml: NOT FOUND")
 endif(SML_FOUND)
-
+if(MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
+endif(MICROHTTPD_FOUND)
 
 if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.
 Install libsml or call cmake -DSML_HOME=path_to_sml_install")
 endif( ENABLE_SML AND NOT SML_FOUND)
 if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
-  message(FATAL_ERROR "microhttpd ist required.
+  message(WARNING "microhttpd was not found. Ignored ENABLE_LOCAL!
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
 endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 
 # add some files to the installation target
-INSTALL(FILES README INSTALL COPYING DESTINATION
+INSTALL(FILES README COPYING DESTINATION
   share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
 )
 

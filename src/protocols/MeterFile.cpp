@@ -167,7 +167,7 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 			rds[i].identifier(rid);
 			if (found >= 1) {
 				if (timestamp >=0.0)
-					rds[i].time(rds[i].dtotv(timestamp)); // convert double to timevals
+					rds[i].time_from_double(timestamp);
 				else
 					rds[i].time(); // use current timestamp
 				i++; // read successfully

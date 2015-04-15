@@ -33,7 +33,9 @@
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
 #include <api/Null.hpp>
+#ifdef LOCAL_SUPPORT
 #include "local.h"
+#endif
 
 extern Config_Options options;
 
@@ -79,9 +81,9 @@ void * reading_thread(void *arg) {
 					char identifier[MAX_IDENTIFIER_LEN];
 					for (size_t i = 0; i < n; i++) {
 						rds[i].unparse(/*mtr->protocolId(),*/ identifier, MAX_IDENTIFIER_LEN);
-						print(log_debug, "Reading: id=%s/%s value=%.2f ts=%.3f", mtr->name(),
+						print(log_debug, "Reading: id=%s/%s value=%.2f ts=%lld", mtr->name(),
 								identifier, rds[i].identifier()->toString().c_str(),
-								rds[i].value(), rds[i].tvtod());
+								rds[i].value(), rds[i].time_ms());
 					}
 				}
 
@@ -100,12 +102,12 @@ void * reading_thread(void *arg) {
 					for (size_t i = 0; i < n; i++) {
 						if (*rds[i].identifier().get() == *(*ch)->identifier().get()) {
 							//print(log_debug, "found channel", mtr->name());
-							if ((*ch)->tvtod() < rds[i].tvtod()) {
+							if ((*ch)->time_ms() < rds[i].time_ms()) {
 								(*ch)->last(&rds[i]);
 							}
 
-							print(log_info, "Adding reading to queue (value=%.2f ts=%.3f)", (*ch)->name(),
-									rds[i].value(), rds[i].tvtod());
+							print(log_info, "Adding reading to queue (value=%.2f ts=%lld)", (*ch)->name(),
+									rds[i].value(), rds[i].time_ms());
 							(*ch)->push(rds[i]);
 
 							if (add == NULL) {
@@ -126,12 +128,12 @@ void * reading_thread(void *arg) {
 
 				/* shrink buffer */
 				(*ch)->buffer()->clean();
-
+#ifdef LOCAL_SUPPORT
 				if (options.local()) {
 					shrink_localbuffer(); // remove old/outdated data in the local buffer
 					add_ch_to_localbuffer(*(*ch)); // add this ch data to the local buffer
 				}
-
+#endif
 				/* notify webserver and logging thread */
 				(*ch)->notify();
 

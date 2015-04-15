@@ -1,11 +1,25 @@
 vzlogger...
-  * is a tool to read and log measurements of a wide variety of smartmeters, sensors to the volkszaehler.org middleware.
-  * can run as a daemon or via Cron.
-  * includes a tiny onboard httpd to serve realtime readings to the AJAX web frontend.
-  * is written in ANSI C and should run on most embedded devices which conform to the POSIX standard.
+
+  * is a part of the volkszaehler.org smart meter
+  * is a tool to read and log measurements of a wide variety of smart meters and sensors to the volkszaehler.org middleware
+  * can run as a daemon or via cron
+  * includes a tiny onboard http daemon to serve realtime readings
+  * is written in C++ and should run on most embedded devices which conform to the POSIX standard
 
 Feel free to implement support your own hardware ;)
-If you have questions, contact Steffen Vogel <info@steffenvogel.de>
+
+To install, follow the detailed installation instructions at http://wiki.volkszaehler.org/software/controller/vzlogger/installation_cpp-version
+
+If you're impatient you can quickstart using:
+
+    sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool
+    wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
+    sudo bash install.sh
+
+If you have questions, contact the volkszaehler mailing lists:
+
+  * Users mailing list: volkszaehler@lists.volkszaehler.org
+  * Developers mailing list: volkszaehler-dev@lists.volkszaehler.org
 
 More information is available in our wiki:
 http://wiki.volkszaehler.org/software/controller/vzlogger
