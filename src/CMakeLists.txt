@@ -48,6 +48,7 @@ target_link_libraries(vzlogger ${JSON_LIBRARY})
 if(SML_FOUND)
   target_link_libraries(vzlogger ${SML_LIBRARY})
 endif(SML_FOUND)
+target_link_libraries(vzlogger ${OCR_LIBRARIES})
 
 if(LOCAL_SUPPORT)
 target_link_libraries(vzlogger ${MICROHTTPD_LIBRARY})

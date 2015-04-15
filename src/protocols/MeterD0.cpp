@@ -93,6 +93,7 @@ MeterD0::MeterD0(std::list<Option> options)
 		int i;
 		for (i=0;i<n;i=i+2) {
 			char hs[3];
+			hs[2]=0;
 			strncpy(hs,hex.c_str()+i,2);
 			char hx[2];
 			hx[0]=strtol(hs,NULL,16);
