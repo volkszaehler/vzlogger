@@ -28,6 +28,12 @@
 /* Smart Messaging Language */
 #cmakedefine SML_SUPPORT 1
 
+/* OCR Meter support */
+#cmakedefine OCR_SUPPORT 1
+
+/* OCR text recgonition support */
+#cmakedefine OCR_TESSERACT_SUPPORT 1
+
 /* true if we use shared_ptr from stl */
 #cmakedefine USE_STL_TR1 1
 
