@@ -39,6 +39,9 @@
 #ifdef SML_SUPPORT
 #include <protocols/MeterSML.hpp>
 #endif
+#ifdef OCR_SUPPORT
+#include "protocols/MeterOCR.hpp"
+#endif
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC) {				\
@@ -57,7 +60,10 @@ static const meter_details_t protocols[] = {
 	METER_DETAIL(d0, D0, "DLMS/IEC 62056-21 plaintext protocol",400,false),
 #ifdef SML_SUPPORT
 	METER_DETAIL(sml, Sml, "Smart Message Language as used by EDL-21, eHz and SyM²", 32,false),
-#endif /* SML_SUPPORT */
+#endif // SML_SUPPORT
+#ifdef OCR_SUPPORT
+	METER_DETAIL(ocr, OCR, "Image processing/recognizing meter", 32, false), // TODO periodic or not periodic?
+#endif
 //{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL,NULL, 0,false),
 };
@@ -163,6 +169,12 @@ Meter::Meter(std::list<Option> pOptions) :
 			_protocol = vz::protocol::Protocol::Ptr(new MeterFluksoV2(pOptions));
 			_identifier = ReadingIdentifier::Ptr(new ChannelIdentifier());
 			break;
+#ifdef OCR_SUPPORT
+		case meter_protocol_ocr:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterOCR(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+			break;
+#endif
 		default:
 			break;
 	}

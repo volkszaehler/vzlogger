@@ -94,6 +94,7 @@ void * reading_thread(void *arg) {
 //				}
 
 				/* insert readings into channel queues */
+				if (n>0)
 				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
 					Reading *add = NULL;
 

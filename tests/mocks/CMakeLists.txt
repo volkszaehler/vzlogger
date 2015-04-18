@@ -25,6 +25,8 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/api/CurlIF.cpp
 	../../src/api/CurlCallback.cpp
 	../../src/api/CurlResponse.cpp
+	protocols/MeterOCR.hpp
+	Channel.hpp
 	../../src/CurlSessionProvider.cpp
 	${mock_local_srcs}
 )

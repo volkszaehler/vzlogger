@@ -28,6 +28,12 @@
 /* Smart Messaging Language */
 #cmakedefine SML_SUPPORT 1
 
+/* OCR Meter support */
+#cmakedefine OCR_SUPPORT 1
+
+/* OCR text recgonition support */
+#cmakedefine OCR_TESSERACT_SUPPORT 1
+
 /* Allow MeterExec protocol to use root privileges */
 #cmakedefine METEREXEC_ROOTACCESS 1
 

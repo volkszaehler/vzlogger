@@ -98,6 +98,8 @@ void Config_Options::config_parse(
 
 		if (json_tok->err > 1) {
 			print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
+			json_object_put(json_cfg);
+			json_cfg=0;
 			throw vz::VZException("Parse configuaration failed.");
 		}
 	}
@@ -117,7 +119,7 @@ void Config_Options::config_parse(
 				_daemon = json_object_get_boolean(value);
 			}
 			else if (strcmp(key, "log") == 0 && type == json_type_string) {
-				_log = strdup(json_object_get_string(value));
+				_log = json_object_get_string(value);
 			}
 			else if (strcmp(key, "retry") == 0 && type == json_type_int) {
 				_retry_pause = json_object_get_int(value);
@@ -172,9 +174,7 @@ void Config_Options::config_parse(
 	}
 
 	print(log_debug, "Have %d meters.", NULL, mappings.size());
-
-
-	//json_object_put(json_cfg); /* free allocated memory */
+	json_object_put(json_cfg); /* free allocated memory */
 }
 
 void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
@@ -220,7 +220,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	std::list<Option> options;
 	const char *uuid = NULL;
 	const char *id_str = NULL;
-	const char *apiProtocol_str = NULL;
+	std::string apiProtocol_str;
 
 	print(log_debug, "Configure channel.", NULL);
 	json_object_object_foreach(jso.Object(), key, value) {
@@ -264,8 +264,8 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	//	print(log_error, "Missing middleware", NULL);
 	//	throw vz::VZException("Missing middleware.");
 	//}
-	if (apiProtocol_str == NULL) {
-		apiProtocol_str = strdup("volkszaehler");
+	if (apiProtocol_str.length()==0) {
+		apiProtocol_str = "volkszaehler";
 	}
 
 	/* parse identifier */
@@ -279,9 +279,9 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		throw vz::VZException("Invalid reader.");
 	}
 
-	Channel::Ptr ch(new Channel(options, apiProtocol_str, uuid, id));
+	Channel::Ptr ch(new Channel(options, apiProtocol_str.c_str(), uuid, id));
 	print(log_info, "New channel initialized (uuid=...%s api=%s id=%s)", ch->name(),
-				uuid+30, apiProtocol_str, (id_str) ? id_str : "(none)");
+				uuid+30, apiProtocol_str.c_str(), (id_str) ? id_str : "(none)");
 	mapping.push_back(ch);
 }
 
