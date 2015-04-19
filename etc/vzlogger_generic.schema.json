@@ -240,6 +240,127 @@
             ]
         },
 
+        "meterOCRBB": {
+            "type" : "object",
+            "properties": {
+                "identifier" : { "type" : "string", "description": "id (obis-like) for this reading" },
+                "scaler": {"type": "integer", "default": 0, "description": "Scaling factor by 10^<scaler>. E.g. 0 = *1, -1 = *0.1, 2 = *100"},
+                "digit": {"type": "boolean", "default": false, "description": "a single digit is expected (thus the recognized value can only be within -9..9)"}
+            }
+        },
+
+        "meterOCRBBInvalid": {
+          "title": "invalid bounding-box. Choose any of the supported ones.",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRBB" },
+                { "properties": {
+                        "type": {"type": "string", "enum": ["invalid"]}
+                    }
+                }
+            ]
+        },
+
+        "meterOCRBBCircle": {
+          "title": "bounding-box with a circle",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRBB" },
+                { "properties": {
+                        "type": {"type": "string", "enum": ["circle"]},
+                        "circle": {"type": "object", "properties": {
+                                "cx": {"type": "integer", "description": "x coordinate of the center of the circle (top-left corner is (0,0))"},
+                                "cy": {"type": "integer", "description": "y coordinate of the center of the circle"},
+                                "cr": {"type": "integer", "default": 10, "description": "radius of the circle. 10 pixel minimum."},
+                                "offset": {"type": "number", "default": 0.0, "description": "offset of this needle. E.g. if at 5.0 (2nd digit needle at zero) but this needle show ~4.6 enter offset 0.4."}
+                            }}
+                    }
+                }
+            ]
+        },
+
+        "meterOCRBBBox": {
+          "title": "bounding-box with a rectangle",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRBB" },
+                { "properties": {
+                        "type": {"type": "string", "enum": ["box"]},
+                        "box": {"type": "object", "properties": {
+                                "x1": {"type": "integer", "description": "left coordinate of the rectangle"},
+                                "y1": {"type": "integer", "description": "top coordinate of the rectangle"},
+                                "x2": {"type": "integer", "description": "right coordinate of the rectangle"},
+                                "y2": {"type": "integer", "description": "bottom coordinate of the rectangle"}
+                            }}
+                    }
+                }
+            ]
+        },
+
+        "meterOCRRecognizer": {
+            "type" : "object",
+            "properties": {
+                "boundingboxes": { "oneOf": [
+                        {"$ref": "#/definitions/meterOCRBBInvalid"},
+                        {"$ref": "#/definitions/meterOCRBBCircle"},
+                        {"$ref": "#/definitions/meterOCRBBBox"}
+                    ]}
+            }
+        },
+
+        "meterOCRRecognizerInvalid": {
+          "title": "invalid recognizer. Choose any of the supported ones.",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRRecognizer" },
+                { "properties": {
+                        "type": { "type": "string", "enum": ["invalid"] }
+                    }
+                }
+            ]
+        },
+
+        "meterOCRRecognizerNeedle": {
+          "title": "needle type recognizer",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRRecognizer" },
+                { "properties": {
+                        "type": { "type": "string", "enum": ["needle"] },
+                        "kernelColorString": { "type": "string", "description": "Color conversion 3x3 matrix. Default red channel only (2 -1 -1 0 0 0 0 0 0). First line channel red. Needles are detected for red color after matrix application. See leptonica:pixMultMatrixColor" }
+                    }
+                }
+            ]
+        },
+
+        "meterOCRRecognizerBinary": {
+          "title": "binary (impulses) recognizer",
+            "allOf": [
+                { "$ref": "#/definitions/meterOCRRecognizer" },
+                { "properties": {
+                        "type": { "type": "string", "enum": ["binary"] },
+                        "kernelColorString": { "type": "string", "description": "Color conversion 3x3 matrix. Default red channel only (2 -1 -1 0 0 0 0 0 0). First line channel red. Rectangle/pixes are detected for red color after matrix application. See leptonica:pixMultMatrixColor" }
+                    }
+                }
+            ]
+        },
+
+        "meterOCR": {
+            "title": "meter extracting data from images (meterOCR)",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["ocr"] },
+                        "impulses": { "type": "integer", "default": 0, "description": "0 = report absolute values, >0 = report given impulses per unit" },
+                        "file": { "type": "string", "default": "/mnt/ramdisk/image.png", "description": "filename of the image to be processed (or use v4l2_dev)" },
+                        "v4l2_dev": { "type": "string", "description": "v4l2 device name (e.g. /dev/video0). Keep empty if file based image should be used. Has preference over file." },
+                        "generate_debug_image": { "type": "boolean", "default": false, "description": "generate debug images to ease configuration. Will be created in /run/vzlogger<nr>_debug.jpg for v4l2 or as <file>_debug.jpg if file based detection is used."},
+                        "rotate": { "type": "number", "default": 0.0, "description": "angle in degree for rotation of the image. Positive angle turn clockwise."},
+                        "recognizer": { "type": "array", "items": { "oneOf": [
+                                    {"$ref": "#/definitions/meterOCRRecognizerInvalid"},
+                                    {"$ref": "#/definitions/meterOCRRecognizerNeedle"},
+                                    {"$ref": "#/definitions/meterOCRRecognizerBinary"}
+                                ]}}
+                    }
+                }
+            ]
+        },
+
         "channels": {
             "type": "array",
             "items": { "oneOf": [
@@ -258,7 +379,8 @@
                     {"$ref": "#/definitions/meterRandom"},
                     {"$ref": "#/definitions/meterFile"},
                     {"$ref": "#/definitions/meterExec"},
-                    {"$ref": "#/definitions/meterFluksoV2"}
+                    {"$ref": "#/definitions/meterFluksoV2"},
+                    {"$ref": "#/definitions/meterOCR"}
                 ]}
         }
 
