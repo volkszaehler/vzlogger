@@ -38,7 +38,7 @@ public:
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
-	const char *command() { return _command.c_str(); }
+	const char *command() const { return _command.c_str(); }
 	const char *format() { return _format.c_str(); }
 
   private:

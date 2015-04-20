@@ -32,7 +32,7 @@ TEST(meter, meter_lookup_protocol)
 	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("D0", NULL)); // we do want case sensitive?
 
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("file", NULL));
-	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("exec", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("exec", NULL));
 
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("random", NULL));
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("s0", NULL));

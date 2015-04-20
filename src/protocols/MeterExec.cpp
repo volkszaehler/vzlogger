@@ -75,6 +75,7 @@ MeterExec::MeterExec(std::list<Option> options)
 									case 'v': j += sprintf(scanf_format+j, "%%1$lf"); break;
 									case 'i': j += sprintf(scanf_format+j, "%%2$ms"); break;
 									case 't': j += sprintf(scanf_format+j, "%%3$lf"); break;
+									default: break;
 									// Regex is not working with gcc-4.6
 									// (?<identifier>[\w]+): (?<value>[\d]+[,|.]?[?:\d]+) (?<timestamp>\d{10})
 									//case 'v': j += sprintf(scanf_format+j, "([\\d]+[.|,]?[?:\\d]+)"); break;
@@ -109,6 +110,11 @@ MeterExec::~MeterExec() {
 }
 
 int MeterExec::open() {
+	if(geteuid() == 0) {
+		print(log_error, "MeterExec::open: MeterExec module cannot be run with root privilleges!", name().c_str());
+		return ERR;
+	}
+
 	print(log_debug, "MeterExec::open: Testing command line '%s': %s", name().c_str(), command(), strerror(errno));
 	_pipe = popen(command(), "r");
 
@@ -118,7 +124,7 @@ int MeterExec::open() {
 	}
 
 /* Pipe is closed after script complete
- 	if (_pipe != NULL) {
+	if (_pipe != NULL) {
 		pclose(_pipe);
 	}
 */
@@ -169,8 +175,7 @@ ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 					// Regex is not working with gcc-4.6
 					//if (found) {
 						if (timestamp >=0.0)
-							rds[i].time(rds[i].dtotv(timestamp)); // convert double to timevals
-							//rds[i].time_from_double(timestamp); // furture implementation of timestamp as int64_t (PR#148)
+							rds[i].time_from_double(timestamp);
 						else
 							rds[i].time(); // use current timestamp
 						i++; // read successfully
