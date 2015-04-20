@@ -105,6 +105,11 @@
 
     var jsoneditor;
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22
+    var b64_to_utf8 = function(str) {
+        return decodeURIComponent(escape(window.atob(str)));
+    }
+
     var reload = function(keep_value) {
         var startval = (jsoneditor && keep_value)? jsoneditor.getValue() : window.startval;
         window.startval = undefined;
@@ -185,6 +190,7 @@
     // load schema
     var localhost = (document.location.host == 'localhost');
     var api = 'https://api.github.com/repos/volkszaehler/vzlogger';
+
     var schemaUrl = localhost ? 'schema.json'
         : api + '/contents/etc/vzlogger_generic.schema.json?ref=master';
     var configUrl = localhost ? 'vzlogger.conf'
@@ -193,7 +199,7 @@
     $.when(
         $.ajax(schemaUrl).done(function(data) {
             if (!localhost) {
-                data = window.atob(data.content);
+                data = b64_to_utf8(data.content);
             }
             if (typeof data !== 'string') {
                 data = JSON.stringify(data, null, 2);
@@ -204,7 +210,7 @@
         }),
         $.ajax(configUrl).done(function(data) {
             if (!localhost) {
-                data = window.atob(data.content);
+                data = b64_to_utf8(data.content);
             }
             if (typeof data !== 'string') {
                 data = JSON.stringify(data, null, 2);
