@@ -10,7 +10,7 @@
 
 //#include "../src/protocols/MeterExec.cpp"
 
-int writes(int fd, const char *str)
+int writes(int fd, const char *str);
 
 TEST(MeterExec, basic) {
 	char tempfilename[L_tmpnam+1];
@@ -19,7 +19,7 @@ TEST(MeterExec, basic) {
 	options.push_back(Option("path", tempfilename));
 
 	// test without format option
-	MeterFile m(options);
+	MeterExec m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
@@ -33,7 +33,7 @@ TEST(MeterExec, basic) {
 	// write two good data set
 	writes(fd, "32552\r\n");
 	writes(fd, "32552.5\r\n");
-	//	writes(fd, "32552.6\r\n"); // bug: with 2 only it hangs! Fixed with changing order in while (i<n...) in MeterFile.cpp
+	//	writes(fd, "32552.6\r\n"); // bug: with 2 only it hangs! Fixed with changing order in while (i<n...) in MeterExec.cpp
 
 	// now read two readings:
 	EXPECT_EQ(2, m.read(rds, 2));
@@ -65,7 +65,7 @@ TEST(MeterExec, format1) {
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$v"));
 
-	MeterFile m(options);
+	MeterExec m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
@@ -110,7 +110,7 @@ TEST(MeterExec, format2) {
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$i : $v"));
 
-	MeterFile m(options);
+	MeterExec m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
@@ -155,7 +155,7 @@ TEST(MeterExec, format3) {
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$t;$i : $v"));
 
-	MeterFile m(options);
+	MeterExec m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
