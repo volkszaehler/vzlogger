@@ -1,4 +1,8 @@
 #include "gtest/gtest.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "Options.hpp"
 #include "protocols/MeterExec.hpp"
 
