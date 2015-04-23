@@ -56,6 +56,9 @@ OPTION(ENABLE_LOCAL
 OPTION(WITH_READER
   "compile reader to for testing your meters (def=yes)])"
   On)
+OPTION(METEREXEC_ROOTACCESS
+  "compile MeterExec protocol to use root privileges for script calls (def=no)])"
+  Off)
 
 # find dependencies
 # libsml
@@ -157,6 +160,9 @@ endif(SML_FOUND)
 if(MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 endif(MICROHTTPD_FOUND)
+if(METEREXEC_ROOTACCESS)
+  message("             MeterExec: root privileges")
+endif(METEREXEC_ROOTACCESS)
 
 if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.

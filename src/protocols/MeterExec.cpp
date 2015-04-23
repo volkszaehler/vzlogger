@@ -34,6 +34,8 @@
 #include "protocols/MeterExec.hpp"
 #include "Options.hpp"
 #include <VZException.hpp>
+#include <sys/types.h>
+#include <unistd.h>
 
 MeterExec::MeterExec(std::list<Option> options)
 		: Protocol("exec")
@@ -110,10 +112,16 @@ MeterExec::~MeterExec() {
 }
 
 int MeterExec::open() {
+#ifndef METEREXEC_ROOTACCESS
 	if(geteuid() == 0) {
-		print(log_error, "MeterExec::open: MeterExec module cannot be run with root privilleges!", name().c_str());
+		print(log_error, "MeterExec::open: MeterExec protocol cannot be run with root privileges!", name().c_str());
+		print(log_error, "                 If you really want this, compile vzlogger with:", name().c_str());
+		print(log_error, "                 'cmake -D METEREXEC_ROOTACCESS=true .'", name().c_str());
 		return ERR;
 	}
+#else
+	print(log_info, "MeterExec::open: MeterExec protocol is compiled with root privileges!", name().c_str());
+#endif
 
 	print(log_debug, "MeterExec::open: Testing command line '%s': %s", name().c_str(), command(), strerror(errno));
 	_pipe = popen(command(), "r");

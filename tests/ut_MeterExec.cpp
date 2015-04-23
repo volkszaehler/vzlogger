@@ -16,11 +16,11 @@ TEST(MeterExec, basic) {
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
 	std::list<Option> options;
-	options.push_back(Option("path", tempfilename));
+	options.push_back(Option("command", tempfilename));
 
 	// test without format option
 	MeterExec m(options);
-	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_STREQ(m.command(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
 	ASSERT_NE(fd, -1);
@@ -62,11 +62,11 @@ TEST(MeterExec, format1) {
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
 	std::list<Option> options;
-	options.push_back(Option("path", tempfilename));
+	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char*)"$v"));
 
 	MeterExec m(options);
-	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_STREQ(m.command(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
 	ASSERT_NE(fd, -1);
@@ -107,11 +107,11 @@ TEST(MeterExec, format2) {
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
 	std::list<Option> options;
-	options.push_back(Option("path", tempfilename));
+	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char*)"$i : $v"));
 
 	MeterExec m(options);
-	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_STREQ(m.command(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
 	ASSERT_NE(fd, -1);
@@ -152,11 +152,11 @@ TEST(MeterExec, format3) {
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
 	std::list<Option> options;
-	options.push_back(Option("path", tempfilename));
+	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char*)"$t;$i : $v"));
 
 	MeterExec m(options);
-	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
+	ASSERT_STREQ(m.command(), tempfilename) << "devicename not eq " << tempfilename;
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
 	ASSERT_NE(fd, -1);
