@@ -10,9 +10,10 @@ Feel free to implement support your own hardware ;)
 
 To install, follow the detailed installation instructions at http://wiki.volkszaehler.org/software/controller/vzlogger/installation_cpp-version
 
-If you're impatient you can quickstart using:
+If you're impatient you can quickstart using (Debian Wheezy):
 
-    sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool
+    sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev \
+      libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
 
