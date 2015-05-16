@@ -107,7 +107,7 @@
 
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22
     var b64_to_utf8 = function(str) {
-        return decodeURIComponent(escape(window.atob(str)));
+        return decodeURIComponent(escape(window.atob(str.replace(/\s/g, ''))));
     }
 
     var reload = function(keep_value) {
