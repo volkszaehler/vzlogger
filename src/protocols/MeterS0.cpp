@@ -72,10 +72,10 @@ int MeterS0::open() {
 		return ERR;
 	}
 
-	/* save current port settings */
+	// save current port settings
 	tcgetattr(fd, &_old_tio);
 
-	/* configure port */
+	// configure port
 	struct termios tio;
 	memset(&tio, 0, sizeof(struct termios));
 
@@ -88,9 +88,13 @@ int MeterS0::open() {
 
 	tcflush(fd, TCIFLUSH);
 
-	/* apply configuration */
+	// apply configuration
 	tcsetattr(fd, TCSANOW, &tio);
 	_fd = fd;
+
+
+	// have yet to wait for very first impulse
+	_impulseReceived = false;
 
 	return SUCCESS;
 }
@@ -105,34 +109,50 @@ int MeterS0::close() {
 
 ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
-	struct timeval time1;
-	struct timeval time2;
+	struct timeval time_now;
 	char buf[8];
 
 	/* clear input buffer */
 	tcflush(_fd, TCIOFLUSH);
 
-	/* blocking until one character/pulse is read */
-	if (::read(_fd, buf, 8) < 1) return 0;
-	gettimeofday(&time1, NULL);
-	if (::read(_fd, buf, 8) < 1) return 0;
-	gettimeofday(&time2, NULL);
+	// wait for very first impulse
+	if (!_impulseReceived) {
+		// blocking until one character/pulse is read
+		if (::read(_fd, buf, 8) < 1) return 0;
+		gettimeofday(&_time_last, NULL);
 
-	double t1 = time1.tv_sec + time1.tv_usec / 1e6;
-	double t2 = time2.tv_sec + time2.tv_usec / 1e6;
-	double value = ( 3600000 ) / ( (t2-t1) * _resolution ) ;
+		_impulseReceived = true;
 
-	/* store current timestamp */
+		// store timestamp
+		rds[0].identifier(new StringIdentifier("Impulse"));
+		rds[0].time(_time_last);
+		rds[0].value(1);
+
+		return 1;
+	}
+
+	// blocking until one character/pulse is read
+	if (::read(_fd, buf, 8) < 1) return 0;
+	gettimeofday(&time_now, NULL);
+
+	// _time_last is initialized at this point
+	double t1 = _time_last.tv_sec + _time_last.tv_usec / 1e6;
+	double t2 = time_now.tv_sec + time_now.tv_usec / 1e6;
+	double value = 3600000 / ((t2-t1) * _resolution);
+
+	memcpy(&_time_last, &time_now, sizeof(struct timeval));
+
+	// store current timestamp
 	rds[0].identifier(new StringIdentifier("Power"));
-	rds[0].time(time2);
+	rds[0].time(time_now);
 	rds[0].value(value);
 
 	rds[1].identifier(new StringIdentifier("Impulse"));
-	rds[1].time(time2);
-	rds[1].value(2);
+	rds[1].time(time_now);
+	rds[1].value(1);
 
 	print(log_debug, "Reading S0 - n=%d power=%f", name().c_str(), n, rds[0].value());
-	/* wait some ms for debouncing */
+	// wait some ms for debouncing
 	usleep(30000);
 
 	return 2;
