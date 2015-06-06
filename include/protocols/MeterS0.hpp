@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _S0_H_
 #define _S0_H_
 
@@ -49,8 +49,11 @@ public:
 	int _resolution;
 	int _counter;
 
-	int _fd;	/* file descriptor of port */
-	struct termios _old_tio;	/* required to reset port */
+	int _fd;					// file descriptor of port
+	struct termios _old_tio;	// required to reset port
+
+	bool _impulseReceived;		// first impulse received
+	struct timeval _time_last;	// timestamp of last impulse
 };
 
 #endif /* _S0_H_ */
