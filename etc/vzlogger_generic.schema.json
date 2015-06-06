@@ -134,7 +134,9 @@
             { "$ref": "#/definitions/meter" },
             { "properties": {
                 "protocol": { "type": "string", "enum": ["s0"] },
-                "device": { "type": "string", "description": "device the meter is connected to. E.g. /dev/ttyUSB0" },
+                "device": { "type": "string", "description": "UART device the meter is connected to. E.g. /dev/ttyUSB0" },
+                "gpio": { "type": "integer", "default": -1, "description": "Number of GPIO port to be used. If this is set >-1 then device is ignored." },
+                "configureGPIO": { "type": "boolean", "default": true, "description": "If true then vzlogger will export, configure,... the GPIO port. Needs proper access rights to /sys/class/gpio/." },
                 "resolution": { "type": "integer", "default": 1000, "description": "number of impulses per kWh" }
             },
             "required": [ "protocol", "device" ]
