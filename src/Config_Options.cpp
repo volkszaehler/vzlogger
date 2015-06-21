@@ -37,6 +37,7 @@ static const char *option_type_str[] = { "null", "boolean", "double", "int", "ob
 Config_Options::Config_Options()
     :  _config("/etc/vzlogger.conf")
 		, _log("")
+		, _pds(0)
 		, _port(8080)
 		, _verbosity(0)
 		, _comet_timeout(30)
@@ -54,6 +55,7 @@ Config_Options::Config_Options(
 	)
 	: _config(filename)
 		, _log("")
+		, _pds(0)
 		, _port(8080)
 		, _verbosity(0)
 		, _comet_timeout(30)
@@ -159,6 +161,13 @@ void Config_Options::config_parse(
 					Json::Ptr  jso(new Json(json_object_array_get_idx(value, i)));
 					config_parse_meter(mappings, jso);
 				}
+			}
+			else if ((strcmp(key, "push") == 0) && type == json_type_array ) {
+				int len = json_object_array_length(value);
+				if (!_pds && len>0) {
+					_pds = new PushDataServer( value );
+				} else
+					print(log_error, "Ignoring push entry due to empty array or duplicate section", "push");
 			}
 			else {
 				print(log_error, "Ignoring invalid field or type: %s=%s (%s)",

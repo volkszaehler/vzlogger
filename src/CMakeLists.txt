@@ -24,6 +24,7 @@ set(vzlogger_srcs
   Meter.cpp
   ${CMAKE_BINARY_DIR}/gitSha1.cpp
   CurlSessionProvider.cpp
+  PushData.cpp ../include/PushData.hpp
 )
 
 set(libvz_srcs 
