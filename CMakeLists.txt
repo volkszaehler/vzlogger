@@ -64,6 +64,18 @@ OPTION(ENABLE_OCR_TESSERACT
 	"enable support for OCR text recognition meter (def=off)"
 	OFF)
 
+OPTION(ENABLE_OCR
+	"enable support for OCR image/processing meter (def=off)"
+	OFF)
+
+OPTION(ENABLE_OCR_TESSERACT
+	"enable support for OCR text recognition meter (def=off)"
+	OFF)
+
+OPTION(METEREXEC_ROOTACCESS
+  "compile MeterExec protocol to use root privileges for script calls (def=no)])"
+  Off)
+
 # find dependencies
 # libsml
 if( ENABLE_SML )
@@ -185,6 +197,9 @@ endif(SML_FOUND)
 if(MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 endif(MICROHTTPD_FOUND)
+if(METEREXEC_ROOTACCESS)
+  message("             MeterExec: root privileges")
+endif(METEREXEC_ROOTACCESS)
 
 if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.

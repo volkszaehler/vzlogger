@@ -53,7 +53,7 @@ static const meter_details_t protocols[] = {
 /*  aliasdescriptionmax_rdsperiodic
 	===============================================================================================*/
 	METER_DETAIL(file, File, "Read from file or fifo",32,true),
-	// METER_DETAIL(exec, "Parse program output",32,true),
+	METER_DETAIL(exec, Exec, "Parse program output",32,false),
 	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
 	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo",16,false),
 	METER_DETAIL(s0, S0, "S0-meter directly connected to RS232",2,false),
@@ -87,7 +87,7 @@ Meter::Meter(std::list<Option> pOptions) :
 		print(log_debug, "Creating new meter with protocol %s.", name(), protocol_str);
 
 		if (meter_lookup_protocol(protocol_str, &_protocol_id) != SUCCESS) {
-//print(log_error, "Invalid protocol: %s", mtr, protocol_str);
+//print(log_error, "Invalid protocol: %s", name(), protocol_str);
 //return ERR; /* skipping this meter */
 			throw vz::VZException("Protocol not found.");
 		}
