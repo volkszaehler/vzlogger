@@ -18,10 +18,10 @@ PushDataServer::PushDataServer(struct json_object *option) :
         assert(len>0);
         for (int i = 0; i<len; ++i) {
             struct json_object *jso = json_object_array_get_idx(option, i);
-            if (json_object_get_type(jso) != json_type_object) throw vz::VZException("config: pushdata array element not an object");
+			if (json_object_get_type(jso) != json_type_object) throw vz::VZException("config: push array element not an object");
             struct json_object *jv;
-            if (!json_object_object_get_ex(jso, "url", &jv)) throw vz::VZException("config: pushdata url not found");
-            if (json_object_get_type(jv) != json_type_string) throw vz::VZException("config: pushdata url no string");
+			if (!json_object_object_get_ex(jso, "url", &jv)) throw vz::VZException("config: push url not found");
+			if (json_object_get_type(jv) != json_type_string) throw vz::VZException("config: push url no string");
             std::string url = json_object_get_string(jv);
             _middlewareList.push_back(url);
         }
@@ -59,7 +59,7 @@ bool PushDataServer::waitAndSendOnceToAll()
     std::string json=generateJson(*dataMap);
 
     // now send this data to all defined push middlewares:
-	print(log_debug, "PushData: %s", "push", json.c_str());
+	print(log_debug, "push: %s", "push", json.c_str());
 
     bool toRet=true;
     // iterate through list of push middlewares:
