@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include <errno.h>
 #include <poll.h>
 
@@ -38,6 +39,7 @@
 MeterS0::MeterS0(std::list<Option> options)
 		: Protocol("s0")
 		, _hwif(0)
+		, _debounce_delay_ms(0)
 		, _counter(0)
 {
 	OptionList optlist;
@@ -69,6 +71,17 @@ MeterS0::MeterS0(std::list<Option> options)
 		throw;
 	}
 	if (_resolution < 1) throw vz::VZException("Resolution must be greater than 0.");
+
+	try {
+		_debounce_delay_ms = optlist.lookup_int(options, "debounce_delay");
+	} catch (vz::OptionNotFoundException &e) {
+		_debounce_delay_ms = 30;
+	} catch (vz::VZException &e) {
+		print(log_error, "Failed to parse debounce_delay", "");
+		throw;
+	}
+	if (_debounce_delay_ms < 0) throw vz::VZException("debounce_delay must not be negative.");
+
 }
 
 MeterS0::~MeterS0()
@@ -116,6 +129,23 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 		rds[0].value(1);
 
 		return 1;
+	} else {
+		// do we need to wait for debounce_delay?
+		gettimeofday(&time_now, NULL);
+		struct timeval delta;
+		timersub(&time_now, &_time_last, &delta);
+		long ms = (delta.tv_sec*1e3) + (delta.tv_usec / 1e3);
+		if (ms<_debounce_delay_ms) {
+			struct timespec ts;
+			ms = _debounce_delay_ms - ms;
+			print(log_finest, "Waiting %d ms for debouncing", name().c_str(), ms );
+			ts.tv_sec = ms/1000;
+			ts.tv_nsec = (ms%1000)*1e6;
+			struct timespec rem;
+			while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+				ts = rem;
+			}
+		}
 	}
 
 	if (!_hwif->waitForImpulse()) return 0;
@@ -139,8 +169,6 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	rds[1].value(1);
 
 	print(log_debug, "Reading S0 - n=%d power=%f", name().c_str(), n, rds[0].value());
-	// wait some ms for debouncing
-	usleep(30000); // todo shall we keep this or move to hwif? (or do we need it at all?)
 
 	return 2;
 }

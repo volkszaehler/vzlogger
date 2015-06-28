@@ -81,6 +81,7 @@ public:
     HWIF * _hwif;
 
 	int _resolution;
+	int _debounce_delay_ms;
 	int _counter;
 
 	bool _impulseReceived;		// first impulse received
