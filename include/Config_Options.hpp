@@ -36,6 +36,7 @@
 #include <MeterMap.hpp>
 #include <Options.hpp>
 #include <meter_protocol.hpp>
+#include <PushData.hpp>
 
 /**
  * General options from CLI
@@ -44,7 +45,7 @@ class Config_Options {
 public:
 	Config_Options();
 	Config_Options(const std::string filename);
-	~Config_Options() {};
+	~Config_Options() { if (_pds) delete _pds; };
 
 /**
  * Parse JSON formatted configuration file
@@ -88,10 +89,13 @@ public:
 
 	void doRegistration(const bool v)    { _doRegistration = v; }
 
+	PushDataServer *pushDataServer() const { return _pds; }
+
 private:
 	std::string _config;	// filename of configuration
 	std::string _log;		// filename for logging
 	FILE *_logfd;
+	PushDataServer *_pds;
 
 	int _port;				// TCP port for local interface
 	int _verbosity;			// verbosity level

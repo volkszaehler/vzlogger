@@ -36,6 +36,7 @@
 #ifdef LOCAL_SUPPORT
 #include "local.h"
 #endif
+#include "PushData.hpp"
 
 extern Config_Options options;
 
@@ -110,6 +111,13 @@ void * reading_thread(void *arg) {
 							print(log_info, "Adding reading to queue (value=%.2f ts=%lld)", (*ch)->name(),
 									rds[i].value(), rds[i].time_ms());
 							(*ch)->push(rds[i]);
+
+							// provide data to push data server:
+							if (pushDataList) {
+								const std::string uuid = (*ch)->uuid();
+								pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
+								print(log_finest, "added to uuid %s", "push", uuid.c_str());
+							}
 
 							if (add == NULL) {
 								add = &rds[i]; /* remember first reading which has been added to the buffer */

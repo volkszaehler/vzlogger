@@ -46,6 +46,7 @@
 #include "Channel.hpp"
 #include "threads.h"
 #include "CurlSessionProvider.hpp"
+#include "PushData.hpp"
 
 #ifdef LOCAL_SUPPORT
 #include "local.h"
@@ -236,6 +237,7 @@ void daemonize() {
 void quit(int sig) {
 	//gStop = true;
 	mappings.quit(sig);
+	end_push_data_thread();
 }
 
 /**
@@ -328,6 +330,7 @@ void register_device() {
  * The application entrypoint
  */
 int main(int argc, char *argv[]) {
+	pthread_t _pushdata_thread=0;
 
 	/* bind signal handler */
 	struct sigaction action;
@@ -412,6 +415,17 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	if (options.pushDataServer()) {
+		pushDataList = new PushDataList();
+		int ret = pthread_create(&_pushdata_thread, NULL, push_data_thread, (void *)options.pushDataServer()); // todo error handling?
+		if (ret)
+			print(log_error, "Error %d creating pushdata_thread!", "push", ret);
+		else
+			print(log_finest, "pushdata_thread created.", "push");
+	} else {
+		print(log_finest, "No pushDataServer defined.", "push");
+	}
+
 	print(log_debug, "===> Start meters", "");
 	try {
 		// open connection meters & start threads
@@ -473,6 +487,15 @@ int main(int argc, char *argv[]) {
 	/* close logfile */
 	if (options.logfd()) {
 		fclose(options.logfd());
+	}
+
+	if (pushDataList) {
+
+		end_push_data_thread();
+		pthread_join(_pushdata_thread, NULL);
+
+		delete pushDataList;
+		pushDataList = 0;
 	}
 
 	if (curlSessionProvider) {

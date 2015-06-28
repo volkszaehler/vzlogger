@@ -3,6 +3,18 @@
 
     "definitions" : {
 
+        "pushdataentry": {
+          "type": "object",
+          "title": "pushdataentry",
+          "properties": {
+            "url": {
+                "type": "string",
+                "description": "full URL of the middleware to push data to e.g. http://127.0.0.1/push/data.json"
+            }
+          },
+          "required": [ "url" ]
+        },
+
         "local": {
             "type": "object",
             "properties": {
@@ -382,7 +394,16 @@
                     {"$ref": "#/definitions/meterFluksoV2"},
                     {"$ref": "#/definitions/meterOCR"}
                 ]}
-        }
+        },
+        "push": {
+            "type": "array",
+            "minItems": 0,
+            "items": { "oneOf": [
+                    {"$ref": "#/definitions/pushdataentry"}
+                    ]},
+            "description": "list of middlewares receiving push data (i.e. non aggregated live data in single http request)"
+            }
+
 
     },
 
@@ -411,6 +432,7 @@
       "type": "string",
       "description": "path to log file"
     },
+    "push": { "$ref": "#/definitions/push" },
     "local": { "$ref": "#/definitions/local" },
     "meters": { "$ref": "#/definitions/meters" }
   },
