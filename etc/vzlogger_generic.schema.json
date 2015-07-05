@@ -252,6 +252,19 @@
             ]
         },
 
+        "meterW1therm": {
+            "title": "w1-therm / 1wire temperature sensors",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["w1therm"] }
+                    }
+                }
+
+            ]
+        },
+
+
         "meterOCRBB": {
             "type" : "object",
             "properties": {
