@@ -23,6 +23,7 @@ bool MeterW1therm::W1sysHWif::scanW1devices()
 	// W1_THERM_DS1822 0x22
 	// W1_THERM_DS18B20 0x28
 	// W1_THERM_DS1825 0x3B
+	// W1_THERM_DS28EA00 0x42
 	//
 	// I'd prefer to scan all devices and check driver for W1_THERM but I don't know how...
 
@@ -31,7 +32,7 @@ bool MeterW1therm::W1sysHWif::scanW1devices()
 	// let's try using glob()
 	glob_t glob_res;
 	size_t strl = strlen("/sys/bus/w1/devices/");
-	if (0 == glob("/sys/bus/w1/devices/{10,22,28,3b}-*", GLOB_BRACE|GLOB_NOSORT, NULL, &glob_res) ) {
+	if (0 == glob("/sys/bus/w1/devices/{10,22,28,3b,42}-*", GLOB_BRACE|GLOB_NOSORT, NULL, &glob_res) ) {
 
 		for (unsigned int i=0; i<glob_res.gl_pathc; ++i) {
 			if (strlen(glob_res.gl_pathv[i]) > strl) {
