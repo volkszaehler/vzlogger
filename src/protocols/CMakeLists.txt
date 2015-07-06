@@ -27,6 +27,7 @@ set(proto_srcs
   MeterFile.cpp
   MeterExec.cpp
   MeterRandom.cpp
+  MeterW1therm.cpp ../../include/protocols/MeterW1therm.hpp
 )
 
 add_library(proto ${proto_srcs})

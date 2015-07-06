@@ -42,6 +42,8 @@
 #ifdef OCR_SUPPORT
 #include "protocols/MeterOCR.hpp"
 #endif
+#include "protocols/MeterW1therm.hpp"
+
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC) {				\
@@ -64,6 +66,7 @@ static const meter_details_t protocols[] = {
 #ifdef OCR_SUPPORT
 	METER_DETAIL(ocr, OCR, "Image processing/recognizing meter", 32, false), // TODO periodic or not periodic?
 #endif
+	METER_DETAIL(w1therm, W1therm, "W1-therm / 1wire temperature devices", 400, false),
 //{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL,NULL, 0,false),
 };
@@ -175,6 +178,10 @@ Meter::Meter(std::list<Option> pOptions) :
 			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 			break;
 #endif
+	case meter_protocol_w1therm:
+			_protocol = vz::protocol::Protocol::Ptr(new MeterW1therm(pOptions));
+			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+			break;
 		default:
 			break;
 	}

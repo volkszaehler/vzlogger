@@ -12,6 +12,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/protocols/MeterRandom.cpp
 	../../src/protocols/MeterSML.cpp
 	../../src/protocols/MeterFluksoV2.cpp
+	../../src/protocols/MeterW1therm.cpp
 	../../src/Reading.cpp
 	../../src/Obis.cpp
 	../../src/ltqnorm.cpp
@@ -47,4 +48,22 @@ if(SML_FOUND)
 endif(SML_FOUND)
 
 
+add_executable(mock_MeterW1therm
+    mock_MeterW1therm.cpp
+    ../../src/protocols/MeterW1therm.cpp
+    ../../src/Reading.cpp
+    ../../src/Obis.cpp
+    ../../src/Options.cpp
+)
+
+target_link_libraries(mock_MeterW1therm
+		${GTEST_LIBS_DIR}/libgtest.a
+		${GMOCK_LIBS_DIR}/libgmock.a
+		pthread
+		${JSON_LIBRARY}
+		${LIBUUID}
+		dl
+)
+
 add_test(mock_metermap mock_metermap)
+add_test(mock_MeterW1therm mock_MeterW1therm)
