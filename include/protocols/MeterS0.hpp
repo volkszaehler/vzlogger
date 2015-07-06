@@ -32,6 +32,43 @@
 
 class MeterS0 : public vz::protocol::Protocol {
 
+	class HWIF {
+	public:
+		virtual ~HWIF() {};
+		virtual bool _open() = 0;
+		virtual bool _close() = 0;
+		virtual bool waitForImpulse() = 0;
+	};
+
+	class HWIF_UART : public HWIF {
+	public:
+		HWIF_UART(const std::list<Option> &options);
+		virtual ~HWIF_UART();
+
+		virtual bool _open();
+		virtual bool _close();
+		virtual bool waitForImpulse();
+	protected:
+		std::string _device;
+		int _fd;					// file descriptor of UART
+		struct termios _old_tio;	// required to reset UART
+	};
+
+	class HWIF_GPIO : public HWIF {
+	public:
+		HWIF_GPIO(const std::list<Option> &options);
+		virtual ~HWIF_GPIO();
+
+		virtual bool _open();
+		virtual bool _close();
+		virtual bool waitForImpulse();
+	protected:
+		int _fd;
+		int _gpiopin;
+		bool _configureGPIO; // try export,...
+		std::string _device;
+	};
+
 public:
 	MeterS0(std::list<Option> options);
 	virtual ~MeterS0();
@@ -40,17 +77,12 @@ public:
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
-  private:
-	int _open_socket(const char *node, const char *service);
-	int _open_device(struct termios *old_tio, speed_t baudrate);
-
   protected:
-	std::string _device;
-	int _resolution;
-	int _counter;
+    HWIF * _hwif;
 
-	int _fd;					// file descriptor of port
-	struct termios _old_tio;	// required to reset port
+	int _resolution;
+	int _debounce_delay_ms;
+	int _counter;
 
 	bool _impulseReceived;		// first impulse received
 	struct timeval _time_last;	// timestamp of last impulse
