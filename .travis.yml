@@ -50,5 +50,12 @@ before_install:
   - sudo ldconfig
   - cd ..
 
+# -- install libmbus
+  - git clone https://github.com/rscada/libmbus
+  - cd libmbus
+  - ./build.sh
+  - sudo make install
+  - cd ..
+
 script:
   - cmake . -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
