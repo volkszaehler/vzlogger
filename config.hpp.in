@@ -28,6 +28,9 @@
 /* Smart Messaging Language */
 #cmakedefine SML_SUPPORT 1
 
+// OMS based devices support
+#cmakedefine OMS_SUPPORT 1
+
 /* OCR Meter support */
 #cmakedefine OCR_SUPPORT 1
 

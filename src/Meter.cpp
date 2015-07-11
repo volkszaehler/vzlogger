@@ -43,7 +43,9 @@
 #include "protocols/MeterOCR.hpp"
 #endif
 #include "protocols/MeterW1therm.hpp"
-
+#ifdef OMS_SUPPORT
+#include "protocols/MeterOMS.hpp"
+#endif
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC) {				\
@@ -67,7 +69,10 @@ static const meter_details_t protocols[] = {
 	METER_DETAIL(ocr, OCR, "Image processing/recognizing meter", 32, false), // TODO periodic or not periodic?
 #endif
 	METER_DETAIL(w1therm, W1therm, "W1-therm / 1wire temperature devices", 400, false),
-//{} /* stop condition for iterator */
+#ifdef OMS_SUPPORT
+	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100, false), // todo what is the max. amount of reading according to spec?
+#endif
+	//{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL,NULL, 0,false),
 };
 
@@ -182,6 +187,12 @@ Meter::Meter(std::list<Option> pOptions) :
 			_protocol = vz::protocol::Protocol::Ptr(new MeterW1therm(pOptions));
 			_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 			break;
+#ifdef OMS_SUPPORT
+	case meter_protocol_oms:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterOMS(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+		break;
+#endif
 		default:
 			break;
 	}

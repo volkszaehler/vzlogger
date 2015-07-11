@@ -267,6 +267,22 @@
             ]
         },
 
+        "meterOMS": {
+            "title": "OMS / OMS (M-Bus) based devices",
+            "allOf": [
+                { "$ref": "#/definitions/meter" },
+                { "properties": {
+                        "protocol": { "type": "string", "enum": ["oms"] },
+                        "device": { "type": "string", "description": "serial device the meter is connected to. E.g. /dev/ttyUSB0" },
+                        "baudrate": { "type": "number", "default": 9600, "description": "Baudrate to use. Default to 9600." },
+                        "key": { "type": "string", "description": "AES key for the device in hex. Needs to be exactly 32 characters. E.g. 0102030405060708090a0b0c0d0e0f10" },
+                        "mbus_debug": { "type": "boolean", "default": false, "description": "provide some more debug output on console by calling some libmbus debug functions" }
+                    },
+                    "required": [ "device", "key" ]
+                }
+
+            ]
+        },
 
         "meterOCRBB": {
             "type" : "object",
@@ -408,7 +424,10 @@
                     {"$ref": "#/definitions/meterFile"},
                     {"$ref": "#/definitions/meterExec"},
                     {"$ref": "#/definitions/meterFluksoV2"},
-                    {"$ref": "#/definitions/meterOCR"}
+                    {"$ref": "#/definitions/meterOCR"},
+                    {"$ref": "#/definitions/meterOMS"},
+                    {"$ref": "#/definitions/meterW1therm"}
+
                 ]}
         },
         "push": {

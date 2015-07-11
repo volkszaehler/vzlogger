@@ -18,6 +18,12 @@ else ()
     endif (OCR_SUPPORT)
 endif( OCR_TESSERACT_SUPPORT )
 
+if( OMS_SUPPORT )
+  set(oms_srcs MeterOMS.cpp ../../include/protocols/MeterOMS.hpp)
+else ( OMS_SUPPORT )
+  set(oms_srcs "")
+endif( OMS_SUPPORT )
+
 set(proto_srcs
   MeterS0.cpp
   MeterD0.cpp
@@ -28,6 +34,7 @@ set(proto_srcs
   MeterExec.cpp
   MeterRandom.cpp
   MeterW1therm.cpp ../../include/protocols/MeterW1therm.hpp
+  ${oms_srcs}
 )
 
 add_library(proto ${proto_srcs})
