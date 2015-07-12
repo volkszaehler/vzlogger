@@ -8,6 +8,7 @@
  * */
 
 #include <assert.h>
+#include <time.h>
 #include <mbus/mbus.h>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
@@ -304,6 +305,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 								frame_data.type = MBUS_DATA_TYPE_VARIABLE;
 								mbus_data_variable_parse(&frame, &(frame_data.data_var));
 								print(log_debug, "got %d data records: %s", name().c_str(), frame_data.data_var.nrecords, mbus_data_variable_xml(&(frame_data.data_var)));
+								double timeFromMeter = 0.0;
 								// go through each record:
 								for (mbus_data_record *record = (mbus_data_record*)frame_data.data_var.record; record; record=(mbus_data_record*)(record->next)) {
 									print(log_debug, "DIF=%.2x, NDIFE=%.2x, DIFE1=%.2x, VIF=%.2x, NVIFE=%.2x VIFE1=%.2x VIFE2=%.2x", name().c_str(),
@@ -319,6 +321,9 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 									const unsigned char &vife1 = record->drh.vib.vife[0];
 
 									switch (record->drh.vib.vif) {
+									case 0x6d: // time
+										timeFromMeter = get_record_value(record);
+										break;
 									case 0x03:
 										if (dif == 0x04) { // Obis 1.8.0 Zaehlerstand Energie A+ Wh
 											print(log_debug, "Obis 1.8.0 %f %s", name().c_str(),
@@ -327,7 +332,10 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret<n) {
 												rds[ret].identifier(new ObisIdentifier("1.8.0"));
 												rds[ret].value(get_record_value(record));
-												rds[ret].time();
+												if (timeFromMeter>1.0)
+													rds[ret].time_from_double(timeFromMeter);
+												else
+													rds[ret].time();
 												++ret;
 											}
 										}
@@ -340,7 +348,10 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.8.0"));
 												rds[ret].value(get_record_value(record));
-												rds[ret].time();
+												if (timeFromMeter>1.0)
+													rds[ret].time_from_double(timeFromMeter);
+												else
+													rds[ret].time();
 												++ret;
 											}
 										}
@@ -353,7 +364,10 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("1.7.0"));
 												rds[ret].value(get_record_value(record));
-												rds[ret].time();
+												if (timeFromMeter>1.0)
+													rds[ret].time_from_double(timeFromMeter);
+												else
+													rds[ret].time();
 												++ret;
 											}
 										}
@@ -366,7 +380,10 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.7.0"));
 												rds[ret].value(get_record_value(record));
-												rds[ret].time();
+												if (timeFromMeter>1.0)
+													rds[ret].time_from_double(timeFromMeter);
+												else
+													rds[ret].time();
 												++ret;
 											}
 										}
@@ -545,9 +562,27 @@ double MeterOMS::get_record_value(mbus_data_record *record) const
 		toRet = mbus_data_float_decode(record->data);
 		break;
 	case 0x06: // 6 byte integer (48 bit)
-
-		mbus_data_long_long_decode(record->data, 6, &long_long_val);
-		toRet = long_long_val;
+		if (vif == 0x6d) { // 48bit time value (CP48)
+			struct tm t;
+			t.tm_sec = record->data[0] & 0x2f;
+			t.tm_min = record->data[1] & 0x2f;
+			t.tm_hour = record->data[2] & 0x1f;
+			t.tm_mday = record->data[3] & 0x1f;
+			t.tm_mon = record->data[4] & 0xf;
+			t.tm_year = 100+(((record->data[3] & 0xe0) >> 5) | ((record->data[4] & 0xf0)>>1)); // tm_year is number of years since 1900.
+			t.tm_isdst = ((record->data[0] & 0x40) == 0x40) ? 1 : 0;
+			// check for time invalid at bit 16 (1-based)
+			if ((record->data[1] & 0x80) == 0x80) {
+				// time invalid!
+			} else {
+				print(log_finest, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d", name().c_str(), 1900+t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
+				// convert to double (as seconds since 1970-01-01
+				toRet = mktime(&t);
+			}
+		} else {
+			mbus_data_long_long_decode(record->data, 6, &long_long_val);
+			toRet = long_long_val;
+		}
 		break;
 	case 0x07: // 8 byte integer (64 bit)
 		mbus_data_long_long_decode(record->data, 8, &long_long_val);

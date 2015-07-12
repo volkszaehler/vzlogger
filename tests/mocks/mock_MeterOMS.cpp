@@ -94,7 +94,16 @@ TEST(mock_MeterOMS, first_packets)
 	std::vector<Reading> rds(10);
 	ASSERT_EQ(m.read(rds, 10), 8);
 	m.close(); // this might be called and should not cause problems
-
+	// check whether one reading has the proper time:
+	struct tm t;
+	t.tm_sec = 3;
+	t.tm_min = 36;
+	t.tm_hour = 23;
+	t.tm_mday = 20;
+	t.tm_mon = 6;
+	t.tm_year = 2015-1900;
+	t.tm_isdst = 1;
+	ASSERT_EQ(rds[7].time_s(),mktime(&t));
 }
 
 
