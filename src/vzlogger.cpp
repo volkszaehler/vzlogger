@@ -477,30 +477,39 @@ int main(int argc, char *argv[]) {
 #ifdef LOCAL_SUPPORT
 	/* stop webserver */
 	if (httpd_handle) {
+		print(log_finest, "Waiting for httpd to stop...", "");
 		MHD_stop_daemon(httpd_handle);
+		print(log_finest, "httpd stopped", "");
 	}
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
 //curl_global_cleanup();
 
-	/* close logfile */
-	if (options.logfd()) {
-		fclose(options.logfd());
-	}
-
 	if (pushDataList) {
 
 		end_push_data_thread();
+		print(log_finest, "Waiting for pushdata_thread to stop...", "");
 		pthread_join(_pushdata_thread, NULL);
+		print(log_finest, "pushdata_thread stopped", "");
 
-		delete pushDataList;
-		pushDataList = 0;
+		if (pushDataList) {
+			delete pushDataList;
+			pushDataList = 0;
+			print(log_finest, "deleted pushdataList", "");
+		}
 	}
 
 	if (curlSessionProvider) {
+		print(log_finest, "Trying to delete curlSessionProvider...", "");
 		delete curlSessionProvider;
 		curlSessionProvider = 0;
+		print(log_finest, "deleted curlSessionProvider", "");
+	}
+
+	/* close logfile */
+	if (options.logfd()) {
+		fclose(options.logfd());
 	}
 
 	return EXIT_SUCCESS;
