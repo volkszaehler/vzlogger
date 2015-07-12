@@ -65,6 +65,7 @@ protected:
 	unsigned char *_aes_key;
 	std::string _device;
 	bool _mbus_debug;
+	double _last_timestamp;
 };
 
 #endif

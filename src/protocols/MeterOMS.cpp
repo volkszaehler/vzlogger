@@ -133,6 +133,7 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
   , _hwif (hwif)
   , _aes_key(0)
   , _mbus_debug(false)
+  , _last_timestamp(0.0)
 {
 	OptionList optlist;
 	// todo parse from options for tcp or uart... if (!_hwif) ->
@@ -307,7 +308,8 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 								print(log_debug, "got %d data records: %s", name().c_str(), frame_data.data_var.nrecords, mbus_data_variable_xml(&(frame_data.data_var)));
 								double timeFromMeter = 0.0;
 								// go through each record:
-								for (mbus_data_record *record = (mbus_data_record*)frame_data.data_var.record; record; record=(mbus_data_record*)(record->next)) {
+								bool ignore_telegram = false;
+								for (mbus_data_record *record = (mbus_data_record*)frame_data.data_var.record; record && !ignore_telegram; record=(mbus_data_record*)(record->next)) {
 									print(log_debug, "DIF=%.2x, NDIFE=%.2x, DIFE1=%.2x, VIF=%.2x, NVIFE=%.2x VIFE1=%.2x VIFE2=%.2x", name().c_str(),
 										  record->drh.dib.dif,
 										  record->drh.dib.ndife,
@@ -323,6 +325,14 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 									switch (record->drh.vib.vif) {
 									case 0x6d: // time
 										timeFromMeter = get_record_value(record);
+										if (timeFromMeter > 1.0 && (timeFromMeter == _last_timestamp)) {
+											// duplicated timestamp received. ignore the remaining telegram as by spec
+											ignore_telegram = true;
+											print(log_finest, "Ignoring telegram due to duplicated timestamp %f", name().c_str(), timeFromMeter);
+										} else {
+											if (timeFromMeter > 1.0)
+												_last_timestamp = timeFromMeter;
+										}
 										break;
 									case 0x03:
 										if (dif == 0x04) { // Obis 1.8.0 Zaehlerstand Energie A+ Wh
