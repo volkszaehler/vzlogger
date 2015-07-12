@@ -100,7 +100,7 @@ TEST(mock_MeterOMS, first_packets)
 	t.tm_min = 36;
 	t.tm_hour = 23;
 	t.tm_mday = 20;
-	t.tm_mon = 6;
+	t.tm_mon = 6-1;
 	t.tm_year = 2015-1900;
 	t.tm_isdst = 1;
 	ASSERT_EQ(rds[7].time_s(),mktime(&t));

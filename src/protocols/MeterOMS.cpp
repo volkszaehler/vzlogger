@@ -569,13 +569,14 @@ double MeterOMS::get_record_value(mbus_data_record *record) const
 			t.tm_hour = record->data[2] & 0x1f;
 			t.tm_mday = record->data[3] & 0x1f;
 			t.tm_mon = record->data[4] & 0xf;
+			if (t.tm_mon>0) t.tm_mon -=1; // struct tm is 0-11 based... (months since January)
 			t.tm_year = 100+(((record->data[3] & 0xe0) >> 5) | ((record->data[4] & 0xf0)>>1)); // tm_year is number of years since 1900.
 			t.tm_isdst = ((record->data[0] & 0x40) == 0x40) ? 1 : 0;
 			// check for time invalid at bit 16 (1-based)
 			if ((record->data[1] & 0x80) == 0x80) {
 				// time invalid!
 			} else {
-				print(log_finest, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d", name().c_str(), 1900+t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
+				print(log_finest, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d", name().c_str(), 1900+t.tm_year, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
 				// convert to double (as seconds since 1970-01-01
 				toRet = mktime(&t);
 			}
