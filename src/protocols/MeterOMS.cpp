@@ -305,7 +305,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 								memset(&frame_data, 0, sizeof(frame_data));
 								frame_data.type = MBUS_DATA_TYPE_VARIABLE;
 								mbus_data_variable_parse(&frame, &(frame_data.data_var));
-								print(log_debug, "got %d data records: %s", name().c_str(), frame_data.data_var.nrecords, mbus_data_variable_xml(&(frame_data.data_var)));
+								print(log_debug, "got %d data records: %s", name().c_str(), frame_data.data_var.nrecords, _mbus_debug ? mbus_data_variable_xml(&(frame_data.data_var)) : "active mbus_debug for detail infos");
 								double timeFromMeter = 0.0;
 								// go through each record:
 								bool ignore_telegram = false;
