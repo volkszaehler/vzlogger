@@ -574,8 +574,8 @@ double MeterOMS::get_record_value(mbus_data_record *record) const
 	case 0x06: // 6 byte integer (48 bit)
 		if (vif == 0x6d) { // 48bit time value (CP48)
 			struct tm t;
-			t.tm_sec = record->data[0] & 0x2f;
-			t.tm_min = record->data[1] & 0x2f;
+			t.tm_sec = record->data[0] & 0x3f;
+			t.tm_min = record->data[1] & 0x3f;
 			t.tm_hour = record->data[2] & 0x1f;
 			t.tm_mday = record->data[3] & 0x1f;
 			t.tm_mon = record->data[4] & 0xf;
