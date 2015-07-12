@@ -23,7 +23,13 @@ if( NOT ENABLE_SML )
 list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif( NOT ENABLE_SML)
 
-add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp)
+if( OMS_SUPPORT )
+  set(oms_sources ../src/protocols/MeterOMS.cpp)
+elseif( OMS_SUPPORT )
+  set(oms_sources "")
+endif( OMS_SUPPORT )
+
+add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources})
 
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
@@ -33,6 +39,10 @@ target_link_libraries(vzlogger_unit_tests
     dl
     pthread)
 target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OCR_LIBRARIES})
+
+if( OMS_SUPPORT )
+target_link_libraries(vzlogger_unit_tests ${MBUS_LIBRARY} ${OPENSSL_LIBRARIES})
+endif( OMS_SUPPORT )
 
 if(SML_FOUND)
   target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})

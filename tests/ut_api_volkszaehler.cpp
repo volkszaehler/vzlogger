@@ -29,7 +29,7 @@ TEST(api_Volkszaehler, config_options){
 #ifdef OCR_SUPPORT
 	options.config_parse(mappings); // let's see whether we can parse the provided example config
 #else
-	ASSERT_THROW(options.config_parse(mappings), vz::VZException); // the default config should fail due to missing Protocol ocr. There might be another failure...
+	// doesn't throw anylonger since OCR removed by basic example conf. ASSERT_THROW(options.config_parse(mappings), vz::VZException); // the default config should fail due to missing Protocol ocr. There might be another failure...
 #endif
 }
 

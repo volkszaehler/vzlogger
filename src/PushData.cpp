@@ -3,6 +3,7 @@
  * */
 
 #include <assert.h>
+#include <time.h>
 #include "vzlogger.h"
 #include "PushData.hpp"
 #include "CurlSessionProvider.hpp"
@@ -52,7 +53,7 @@ bool PushDataServer::waitAndSendOnceToAll()
     }
     PushDataList::DataMap *dataMap = pushDataList->waitForData();
     if (!dataMap) {
-		print(log_error, "waitAndSendOnceToAll empty dataMap!", "push");
+		print(log_finest, "waitAndSendOnceToAll empty dataMap (timeout?)", "push"); // this is no error as it happens each 5s on timeout
         return false;
     }
 
@@ -223,14 +224,21 @@ PushDataList::DataMap *PushDataList::waitForData()
 {
     DataMap *toRet = 0;
     assert( 0 == pthread_mutex_lock(&_map_mutex));
+	int rc = 0;
 
-    while(!(_next && !_next->empty()))
-        pthread_cond_wait(&_cond, &_map_mutex); // todo should check for errors !=0!
-    // todo check behaviour on thread cancellation!
+	// try max 5s. We need to avoid deadlocking e.g. on program end/termination.
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	ts.tv_sec += 5;
 
-    toRet = _next;
-    _next = 0; // change ownership to caller. We will create new one on next add()
+	while((!(_next && !_next->empty())) && rc == 0) {
+		rc = pthread_cond_timedwait(&_cond, &_map_mutex, &ts);
+	}
 
+	if (rc == 0) {
+		toRet = _next;
+		_next = 0; // change ownership to caller. We will create new one on next add()
+	}
     pthread_mutex_unlock(&_map_mutex);
 
     return toRet;

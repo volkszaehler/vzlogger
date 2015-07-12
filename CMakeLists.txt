@@ -7,7 +7,7 @@ endif(POLICY CMP0011)
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 4)
-set(VZLOGGER_SUB_VERSION   2)
+set(VZLOGGER_SUB_VERSION   3)
 set(VERSION_SEP "-")
 set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MINOR_VERSION}")
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
@@ -50,6 +50,9 @@ include ( ConfigureMacro )
 OPTION(ENABLE_SML
   "enable support for smart messaging language (def=yes)])"
   On)
+OPTION(ENABLE_OMS
+  "enable support for OMS (M-Bus) based devices (def=yes)"
+  On)
 OPTION(ENABLE_LOCAL
   "enable support for local HTTPd (def=yes)]"
   On)
@@ -73,6 +76,21 @@ if( ENABLE_SML )
     include_directories(${SML_INCLUDE_DIR})
   endif(SML_FOUND)
 endif( ENABLE_SML )
+
+if( ENABLE_OMS )
+  # find dependencies todo libmbus
+  include(FindMBus)
+  include(FindOpenSSL)
+  if(MBUS_FOUND)
+    set(OMS_SUPPORT 1)
+    include_directories(${MBUS_INCLUDE_DIR})
+    set(OMS_LIBRARIES ${MBUS_LIBRARY})
+  elseif(MBUS_FOUND)
+    set(OMS_SUPPORT 0)
+    message( STATUS "libmbus not found. Disabling ENABLE_OMS" )
+  endif(MBUS_FOUND)
+
+endif( ENABLE_OMS )
 
 if(ENABLE_LOCAL)
   include(FindMicroHttpd)
@@ -185,6 +203,9 @@ endif(SML_FOUND)
 if(MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 endif(MICROHTTPD_FOUND)
+if(MBUS_FOUND)
+message("             libmbus: -L${MBUS_LIBRARY} -I${MBUS_INCLUDE_DIR}")
+endif(MBUS_FOUND)
 
 if( ENABLE_SML AND NOT SML_FOUND)
   message(WARNING "libsml was not found.

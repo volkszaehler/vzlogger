@@ -50,7 +50,7 @@ namespace vz {
 			virtual int    close() = 0;
 			virtual ssize_t read(std::vector<Reading> &rds, size_t n) = 0;
 
-			const std::string &name() { return _name; }
+            const std::string &name() const { return _name; }
     
 		private:
 			std::string _name;

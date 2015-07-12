@@ -1,0 +1,32 @@
+/**
+ * vzlogger configuration example for meterOMS
+ *
+ * use proper encoded JSON with javascript comments
+ *
+ * take a look at the wiki for detailed information:
+ * http://wiki.volkszaehler.org/software/controller/vzlogger#configuration
+*/
+
+{
+    // ... for general vzlogger settings see vzlogger.conf
+
+    "meters": [
+        // example for OMS (M-Bus based) meter
+		{
+			"enabled" : true,
+			"skip": false,
+			"protocol": "oms",
+			"device": "/dev/ttyUSB0",
+			"baudrate": 9600, // optional default 9600
+			"key": "0102030405060708090a0b0c0d0e0f10", // AES key in hex without spaces. Needs to be exactly 32 chars
+			"mbus_debug": false, // optional provide additional debug output from libmbus on the console/stderr/stdout
+
+			"channel": {                    // example channel. multiple channels supported as well
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                "middleware": "http://127.0.0.1/middleware.php",
+                "identifier": "1.7.0"   // currently 1.7.0, 1.8.0, 2.7.0, 2.8.0 supported
+            }
+
+        }
+    ]
+}
