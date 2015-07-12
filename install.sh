@@ -9,27 +9,27 @@
 ##
 # The installer will clone all required repositories or update them if necessary.
 # Then the modules are compiled and installed
-# 
+#
 # USAGE:
-# 
+#
 #   Run install.sh from vzlogger or parent folder
-#   
+#
 #   	./install.sh
-#   	
+#
 #   To execute specific parts of the build select which ones to run:
-#   	
-#   	./install.sh <list of modules> 
-#   
+#
+#   	./install.sh <list of modules>
+#
 #   Modules:
 #     - vzlogger (libraries must be in place already)
-#     - libjson
+#     - libsmljson
 #     - libsml
 #     - clean (will clean the respektive make targets, requires explicitly naming the modules)
-# 
+#
 # 	To run a clean build:
-# 	
+#
 #   	./install.sh vzlogger libjson libsml clean
-#   	
+#
 ##
 # This file is part of volkzaehler.org
 #
@@ -183,6 +183,14 @@ pushd "$lib_dir"
 		git_update libsml https://github.com/volkszaehler/libsml.git
 	fi
 
+	# libmbus
+	if [ -z "$1" ] || contains "$*" libmbus; then
+		echo
+		echo "checking for libmbus"
+
+		git_update libmbus https://github.com/rscada/libmbus.git
+	fi
+
 
 	###############################
 	echo
@@ -216,6 +224,18 @@ pushd "$lib_dir"
 			sudo cp sml/lib/libsml.* /usr/lib/
 			sudo cp -R sml/include/* /usr/include/
 			sudo cp sml.pc /usr/lib/pkgconfig/
+		popd
+	fi
+
+	# libmbus
+	if [ -z "$1" ] || contains "$*" libmbus; then
+		echo
+		echo "building and installing libmbus"
+		pushd libmbus
+			if contains "$*" clean; then make clean; fi
+
+			./build.sh
+			sudo make install
 		popd
 	fi
 
