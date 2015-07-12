@@ -327,7 +327,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret<n) {
 												rds[ret].identifier(new ObisIdentifier("1.8.0"));
 												rds[ret].value(get_record_value(record));
-												// rds[ret].time todo
+												rds[ret].time();
 												++ret;
 											}
 										}
@@ -340,7 +340,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.8.0"));
 												rds[ret].value(get_record_value(record));
-												// rds[ret].time todo
+												rds[ret].time();
 												++ret;
 											}
 										}
@@ -353,7 +353,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("1.7.0"));
 												rds[ret].value(get_record_value(record));
-												// rds[ret].time todo
+												rds[ret].time();
 												++ret;
 											}
 										}
@@ -366,7 +366,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.7.0"));
 												rds[ret].value(get_record_value(record));
-												// rds[ret].time todo
+												rds[ret].time();
 												++ret;
 											}
 										}
@@ -508,7 +508,9 @@ double MeterOMS::get_record_value(mbus_data_record *record) const
 		if (vif == 0x6C)
 		{
 			mbus_data_tm_decode(&time, record->data, 2);
+			print(log_finest, "time %d.%d.%d", name().c_str(), time.tm_mday, time.tm_mon, time.tm_year);
 			// todo convert time to double similar to the other (in ms?)
+			// we don't use this time info for now.
 		}
 		else  // 2 byte integer
 		{
