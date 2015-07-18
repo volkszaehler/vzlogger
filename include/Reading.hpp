@@ -155,6 +155,7 @@ public:
 	const long &time_s() const { return _time.tv_sec; }; // return only the seconds (always rounding down)
 	void time() { gettimeofday(&_time, NULL); }
 	void time(struct timeval const &v) { _time = v; }
+	void time(struct timespec const &v) { _time.tv_sec = v.tv_sec; _time.tv_usec = v.tv_nsec / 1e3; }
 	// not needed yet: void time_from_ms( int64_t &ms );
 	void time_from_double( double const &d);
 

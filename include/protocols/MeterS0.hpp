@@ -26,6 +26,8 @@
 #ifndef _S0_H_
 #define _S0_H_
 
+#include <thread>
+#include <atomic>
 #include <termios.h>
 
 #include <protocols/Protocol.hpp>
@@ -38,6 +40,7 @@ class MeterS0 : public vz::protocol::Protocol {
 		virtual bool _open() = 0;
 		virtual bool _close() = 0;
 		virtual bool waitForImpulse() = 0;
+		virtual bool is_blocking() const = 0;
 	};
 
 	class HWIF_UART : public HWIF {
@@ -48,6 +51,7 @@ class MeterS0 : public vz::protocol::Protocol {
 		virtual bool _open();
 		virtual bool _close();
 		virtual bool waitForImpulse();
+		virtual bool is_blocking() const { return true; };
 	protected:
 		std::string _device;
 		int _fd;					// file descriptor of UART
@@ -62,6 +66,7 @@ class MeterS0 : public vz::protocol::Protocol {
 		virtual bool _open();
 		virtual bool _close();
 		virtual bool waitForImpulse();
+		virtual bool is_blocking() const { return true; }
 	protected:
 		int _fd;
 		int _gpiopin;
@@ -78,14 +83,21 @@ public:
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
   protected:
-    HWIF * _hwif;
+	void counter_thread();
 
+    HWIF * _hwif;
+	std::thread _counter_thread;
+	std::atomic<unsigned int> _impulses;
+	std::atomic<unsigned int> _impulses_neg;
+
+	volatile bool _counter_thread_stop;
+
+	bool _send_zero;
 	int _resolution;
 	int _debounce_delay_ms;
 	int _counter;
 
-	bool _impulseReceived;		// first impulse received
-	struct timeval _time_last;	// timestamp of last impulse
+	struct timespec _time_last;	// timestamp of last impulse
 };
 
 #endif /* _S0_H_ */

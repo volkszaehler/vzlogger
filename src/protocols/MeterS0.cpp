@@ -39,6 +39,8 @@
 MeterS0::MeterS0(std::list<Option> options)
 		: Protocol("s0")
 		, _hwif(0)
+		, _counter_thread_stop(false)
+		, _send_zero(false)
 		, _debounce_delay_ms(0)
 		, _counter(0)
 {
@@ -82,6 +84,15 @@ MeterS0::MeterS0(std::list<Option> options)
 	}
 	if (_debounce_delay_ms < 0) throw vz::VZException("debounce_delay must not be negative.");
 
+	try {
+		_send_zero = optlist.lookup_bool(options, "send_zero");
+	} catch (vz::OptionNotFoundException &e) {
+		// keep default init value (false)
+	} catch (vz::VZException &e) {
+		print(log_error, "Failed to parse send_zero", "");
+		throw;
+	}
+
 }
 
 MeterS0::~MeterS0()
@@ -89,19 +100,73 @@ MeterS0::~MeterS0()
 	if (_hwif) delete _hwif;
 }
 
+void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res)
+{
+	res.tv_sec = a.tv_sec - b.tv_sec;
+	res.tv_nsec = a.tv_nsec - b.tv_nsec;
+	if (res.tv_nsec < 0) {
+		--res.tv_sec;
+		res.tv_nsec += 1e9;
+	}
+}
+
+void MeterS0::counter_thread()
+{
+	// _hwif exists and open() succeeded
+	print(log_finest, "Counter thread started with %s hwif", name().c_str(), _hwif->is_blocking() ? "blocking" : "non blocking");
+	bool is_blocking = _hwif->is_blocking();
+	while(!_counter_thread_stop) {
+		if (is_blocking) {
+			if (_hwif->waitForImpulse())
+				++_impulses; // todo add logic for _impulses_neg
+			// we handle errors from waitForImpulse by simply debouncing and trying again (with debounce_delay_ms==0 this might be an endless loop
+			if (_debounce_delay_ms > 0){
+				// nanosleep _debounde_delay_ms
+				struct timespec ts;
+				ts.tv_sec = _debounce_delay_ms/1000;
+				ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+				struct timespec rem;
+				while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+					ts = rem;
+				}
+			}
+		} else {
+			// non blocking
+			usleep(1000); // fixme update/increase _impulses and _impulses_neg here (ignore wrap around as read will reduce them
+
+		}
+	}
+	print(log_finest, "Counter thread stopped", name().c_str());
+}
+
 int MeterS0::open() {
 
 	if (!_hwif) return ERR;
-
 	if (!_hwif->_open()) return ERR;
 
-	// have yet to wait for very first impulse
-	_impulseReceived = false;
+	_impulses = 0;
+	_impulses_neg = 0;
+
+	// create counter_thread and pass this as param
+	_counter_thread_stop = false;
+	_counter_thread = std::thread(&MeterS0::counter_thread, this);
+
+	// todo increase counter_threads scheduling class and prio!
+
+	clock_gettime(CLOCK_REALTIME, &_time_last); // we use realtime as this is returned as well (clock_monotonic would be better but...)
+	// store current time as last_time. Next read will return after 1s.
+
+	print(log_finest, "counter_thread created", name().c_str());
 
 	return SUCCESS;
 }
 
 int MeterS0::close() {
+	// signal thread to stop:
+	_counter_thread_stop = true;
+	if (_counter_thread.joinable())
+		_counter_thread.join(); // wait for thread
+
 	if (!_hwif) return ERR;
 
 	return (_hwif->_close() ? SUCCESS : ERR);
@@ -109,68 +174,67 @@ int MeterS0::close() {
 
 ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
-	struct timeval time_now;
+	ssize_t ret = 0;
 
 	if (!_hwif) return 0;
 	if (n<2) return 0; // would be worth a debug msg!
 
-	// wait for very first impulse
-	if (!_impulseReceived) {
+	// wait till last+1s (even if we are already later)
+	struct timespec req = _time_last;
+	// (or even more seconds if !send_zero
 
-		if (!_hwif->waitForImpulse()) return 0;
-
-		gettimeofday(&_time_last, NULL);
-
-		_impulseReceived = true;
-
-		// store timestamp
-		rds[0].identifier(new StringIdentifier("Impulse"));
-		rds[0].time(_time_last);
-		rds[0].value(1);
-
-		return 1;
-	} else {
-		// do we need to wait for debounce_delay?
-		gettimeofday(&time_now, NULL);
-		struct timeval delta;
-		timersub(&time_now, &_time_last, &delta);
-		long ms = (delta.tv_sec*1e3) + (delta.tv_usec / 1e3);
-		if (ms<_debounce_delay_ms) {
-			struct timespec ts;
-			ms = _debounce_delay_ms - ms;
-			print(log_finest, "Waiting %d ms for debouncing", name().c_str(), ms );
-			ts.tv_sec = ms/1000;
-			ts.tv_nsec = (ms%1000)*1e6;
-			struct timespec rem;
-			while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
-				ts = rem;
-			}
+	unsigned int t_imp;
+	unsigned int t_imp_neg;
+	bool is_zero = true;
+	do{
+		req.tv_sec += 1;
+		while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL));
+		// check from counter_thread the current impulses:
+		t_imp = _impulses;
+		t_imp_neg = _impulses_neg;
+		if (t_imp > 0 || t_imp_neg > 0 ) {
+			is_zero = false;
+			// reduce _impulses to avoid wraps. there is no race cond here as it's ok if _impulses is >0 afterwards if new impulses arrived in the meantime. That's why we don't set to 0!
+			_impulses -= t_imp;
+			_impulses_neg -= t_imp_neg;
 		}
+	} while (!_send_zero && (is_zero)); // so we are blocking is send_zero is false and no impulse coming!
+	// todo check thread cancellation on program termination
+
+	// we got t_imp and/or t_imp_neq between _time_last and req
+
+	double t1 = _time_last.tv_sec + _time_last.tv_nsec / 1e9;
+	double t2 = req.tv_sec + req.tv_nsec / 1e9;
+
+	_time_last = req;
+
+	if (_send_zero || t_imp > 0 ) {
+		double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
+		rds[ret].identifier(new StringIdentifier("Power"));
+		rds[ret].time(req);
+		rds[ret].value(value);
+		++ret;
+		rds[ret].identifier(new StringIdentifier("Impulse"));
+		rds[ret].time(req);
+		rds[ret].value(t_imp);
+		++ret;
 	}
 
-	if (!_hwif->waitForImpulse()) return 0;
+	if (_send_zero || t_imp_neg > 0) {
+		double value = 3600000 / ((t2-t1) * (_resolution * t_imp_neg));
+		rds[ret].identifier(new StringIdentifier("Power_neg"));
+		rds[ret].time(req);
+		rds[ret].value(value);
+		++ret;
+		rds[ret].identifier(new StringIdentifier("Impulse_neg"));
+		rds[ret].time(req);
+		rds[ret].value(t_imp_neg);
+		++ret;
+	}
 
-	gettimeofday(&time_now, NULL);
+	print(log_finest, "Reading S0 - n=%d n_neg = %d", name().c_str(), t_imp, t_imp_neg);
 
-	// _time_last is initialized at this point
-	double t1 = _time_last.tv_sec + _time_last.tv_usec / 1e6;
-	double t2 = time_now.tv_sec + time_now.tv_usec / 1e6;
-	double value = 3600000 / ((t2-t1) * _resolution);
-
-	memcpy(&_time_last, &time_now, sizeof(struct timeval));
-
-	// store current timestamp
-	rds[0].identifier(new StringIdentifier("Power"));
-	rds[0].time(time_now);
-	rds[0].value(value);
-
-	rds[1].identifier(new StringIdentifier("Impulse"));
-	rds[1].time(time_now);
-	rds[1].value(1);
-
-	print(log_debug, "Reading S0 - n=%d power=%f", name().c_str(), n, rds[0].value());
-
-	return 2;
+	return ret;
 }
 
 MeterS0::HWIF_UART::HWIF_UART(const std::list<Option> &options) :
