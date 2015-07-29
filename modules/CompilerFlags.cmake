@@ -5,6 +5,7 @@ endif (${CMAKE_BUILD_TYPE} MATCHES "Release")
 
 if(NOT WIN32)
   if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+    message(STATUS "using gcc compiler ${CMAKE_CXX_COMPILER_ID}")
     include (CheckCXXSourceCompiles)
 
     set(CMAKE_CXX_FLAGS "${CXXFLAGS} -W -Wall -Wextra -Werror -Wnon-virtual-dtor -Wno-system-headers")
@@ -72,6 +73,7 @@ if(NOT WIN32)
   endif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
 
   if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    message(STATUS "using clang compiler ${CMAKE_CXX_COMPILER_ID}")
     set(CMAKE_CXX_FLAGS "${CXXFLAGS} -W -Wall -Wextra -Werror")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-parentheses")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")

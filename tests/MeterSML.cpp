@@ -151,7 +151,7 @@ TEST(MeterSML, EMH_basic) {
 	// check obis data:
 	ReadingIdentifier *p = rds[0].identifier().get();
 	double value = rds[0].value();
-	EXPECT_LE(abs(14796777.1-value), 0.1);
+	EXPECT_LE(fabs(14796777.1-value), 0.1);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier*>(p);
 	ASSERT_NE((ObisIdentifier*)0, o);
 	EXPECT_TRUE(Obis(1, 0, 1, 8, 1, 255)==(o->obis()));
@@ -165,7 +165,7 @@ TEST(MeterSML, EMH_basic) {
 	o = dynamic_cast<ObisIdentifier*>(rds[2].identifier().get());
 	ASSERT_NE((ObisIdentifier*)0, o);
 	value = rds[2].value();
-	EXPECT_LE(abs(11.2-value), 0.1);
+	EXPECT_LE(fabs(11.2-value), 0.1);
 	EXPECT_TRUE(Obis(1, 0, 1, 7, 0, 255)==(o->obis()));
 
 

@@ -99,3 +99,22 @@ target_link_libraries(mock_MeterOMS
 add_test(mock_MeterOMS mock_MeterOMS)
 
 endif( OMS_SUPPORT )
+
+add_executable(mock_MeterS0
+	mock_MeterS0.cpp
+	../../src/protocols/MeterS0.cpp
+	../../src/Reading.cpp
+	../../src/Obis.cpp
+	../../src/Options.cpp
+)
+
+target_link_libraries(mock_MeterS0
+		${GTEST_LIBS_DIR}/libgtest.a
+		${GMOCK_LIBS_DIR}/libgmock.a
+		pthread
+		${JSON_LIBRARY}
+		${LIBUUID}
+		dl
+)
+add_test(mock_MeterS0 mock_MeterS0)
+

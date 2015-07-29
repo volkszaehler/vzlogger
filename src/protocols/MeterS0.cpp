@@ -31,18 +31,20 @@
 #include <time.h>
 #include <errno.h>
 #include <poll.h>
+#include <sys/mman.h>
 
 #include "protocols/MeterS0.hpp"
 #include "Options.hpp"
 #include <VZException.hpp>
 
-MeterS0::MeterS0(std::list<Option> options)
+MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		: Protocol("s0")
-		, _hwif(0)
+		, _hwif(hwif)
+		, _hwif_dir(hwif_dir)
 		, _counter_thread_stop(false)
 		, _send_zero(false)
 		, _debounce_delay_ms(0)
-		, _counter(0)
+		, _nonblocking_delay_ns(1e5)
 {
 	OptionList optlist;
 
@@ -50,18 +52,54 @@ MeterS0::MeterS0(std::list<Option> options)
 	// if "gpio" is given -> GPIO
 	// else (assuming "device") -> UART
 	bool use_gpio = false;
+	bool use_mmap = false;
+	std::string mmap;
+	int gpiopin = -1;
 
-	try {
-		int gpiopin = optlist.lookup_int(options, "gpio");
-		if (gpiopin >=0 ) use_gpio = true;
-	} catch (vz::VZException &e) {
+	if (!_hwif) {
+		try {
+			gpiopin = optlist.lookup_int(options, "gpio");
+			if (gpiopin >=0) use_gpio = true;
+		} catch (vz::VZException &e) {
 			// ignore
+		}
+
+		if (use_gpio) {
+			try {
+				mmap = optlist.lookup_string(options, "mmap");
+				if (mmap == "rpi2" || mmap == "rpi" || mmap == "rpi1") {
+					use_mmap = true;
+				} else {
+					print(log_error, "unknown option for mmap (%s). Falling back to normal gpio.", name().c_str(), mmap.c_str());
+				}
+			} catch (vz::VZException &e) {
+				// ignore
+			}
+			if (use_mmap) {
+				_hwif = new HWIF_MMAP(gpiopin, mmap);
+			} else
+				_hwif = new HWIF_GPIO(gpiopin, options);
+		} else {
+			_hwif = new HWIF_UART(options);
+		}
 	}
 
-	if (use_gpio) {
-		_hwif = new HWIF_GPIO(options);
-	} else {
-		_hwif = new HWIF_UART(options);
+	if (!_hwif_dir) {
+		int gpiodirpin = -1;
+		try {
+			gpiodirpin = optlist.lookup_int(options, "gpio_dir");
+		} catch (vz::VZException &e) {
+			// ignore
+		}
+		if (gpiodirpin >= 0) {
+			if (gpiodirpin == gpiopin) {
+				throw vz::VZException("gpio_dir must not be equal to gpio");
+			}
+			if (use_mmap) {
+				_hwif_dir = new HWIF_MMAP( gpiodirpin, mmap);
+			} else
+				_hwif_dir = new HWIF_GPIO( gpiodirpin, options);
+		}
 	}
 
 	try {
@@ -85,6 +123,16 @@ MeterS0::MeterS0(std::list<Option> options)
 	if (_debounce_delay_ms < 0) throw vz::VZException("debounce_delay must not be negative.");
 
 	try {
+		_nonblocking_delay_ns = optlist.lookup_int(options, "nonblocking_delay");
+	} catch (vz::OptionNotFoundException &e) {
+		// keep default 1e5;
+	} catch (vz::VZException &e) {
+		print(log_error, "Failed to parse nonblocking_delay", "");
+		throw;
+	}
+	if (_nonblocking_delay_ns < 100) throw vz::VZException("nonblocking_delay must not be <100ns.");
+
+	try {
 		_send_zero = optlist.lookup_bool(options, "send_zero");
 	} catch (vz::OptionNotFoundException &e) {
 		// keep default init value (false)
@@ -98,6 +146,7 @@ MeterS0::MeterS0(std::list<Option> options)
 MeterS0::~MeterS0()
 {
 	if (_hwif) delete _hwif;
+	if (_hwif_dir) delete _hwif_dir;
 }
 
 void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res)
@@ -114,14 +163,34 @@ void MeterS0::counter_thread()
 {
 	// _hwif exists and open() succeeded
 	print(log_finest, "Counter thread started with %s hwif", name().c_str(), _hwif->is_blocking() ? "blocking" : "non blocking");
+
 	bool is_blocking = _hwif->is_blocking();
+
+	{ // set thread priority to highest and SCHED_FIFO scheduling class
+		// ignore any errors
+		int policy;
+		struct sched_param param;
+		pthread_getschedparam(pthread_self(), &policy, &param);
+		policy = SCHED_FIFO; // different approach would be PR_SET_TIMERSLACK with 1ns (default 50us)
+		param.sched_priority = sched_get_priority_max(policy);
+		if (0!= pthread_setschedparam(pthread_self(), policy, &param) ) {
+			print(log_error, "failed to set policy to SCHED_FIFO for counter_thread", name().c_str());
+		}
+	}
+
+	int last_state = 0; // low edge initial value
+	const int nonblocking_delay_ns = _nonblocking_delay_ns;
 	while(!_counter_thread_stop) {
 		if (is_blocking) {
-			if (_hwif->waitForImpulse())
-				++_impulses; // todo add logic for _impulses_neg
+			if (_hwif->waitForImpulse()) {
+				if (_hwif_dir && ( _hwif_dir->status()>0 ) )
+					++_impulses_neg;
+				else
+					++_impulses;
+			}
 			// we handle errors from waitForImpulse by simply debouncing and trying again (with debounce_delay_ms==0 this might be an endless loop
 			if (_debounce_delay_ms > 0){
-				// nanosleep _debounde_delay_ms
+				// nanosleep _debounce_delay_ms
 				struct timespec ts;
 				ts.tv_sec = _debounce_delay_ms/1000;
 				ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
@@ -130,19 +199,42 @@ void MeterS0::counter_thread()
 					ts = rem;
 				}
 			}
-		} else {
-			// non blocking
-			usleep(1000); // fixme update/increase _impulses and _impulses_neg here (ignore wrap around as read will reduce them
-
-		}
-	}
-	print(log_finest, "Counter thread stopped", name().c_str());
+		} else { // non-blocking case:
+			int state = _hwif->status();
+			if ((state >= 0) && (state != last_state)) {
+				if (last_state == 0) { // low->high edge found
+					if (_hwif_dir && (_hwif_dir->status()>0))
+						++_impulses_neg;
+					else
+						++_impulses;
+					if (_debounce_delay_ms > 0){
+						// nanosleep _debounce_delay_ms
+						struct timespec ts;
+						ts.tv_sec = _debounce_delay_ms/1000;
+						ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+						struct timespec rem;
+						while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+							ts = rem;
+						}
+					}
+				}
+				last_state = state;
+			} else { // error reading gpio status or status same as previous one
+				struct timespec ts;
+				ts.tv_sec = 0;
+				ts.tv_nsec = nonblocking_delay_ns; // 5*(1e3) needed for up to 30kHz! 1e3 -> <1mhz, 1e4 -> <100kHz, 1e5 -> <10kHz
+				nanosleep(&ts, NULL); // we can ignore any errors here
+			}
+		} // non blocking case
+	} // while
+	print(log_finest, "Counter thread stopped with %d imp", name().c_str(), _impulses.load());
 }
 
 int MeterS0::open() {
 
 	if (!_hwif) return ERR;
 	if (!_hwif->_open()) return ERR;
+	if (_hwif_dir && (!_hwif_dir->_open())) return ERR;
 
 	_impulses = 0;
 	_impulses_neg = 0;
@@ -150,8 +242,6 @@ int MeterS0::open() {
 	// create counter_thread and pass this as param
 	_counter_thread_stop = false;
 	_counter_thread = std::thread(&MeterS0::counter_thread, this);
-
-	// todo increase counter_threads scheduling class and prio!
 
 	clock_gettime(CLOCK_REALTIME, &_time_last); // we use realtime as this is returned as well (clock_monotonic would be better but...)
 	// store current time as last_time. Next read will return after 1s.
@@ -168,6 +258,7 @@ int MeterS0::close() {
 		_counter_thread.join(); // wait for thread
 
 	if (!_hwif) return ERR;
+	if (_hwif_dir) _hwif_dir->_close(); // ignore errors
 
 	return (_hwif->_close() ? SUCCESS : ERR);
 }
@@ -177,7 +268,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	ssize_t ret = 0;
 
 	if (!_hwif) return 0;
-	if (n<2) return 0; // would be worth a debug msg!
+	if (n<4) return 0; // would be worth a debug msg!
 
 	// wait till last+1s (even if we are already later)
 	struct timespec req = _time_last;
@@ -203,12 +294,15 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	// we got t_imp and/or t_imp_neq between _time_last and req
 
+	clock_gettime(CLOCK_REALTIME, &req);
+
 	double t1 = _time_last.tv_sec + _time_last.tv_nsec / 1e9;
 	double t2 = req.tv_sec + req.tv_nsec / 1e9;
+	if (t2==t1) t2+=0.000001;
 
 	_time_last = req;
 
-	if (_send_zero || t_imp > 0 ) {
+	if (_send_zero || t_imp > 0) {
 		double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
 		rds[ret].identifier(new StringIdentifier("Power"));
 		rds[ret].time(req);
@@ -232,7 +326,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 		++ret;
 	}
 
-	print(log_finest, "Reading S0 - n=%d n_neg = %d", name().c_str(), t_imp, t_imp_neg);
+	print(log_finest, "Reading S0 - returning %d readings (n=%d n_neg = %d)", name().c_str(), ret, t_imp, t_imp_neg);
 
 	return ret;
 }
@@ -314,18 +408,79 @@ bool MeterS0::HWIF_UART::waitForImpulse()
 	return true;
 }
 
-MeterS0::HWIF_GPIO::HWIF_GPIO(const std::list<Option> &options) :
-	_fd(-1), _gpiopin(-1), _configureGPIO(true)
+#define BLOCK_SIZE (4*1024)
+#define BCM2708_PERI_BASE_RPI1 0x20000000
+#define BCM2708_PERI_BASE_RPI2 0x3F000000
+
+MeterS0::HWIF_MMAP::HWIF_MMAP(int gpiopin, const std::string &hw) :
+	_gpiopin(gpiopin), _gpio(0), _gpio_base(0)
+{
+	// check gpiopin for max value! (todo)
+	// we do mmap in _open only
+	if (hw=="rpi" || hw=="rpi1")
+		_gpio_base = (void *) (BCM2708_PERI_BASE_RPI1 + 0x200000);
+	else
+		if (hw=="rpi2")
+			_gpio_base = (void *) (BCM2708_PERI_BASE_RPI2 + 0x200000);
+	else throw vz::VZException("unknown hw for HWIF_MMAP!");
+}
+
+MeterS0::HWIF_MMAP::~HWIF_MMAP()
+{
+	if (_gpio) _close();
+}
+
+bool MeterS0::HWIF_MMAP::_open()
+{
+	int mem_fd = -1;
+	if ((mem_fd = ::open("/dev/mem", O_RDWR|O_SYNC)) < 0) {
+	   print( log_error, "can't open /dev/mem \n", "MMAP" );
+	   return false;
+	}
+
+	void *gpio_map = mmap(
+	   (void*)NULL,             //Any adddress in our space will do
+	   BLOCK_SIZE,       //Map length
+	   PROT_READ|PROT_WRITE, // Enable reading & writting to mapped memory
+	   MAP_SHARED,       //Shared with other processes
+	   mem_fd,           //File to map
+	   (off_t)_gpio_base         //Offset to GPIO peripheral
+	);
+
+	::close(mem_fd); //No need to keep mem_fd open after mmap
+
+	if (gpio_map == MAP_FAILED) {
+	   print( log_error, "mmap error %p errno=%d\n", "MMAP", gpio_map, errno);
+	   return false;
+	}
+
+	// Always use volatile pointer!
+	_gpio = (volatile unsigned *)gpio_map;
+
+	return true;
+}
+
+bool MeterS0::HWIF_MMAP::_close()
+{
+	// need unmap? todo
+	_gpio = 0;
+	return true;
+}
+
+int MeterS0::HWIF_MMAP::status()
+{
+#define GET_GPIO(g) (*(_gpio+13)&(1<<g)) // 0 if LOW, (1<<g) if HIGH
+
+	return GET_GPIO(_gpiopin)>0 ? 1 : 0;
+}
+
+
+MeterS0::HWIF_GPIO::HWIF_GPIO(int gpiopin, const std::list<Option> &options) :
+	_fd(-1), _gpiopin(gpiopin), _configureGPIO(true)
 {
 	OptionList optlist;
 
-	try {
-		_gpiopin = optlist.lookup_int(options, "gpio");
-	} catch (vz::VZException &e) {
-		print(log_error, "Missing gpio or invalid type (expect int)", "S0");
-		throw;
-	}
-	if (_gpiopin <0 ) throw vz::VZException("invalid (<0) gpio(pin) set");
+	if (_gpiopin <0) throw vz::VZException("invalid (<0) gpio(pin) set");
 
 	try {
 		_configureGPIO = optlist.lookup_bool(options, "configureGPIO");
@@ -419,6 +574,15 @@ bool MeterS0::HWIF_GPIO::_close()
 	_fd = -1;
 
 	return true;
+}
+
+int MeterS0::HWIF_GPIO::status()
+{
+	unsigned char buf[2];
+	if (_fd<0) return -1;
+	if (::pread(_fd, buf, 1, 0) < 1) return -2;
+	if (buf[0] != '0') return 1;
+	return 0;
 }
 
 bool MeterS0::HWIF_GPIO::waitForImpulse()
