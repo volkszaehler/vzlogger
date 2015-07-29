@@ -401,7 +401,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 
 									}
 								}
-
+								mbus_data_record_free((mbus_data_record*)frame_data.data_var.record);
 							}
 						}
 						break;
