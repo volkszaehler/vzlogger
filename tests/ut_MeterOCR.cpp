@@ -50,7 +50,7 @@ TEST(MeterOCR, basic2_needle_autofix)
     EXPECT_EQ(2, m.read(rds, 2));
 
     double value = rds[0].value();
-    EXPECT_TRUE(abs(0.3767-value)<0.00001);
+	EXPECT_TRUE(std::abs(0.3767-value)<0.00001);
 
     value = rds[1].value();
     EXPECT_GT(value, 80.0); // expect conf. >80
@@ -94,7 +94,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses)
   // expect 2 on 2nd read
 
   double value = rds[0].value(); // but with same pic no impulses. // TODO add interface to change file between reads
-  EXPECT_TRUE(abs(value)<0.00001);
+  EXPECT_TRUE(std::abs(value)<0.00001);
 
   value = rds[1].value();
   EXPECT_GT(value, 80.0); // expect conf. >80
@@ -138,7 +138,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses_debug_image)
 	// expect 2 on 2nd read
 
 	double value = rds[0].value(); // but with same pic no impulses. // TODO add interface to change file between reads
-	EXPECT_TRUE(abs(value)<0.00001);
+	EXPECT_TRUE(std::abs(value)<0.00001);
 	
 	value = rds[1].value();
 	EXPECT_GT(value, 80.0); // expect conf. >80
@@ -304,7 +304,7 @@ TEST(MeterOCR, basic2_needle_v4l) // TODO remove this test as it depends on a te
 
 		  /*
 	double value = rds[0].value();
-	EXPECT_TRUE(abs(0.3767-value)<0.00001);
+	EXPECT_TRUE(std::abs(0.3767-value)<0.00001);
 
 	value = rds[1].value();
 	EXPECT_GT(value, 80.0); // expect conf. >80

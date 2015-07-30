@@ -26,18 +26,22 @@
 #ifndef _S0_H_
 #define _S0_H_
 
+#include <thread>
+#include <atomic>
 #include <termios.h>
 
 #include <protocols/Protocol.hpp>
 
 class MeterS0 : public vz::protocol::Protocol {
-
+public:
 	class HWIF {
 	public:
 		virtual ~HWIF() {};
 		virtual bool _open() = 0;
 		virtual bool _close() = 0;
-		virtual bool waitForImpulse() = 0;
+		virtual bool waitForImpulse() = 0; // blocking interface
+		virtual int status() = 0; // non blocking IO status (<0 = ERR, 0 = low, 1 = high)
+		virtual bool is_blocking() const = 0;
 	};
 
 	class HWIF_UART : public HWIF {
@@ -48,6 +52,8 @@ class MeterS0 : public vz::protocol::Protocol {
 		virtual bool _open();
 		virtual bool _close();
 		virtual bool waitForImpulse();
+		virtual int status() { return -1; }; // not supported always return error
+		virtual bool is_blocking() const { return true; };
 	protected:
 		std::string _device;
 		int _fd;					// file descriptor of UART
@@ -56,12 +62,14 @@ class MeterS0 : public vz::protocol::Protocol {
 
 	class HWIF_GPIO : public HWIF {
 	public:
-		HWIF_GPIO(const std::list<Option> &options);
+		HWIF_GPIO(int gpiopin, const std::list<Option> &options);
 		virtual ~HWIF_GPIO();
 
 		virtual bool _open();
 		virtual bool _close();
 		virtual bool waitForImpulse();
+		virtual int status();
+		virtual bool is_blocking() const { return true; }
 	protected:
 		int _fd;
 		int _gpiopin;
@@ -69,8 +77,25 @@ class MeterS0 : public vz::protocol::Protocol {
 		std::string _device;
 	};
 
+	class HWIF_MMAP : public HWIF {
+	public:
+		HWIF_MMAP(int gpiopin, const std::string &hw);
+		virtual ~HWIF_MMAP();
+
+		virtual bool _open();
+		virtual bool _close();
+		virtual bool waitForImpulse() {return false;} // not supported
+		virtual int status();
+		virtual bool is_blocking() const { return false; }
+	protected:
+		int _gpiopin;
+		volatile unsigned *_gpio; // mmap ptr to hw registers
+		void *_gpio_base;
+	};
+
+
 public:
-	MeterS0(std::list<Option> options);
+	MeterS0(std::list<Option> options, HWIF *hwif=0, HWIF *hwif_dir=0);
 	virtual ~MeterS0();
 
 	int open();
@@ -78,14 +103,22 @@ public:
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
   protected:
-    HWIF * _hwif;
+	void counter_thread();
 
+    HWIF * _hwif;
+	HWIF * _hwif_dir; // for dir gpio pin
+	std::thread _counter_thread;
+	std::atomic<unsigned int> _impulses;
+	std::atomic<unsigned int> _impulses_neg;
+
+	volatile bool _counter_thread_stop;
+
+	bool _send_zero;
 	int _resolution;
 	int _debounce_delay_ms;
-	int _counter;
+	int _nonblocking_delay_ns;
 
-	bool _impulseReceived;		// first impulse received
-	struct timeval _time_last;	// timestamp of last impulse
+	struct timespec _time_last;	// timestamp of last impulse
 };
 
 #endif /* _S0_H_ */

@@ -170,6 +170,17 @@
                         "default": -1,
                         "description": "Number of GPIO port to be used. If this is set >-1 then device is ignored."
                     },
+                    "mmap": {
+                        "type": "string",
+                        "default": "",
+                        "description": "For gpio based devices and high frequency signals (>5-10kHz on a rpi2) memory mapped gpio can be used. Currently only supported on Raspberry-Pi 1 or 2. Leads to a constant but high CPU load depending on nonblocking_delay value. MMAPed GPIO pins need to be configured manually as input pins.",
+                        "enum": ["", "rpi1", "rpi2"]
+                    },
+                    "gpio_dir": {
+                        "type": "integer",
+                        "default": -1,
+                        "description": "Number of GPIO port to be used as directional pin. If this pin is used and active Impulses_neg instead of Impulses is returned. Keep to -1 if unsure about the purpose."
+                    },
                     "configureGPIO": {
                         "type": "boolean",
                         "default": true,
@@ -184,7 +195,13 @@
                         "type": "integer",
                         "default": 30,
                         "description": "Delay in ms until the next edge is detected"
+                    },
+                    "nonblocking_delay": {
+                        "type": "integer",
+                        "default": 100000,
+                        "description": "Delay in ns for polling/non-blocking interface. On an rpi2 e.g. 5000 can be used to detect up to 30kHz signals with mmap active."
                     }
+
                 },
                 "required": ["protocol", "device"]
             }]
