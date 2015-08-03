@@ -298,7 +298,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 							aes_decrypt(frame.data+12, 16*nr_enc_16byte_blocks, _aes_key, iv );
 							if (_mbus_debug) mbus_frame_print(&frame);
 							if (frame.length1<=14 || frame.data[12] != 0x2f || frame.data[13] != 0x2f) {
-								print(log_debug, "encryption sanity check failed", name().c_str());
+								print(log_error, "encryption sanity check failed", name().c_str());
 							} else {
 								print(log_finest, "successfully decrypted a frame", name().c_str());
 								mbus_frame_data frame_data;
