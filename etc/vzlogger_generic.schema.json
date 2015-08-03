@@ -191,6 +191,11 @@
                         "default": 1000,
                         "description": "number of impulses per kWh"
                     },
+                    "send_zero": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If active/true send data once a second even if no impulses have been received. Use aggregation is this case to reduce frequency."
+                    },
                     "debounce_delay": {
                         "type": "integer",
                         "default": 30,
