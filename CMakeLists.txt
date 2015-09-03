@@ -221,6 +221,12 @@ INSTALL(FILES README COPYING DESTINATION
   share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
 )
 
+# add clean-all target that removes the cached files from cmake as well (see e.g. issue #186)
+add_custom_target(clean-all
+    COMMAND ${CMAKE_BUILD_TOOL} clean
+    COMMAND ${CMAKE_COMMAND} -P clean-all-cmake.txt
+)
+
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS On)
