@@ -118,3 +118,5 @@ target_link_libraries(mock_MeterS0
 )
 add_test(mock_MeterS0 mock_MeterS0)
 
+# ensure that all test binaries are added to tests/CMakeLists.txt test_coverage target
+# (or find a better way to add them from here to the test_coverage target

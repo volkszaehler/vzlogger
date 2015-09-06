@@ -24,7 +24,6 @@ ADD_DEFINITIONS(-g3)
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
-include (UseCodeCoverage)
 
 # get git sha1 as additional version:
 include(GetGitRevisionDescription)
