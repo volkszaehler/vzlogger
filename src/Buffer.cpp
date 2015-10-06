@@ -168,16 +168,19 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 }
 
 
-void Buffer::clean() {
+void Buffer::clean(bool deleted_only) {
 	lock();
-	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-		if (it->deleted()) {
-			it = _sent.erase(it);
-			it--;
-		}
+	if (deleted_only) {
+		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+			if (it->deleted()) {
+				it = _sent.erase(it);
+				it--;
+			}
 
+		}
+	} else {
+		_sent.clear();
 	}
-//_sent.clear();
 	unlock();
 }
 

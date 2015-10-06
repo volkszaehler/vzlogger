@@ -48,7 +48,7 @@ class Buffer {
 
 	void aggregate(int aggtime, bool aggFixedInterval);
 	void push(const Reading &rd);
-	void clean();
+	void clean(bool deleted_only = true);
 	void undelete();
 	void shrink(/*size_t keep = 0*/);
 	char *dump(char *dump, size_t len);

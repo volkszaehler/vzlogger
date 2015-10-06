@@ -72,7 +72,8 @@ void MeterMap::start() {
 			if (options.logging()) {
 				(*it)->start();
 				print(log_debug, "Logging thread started", (*it)->name());
-			}
+			} else
+				print(log_debug, "Logging thread not started", (*it)->name());
 		}
 		_thread_running = true;
 	} else {

@@ -166,6 +166,11 @@ void * reading_thread(void *arg) {
 
 					free(dump);
 				}
+
+				// if logging is not enabled we need to empty the ch->buffer here already:
+				if (!options.logging()) {
+					(*ch)->buffer()->clean(false);
+				}
 			}
 
 			if (mtr->interval() > 0) {
@@ -220,7 +225,6 @@ void * logging_thread(void *arg) {
 	do { /* start thread mainloop */
 		try {
 			ch->wait();
-
 			api->send();
 		}
 		catch (std::exception &e) {

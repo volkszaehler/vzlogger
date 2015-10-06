@@ -62,3 +62,38 @@ TEST(buffer, buffer_agg_avg)
         r.mark_delete();
     }
 }
+
+TEST(buffer, clean)
+{
+	// call clean on empty buffer:
+	Buffer buf;
+	buf.clean();
+
+	Buffer buf2;
+	buf2.clean(false);
+
+	// add one item:
+	ReadingIdentifier::Ptr pRid;
+	struct timeval t1;
+	t1.tv_sec = 1;
+	t1.tv_usec = 0;
+	Reading r1(1.0, t1, pRid);
+
+	buf.push(r1);
+	ASSERT_EQ(1ul, buf.size());
+
+	// call default clean() that does only remove deleted items:
+	buf.clean();
+	ASSERT_EQ(1ul, buf.size());
+
+	(*buf.begin()).mark_delete();
+	// call default clean() that does only remove deleted items:
+	buf.clean();
+	ASSERT_EQ(0ul, buf.size());
+
+	Reading r2(2.0, t1, pRid);
+	buf.push(r2);
+	buf.clean(false);
+	ASSERT_EQ(0ul, buf.size());
+
+}
