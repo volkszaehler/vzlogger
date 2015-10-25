@@ -183,6 +183,9 @@ void MeterS0::counter_thread()
 	while(!_counter_thread_stop) {
 		if (is_blocking) {
 			if (_hwif->waitForImpulse()) {
+				struct timespec temp_ts;
+				clock_gettime(CLOCK_REALTIME, &temp_ts);
+				_time_last_impulse = temp_ts; // uses atomic operator=
 				if (_hwif_dir && ( _hwif_dir->status()>0 ) )
 					++_impulses_neg;
 				else
@@ -243,8 +246,10 @@ int MeterS0::open() {
 	_counter_thread_stop = false;
 	_counter_thread = std::thread(&MeterS0::counter_thread, this);
 
-	clock_gettime(CLOCK_REALTIME, &_time_last); // we use realtime as this is returned as well (clock_monotonic would be better but...)
+	clock_gettime(CLOCK_REALTIME, &_time_last_read); // we use realtime as this is returned as well (clock_monotonic would be better but...)
 	// store current time as last_time. Next read will return after 1s.
+	_time_last_impulse = _time_last_read;
+	_time_last_impulse_returned = _time_last_read;
 
 	print(log_finest, "counter_thread created", name().c_str());
 
@@ -271,7 +276,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	if (n<4) return 0; // would be worth a debug msg!
 
 	// wait till last+1s (even if we are already later)
-	struct timespec req = _time_last;
+	struct timespec req = _time_last_read;
 	// (or even more seconds if !send_zero
 
 	unsigned int t_imp;
@@ -292,15 +297,27 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	} while (!_send_zero && (is_zero)); // so we are blocking is send_zero is false and no impulse coming!
 	// todo check thread cancellation on program termination
 
-	// we got t_imp and/or t_imp_neq between _time_last and req
+	// we got t_imp and/or t_imp_neq between _time_last_read and req
 
 	clock_gettime(CLOCK_REALTIME, &req);
+	double t1;
+	double t2;
+	if (_hwif->is_blocking()) {
+		// we use the time from last impulse
+		t1 = _time_last_impulse_returned.tv_sec + _time_last_impulse_returned.tv_nsec / 1e9;
+		struct timespec temp_ts = _time_last_impulse; // uses atomic operator T
+		t2 = temp_ts.tv_sec + temp_ts.tv_nsec / 1e9;
+		_time_last_impulse_returned = temp_ts;
+		_time_last_read = req;
+		req = _time_last_impulse_returned;
+	} else {
+		// we use the time from last read call
+		t1= _time_last_read.tv_sec + _time_last_read.tv_nsec / 1e9;
+		t2 = req.tv_sec + req.tv_nsec / 1e9;
+		_time_last_read = req;
+	}
 
-	double t1 = _time_last.tv_sec + _time_last.tv_nsec / 1e9;
-	double t2 = req.tv_sec + req.tv_nsec / 1e9;
 	if (t2==t1) t2+=0.000001;
-
-	_time_last = req;
 
 	if (_send_zero || t_imp > 0) {
 		double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
