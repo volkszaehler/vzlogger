@@ -121,6 +121,7 @@ public:
 	struct timespec _time_last_read;	// timestamp of last read. 1s interval based on this timestamp
 	std::atomic<struct timespec> _time_last_impulse; // timestamp of last impulse
 	struct timespec _time_last_impulse_returned; // timestamp of last impulse returned
+	bool _first_impulse;
 };
 
 #endif /* _S0_H_ */

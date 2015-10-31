@@ -109,7 +109,7 @@ TEST(mock_MeterS0, basic_non_blocking_read)
 	MeterS0 m(opt, hwif);
 	ASSERT_EQ(SUCCESS, m.open());
 	std::vector<Reading> rds(4);
-	ASSERT_EQ(m.read(rds, 4), 4);
+	ASSERT_EQ(m.read(rds, 4), 2); // no Powers for first impulse
 
 	m.close(); // this might be called and should not cause problems
 }

@@ -45,6 +45,7 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		, _send_zero(false)
 		, _debounce_delay_ms(0)
 		, _nonblocking_delay_ns(1e5)
+		, _first_impulse(true)
 {
 	OptionList optlist;
 
@@ -320,11 +321,13 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	if (t2==t1) t2+=0.000001;
 
 	if (_send_zero || t_imp > 0) {
-		double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
-		rds[ret].identifier(new StringIdentifier("Power"));
-		rds[ret].time(req);
-		rds[ret].value(value);
-		++ret;
+		if (!_first_impulse) {
+			double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
+			rds[ret].identifier(new StringIdentifier("Power"));
+			rds[ret].time(req);
+			rds[ret].value(value);
+			++ret;
+		}
 		rds[ret].identifier(new StringIdentifier("Impulse"));
 		rds[ret].time(req);
 		rds[ret].value(t_imp);
@@ -332,16 +335,20 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	}
 
 	if (_send_zero || t_imp_neg > 0) {
-		double value = 3600000 / ((t2-t1) * (_resolution * t_imp_neg));
-		rds[ret].identifier(new StringIdentifier("Power_neg"));
-		rds[ret].time(req);
-		rds[ret].value(value);
-		++ret;
+		if (!_first_impulse) {
+			double value = 3600000 / ((t2-t1) * (_resolution * t_imp_neg));
+			rds[ret].identifier(new StringIdentifier("Power_neg"));
+			rds[ret].time(req);
+			rds[ret].value(value);
+			++ret;
+		}
 		rds[ret].identifier(new StringIdentifier("Impulse_neg"));
 		rds[ret].time(req);
 		rds[ret].value(t_imp_neg);
 		++ret;
 	}
+	if (_first_impulse && ret>0)
+		_first_impulse = false;
 
 	print(log_finest, "Reading S0 - returning %d readings (n=%d n_neg = %d)", name().c_str(), ret, t_imp, t_imp_neg);
 
