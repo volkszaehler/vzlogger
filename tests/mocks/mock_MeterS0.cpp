@@ -104,12 +104,12 @@ TEST(mock_MeterS0, basic_non_blocking_read)
 
 	EXPECT_CALL(*hwif, _open()).Times(1).WillRepeatedly(Return(true));
 	EXPECT_CALL(*hwif, _close()).Times(1).WillOnce(Return(true));
-	EXPECT_CALL(*hwif, is_blocking()).Times(2).WillRepeatedly(Return(false));
+	EXPECT_CALL(*hwif, is_blocking()).Times(3).WillRepeatedly(Return(false));
 	EXPECT_CALL(*hwif, status()).Times(AtLeast(1)).WillRepeatedly(Return(0));
 	MeterS0 m(opt, hwif);
 	ASSERT_EQ(SUCCESS, m.open());
 	std::vector<Reading> rds(4);
-	ASSERT_EQ(m.read(rds, 4), 4);
+	ASSERT_EQ(m.read(rds, 4), 2); // no Powers for first impulse
 
 	m.close(); // this might be called and should not cause problems
 }

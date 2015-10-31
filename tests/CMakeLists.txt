@@ -38,7 +38,7 @@ target_link_libraries(vzlogger_unit_tests
     ${LIBUUID}
     dl
     pthread)
-target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OCR_LIBRARIES})
+target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OCR_LIBRARIES} atomic)
 
 if( OMS_SUPPORT )
 target_link_libraries(vzlogger_unit_tests ${MBUS_LIBRARY} ${OPENSSL_LIBRARIES})
