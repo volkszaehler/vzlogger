@@ -88,7 +88,7 @@ public:
 	typedef std::list<Option>::const_iterator const_iterator;
 
 	const Option& lookup(std::list<Option> const &options, const std::string &key) const;
-	const char  *lookup_string(std::list<Option> const &options, const char *key);
+	const char *lookup_string(std::list<Option> const &options, const char *key) const;
 	int    lookup_int(std::list<Option> const &options, const char *key) const;
 	bool   lookup_bool(std::list<Option> const &options, const char *key) const;
 	double lookup_double(std::list<Option> const &options, const char *key) const;

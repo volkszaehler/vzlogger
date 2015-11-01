@@ -38,14 +38,17 @@ TEST(MeterD0, basic_dump_fd) {
 	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
 	char tempfilename[L_tmpnam+1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	ASSERT_NE(strlen(tempfilename), 0ul);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
-	options.push_back(Option("dump_file", (char*)dumpName.c_str()));
+	options.push_back(Option("dump_file", dumpName.c_str()));
 	options.push_back(Option("pullseq", (char*) "4041424344"));
 	options.push_back(Option("ackseq", (char*) "063030300d0a"));
 	MeterD0 m(options);
+	ASSERT_STREQ(m.device(), tempfilename);
 	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
+	ASSERT_NE(strlen(tempfilename), 0ul);
 	ASSERT_NE(fd, -1);
 	ASSERT_EQ(SUCCESS, m.open());
 	std::vector<Reading> rds;

@@ -50,7 +50,7 @@
 
 #define STX 0x02
 
-MeterD0::MeterD0(std::list<Option> options)
+MeterD0::MeterD0(std::list<Option> &options)
 		: Protocol("d0")
 		, _host("")
 		, _device("")
@@ -71,6 +71,7 @@ MeterD0::MeterD0(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		try {
 			_device = optlist.lookup_string(options, "device");
+			if ( !_device.length() ) throw vz::VZException("device without length");
 		} catch (vz::VZException &e) {
 			print(log_error, "Missing device or host", name().c_str());
 			throw ;
@@ -271,10 +272,10 @@ int MeterD0::open() {
 		dump_file(CTRL, "opened");
 	}
 
-	if (_device != "") {
+	if (_device.length() > 0 ) {
 		_fd = _openDevice(&_oldtio, _baudrate);
 	}
-	else if (_host != "") {
+	else if (_host.length() > 0 ) {
 		char *addr = strdup(host());
 		const char *node = strsep(&addr, ":");
 		const char *service = strsep(&addr, ":");

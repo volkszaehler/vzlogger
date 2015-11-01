@@ -37,7 +37,7 @@
 
 class MeterD0 : public vz::protocol::Protocol {
 public:
-	MeterD0(std::list<Option> options);
+	MeterD0(std::list<Option> &options);
 	virtual ~MeterD0();
 
 	int open();
