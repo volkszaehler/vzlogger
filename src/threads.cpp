@@ -198,7 +198,7 @@ void logging_thread_cleanup(/*void *arg*/) {
 //	api_free(api);
 }
 
-void * logging_thread(void *arg) {
+void * logging_thread(void *arg) { // get's started from Channel::start and stopped via Channel::cancel via pthread_cancel!
 	Channel::Ptr ch;
 	ch.reset(static_cast<Channel *>(arg)); /* casting argument */
 	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),

@@ -183,7 +183,8 @@ void MeterS0::counter_thread()
 	const int nonblocking_delay_ns = _nonblocking_delay_ns;
 	while(!_counter_thread_stop) {
 		if (is_blocking) {
-			if (_hwif->waitForImpulse()) {
+			bool timeout = false;
+			if (_hwif->waitForImpulse( timeout )) {
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
 				_time_last_impulse = temp_ts; // uses atomic operator=
@@ -193,7 +194,7 @@ void MeterS0::counter_thread()
 					++_impulses;
 			}
 			// we handle errors from waitForImpulse by simply debouncing and trying again (with debounce_delay_ms==0 this might be an endless loop
-			if (_debounce_delay_ms > 0){
+			if (!timeout && (_debounce_delay_ms > 0) ){
 				// nanosleep _debounce_delay_ms
 				struct timespec ts;
 				ts.tv_sec = _debounce_delay_ms/1000;
@@ -394,8 +395,8 @@ bool MeterS0::HWIF_UART::_open()
 	tio.c_iflag = IGNPAR;
 	tio.c_oflag = 0;
 	tio.c_lflag = 0;
-	tio.c_cc[VMIN]=1;
-	tio.c_cc[VTIME]=0;
+	tio.c_cc[VMIN]=0;
+	tio.c_cc[VTIME]=10; // 1s timeout see man 3 termios
 
 	tcflush(fd, TCIFLUSH);
 
@@ -418,16 +419,28 @@ bool MeterS0::HWIF_UART::_close()
 	return true;
 }
 
-bool MeterS0::HWIF_UART::waitForImpulse()
+bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout)
 {
-	if (_fd<0) return false;
+	if (_fd<0) {
+		timeout = false;
+		return false;
+	}
 	char buf[8];
 
 	// clear input buffer
 	tcflush(_fd, TCIOFLUSH);
 
 	// blocking until one character/pulse is read
-	if (::read(_fd, buf, 8) < 1) return false;
+	ssize_t ret;
+	ret = ::read( _fd, buf, 8 );
+	if (ret < 1) {
+		timeout = false;
+		return false;
+	} else if (ret == 0) {
+		timeout = true;
+		return false;
+	}
+	// we don't have to set timeout here. Only in case of error.
 
 	return true;
 }
@@ -609,23 +622,37 @@ int MeterS0::HWIF_GPIO::status()
 	return 0;
 }
 
-bool MeterS0::HWIF_GPIO::waitForImpulse()
+bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout)
 {
 	unsigned char buf[2];
-	if (_fd<0) return false;
+	if (_fd<0) {
+		timeout = false;
+		return false;
+	}
 
 	struct pollfd poll_fd;
 	poll_fd.fd = _fd;
 	poll_fd.events = POLLPRI|POLLERR;
 	poll_fd.revents = 0;
 
-	int rv = poll(&poll_fd, 1, -1);    // block endlessly
+	int rv = poll(&poll_fd, 1, 1000);    // timeout set to 1s
 	print(log_debug, "MeterS0:HWIF_GPIO:first poll returned %d", "S0", rv);
 	if (rv > 0) {
 		if (poll_fd.revents & POLLPRI) {
-			if (::pread(_fd, buf, 1, 0) < 1) return false;
-		} else return false;
-	} else return false;
-
-	return true;
+			if (::pread(_fd, buf, 1, 0) < 1) {
+				timeout = false;
+				return false;
+			}
+			return true;
+		} else {
+			timeout = false;
+			return false;
+		}
+	} else
+		if (rv == 0) {
+			timeout = true;
+			return false;
+		}
+	timeout = false;
+	return false;
 }

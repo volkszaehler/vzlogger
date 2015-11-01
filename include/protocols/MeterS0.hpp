@@ -39,7 +39,7 @@ public:
 		virtual ~HWIF() {};
 		virtual bool _open() = 0;
 		virtual bool _close() = 0;
-		virtual bool waitForImpulse() = 0; // blocking interface
+		virtual bool waitForImpulse(bool &timeout) = 0; // blocking interface
 		virtual int status() = 0; // non blocking IO status (<0 = ERR, 0 = low, 1 = high)
 		virtual bool is_blocking() const = 0;
 	};
@@ -51,7 +51,7 @@ public:
 
 		virtual bool _open();
 		virtual bool _close();
-		virtual bool waitForImpulse();
+		virtual bool waitForImpulse(bool &timeout);
 		virtual int status() { return -1; }; // not supported always return error
 		virtual bool is_blocking() const { return true; };
 	protected:
@@ -67,7 +67,7 @@ public:
 
 		virtual bool _open();
 		virtual bool _close();
-		virtual bool waitForImpulse();
+		virtual bool waitForImpulse(bool &timeout);
 		virtual int status();
 		virtual bool is_blocking() const { return true; }
 	protected:
@@ -84,7 +84,7 @@ public:
 
 		virtual bool _open();
 		virtual bool _close();
-		virtual bool waitForImpulse() {return false;} // not supported
+		virtual bool waitForImpulse(bool &timeout) {timeout = false; return false;} // not supported
 		virtual int status();
 		virtual bool is_blocking() const { return false; }
 	protected:

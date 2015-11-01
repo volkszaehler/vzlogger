@@ -103,7 +103,8 @@ Channel::Channel(
  * Free all allocated memory recursivly
  */
 Channel::~Channel() {
-	pthread_cond_destroy(&condition);
+	// this hangs is the readingthread was pthread_cancelled during wait!
+	// pthread_cond_destroy(&condition);
 }
 
 

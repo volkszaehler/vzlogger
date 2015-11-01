@@ -99,18 +99,22 @@ bool MeterMap::stopped() {
 	return false;
 }
 
-void MeterMap::cancel() {
+void MeterMap::cancel() { // get's called from MapContainer::quit that get's called from sigint handler ::quit
+	print(log_finest, "MeterMap::cancel entered...", "main");
 	if (_meter->isEnabled() && running()) {
 		for (iterator it = _channels.begin(); it != _channels.end(); it++) {
-			(*it)->cancel();
+			(*it)->cancel(); // stops the logging_thread via pthread_cancel
 			(*it)->join();
 		}
-		pthread_cancel(_thread);
+		print(log_finest, "MeterMap::cancel wait for readingthread", "main");
+		pthread_cancel(_thread); // readingthread
 		pthread_join(_thread, NULL);
 		_thread_running = false;
+		print(log_finest, "MeterMap::cancel wait for meter::close", "main");
 		_meter->close();
 		//_channels.clear();
 	}
+	print(log_finest, "MeterMap::cancel finished.", "main");
 }
 
 void MeterMap::registration() {
