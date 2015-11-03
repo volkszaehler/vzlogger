@@ -322,7 +322,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	if (_send_zero || t_imp > 0) {
 		if (!_first_impulse) {
-			double value = 3600000 / ((t2-t1) * (_resolution * t_imp));
+			double value = (3600000 / ((t2-t1) * _resolution)) * t_imp;
 			rds[ret].identifier(new StringIdentifier("Power"));
 			rds[ret].time(req);
 			rds[ret].value(value);
@@ -336,7 +336,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	if (_send_zero || t_imp_neg > 0) {
 		if (!_first_impulse) {
-			double value = 3600000 / ((t2-t1) * (_resolution * t_imp_neg));
+			double value = (3600000 / ((t2-t1) * _resolution)) * t_imp_neg;
 			rds[ret].identifier(new StringIdentifier("Power_neg"));
 			rds[ret].time(req);
 			rds[ret].value(value);
