@@ -267,7 +267,7 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo "make sure to configure vzlogger before running (see etc/vzlogger.conf)"
 	fi
 
-	if [ -n $(pidof vzlogger) ]; then
+	if [ -n "$(pidof vzlogger)" ]; then
 		echo
 		echo "vzlogger is already running"
 		echo "make sure to restart vzlogger"
