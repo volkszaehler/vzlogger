@@ -31,6 +31,59 @@ public:
 protected:
 };
 
+TEST(mock_MeterS0, timespec_add_ms)
+{
+	struct timespec a;
+	a.tv_sec = 1;
+	a.tv_nsec = 0;
+	timespec_add_ms(a, 1001);
+	ASSERT_EQ(2, a.tv_sec);
+	ASSERT_EQ(1000000, a.tv_nsec);
+}
+
+TEST(mock_MeterS0, timespec_add_ms2)
+{
+	struct timespec a;
+	a.tv_sec = 1;
+	a.tv_nsec = 1000000000;
+	timespec_add_ms(a, 1000);
+	EXPECT_EQ(3, a.tv_sec);
+	ASSERT_EQ(0, a.tv_nsec);
+}
+
+TEST(mock_MeterS0, timespec_add_ms3)
+{
+	struct timespec a;
+	a.tv_sec = 1;
+	a.tv_nsec = 1001000000;
+	timespec_add_ms(a, 1999);
+	EXPECT_EQ(4, a.tv_sec);
+	EXPECT_EQ(0, a.tv_nsec);
+}
+
+TEST(mock_MeterS0, timespec_sub_ms)
+{
+	struct timespec a;
+	a.tv_sec = 1;
+	a.tv_nsec = 0;
+	struct timespec b;
+	b=a;
+	timespec_add_ms(a, 1999);
+	EXPECT_EQ(1999ul, timespec_sub_ms(a, b) );
+}
+
+TEST(mock_MeterS0, timespec_sub_ms2)
+{
+	struct timespec a;
+	a.tv_sec = 2;
+	a.tv_nsec = 0;
+	struct timespec b;
+	b.tv_sec = 1;
+	b.tv_nsec = 1000000;
+	EXPECT_EQ(999ul, timespec_sub_ms(a, b) );
+}
+
+
 TEST(mock_MeterS0, basic_noopen)
 {
 	mock_S0hwif *hwif = new mock_S0hwif();
