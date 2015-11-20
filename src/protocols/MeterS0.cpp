@@ -156,7 +156,46 @@ void timespec_sub(const struct timespec &a, const struct timespec &b, struct tim
 	res.tv_nsec = a.tv_nsec - b.tv_nsec;
 	if (res.tv_nsec < 0) {
 		--res.tv_sec;
-		res.tv_nsec += 1e9;
+		res.tv_nsec += 1000000000ul;
+	}
+}
+
+unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b)
+{
+	unsigned long ret;
+	ret = a.tv_sec - b.tv_sec;
+	if (a.tv_nsec < b.tv_nsec) {
+		--ret;
+		ret *= 1000ul;
+		ret += (1000000000ul + a.tv_nsec - b.tv_nsec) / 1000000ul;
+	} else {
+		ret *= 1000ul;
+		ret += (a.tv_nsec - b.tv_nsec) / 1000000ul;
+	}
+	return ret;
+}
+
+void timespec_add_ms(struct timespec &a, unsigned long ms)
+{
+	a.tv_sec += ms/1000ul;
+	a.tv_nsec += (ms%1000ul)*1000000ul;
+	// normalize nsec
+	while (a.tv_nsec >= 1000000000l) {
+		++a.tv_sec;
+		a.tv_nsec -= 1000000000l;
+	}
+}
+
+void MeterS0::check_ref_for_overflow()
+{
+	// check whether _ms_last_impulse get's too long
+	// and has risk for overflow (roughly once a month with 32bit unsigned long)
+
+	if (_ms_last_impulse > (1ul<<30)) {
+		// now we enter a race condition so there might be wrong impulse now!
+		timespec_add_ms(_time_last_ref, 1ul<<30 );
+		_ms_last_impulse -= 1ul << 30;
+
 	}
 }
 
@@ -186,7 +225,7 @@ void MeterS0::counter_thread()
 			if (_hwif->waitForImpulse()) {
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
-				_time_last_impulse = temp_ts; // uses atomic operator=
+				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
 				if (_hwif_dir && ( _hwif_dir->status()>0 ) )
 					++_impulses_neg;
 				else
@@ -243,14 +282,15 @@ int MeterS0::open() {
 	_impulses = 0;
 	_impulses_neg = 0;
 
+	clock_gettime(CLOCK_REALTIME, &_time_last_read); // we use realtime as this is returned as well (clock_monotonic would be better but...)
+	// store current time as last_time. Next read will return after 1s.
+	_time_last_ref = _time_last_read;
+	_ms_last_impulse = 0;
+	_time_last_impulse_returned = _time_last_read;
+
 	// create counter_thread and pass this as param
 	_counter_thread_stop = false;
 	_counter_thread = std::thread(&MeterS0::counter_thread, this);
-
-	clock_gettime(CLOCK_REALTIME, &_time_last_read); // we use realtime as this is returned as well (clock_monotonic would be better but...)
-	// store current time as last_time. Next read will return after 1s.
-	_time_last_impulse = _time_last_read;
-	_time_last_impulse_returned = _time_last_read;
 
 	print(log_finest, "counter_thread created", name().c_str());
 
@@ -306,7 +346,9 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	if (_hwif->is_blocking()) {
 		// we use the time from last impulse
 		t1 = _time_last_impulse_returned.tv_sec + _time_last_impulse_returned.tv_nsec / 1e9;
-		struct timespec temp_ts = _time_last_impulse; // uses atomic operator T
+		struct timespec temp_ts = _time_last_ref;
+		timespec_add_ms(temp_ts, _ms_last_impulse);
+		check_ref_for_overflow();
 		t2 = temp_ts.tv_sec + temp_ts.tv_nsec / 1e9;
 		_time_last_impulse_returned = temp_ts;
 		_time_last_read = req;

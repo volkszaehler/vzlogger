@@ -32,6 +32,12 @@
 
 #include <protocols/Protocol.hpp>
 
+// some helper functions. might need a namespace
+void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res);
+void timespec_add_ms(struct timespec &a, unsigned long ms);
+unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b);
+
+
 class MeterS0 : public vz::protocol::Protocol {
 public:
 	class HWIF {
@@ -104,6 +110,7 @@ public:
 
   protected:
 	void counter_thread();
+	void check_ref_for_overflow();
 
     HWIF * _hwif;
 	HWIF * _hwif_dir; // for dir gpio pin
@@ -119,7 +126,8 @@ public:
 	int _nonblocking_delay_ns;
 
 	struct timespec _time_last_read;	// timestamp of last read. 1s interval based on this timestamp
-	std::atomic<struct timespec> _time_last_impulse; // timestamp of last impulse
+	struct timespec _time_last_ref; // reference timestamp for the millisecond delta
+	std::atomic<unsigned long> _ms_last_impulse; // ms of last impulse relative to _time_last_ref
 	struct timespec _time_last_impulse_returned; // timestamp of last impulse returned
 	bool _first_impulse;
 };

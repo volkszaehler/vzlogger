@@ -49,7 +49,7 @@ target_link_libraries(mock_metermap
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
-		dl atomic
+		dl
 	  )
 if(SML_FOUND)
   target_link_libraries(mock_metermap ${SML_LIBRARY})
@@ -114,7 +114,7 @@ target_link_libraries(mock_MeterS0
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
-		dl atomic
+		dl
 )
 add_test(mock_MeterS0 mock_MeterS0)
 
