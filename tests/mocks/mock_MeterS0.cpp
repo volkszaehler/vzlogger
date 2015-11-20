@@ -24,7 +24,7 @@ public:
 	virtual ~mock_S0hwif() {};
 	MOCK_METHOD0(_open, bool());
 	MOCK_METHOD0(_close, bool());
-	MOCK_METHOD0(waitForImpulse, bool());
+	MOCK_METHOD1(waitForImpulse, bool(bool &));
 	MOCK_METHOD0(status, int());
 	MOCK_CONST_METHOD0(is_blocking, bool());
 
