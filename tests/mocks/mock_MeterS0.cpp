@@ -167,6 +167,34 @@ TEST(mock_MeterS0, basic_non_blocking_read)
 	m.close(); // this might be called and should not cause problems
 }
 
+TEST(mock_MeterS0, basic_blocking_send_zero_2reads)
+{
+	mock_S0hwif *hwif = new mock_S0hwif();
+	std::list<Option> opt;
+	opt.push_back(Option("send_zero", true));
+
+	EXPECT_CALL(*hwif, _open()).Times(1).WillRepeatedly(Return(true));
+	EXPECT_CALL(*hwif, _close()).Times(1).WillOnce(Return(true));
+	EXPECT_CALL(*hwif, is_blocking()).Times(4).WillRepeatedly(Return(true));
+	EXPECT_CALL(*hwif, waitForImpulse(_)).Times(AtLeast(1)).WillRepeatedly(Return(false));
+	MeterS0 m(opt, hwif);
+	ASSERT_EQ(SUCCESS, m.open());
+	std::vector<Reading> rds(4);
+	ASSERT_EQ(m.read(rds, 4), 2); // no Powers for first impulse
+	std::vector<Reading> rds2(4);
+	ASSERT_EQ(m.read(rds2, 4), 4); // no Powers for first impulse
+	// check that time has roughly 1s distance and values reported are zero:
+	ASSERT_EQ(rds[0].value(), 0);
+	ASSERT_EQ(rds[1].value(), 0);
+	ASSERT_EQ(rds2[0].value(), 0);
+	ASSERT_EQ(rds2[1].value(), 0);
+	int64_t tdist = rds2[0].time_ms() - rds[0].time_ms();
+	ASSERT_TRUE(tdist >= 900 && tdist <= 1100) << "tdist=" << tdist;
+
+	m.close(); // this might be called and should not cause problems
+}
+
+
 /* time out -> endless waiting for first impulse
 TEST(mock_MeterS0, basic_non_blocking_read_no_send_zero)
 {

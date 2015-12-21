@@ -34,6 +34,7 @@
 
 // some helper functions. might need a namespace
 void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res);
+void timespec_add(struct timespec &a, const struct timespec &b); // a+=b
 void timespec_add_ms(struct timespec &a, unsigned long ms);
 unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b);
 
