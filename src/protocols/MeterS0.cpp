@@ -160,6 +160,17 @@ void timespec_sub(const struct timespec &a, const struct timespec &b, struct tim
 	}
 }
 
+void timespec_add(struct timespec &a, const struct timespec &b)
+{
+	a.tv_sec += b.tv_sec;
+	a.tv_nsec += b.tv_nsec;
+	// normalize nsec
+	while (a.tv_nsec >= 1000000000l) {
+		++a.tv_sec;
+		a.tv_nsec -= 1000000000l;
+	}
+}
+
 unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b)
 {
 	unsigned long ret;
@@ -345,6 +356,15 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	double t1;
 	double t2;
 	if (_hwif->is_blocking()) {
+		// if is_zero we need to correct the time here as no impulse occured!
+		if (is_zero) {
+			// we simply add the time from req-_time_last_read to _time_last_ref:
+			struct timespec d1s;
+			timespec_sub(req, _time_last_read, d1s);
+			timespec_add(_time_last_ref, d1s);
+			// this has a little racecond as well (if after existing while loop a impulse returned the ms_last_impulse might have been increased already based on old time_last_ref
+		}
+
 		// we use the time from last impulse
 		t1 = _time_last_impulse_returned.tv_sec + _time_last_impulse_returned.tv_nsec / 1e9;
 		struct timespec temp_ts = _time_last_ref;
