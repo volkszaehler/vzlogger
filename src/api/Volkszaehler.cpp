@@ -57,8 +57,10 @@ vz::api::Volkszaehler::Volkszaehler(
 	try {
 		_middleware = optlist.lookup_string(pOptions, "middleware");
 	} catch (vz::OptionNotFoundException &e) {
+		print(log_error, "api volkszaehler requires parameter \"middleware\" but it's missing!", ch->name());
 		throw;
 	} catch (vz::VZException &e) {
+		print(log_error, "api volkszaehler requires parameter \"middleware\" as string but seems to have different type!", ch->name());
 		throw;
 	}
 
@@ -67,6 +69,7 @@ vz::api::Volkszaehler::Volkszaehler(
 	} catch (vz::OptionNotFoundException &e) {
 		_curlTimeout = 30; // 30 seconds default
 	} catch (vz::VZException &e) {
+		print(log_error, "api volkszaehler requires parameter \"timeout\" as integer but seems to have different type!", ch->name());
 		throw;
 	}
 

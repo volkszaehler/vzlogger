@@ -33,6 +33,16 @@ TEST(api_Volkszaehler, config_options){
 #endif
 }
 
+TEST(api_Volkszaehler, no_middleware) {
+	using namespace vz::api;
+	std::list<Option> options;
+	//options.push_front(Option("middleware", (char*)"bla_middleware"));
+	ReadingIdentifier::Ptr pRid;
+	Channel *ch = new Channel(options, std::string("bla_api"), std::string("bla_uuid"), pRid);
+	Channel::Ptr chp(ch);
+	ASSERT_THROW(Volkszaehler v(chp, options), vz::VZException);
+}
+
 TEST(api_Volkszaehler, api_parse_exception) {
 using namespace vz::api;
 	CURLresponse resp;

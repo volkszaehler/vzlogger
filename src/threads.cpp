@@ -207,14 +207,18 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 	// create configured api interfaces
 	// NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
 	vz::ApiIF::Ptr api;
-	if (ch->apiProtocol() == "mysmartgrid") {
+	if (0 == strcasecmp(ch->apiProtocol().c_str(), "mysmartgrid")) {
 		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
 		print(log_debug, "Using MySmartGrid api.", ch->name());
 	}
-	else if (ch->apiProtocol() == "null") {
+	else if (0 == strcasecmp(ch->apiProtocol().c_str(), "null")) {
 		api =  vz::ApiIF::Ptr(new vz::api::Null(ch, ch->options()));
 		print(log_debug, "Using null api- meter data available via local httpd if enabled.", ch->name());
 	} else {
+		if (strcasecmp(ch->apiProtocol().c_str(), "volkszaehler"))
+			print(log_error, "Wrong config! api: <%s> is unknown!", ch->name(), ch->apiProtocol().c_str());
+		// try to use volkszaehler api anyhow:
+
 		// default == volkszaehler
 		api =  vz::ApiIF::Ptr(new vz::api::Volkszaehler(ch, ch->options()));
 		print(log_debug, "Using default volkszaehler api.", ch->name());
