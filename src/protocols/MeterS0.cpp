@@ -253,6 +253,8 @@ void MeterS0::counter_thread()
 				while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
 					ts = rem;
 				}
+				// now check status to retrieve any pending events
+				(void)_hwif->status();
 			}
 		} else { // non-blocking case:
 			int state = _hwif->status();
