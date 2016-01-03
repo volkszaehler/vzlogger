@@ -88,15 +88,23 @@ void Config_Options::config_parse(
 		print(log_info, "Start parsing configuration from %s", NULL, _config.c_str());
 	}
 
+#ifdef HAVE_CPP_REGEX
 	std::regex regex("^\\s*(//(.*|)|$)"); // if you change this pls adjust unit test in ut_api_volkszaehler.cpp regex_for_configs as well!
+#endif
 
 	/* parse JSON */
 	while(fgets(buf, JSON_FILE_BUF_SIZE, file)) {
 		line++;
 
 		if (json_cfg!=NULL){
+#ifdef HAVE_CPP_REGEX
 			// let's ignore whitespace and single line comments here:
 			if (!std::regex_match ((const char*)buf, regex )) {
+#else
+			// let's accept at least whitespace here:
+			std::string strline(buf);
+			if (!std::all_of(strline.begin(), strline.end(), isspace)) {
+#endif
 				print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
 				throw vz::VZException("extra data after end of configuration");
 			}

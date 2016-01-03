@@ -25,6 +25,8 @@ class Volkszaehler_Test
 
 Config_Options options("etc/vzlogger.conf");
 
+#ifdef HAVE_CPP_REGEX
+
 TEST(api_Volkszaehler, regex_for_configs)
 {
 	// ^\s*(#|$)
@@ -39,6 +41,8 @@ TEST(api_Volkszaehler, regex_for_configs)
 	// some neg. tests:
 	EXPECT_FALSE(std::regex_match("bla", regex));
 }
+
+#endif
 
 TEST(api_Volkszaehler, config_options){
 	MapContainer mappings;
