@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sstream>
+#include <algorithm>
 
 #include "Options.hpp"
 #include <VZException.hpp>
@@ -154,6 +155,13 @@ const char *OptionList::lookup_string(std::list<Option> const &options, const ch
 {
 	const Option &opt = lookup(options, key);
 	return opt.operator const char *();
+}
+
+const char *OptionList::lookup_string_tolower(std::list<Option> const &options, const char *key) const
+{
+	std::string str = lookup_string(options, key);
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+	return str.c_str();
 }
 
 int OptionList::lookup_int(std::list<Option> const &options, const char *key) const

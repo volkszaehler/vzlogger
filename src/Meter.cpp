@@ -244,7 +244,7 @@ size_t Meter::read(std::vector<Reading> &rds, size_t n) {
 int meter_lookup_protocol(const char* name, meter_protocol_t *protocol) {
 	if (!name) return ERR_NOT_FOUND;
 	for (const meter_details_t *it = meter_get_protocols(); it->id != meter_protocol_none; it++) { // we have to stop when the id is null not the ptr to the array!
-		if (it->name && (strcmp(it->name, name) == 0)) {
+		if (it->name && (strcasecmp(it->name, name) == 0)) {
 			if (protocol)
 				*protocol = it->id; // else ignore anyhow. can be used to check whether a protocol exists.
 			return SUCCESS;
