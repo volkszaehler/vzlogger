@@ -100,3 +100,13 @@ else(NOT WIN32)
   set(CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} ws2_32.lib rpcrt4.lib")
   #set(CMAKE_CXX_FLAGS "/Z7")
 endif(NOT WIN32)
+
+# check for specific c++ features:
+include(CheckCXXSourceRuns)
+check_cxx_source_runs("
+      #include <regex>
+
+      int main() {
+        return std::regex_match(\"test\", std::regex(\"\^\\\\\\\\s*(//(.*|)|\$)\"));
+      }
+" HAVE_CPP_REGEX)

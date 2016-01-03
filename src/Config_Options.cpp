@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
+#include <regex>
 
 #include <Config_Options.hpp>
 #include "Channel.hpp"
@@ -87,22 +88,36 @@ void Config_Options::config_parse(
 		print(log_info, "Start parsing configuration from %s", NULL, _config.c_str());
 	}
 
+#ifdef HAVE_CPP_REGEX
+	std::regex regex("^\\s*(//(.*|)|$)"); // if you change this pls adjust unit test in ut_api_volkszaehler.cpp regex_for_configs as well!
+#endif
+
 	/* parse JSON */
 	while(fgets(buf, JSON_FILE_BUF_SIZE, file)) {
 		line++;
 
 		if (json_cfg!=NULL){
-			print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
-			throw vz::VZException("extra data after end of configuration");
-		}
+#ifdef HAVE_CPP_REGEX
+			// let's ignore whitespace and single line comments here:
+			if (!std::regex_match ((const char*)buf, regex )) {
+#else
+			// let's accept at least whitespace here:
+			std::string strline(buf);
+			if (!std::all_of(strline.begin(), strline.end(), isspace)) {
+#endif
+				print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
+				throw vz::VZException("extra data after end of configuration");
+			}
+		} else {
 
-		json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
+			json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
-		if (json_tok->err > 1) {
-			print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
-			json_object_put(json_cfg);
-			json_cfg=0;
-			throw vz::VZException("Parse configuaration failed.");
+			if (json_tok->err > 1) {
+				print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
+				json_object_put(json_cfg);
+				json_cfg=0;
+				throw vz::VZException("Parse configuaration failed.");
+			}
 		}
 	}
 
