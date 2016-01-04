@@ -229,7 +229,10 @@ void MeterS0::counter_thread()
 		}
 	}
 
-	int last_state = 0; // low edge initial value
+	// read current state from hwif: (this is needed for gpio if as well to reset waitForImpulse after startup (see bug #229)
+	int cur_state = _hwif->status();
+
+	int last_state = (cur_state >= 0) ? cur_state : 0; // use current state if it is valid else assume low edge
 	const int nonblocking_delay_ns = _nonblocking_delay_ns;
 	while(!_counter_thread_stop) {
 		if (is_blocking) {
@@ -677,7 +680,7 @@ bool MeterS0::HWIF_GPIO::_close()
 	return true;
 }
 
-int MeterS0::HWIF_GPIO::status()
+int MeterS0::HWIF_GPIO::status() // this resets any pending events for waitForImpulse as well!
 {
 	unsigned char buf[2];
 	if (_fd<0) return -1;
