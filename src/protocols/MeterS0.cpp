@@ -238,31 +238,34 @@ void MeterS0::counter_thread()
 		if (is_blocking) {
 			bool timeout = false;
 			if (_hwif->waitForImpulse( timeout )) {
+				//Event erkannt. Wert des Events ist, aufgrund des prellen reiner Zufall!!
+				//deswegen erst entprellen .....
+				if (!timeout && (_debounce_delay_ms > 0) ){
+					// nanosleep _debounce_delay_ms
+					struct timespec ts;
+					ts.tv_sec = _debounce_delay_ms/1000;
+					ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+					struct timespec rem;
+					while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+						ts = rem;
+					}
+				}
+				//  ... und dann weiterarbeiten
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
 				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
-				if (_hwif_dir && ( _hwif_dir->status()>0 ) )
+				
+				if (_hwif_dir && ( _hwif_dir->status()>0 ) ) { // bei Zweirichtungszaehler Impulse mit logisch 1 negativ werten
 					++_impulses_neg;
-				else
+				} else if ( _hwif->status()>0 ){ // sonst Impulse nur bei echter logischer 1 positiv werten!!
 					++_impulses;
-			}
-			// we handle errors from waitForImpulse by simply debouncing and trying again (with debounce_delay_ms==0 this might be an endless loop
-			if (!timeout && (_debounce_delay_ms > 0) ){
-				// nanosleep _debounce_delay_ms
-				struct timespec ts;
-				ts.tv_sec = _debounce_delay_ms/1000;
-				ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
-				struct timespec rem;
-				while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
-					ts = rem;
 				}
-				// now check status to retrieve any pending events
-				(void)_hwif->status();
 			}
 		} else { // non-blocking case:
 			int state = _hwif->status();
 			if ((state >= 0) && (state != last_state)) {
 				if (last_state == 0) { // low->high edge found
+//  auch hier muss wahrscheinlich erst das debouncing erfolgen, bevor es zur Auswertung kommt !!
 					if (_hwif_dir && (_hwif_dir->status()>0))
 						++_impulses_neg;
 					else
