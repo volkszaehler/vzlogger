@@ -238,8 +238,9 @@ void MeterS0::counter_thread()
 		if (is_blocking) {
 			bool timeout = false;
 			if (_hwif->waitForImpulse( timeout )) {
-				//Event erkannt. Wert des Events ist, aufgrund des prellen reiner Zufall!!
-				//deswegen erst entprellen .....
+				// something has happened on the hardwareinterface (hwif)
+				// because of the bouncing of the contact we still can not decide if it is a rising edge event
+				// that's why we have to debounce first...
 				if (!timeout && (_debounce_delay_ms > 0) ){
 					// nanosleep _debounce_delay_ms
 					struct timespec ts;
@@ -250,15 +251,16 @@ void MeterS0::counter_thread()
 						ts = rem;
 					}
 				}
-				//  ... und dann weiterarbeiten
+				//  ... and then going on with our work
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
 				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
-				
-				if (_hwif_dir && ( _hwif_dir->status()>0 ) ) { // bei Zweirichtungszaehler Impulse mit logisch 1 negativ werten
-					++_impulses_neg;
-				} else if ( _hwif->status()>0 ){ // sonst Impulse nur bei echter logischer 1 positiv werten!!
-					++_impulses;
+
+				if (_hwif->status()>0) {                         // check if value of gpio is set -> rising edge event
+					if (_hwif_dir && ( _hwif_dir->status()>0 ) ) // check if second hardware interface has caused the event
+						++_impulses_neg;
+					else                                         // main hardware interface caused the event
+						++_impulses;
 				}
 			}
 		} else { // non-blocking case:
