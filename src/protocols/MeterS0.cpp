@@ -238,31 +238,36 @@ void MeterS0::counter_thread()
 		if (is_blocking) {
 			bool timeout = false;
 			if (_hwif->waitForImpulse( timeout )) {
+				// something has happened on the hardwareinterface (hwif)
+				// because of the bouncing of the contact we still can not decide if it is a rising edge event
+				// that's why we have to debounce first...
+				if (!timeout && (_debounce_delay_ms > 0) ){
+					// nanosleep _debounce_delay_ms
+					struct timespec ts;
+					ts.tv_sec = _debounce_delay_ms/1000;
+					ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+					struct timespec rem;
+					while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+						ts = rem;
+					}
+				}
+				//  ... and then going on with our work
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
 				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
-				if (_hwif_dir && ( _hwif_dir->status()>0 ) )
-					++_impulses_neg;
-				else
-					++_impulses;
-			}
-			// we handle errors from waitForImpulse by simply debouncing and trying again (with debounce_delay_ms==0 this might be an endless loop
-			if (!timeout && (_debounce_delay_ms > 0) ){
-				// nanosleep _debounce_delay_ms
-				struct timespec ts;
-				ts.tv_sec = _debounce_delay_ms/1000;
-				ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
-				struct timespec rem;
-				while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
-					ts = rem;
+
+				if (_hwif->status()>0) {                         // check if value of gpio is set -> rising edge event
+					if (_hwif_dir && ( _hwif_dir->status()>0 ) ) // check if second hardware interface has caused the event
+						++_impulses_neg;
+					else                                         // main hardware interface caused the event
+						++_impulses;
 				}
-				// now check status to retrieve any pending events
-				(void)_hwif->status();
 			}
 		} else { // non-blocking case:
 			int state = _hwif->status();
 			if ((state >= 0) && (state != last_state)) {
 				if (last_state == 0) { // low->high edge found
+//  auch hier muss wahrscheinlich erst das debouncing erfolgen, bevor es zur Auswertung kommt !!
 					if (_hwif_dir && (_hwif_dir->status()>0))
 						++_impulses_neg;
 					else
