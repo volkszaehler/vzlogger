@@ -256,7 +256,7 @@ void MeterS0::counter_thread()
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
 				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
 
-				if (_hwif->status()>0) {                         // check if value of gpio is set -> rising edge event
+				if (_hwif->status()!=0) {                         // check if value of gpio is set (or not supported/error (-1) for e.g. UART HWIF -> rising edge event (or error in case we accept the trigger)
 					if (_hwif_dir && ( _hwif_dir->status()>0 ) ) // check if second hardware interface has caused the event
 						++_impulses_neg;
 					else                                         // main hardware interface caused the event
