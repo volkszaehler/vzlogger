@@ -212,7 +212,7 @@ int handle_request(
 			}
 
 			json_str = json_object_to_json_string(json_obj);
-			response = MHD_create_response_from_data(strlen(json_str), (void *) json_str, FALSE, TRUE);
+			response = MHD_create_response_from_buffer(strlen(json_str), static_cast<void *>(const_cast<char *> (json_str)), MHD_RESPMEM_MUST_COPY);
 			json_object_put(json_obj);
 
 			MHD_add_response_header(response, "Content-type", "application/json");
@@ -220,7 +220,7 @@ int handle_request(
 		else {
 			char *response_str = strdup("not implemented\n");
 
-			response = MHD_create_response_from_data(strlen(response_str), (void *) response_str, TRUE, FALSE);
+			response = MHD_create_response_from_buffer(strlen(response_str), static_cast<void *>(const_cast<char *> (response_str)), MHD_RESPMEM_MUST_COPY);
 			response_code = MHD_HTTP_METHOD_NOT_ALLOWED;
 
 			MHD_add_response_header(response, "Content-type", "text/text");
