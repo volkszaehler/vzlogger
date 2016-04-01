@@ -382,14 +382,14 @@ int main(int argc, char *argv[]) {
 	if (options.doRegistration()) {
 		register_device();
 		return (0);
-	}	
+	}
 
-	// @todo clarify why no logging in local mode
-	options.logging((!options.local() || options.daemon()));
+	// only logging to file if daemonizing
+	options.logging(options.daemon());
 
 	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
 
-	if (options.daemon() || options.local()) {
+	if (options.daemon()) {
 		print(log_info, "Daemonize process...", (char*)0);
 		daemonize();
 	}
