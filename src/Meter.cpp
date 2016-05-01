@@ -46,6 +46,7 @@
 #ifdef OMS_SUPPORT
 #include "protocols/MeterOMS.hpp"
 #endif
+#include "protocols/MeterModbus.hpp"
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC) {				\
@@ -72,6 +73,7 @@ static const meter_details_t protocols[] = {
 #ifdef OMS_SUPPORT
 	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100, false), // todo what is the max. amount of reading according to spec?
 #endif
+	METER_DETAIL(modbus, Modbus, "Modbus meter", 64, true),
 	//{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL,NULL, 0,false),
 };
@@ -191,6 +193,10 @@ Meter::Meter(std::list<Option> pOptions) :
 	case meter_protocol_oms:
 		_protocol = vz::protocol::Protocol::Ptr(new MeterOMS(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
+		break;
+	case meter_protocol_modbus:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterModbus(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 		break;
 #endif
 		default:
