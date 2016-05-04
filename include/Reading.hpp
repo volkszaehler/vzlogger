@@ -71,7 +71,7 @@ public:
 	bool operator==(ObisIdentifier const &cmp) const;
 	const std::string toString() {
 		std::ostringstream oss;
-		oss << "ObisItentifier:" << _obis.toString();
+		oss << "ObisIdentifier:" << _obis.toString();
 		return oss.str();
 	};
 
@@ -95,7 +95,7 @@ public:
 	bool operator==(StringIdentifier const &cmp) const;
 	const std::string toString()  {
 		std::ostringstream oss;
-		oss << "StringItentifier:";
+		oss << "StringIdentifier:";
 		return oss.str();
 	};
 protected:
@@ -114,7 +114,7 @@ public:
 	bool operator==(ChannelIdentifier const &cmp) const;
 	const std::string toString()  {
 		std::ostringstream oss;
-		oss << "ChannelItentifier:";
+		oss << "ChannelIdentifier:";
 		return oss.str();
 	};
 
