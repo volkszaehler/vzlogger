@@ -38,9 +38,14 @@ public:
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
+	const char *command() const { return _command.c_str(); }
+	const char *format() { return _format.c_str(); }
+
   private:
-	const char *_command;
-	const char *_format;
+	std::string _command;
+	std::string _format;
+
+	FILE *_pipe;
 };
 
 #endif /* _EXEC_H_ */

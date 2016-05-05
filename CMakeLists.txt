@@ -7,7 +7,7 @@ endif(POLICY CMP0011)
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 5)
-set(VZLOGGER_SUB_VERSION   2)
+set(VZLOGGER_SUB_VERSION   3)
 set(VERSION_SEP "-")
 set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MINOR_VERSION}")
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
@@ -65,6 +65,10 @@ OPTION(ENABLE_OCR
 OPTION(ENABLE_OCR_TESSERACT
 	"enable support for OCR text recognition meter (def=off)"
 	OFF)
+
+OPTION(METEREXEC_ROOTACCESS
+  "compile MeterExec protocol to use root privileges for script calls (def=no)])"
+  Off)
 
 # find dependencies
 # libsml
@@ -202,6 +206,9 @@ endif(SML_FOUND)
 if(MICROHTTPD_FOUND)
 message("             microhttpd: -L${MICROHTTPD_LIBRARY} -I${MICROHTTPD_INCLUDE_DIR}")
 endif(MICROHTTPD_FOUND)
+if(METEREXEC_ROOTACCESS)
+  message("             MeterExec: root privileges")
+endif(METEREXEC_ROOTACCESS)
 if(MBUS_FOUND)
 message("             libmbus: -L${MBUS_LIBRARY} -I${MBUS_INCLUDE_DIR}")
 endif(MBUS_FOUND)

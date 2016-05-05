@@ -56,4 +56,4 @@ before_install:
   - cd ..
   - sudo apt-get install -y lcov
 script:
-  - cmake . -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
+  - cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
