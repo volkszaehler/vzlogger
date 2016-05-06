@@ -37,6 +37,9 @@
 /* OCR text recgonition support */
 #cmakedefine OCR_TESSERACT_SUPPORT 1
 
+/* Allow MeterExec protocol to use root privileges */
+#cmakedefine METEREXEC_ROOTACCESS 1
+
 /* true if we use shared_ptr from stl */
 #cmakedefine USE_STL_TR1 1
 
