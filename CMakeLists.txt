@@ -162,7 +162,7 @@ myconfigure_file(
 
 add_subdirectory(src)
 
-find_package(Subversion)
+find_package(Git)
 
 set(ENABLE_GOOGLEMOCK TRUE)
 #disable unit tests on gcc4.6 (problems with googlemock 1.7)
@@ -181,17 +181,15 @@ endif()
 include(CTest)
 enable_testing()
 
-if(Subversion_FOUND AND ENABLE_GOOGLEMOCK)
+if(GIT_FOUND AND ENABLE_GOOGLEMOCK)
   add_subdirectory(gmock)
   add_subdirectory(tests)
 else()
-  if (ENABLE_GOOGLEMOCK)
-   message(WARNING "googletest based unit tests disabled due to missing subversion! Please install svn.")
-  endif()
+ if (ENABLE_GOOGLEMOCK)
+    message(WARNING "googletest based unit tests disabled due to missing git. Please install git.")
+ endif(ENABLE_GOOGLEMOCK)
 endif()
-if(Subversion_FOUND)
-  add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
-endif()
+add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
 
 ### print some output for the user
 message("")

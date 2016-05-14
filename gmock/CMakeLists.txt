@@ -3,7 +3,7 @@ project(gmock_builder C CXX)
 include(ExternalProject)
 
 ExternalProject_Add(googlemock
-    SVN_REPOSITORY http://googlemock.googlecode.com/svn/tags/release-1.7.0/
+    GIT_REPOSITORY https://github.com/google/googletest.git
     CMAKE_ARGS
      PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
 # Disable install step
@@ -14,11 +14,11 @@ ExternalProject_Add(googlemock
 
 # Specify include dir
 ExternalProject_Get_Property(googlemock source_dir)
-set(GMOCK_INCLUDE_DIRS ${source_dir}/include PARENT_SCOPE)
-set(GTEST_INCLUDE_DIRS ${source_dir}/gtest/include PARENT_SCOPE)
+set(GMOCK_INCLUDE_DIRS ${source_dir}/googlemock/include PARENT_SCOPE)
+set(GTEST_INCLUDE_DIRS ${source_dir}/googletest/include PARENT_SCOPE)
 
 # Specify MainTest's link libraries
 ExternalProject_Get_Property(googlemock binary_dir)
-set(GTEST_LIBS_DIR ${binary_dir}/gtest PARENT_SCOPE)
-set(GMOCK_LIBS_DIR ${binary_dir} PARENT_SCOPE)
+set(GTEST_LIBS_DIR ${binary_dir}/googlemock/gtest PARENT_SCOPE)
+set(GMOCK_LIBS_DIR ${binary_dir}/googlemock PARENT_SCOPE)
 

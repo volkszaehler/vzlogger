@@ -3,7 +3,7 @@ project(gtest_builder C CXX)
 include(ExternalProject)
 
 ExternalProject_Add(googletest
-    SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk
+    GIT_REPOSITORY https://github.com/google/googletest.git
     CMAKE_ARGS
      PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
 # Disable install step
@@ -14,8 +14,8 @@ ExternalProject_Add(googletest
 
 # Specify include dir
 ExternalProject_Get_Property(googletest source_dir)
-set(GTEST_INCLUDE_DIRS ${source_dir}/include PARENT_SCOPE)
+set(GTEST_INCLUDE_DIRS ${source_dir}/googletest/include PARENT_SCOPE)
 
 # Specify MainTest's link libraries
 ExternalProject_Get_Property(googletest binary_dir)
-set(GTEST_LIBS_DIR ${binary_dir} PARENT_SCOPE)
+set(GTEST_LIBS_DIR ${binary_dir}/googletest PARENT_SCOPE)
