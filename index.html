@@ -151,8 +151,8 @@
             var value = $output.value;
 
             // strip json comments
-            value = value.replace(/\/\*.*?\*\//, "");
-            value = value.replace(/\/\/.*?$/m, "");
+            value = value.replace(/\/\*[^]*?\*\//g, "");
+            value = value.replace(/\/\/.*?$/gm, "");
 
             var json = JSON.parse(value);
             jsoneditor.setValue(json);
