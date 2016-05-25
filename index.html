@@ -111,7 +111,7 @@
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_.22Unicode_Problem.22
     var b64_to_utf8 = function(str) {
         return decodeURIComponent(escape(window.atob(str.replace(/\s/g, ''))));
-    }
+    };
 
     var reload = function(keep_value) {
         var startval = (jsoneditor && keep_value)? jsoneditor.getValue() : window.startval;
@@ -147,20 +147,31 @@
 
     // When the 'update form' button is clicked, set the editor's value
     $set_value_button.addEventListener('click',function() {
-        jsoneditor.setValue(JSON.parse($output.value));
+        try {
+            var value = $output.value;
+
+            // strip json comments
+            value.replace(/\/\*.*?\*\//, "");
+            value.replace(/\/\/.*?$/m, "");
+
+            var json = JSON.parse(value);
+            jsoneditor.setValue(json);
+        }
+        catch(e) {
+            $validate.value = 'Invalid JSON: '+e.message;
+        }
     });
 
     // Update the schema when the button is clicked
     $set_schema_button.addEventListener('click',function() {
         try {
             JSON.parse($schema.value);
+            reload();
         }
         catch(e) {
             alert('Invalid Schema: '+e.message);
             return;
         }
-
-        reload();
     });
 
     var refreshBooleanOptions = function(no_reload) {
