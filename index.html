@@ -31,6 +31,7 @@
 -->
     <script src='https://cdn.rawgit.com/jdorn/json-editor/master/dist/jsoneditor.min.js'></script>
     <script src='js/xregexp-min.js'></script>
+    <script src='js/strip-json-comments.js'></script>
 </head>
 <body>
 <div class='container'>
@@ -147,18 +148,14 @@
 
     // When the 'update form' button is clicked, set the editor's value
     $set_value_button.addEventListener('click',function() {
+        var value = stripJsonComments($output.value);
         try {
-            var value = $output.value;
-
-            // strip json comments
-            value = value.replace(/\/\*[^]*?\*\//g, "");
-            value = value.replace(/\/\/.*?$/gm, "");
-
             var json = JSON.parse(value);
             jsoneditor.setValue(json);
         }
         catch(e) {
             $validate.value = 'Invalid JSON: '+e.message;
+            $output.value = value;
         }
     });
 
