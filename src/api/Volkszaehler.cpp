@@ -42,6 +42,8 @@
 
 extern Config_Options options;
 
+const int MAX_CHUNK_SIZE = 64;
+
 vz::api::Volkszaehler::Volkszaehler(
 	Channel::Ptr ch,
 	std::list<Option> pOptions
@@ -144,7 +146,13 @@ void vz::api::Volkszaehler::send()
 	// check response
 	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
 		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
-		_values.clear();
+		if (_values.size() <= MAX_CHUNK_SIZE)
+			_values.clear();
+		else {
+			// remove only the first MAX_CHUNK_SIZE values:
+			for (int i=0; i<MAX_CHUNK_SIZE;++i)
+				_values.pop_front();
+		}
 		// clear buffer-readings
 		//channel()->buffer.sent = last->next;
 	}
@@ -227,6 +235,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	}
 
 	json_object *json_tuples = json_object_new_array();
+	int nrTuples = 0;
 	for (it = _values.begin(); it != _values.end(); it++) {
 		struct json_object *json_tuple = json_object_new_array();
 
@@ -234,6 +243,9 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 		json_object_array_add(json_tuple, json_object_new_double(it->value()));
 
 		json_object_array_add(json_tuples, json_tuple);
+		++nrTuples;
+		if (nrTuples >= MAX_CHUNK_SIZE)
+			break;
 	}
 
 	return json_tuples;
