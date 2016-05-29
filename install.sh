@@ -92,7 +92,7 @@ git_update() {
 	else
 		echo "$folder not found"
 		echo "cloning $folder git repository"
-		git clone $git_params "$git_repo"
+		git clone $git_params "$git_repo" $folder
 	fi
 
 	if [ -n "$git_dirty" ]; then
