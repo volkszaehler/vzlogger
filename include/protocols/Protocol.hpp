@@ -49,6 +49,7 @@ namespace vz {
 			virtual int    open() = 0;
 			virtual int    close() = 0;
 			virtual ssize_t read(std::vector<Reading> &rds, size_t n) = 0;
+			virtual bool allowInterval() const { return true; } // default we allow interval (but S0 e.g disallows)
 
             const std::string &name() const { return _name; }
     

@@ -108,6 +108,7 @@ public:
 	int open();
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
+	virtual bool allowInterval() const { return false; } // don't allow interval setting in conf file with S0
 
   protected:
 	void counter_thread();

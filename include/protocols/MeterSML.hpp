@@ -50,6 +50,7 @@ public:
 	int open();
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
+	virtual bool allowInterval() const { return false; } // don't allow conf setting interval with sml
 
 	const char *host() const { return _host.c_str(); }
 	const char *device() const { return _device.c_str(); }
