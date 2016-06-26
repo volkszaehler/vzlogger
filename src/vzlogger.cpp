@@ -24,6 +24,7 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,7 @@
 #include <fcntl.h>
 
 #include <list>
+#include <sstream>
 
 #include <Config_Options.hpp>
 #include <Meter.hpp>
@@ -57,6 +59,8 @@ MapContainer mappings;		// mapping between meters and channels
 Config_Options options;		// global application options
 bool gStop = false;
 size_t gSkippedFailed = 0;	// disabled or failed meters
+
+std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
 
 /**
  * Command line options
@@ -140,7 +144,15 @@ void print(log_level_t level, const char *format, const char *id, ... ) {
 		vfprintf(options.logfd(), format, args);
 		fprintf(options.logfd(), "\n");
 		fflush(options.logfd());
-	}
+	} else
+		if (gStartLogBuf) {
+			char buf[500];
+			int bufUsed;
+			bufUsed = snprintf(buf, 500, "%-24s", prefix);
+			bufUsed += vsnprintf(buf+bufUsed, bufUsed < 500 ? 500-bufUsed : 0, format, args);
+			bufUsed += snprintf(buf+bufUsed, bufUsed < 500 ? 500-bufUsed : 0, "\n");
+			gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
+		}
 	va_end(args);
 }
 
@@ -337,6 +349,7 @@ int main(int argc, char *argv[]) {
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
 	action.sa_handler = quit;
+	gStartLogBuf = new std::stringbuf;
 
 #ifdef LOCAL_SUPPORT
 	/* webserver for local interface */
@@ -406,8 +419,21 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 
+		if (gStartLogBuf) {
+			// log current console output to logfile as we missed the start
+			fprintf(logfd, "%s", gStartLogBuf->str().c_str());
+			auto temp = gStartLogBuf;
+			gStartLogBuf = 0;
+			delete temp;
+		}
+
 		options.logfd(logfd);
 		print(log_debug, "Opened logfile %s", (char*)0, options.log().c_str());
+	} else {
+		// stop temp logging, continue logging to console only
+		auto temp = gStartLogBuf;
+		gStartLogBuf = 0;
+		delete temp;
 	}
 
 	if (mappings.size() <= 0) {
