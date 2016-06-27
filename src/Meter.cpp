@@ -217,6 +217,12 @@ Meter::Meter(std::list<Option> pOptions) :
 		throw;
 	}
 
+	// does the meter allow interval parameter?
+	if (_interval > 0 && !(_protocol.get()->allowInterval())) {
+		print(log_warning, "Interval set but not allowed for this meter! Ignoring (setting to 0). Use aggregation if you want less frequent output.", name());
+		_interval = 0;
+	}
+
 	print(log_debug, "Meter configured, %s.", name(), _enable ? "enabled" : "disabled");
 }
 
