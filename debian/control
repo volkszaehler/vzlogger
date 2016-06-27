@@ -2,7 +2,7 @@ Source: vzlogger
 Section: net
 Priority: optional
 Maintainer: Steffen Vogel <info@steffenvogel.de>
-Build-Depends: debhelper (>= 7.0.50~), pkg-config (>= 0.25), libjson0-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19), libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 0.1.1)
+Build-Depends: debhelper (>= 7.0.50~), pkg-config (>= 0.25), libjson0-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19), libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 0.1.1), cmake, libsasl2-dev, libssl-dev, libgcrypt-dev, libgnutls-dev, uuid-dev
 Standards-Version: 3.9.1
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
 Vcs-Git: git://github.com/volkszaehler/volkszaehler.org.git
