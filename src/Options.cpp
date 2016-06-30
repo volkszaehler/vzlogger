@@ -107,7 +107,7 @@ Option::~Option() {
 	if (_type == type_array || _type == type_object) {
 		if (value.jso)
 			json_object_put(value.jso);
-			value.jso = 0;
+		value.jso = 0;
 	}
 }
 

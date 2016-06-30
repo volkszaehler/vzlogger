@@ -143,8 +143,8 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
 	curl_code = curl_easy_perform(curl);
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
-    if (curlSessionProvider)
-        curlSessionProvider->return_session(middleware, curl);
+	if (curlSessionProvider)
+		curlSessionProvider->return_session(middleware, curl);
 
 	// check response
 	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok

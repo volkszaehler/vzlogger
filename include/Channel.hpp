@@ -61,7 +61,9 @@ class Channel {
 	std::list<Option> &options()        { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {
-		if (_identifier.use_count() < 1) throw vz::VZException("Not identifier defined.") ; return _identifier; }
+		if (_identifier.use_count() < 1) throw vz::VZException("No identifier defined.");
+		return _identifier;
+	}
 	int64_t time_ms() const { return _last == NULL ? 0 : _last->time_ms(); }
 
 	const char* uuid() const            { return _uuid.c_str(); }
