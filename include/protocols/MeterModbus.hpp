@@ -46,7 +46,7 @@ class ModbusTCPConnection : public ModbusConnection
 class MeterModbus: public vz::protocol::Protocol
 {
 	ModbusConnection::Ptr _mbconn;
-	const char *_device;
+	const std::string _device;
 	int _baudrate;
 	bool _libmodbus_debug;
 	int _slave;

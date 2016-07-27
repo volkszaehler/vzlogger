@@ -49,7 +49,7 @@ MeterModbus::~MeterModbus()
 }
 
 int MeterModbus::open() {
-	_mbconn.reset(new ModbusConnection(_device, _baudrate, _slave));
+	_mbconn.reset(new ModbusConnection(_device.c_str(), _baudrate, _slave));
 	if (_libmodbus_debug)
 		modbus_set_debug(_mbconn->getctx(), TRUE);
 	return SUCCESS;
