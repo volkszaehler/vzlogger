@@ -103,21 +103,27 @@ void * reading_thread(void *arg) {
 
 					for (size_t i = 0; i < n; i++) {
 						if (*rds[i].identifier().get() == *(*ch)->identifier().get()) {
-							//print(log_debug, "found channel", mtr->name());
-							if ((*ch)->time_ms() < rds[i].time_ms()) {
-								(*ch)->last(&rds[i]);
-							}
+							int div = (*ch)->interval_div(1);
+							if (div == 0) {
+								//print(log_debug, "found channel", mtr->name());
+								if ((*ch)->time_ms() < rds[i].time_ms()) {
+									(*ch)->last(&rds[i]);
+								}
 
-							print(log_info, "Adding reading to queue (value=%.2f ts=%lld)", (*ch)->name(),
-									rds[i].value(), rds[i].time_ms());
-							(*ch)->push(rds[i]);
-
+								print(log_info, "Adding reading to queue (value=%.2f ts=%lld)", (*ch)->name(),
+										rds[i].value(), rds[i].time_ms());
+								(*ch)->push(rds[i]);
 							// provide data to push data server:
 							if (pushDataList) {
 								const std::string uuid = (*ch)->uuid();
 								pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
 								print(log_finest, "added to uuid %s", "push", uuid.c_str());
 							}
+							} else {
+								print(log_info, "Skipping [%d/%d] reading    (value=%.2f ts=%lld)", (*ch)->name(),
+										div, (*ch)->interval_factor(), rds[i].value(), rds[i].time_ms());
+							}
+
 
 							if (add == NULL) {
 								add = &rds[i]; /* remember first reading which has been added to the buffer */

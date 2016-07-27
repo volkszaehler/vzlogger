@@ -92,6 +92,10 @@ class Channel {
 
 	int duplicates() const { return _duplicates; }
 
+	int interval_div(int inc);
+
+	int interval_factor() const { return _interval_factor; }
+
 	private:
 	static int instances;
 	bool _thread_running;   	// flag if thread is started
@@ -111,6 +115,8 @@ class Channel {
 	std::string _uuid;			// unique identifier for middleware
 	std::string _apiProtocol;	// protocol of api to use for logging
 	int _duplicates;			// how to handle duplicate values (see conf)
+	int _interval_factor;		// log this channel only every interval_factor
+	int _interval_cnt;
 };
 
 #endif /* _CHANNEL_H_ */

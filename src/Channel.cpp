@@ -50,6 +50,8 @@ Channel::Channel(
 		, _uuid(uuid)
 		, _apiProtocol(apiProtocol)
 		, _duplicates (0)
+		, _interval_factor(0)
+		, _interval_cnt(0)
 {
 	id = instances++;
 
@@ -96,6 +98,18 @@ Channel::Channel(
 		throw;
 	}
 
+	try {
+		_interval_factor = optlist.lookup_int(pOptions, "interval_factor");
+		if (_interval_factor < 0) throw vz::VZException("interval_factor < 0 not allowed");
+	} catch (vz::OptionNotFoundException &e) {
+		// using default value if not specified (from above)
+	} catch (vz::VZException &e) {
+		std::stringstream oss;
+		oss << e.what();
+		print(log_error, "Invalid parameter interval_factor (%s)", name(), oss.str().c_str());
+		throw;
+	}
+
 	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
 }
 
@@ -107,6 +121,13 @@ Channel::~Channel() {
 	// pthread_cond_destroy(&condition);
 }
 
+int Channel::interval_div(int inc) {
+	int r = _interval_cnt;
+	_interval_cnt += inc;
+	if (_interval_cnt >= _interval_factor)
+		_interval_cnt = 0;
+	return r;
+}
 
 /*
  * Local variables:
