@@ -62,6 +62,17 @@ Reading::Reading(
 }
 
 Reading::Reading(
+	double pValue
+	, ReadingIdentifier *pIndentifier
+	)
+		: _deleted(false)
+		, _value(pValue)
+{
+	time();
+	_identifier.reset(pIndentifier);
+}
+
+Reading::Reading(
 	const Reading &orig
 	) :
 		_deleted(orig._deleted)
