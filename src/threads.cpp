@@ -97,7 +97,6 @@ void * reading_thread(void *arg) {
 				/* insert readings into channel queues */
 				if (n>0)
 				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
-					Reading *add = NULL;
 
 					//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
 
@@ -117,10 +116,6 @@ void * reading_thread(void *arg) {
 								const std::string uuid = (*ch)->uuid();
 								pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
 								print(log_finest, "added to uuid %s", "push", uuid.c_str());
-							}
-
-							if (add == NULL) {
-								add = &rds[i]; /* remember first reading which has been added to the buffer */
 							}
 						}
 					}
