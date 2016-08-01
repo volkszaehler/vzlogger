@@ -87,17 +87,17 @@ public:
 	typedef std::list<Option>::iterator iterator;
 	typedef std::list<Option>::const_iterator const_iterator;
 
-	const Option& lookup(std::list<Option> const &options, const std::string &key) const;
-	const char *lookup_string(std::list<Option> const &options, const char *key) const;
-	const char *lookup_string_tolower(std::list<Option> const &options, const char *key) const;
-	int    lookup_int(std::list<Option> const &options, const char *key) const;
-	bool   lookup_bool(std::list<Option> const &options, const char *key) const;
-	double lookup_double(std::list<Option> const &options, const char *key) const;
-	struct json_object *lookup_json_array(std::list<Option> const &options, const char *key) const;
-	struct json_object *lookup_json_object(std::list<Option> const &options, const char *key) const; 
-	void dump(std::list<Option> const &options);
+	static const Option& lookup(std::list<Option> const &options, const std::string &key);
+	static const char *lookup_string(std::list<Option> const &options, const char *key);
+	static const char *lookup_string_tolower(std::list<Option> const &options, const char *key);
+	static int    lookup_int(std::list<Option> const &options, const char *key);
+	static bool   lookup_bool(std::list<Option> const &options, const char *key);
+	static double lookup_double(std::list<Option> const &options, const char *key);
+	static struct json_object *lookup_json_array(std::list<Option> const &options, const char *key);
+	static struct json_object *lookup_json_object(std::list<Option> const &options, const char *key);
+	static void dump(std::list<Option> const &options);
 
-	void parse();
+	static void parse();
 
 protected:
 
