@@ -19,44 +19,76 @@ public:
 };
 class ModbusConnection
 {
+protected:
 	modbus_t *ctx;
 public:
 	typedef vz::shared_ptr<ModbusConnection> Ptr;
-	ModbusConnection(const char *device, int baud, int slave);
+	ModbusConnection() :
+		ctx(NULL) {}
 	virtual ~ModbusConnection();
 	modbus_t *getctx() {
 		return ctx;
 	}
 
+	virtual void connect();
+
 };
 
 class ModbusRTUConnection : public ModbusConnection
 {
-
+public:
+	ModbusRTUConnection(const std::string &device, int baud, int slave);
 };
 
 class ModbusTCPConnection : public ModbusConnection
 {
-
+public:
+	ModbusTCPConnection(const std::string &ip, int port = 502);
 };
 
+class RegisterMap
+{
+public:
+	typedef vz::shared_ptr<RegisterMap> Ptr;
+	virtual ~RegisterMap() {}
+	virtual std::vector<Reading> read(ModbusConnection::Ptr conn) = 0;
+};
 /**
  *
  */
 class MeterModbus: public vz::protocol::Protocol
 {
 	ModbusConnection::Ptr _mbconn;
-	const std::string _device;
-	int _baudrate;
 	bool _libmodbus_debug;
-	int _slave;
+	RegisterMap::Ptr _regmap;
 
+	template <typename T, T (*L)(const std::list<Option> &, const char *)>
+	T lookup_mandatory(const std::list<Option> &olist, const char *o, const char *errmsg);
+
+	template <typename T, T (*L)(const std::list<Option> &, const char *)>
+	T lookup_optional(const std::list<Option> &olist, const char *o, const T &def);
+
+	void create_rtu(const std::list<Option> &options);
+	void create_tcp(const std::list<Option> &options);
 public:
 	MeterModbus(const std::list<Option> &options);
 	virtual ~MeterModbus();
 	virtual int open();
 	virtual int close();
 	virtual ssize_t read(std::vector<Reading> &rds, size_t n);
+};
+
+
+class OhmpilotRegisterMap: public RegisterMap {
+public:
+	virtual ~OhmpilotRegisterMap() {}
+	virtual std::vector<Reading> read(ModbusConnection::Ptr conn);
+};
+
+class IMEmeterRegisterMap: public RegisterMap {
+public:
+	virtual ~IMEmeterRegisterMap() {}
+	virtual std::vector<Reading> read(ModbusConnection::Ptr conn);
 };
 
 #endif /* METERMODBUS_H_ */

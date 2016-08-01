@@ -6,41 +6,73 @@
  */
 #include "protocols/MeterModbus.hpp"
 
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T MeterModbus::lookup_mandatory(const std::list<Option> &olist, const char *o, const char *errmsg) {
+	T v;
+	try {
+		v = L(olist, o);
+	} catch (vz::VZException &e) {
+			print(log_error, "Missing path or invalid type", name().c_str());
+			throw;
+	}
+	return v;
+}
+
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T MeterModbus::lookup_optional(const std::list<Option> &olist, const char *o, const T &def) {
+	T v;
+	try {
+		v = L(olist, o);
+	} catch (vz::VZException &e) {
+		return def;
+	}
+	return v;
+}
+
+
 MeterModbus::MeterModbus(const std::list<Option> &options) :
-Protocol("modbus"),
-_baudrate(9600),
-_libmodbus_debug(false),
-_slave(1)
-
+Protocol("modbus"), _libmodbus_debug(false)
 {
-	OptionList optlist;
-	try {
-		_device = optlist.lookup_string(options, "device");
-	} catch (vz::VZException &e) {
-		print(log_error, "Missing path or invalid type", name().c_str());
-		throw;
-	}
+	std::string mb_type = lookup_mandatory<const char *, OptionList::lookup_string>(options, "type", "Either 'rtu' or 'tcp' must be specified.");
 
-	// optional baudrate, default to 9600:
-	try {
-		_baudrate = optlist.lookup_int(options, "baudrate");
-	} catch (vz::VZException &e) {
-		// keep default
-	}
+	if (mb_type == "rtu")
+		create_rtu(options);
+	else if (mb_type == "tcp")
+		create_tcp(options);
+	else
+		throw(std::invalid_argument("Modbus type can be rtu or tcp."));
 
-	try {
-		_slave = optlist.lookup_int(options, "slave");
-	} catch (vz::VZException &e) {
-		// keep default
-	}
+	_libmodbus_debug = lookup_optional<bool, OptionList::lookup_bool>(options, "libmodbus_debug", false);
 
-	// optional mbus_debug, default to false
-	try {
-		_libmodbus_debug = optlist.lookup_bool(options, "libmodbus_debug");
-	} catch (vz::VZException &e) {
-		// keep default
-	}
+	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", "Register map must be specified.");
 
+	if (map == "ohmpilot")
+		_regmap.reset(new OhmpilotRegisterMap());
+	else if (map == "imemeter")
+		_regmap.reset(new IMEmeterRegisterMap());
+	else
+		throw(std::invalid_argument("Modbus register map invalid."));
+}
+
+void MeterModbus::create_rtu(const std::list<Option> &options) {
+	std::string rtu_device;
+	int rtu_baudrate;
+	int rtu_slave;
+
+	rtu_device = lookup_mandatory<const char *, OptionList::lookup_string>(options, "device", "Modbus RTU device path missing.");
+	rtu_baudrate = lookup_optional<int, OptionList::lookup_int>(options, "baudrate", 9600);
+	rtu_slave = lookup_optional<int, OptionList::lookup_int>(options, "slave", 1);
+
+	_mbconn.reset(new ModbusRTUConnection(rtu_device, rtu_baudrate, rtu_slave));
+}
+
+void MeterModbus::create_tcp(const std::list<Option> &options) {
+	std::string tcp_host;
+	int tcp_port;
+	tcp_host = lookup_mandatory<const char *, OptionList::lookup_string>(options, "host", "Modbus TCP host missing.");
+	tcp_port = lookup_optional<int, OptionList::lookup_int>(options, "port", 502);
+
+	_mbconn.reset(new ModbusTCPConnection(tcp_host, tcp_port));
 }
 
 MeterModbus::~MeterModbus()
@@ -49,7 +81,7 @@ MeterModbus::~MeterModbus()
 }
 
 int MeterModbus::open() {
-	_mbconn.reset(new ModbusConnection(_device.c_str(), _baudrate, _slave));
+	_mbconn->connect();
 	if (_libmodbus_debug)
 		modbus_set_debug(_mbconn->getctx(), TRUE);
 	return SUCCESS;
@@ -61,47 +93,81 @@ int MeterModbus::close() {
 }
 
 ssize_t MeterModbus::read(std::vector<Reading> &rds, size_t n) {
-	int ret;
-	uint16_t regs[2];
-	int value, i;
-	unsigned rs = 0;
-
-	while (rs < n) {
-		ret = -3;
-		for (i = 0; ret < 0 && i < 10; i++) {
-			ret = modbus_read_registers(_mbconn->getctx(), 4116, 2, regs);
-			if (ret < 0) {
-				print(log_error, "modbus_read_registers %d: %s", "Modbus", ret, modbus_strerror(errno));
-			}
-		}
-		value = MODBUS_GET_INT32_FROM_INT16(regs, 0);
-		rds[rs].value(value * 0.01);
-		rds[rs].identifier(new StringIdentifier("Current Power"));
-		rds[rs].time();
-		rs++;
-		break;
+	try {
+		rds = _regmap->read(_mbconn);
+		return rds.size();
+	} catch (ModbusException &e) {
+		print(log_error, "Modbus read error: %s", name().c_str(), e.what());
+		return 0;
 	}
-	return rs;
 
 }
 
-ModbusConnection::ModbusConnection(const char *device, int baud, int slave)
-: ctx(NULL) {
-	ctx = modbus_new_rtu(device, baud, 'N', 8, 1);
-	if (ctx == NULL)
-		throw ModbusException("creating new rtu");
+void ModbusConnection::connect() {
 	int ret = modbus_connect(ctx);
 	if (ret < 0) {
-		throw ModbusException("connecting new rtu");
+		throw ModbusException("connecting modbus");
 	}
 
-	modbus_set_slave(ctx, slave);
 }
-ModbusConnection::~ModbusConnection()
-{
+ModbusConnection::~ModbusConnection() {
 	if (ctx) {
 		modbus_close(ctx);
 		modbus_free(ctx);
 		ctx = NULL;
 	}
 }
+
+ModbusRTUConnection::ModbusRTUConnection(const std::string &device, int baud, int slave) {
+	ctx = modbus_new_rtu(device.c_str(), baud, 'N', 8, 1);
+	if (ctx == NULL)
+		throw ModbusException("creating new rtu");
+	modbus_set_slave(ctx, slave);
+}
+
+ModbusTCPConnection::ModbusTCPConnection(const std::string &ip, int port) {
+	ctx = modbus_new_tcp(ip.c_str(), port);
+	if (ctx == NULL)
+		throw ModbusException("creating new tcp");
+}
+
+
+std::vector<Reading> OhmpilotRegisterMap::read(ModbusConnection::Ptr conn) {
+	std::vector<Reading> rds;
+	uint16_t regs[10];
+	int ret;
+	ret = modbus_read_registers(conn->getctx(), 40799, 10, regs);
+	if (ret < 0)
+		throw(ModbusException("Ohmpilot read failed."));
+
+	rds.push_back(Reading(regs[9] / 10.0, new StringIdentifier("T")));
+
+	rds.push_back(Reading(regs[2], new StringIdentifier("P")));
+
+	rds.push_back(Reading(regs[8], new StringIdentifier("E")));
+
+	return rds;
+}
+
+std::vector<Reading> IMEmeterRegisterMap::read(ModbusConnection::Ptr conn) {
+	std::vector<Reading> rds;
+	int ret;
+	const int reg_offset = 4096;
+	const int reg_len = 59;
+	uint16_t regs[reg_len];
+	int value;
+
+	ret = -3;
+	ret = modbus_read_registers(conn->getctx(), reg_offset, reg_len, regs);
+	if (ret < 0)
+		throw(ModbusException("IME meter read failed."));
+
+	value = MODBUS_GET_INT32_FROM_INT16(regs, 4116 - reg_offset);
+	rds.push_back(Reading(value * 0.01, new StringIdentifier("Current Power")));
+
+	value = MODBUS_GET_INT32_FROM_INT16(regs, 4128 - reg_offset);
+	rds.push_back(Reading(value, new StringIdentifier("TotalExpWh")));
+
+	return rds;
+}
+
