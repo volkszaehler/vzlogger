@@ -72,7 +72,9 @@ ssize_t MeterModbus::read(std::vector<Reading> &rds, size_t n) {
 		rds = _regmap->read(_mbconn);
 		return rds.size();
 	} catch (ModbusException &e) {
-		print(log_error, "Modbus read error: %s", name().c_str(), e.what());
+		print(log_error, "Modbus read error: %s. Re-connecting.", name().c_str(), e.what());
+		_mbconn->close();
+		_mbconn->connect();
 		return 0;
 	}
 
@@ -85,6 +87,11 @@ void ModbusConnection::connect() {
 	}
 
 }
+
+void ModbusConnection::close() {
+	modbus_close(ctx);
+}
+
 ModbusConnection::~ModbusConnection() {
 	if (ctx) {
 		modbus_close(ctx);

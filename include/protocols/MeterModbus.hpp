@@ -32,6 +32,7 @@ public:
 	}
 
 	virtual void connect();
+	virtual void close();
 
 };
 
