@@ -5,6 +5,7 @@
 #include <iostream>
 #include <list>
 #include <json-c/json.h>
+#include <common.h>
 
 class Option {
 
@@ -102,5 +103,30 @@ public:
 protected:
 
 };
+
+
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T lookup_mandatory(const std::list<Option> &olist, const std::string &o, const std::string &errorcontext) {
+	T v;
+	try {
+		v = L(olist, o.c_str());
+	} catch (vz::VZException &e) {
+			print(log_error, "Missing mandatory option: %s", errorcontext.c_str(), o.c_str());
+			throw;
+	}
+	return v;
+}
+
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T lookup_optional(const std::list<Option> &olist, const std::string &o, const T &def) {
+	T v;
+	try {
+		v = L(olist, o.c_str());
+	} catch (vz::VZException &e) {
+		return def;
+	}
+	return v;
+}
+
 
 #endif /* _OPTIONS_H_ */
