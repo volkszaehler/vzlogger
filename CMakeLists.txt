@@ -164,7 +164,7 @@ add_subdirectory(src)
 
 find_package(Git)
 
-set(ENABLE_GOOGLEMOCK TRUE)
+set(ENABLE_GOOGLEMOCK FALSE)
 #disable unit tests on gcc4.6 (problems with googlemock 1.7)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # require at least gcc 4.8
