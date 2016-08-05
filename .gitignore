@@ -33,3 +33,7 @@ stamp-h1
 
 # Debian packaging
 /debian/config.log
+
+.cproject
+.project
+.settings/
