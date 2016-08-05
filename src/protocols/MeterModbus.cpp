@@ -46,12 +46,11 @@ Protocol("modbus"), _libmodbus_debug(false)
 
 	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", "Register map must be specified.");
 
-	if (map == "ohmpilot")
-		_regmap.reset(new OhmpilotRegisterMap());
-	else if (map == "imemeter")
-		_regmap.reset(new IMEmeterRegisterMap());
-	else
+	try {
+	_regmap = RegisterMap::findMap(map);
+	} catch (std::out_of_range &e) {
 		throw(std::invalid_argument("Modbus register map invalid."));
+	}
 }
 
 void MeterModbus::create_rtu(const std::list<Option> &options) {
@@ -132,13 +131,18 @@ ModbusTCPConnection::ModbusTCPConnection(const std::string &ip, int port) {
 }
 
 
-std::vector<Reading> OhmpilotRegisterMap::read(ModbusConnection::Ptr conn) {
+std::map<std::string, RegisterMap::Ptr (*)()> RegisterMap::maps = {
+		{ "ohmpilot", createMap<OpRegisterMap> },
+		{ "imemeter", createMap<IMEmeterRegisterMap> }
+};
+
+std::vector<Reading> OpRegisterMap::read(ModbusConnection::Ptr conn) {
 	std::vector<Reading> rds;
 	uint16_t regs[10];
 	int ret;
 	ret = modbus_read_registers(conn->getctx(), 40799, 10, regs);
 	if (ret < 0)
-		throw(ModbusException("Ohmpilot read failed."));
+		throw(ModbusException("OP read failed."));
 
 	rds.push_back(Reading(regs[9] / 10.0, new StringIdentifier("T")));
 

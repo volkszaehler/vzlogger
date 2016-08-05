@@ -10,6 +10,7 @@
 #include "protocols/Protocol.hpp"
 #include <modbus/modbus.h>
 #include <errno.h>
+#include <map>
 
 class ModbusException : public std::runtime_error {
 	int _errno;
@@ -52,6 +53,15 @@ public:
 	typedef vz::shared_ptr<RegisterMap> Ptr;
 	virtual ~RegisterMap() {}
 	virtual std::vector<Reading> read(ModbusConnection::Ptr conn) = 0;
+	static Ptr findMap(const std::string &name) {
+		return maps.at(name)();
+	}
+private:
+	template <class T> static Ptr createMap() {
+		return Ptr(new T());
+	}
+
+	static std::map<std::string, Ptr (*)()> maps;
 };
 /**
  *
@@ -79,9 +89,9 @@ public:
 };
 
 
-class OhmpilotRegisterMap: public RegisterMap {
+class OpRegisterMap: public RegisterMap {
 public:
-	virtual ~OhmpilotRegisterMap() {}
+	virtual ~OpRegisterMap() {}
 	virtual std::vector<Reading> read(ModbusConnection::Ptr conn);
 };
 
