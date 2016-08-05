@@ -6,34 +6,10 @@
  */
 #include "protocols/MeterModbus.hpp"
 
-template <typename T, T (*L)(const std::list<Option> &, const char *)>
-T MeterModbus::lookup_mandatory(const std::list<Option> &olist, const char *o, const char *errmsg) {
-	T v;
-	try {
-		v = L(olist, o);
-	} catch (vz::VZException &e) {
-			print(log_error, "Missing path or invalid type", name().c_str());
-			throw;
-	}
-	return v;
-}
-
-template <typename T, T (*L)(const std::list<Option> &, const char *)>
-T MeterModbus::lookup_optional(const std::list<Option> &olist, const char *o, const T &def) {
-	T v;
-	try {
-		v = L(olist, o);
-	} catch (vz::VZException &e) {
-		return def;
-	}
-	return v;
-}
-
-
 MeterModbus::MeterModbus(const std::list<Option> &options) :
 Protocol("modbus"), _libmodbus_debug(false)
 {
-	std::string mb_type = lookup_mandatory<const char *, OptionList::lookup_string>(options, "type", "Either 'rtu' or 'tcp' must be specified.");
+	std::string mb_type = lookup_mandatory<const char *, OptionList::lookup_string>(options, "type", name());
 
 	if (mb_type == "rtu")
 		create_rtu(options);
@@ -44,7 +20,7 @@ Protocol("modbus"), _libmodbus_debug(false)
 
 	_libmodbus_debug = lookup_optional<bool, OptionList::lookup_bool>(options, "libmodbus_debug", false);
 
-	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", "Register map must be specified.");
+	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", name());
 
 	try {
 	_regmap = RegisterMap::findMap(map);
@@ -58,7 +34,7 @@ void MeterModbus::create_rtu(const std::list<Option> &options) {
 	int rtu_baudrate;
 	int rtu_slave;
 
-	rtu_device = lookup_mandatory<const char *, OptionList::lookup_string>(options, "device", "Modbus RTU device path missing.");
+	rtu_device = lookup_mandatory<const char *, OptionList::lookup_string>(options, "device", name());
 	rtu_baudrate = lookup_optional<int, OptionList::lookup_int>(options, "baudrate", 9600);
 	rtu_slave = lookup_optional<int, OptionList::lookup_int>(options, "slave", 1);
 
@@ -68,7 +44,7 @@ void MeterModbus::create_rtu(const std::list<Option> &options) {
 void MeterModbus::create_tcp(const std::list<Option> &options) {
 	std::string tcp_host;
 	int tcp_port;
-	tcp_host = lookup_mandatory<const char *, OptionList::lookup_string>(options, "host", "Modbus TCP host missing.");
+	tcp_host = lookup_mandatory<const char *, OptionList::lookup_string>(options, "host", name());
 	tcp_port = lookup_optional<int, OptionList::lookup_int>(options, "port", 502);
 
 	_mbconn.reset(new ModbusTCPConnection(tcp_host, tcp_port));

@@ -72,12 +72,6 @@ class MeterModbus: public vz::protocol::Protocol
 	bool _libmodbus_debug;
 	RegisterMap::Ptr _regmap;
 
-	template <typename T, T (*L)(const std::list<Option> &, const char *)>
-	T lookup_mandatory(const std::list<Option> &olist, const char *o, const char *errmsg);
-
-	template <typename T, T (*L)(const std::list<Option> &, const char *)>
-	T lookup_optional(const std::list<Option> &olist, const char *o, const T &def);
-
 	void create_rtu(const std::list<Option> &options);
 	void create_tcp(const std::list<Option> &options);
 public:
