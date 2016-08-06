@@ -6,6 +6,12 @@
  */
 #include "protocols/MeterModbus.hpp"
 
+const char *ModbusException::what() const noexcept {
+	std::ostringstream oss;
+	oss << std::runtime_error::what() << " errno " << _errno << ": " <<  modbus_strerror(_errno) << std::endl;
+	return oss.str().c_str();
+}
+
 MeterModbus::MeterModbus(const std::list<Option> &options) :
 Protocol("modbus"), _libmodbus_debug(false)
 {

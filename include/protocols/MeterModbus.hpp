@@ -17,6 +17,8 @@ class ModbusException : public std::runtime_error {
 public:
 	explicit ModbusException(const std::string& arg)
 	: std::runtime_error(arg), _errno(errno) {}
+	virtual const char *what() const noexcept override;
+
 };
 class ModbusConnection
 {
