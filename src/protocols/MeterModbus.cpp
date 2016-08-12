@@ -161,6 +161,9 @@ std::vector<Reading> IMEmeterRegisterMap::read(ModbusConnection::Ptr conn) {
 	value = MODBUS_GET_INT32_FROM_INT16(regs, 4128 - reg_offset);
 	rds.push_back(Reading(value, new StringIdentifier("TotalExpWh")));
 
+	value = MODBUS_GET_INT32_FROM_INT16(regs, 4124 - reg_offset);
+	rds.push_back(Reading(value, new StringIdentifier("TotalImpWh")));
+
 	return rds;
 }
 
