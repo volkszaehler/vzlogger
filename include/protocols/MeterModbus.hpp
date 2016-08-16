@@ -23,25 +23,29 @@ public:
 class ModbusConnection
 {
 protected:
-	modbus_t *ctx;
+	modbus_t *_ctx;
 public:
 	typedef vz::shared_ptr<ModbusConnection> Ptr;
 	ModbusConnection() :
-		ctx(NULL) {}
+		_ctx(NULL) {}
 	virtual ~ModbusConnection();
 	modbus_t *getctx() {
-		return ctx;
+		return _ctx;
 	}
 
 	virtual void connect();
 	virtual void close();
-
+	virtual void read_registers(int addr, int nb, uint16_t *dest, unsigned slave);
+	virtual void debug(bool enable);
+private:
+	ModbusConnection(const ModbusConnection&) = delete;
+	ModbusConnection& operator= (const ModbusConnection&) = delete;
 };
 
 class ModbusRTUConnection : public ModbusConnection
 {
 public:
-	ModbusRTUConnection(const std::string &device, int baud, int slave);
+	ModbusRTUConnection(const std::string &device, int baud);
 };
 
 class ModbusTCPConnection : public ModbusConnection
@@ -55,7 +59,7 @@ class RegisterMap
 public:
 	typedef vz::shared_ptr<RegisterMap> Ptr;
 	virtual ~RegisterMap() {}
-	virtual std::vector<Reading> read(ModbusConnection::Ptr conn) = 0;
+	virtual void read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, unsigned id) = 0;
 	static Ptr findMap(const std::string &name) {
 		return maps.at(name)();
 	}
@@ -73,7 +77,9 @@ class MeterModbus: public vz::protocol::Protocol
 {
 	ModbusConnection::Ptr _mbconn;
 	bool _libmodbus_debug;
-	RegisterMap::Ptr _regmap;
+	typedef unsigned slaveid_t;
+	typedef std::map<slaveid_t, RegisterMap::Ptr> SlaveRegMaps;
+	SlaveRegMaps _devices;
 
 	void create_rtu(const std::list<Option> &options);
 	void create_tcp(const std::list<Option> &options);
@@ -89,13 +95,13 @@ public:
 class OpRegisterMap: public RegisterMap {
 public:
 	virtual ~OpRegisterMap() {}
-	virtual std::vector<Reading> read(ModbusConnection::Ptr conn);
+	virtual void read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, unsigned id);
 };
 
 class IMEmeterRegisterMap: public RegisterMap {
 public:
 	virtual ~IMEmeterRegisterMap() {}
-	virtual std::vector<Reading> read(ModbusConnection::Ptr conn);
+	virtual void read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, unsigned id);
 };
 
 #endif /* METERMODBUS_H_ */
