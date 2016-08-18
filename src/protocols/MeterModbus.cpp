@@ -6,10 +6,13 @@
  */
 #include "protocols/MeterModbus.hpp"
 
-const char *ModbusException::what() const noexcept {
+#include <sstream>
+
+ModbusException::ModbusException(const std::string& arg)
+: std::runtime_error(arg), _errno(errno) {
 	std::ostringstream oss;
 	oss << std::runtime_error::what() << " errno " << _errno << ": " <<  modbus_strerror(_errno) << std::endl;
-	return oss.str().c_str();
+	_what = oss.str();
 }
 
 MeterModbus::MeterModbus(const std::list<Option> &options) :
