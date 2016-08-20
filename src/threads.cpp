@@ -40,9 +40,6 @@
 
 extern Config_Options options;
 
-void reading_thread_cleanup(void *rds) {
-	free(rds);
-}
 
 void * reading_thread(void *arg) {
 	std::vector<Reading> rds;
@@ -143,23 +140,8 @@ void * reading_thread(void *arg) {
 
 				/* debugging */
 				if (options.verbosity() >= log_debug) {
-					size_t dump_len = 24;
-					char *dump = (char*)malloc(dump_len);
-
-					if (dump == NULL) {
-						print(log_error, "Cannot allocate buffer", (*ch)->name());
-					}
-
-					while (dump == NULL || (*ch)->dump(dump, dump_len) == NULL) {
-						dump_len *= 1.5;
-						free(dump);
-						dump = (char*)malloc(dump_len);
-					}
-
-					print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
-							(*ch)->size(), dump);
-
-					free(dump);
+					//print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
+							//(*ch)->size(), (*ch)->dump().c_str());
 				}
 
 				// if logging is not enabled we need to empty the ch->buffer here already:
@@ -181,17 +163,11 @@ void * reading_thread(void *arg) {
 	}
 
 	print(log_debug, "Stopped reading. ", mtr->name());
-	//pthread_cleanup_pop(1);
 
 	pthread_exit(0);
 	return NULL;
 }
 
-void logging_thread_cleanup(/*void *arg*/) {
-//	api_handle_t *api = (api_handle_t *) arg;
-
-//	api_free(api);
-}
 
 void * logging_thread(void *arg) { // get's started from Channel::start and stopped via Channel::cancel via pthread_cancel!
 	Channel::Ptr ch;
@@ -219,8 +195,6 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 		print(log_debug, "Using default volkszaehler api.", ch->name());
 	}
 
-	//pthread_cleanup_push(&logging_thread_cleanup, &api);
-
 	do { /* start thread mainloop */
 		try {
 			ch->wait();
@@ -234,7 +208,6 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 
 	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
-	//pthread_cleanup_pop(1);
 
 	return NULL;
 }
