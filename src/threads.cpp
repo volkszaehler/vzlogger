@@ -162,8 +162,8 @@ void * reading_thread(void *arg) {
 
 
 void * logging_thread(void *arg) { // get's started from Channel::start and stopped via Channel::cancel via pthread_cancel!
-	Channel::Ptr ch;
-	ch.reset(static_cast<Channel *>(arg)); /* casting argument */
+	Channel *__this = static_cast<Channel *>(arg);		// retrieve the pointer to the corresponding Channel
+	Channel::Ptr ch = __this->_this_forthread;			// And get a copy of the Channel owner's shared_ptr for passing it on.
 	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
 				ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
 
