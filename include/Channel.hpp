@@ -56,9 +56,11 @@ class Channel {
 	}
 
 	void join() {
-		pthread_join(_thread, NULL);
-		_thread_running = false;
-		_this_forthread.reset();
+		if (_thread_running) {
+			pthread_join(_thread, NULL);
+			_thread_running = false;
+			_this_forthread.reset();
+		}
 	}
 
 	void cancel() { if (running()) pthread_cancel(_thread); }
