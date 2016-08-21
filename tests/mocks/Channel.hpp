@@ -14,7 +14,7 @@ public:
 	typedef vz::shared_ptr<Channel> Ptr;
 	Channel() : mock_buf(new Buffer()){};
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid, ReadingIdentifier::Ptr pIdentifier) : mock_buf(new Buffer()){};
-	MOCK_METHOD0( start, void());
+	MOCK_METHOD1( start, void(Channel::Ptr));
 	MOCK_METHOD0( join, void());
 	MOCK_METHOD0( cancel, void());
 	MOCK_METHOD0( name,	const char* ());
@@ -36,6 +36,7 @@ public:
 	ReadingIdentifier::Ptr mock_id;
 	Buffer::Ptr mock_buf;
 	Buffer::Ptr &real_buf() {return mock_buf;}
+	Ptr _this_forthread;
 };
 
 #endif

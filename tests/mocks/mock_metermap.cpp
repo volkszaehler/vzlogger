@@ -97,7 +97,7 @@ TEST(mock_metermap, one_channel)
 	EXPECT_CALL(*ch, notify()).Times(AtLeast(0)); // can be called 0 or sometimes
 	{
 		InSequence s;
-		EXPECT_CALL(*ch, start()).Times(1);
+		EXPECT_CALL(*ch, start(_)).Times(1);
 		EXPECT_CALL(*ch, cancel()).Times(1);
 		EXPECT_CALL(*ch, join()).Times(1);
 	}

@@ -70,7 +70,7 @@ void MeterMap::start() {
 		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
 
 			if (options.logging()) {
-				Channel::start(*it);
+				(*it)->start(*it);
 				print(log_debug, "Logging thread started", (*it)->name());
 			} else
 				print(log_debug, "Logging thread not started", (*it)->name());

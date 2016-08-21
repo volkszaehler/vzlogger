@@ -47,7 +47,8 @@ class Channel {
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid, ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
-	static void start(Ptr this_shared) {
+	// Doesn't touch the object, could also be static, but static breaks google mock.
+	void start(Ptr this_shared) {
 		// Copy the owner's shared pointer for the logging_thread into this member.
 		this_shared->_this_forthread = this_shared;
 		// .. and pass the raw Channel*
