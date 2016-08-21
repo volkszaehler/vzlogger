@@ -42,7 +42,6 @@ extern Config_Options options;
 
 
 void * reading_thread(void *arg) {
-	std::vector<Reading> rds;
 	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr  mtr = mapping->meter();
 	time_t aggIntEnd;
@@ -50,14 +49,7 @@ void * reading_thread(void *arg) {
 	size_t n = 0;
 
 	details = meter_get_details(mtr->protocolId());
-
-	/* allocate memory for readings */
-	for (size_t i=0; i< details->max_readings; i++) {
-		Reading rd(mtr->identifier());
-		rds.push_back(rd);
-	}
-
-	//pthread_cleanup_push(&reading_thread_cleanup, rds);
+	std::vector<Reading> rds(details->max_readings, Reading(mtr->identifier()));;
 
 	print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
 	print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
