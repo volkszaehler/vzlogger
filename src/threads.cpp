@@ -25,6 +25,8 @@
 
 #include <math.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "Reading.hpp"
 #include "vzlogger.h"
@@ -71,6 +73,7 @@ void * reading_thread(void *arg) {
 		aggIntEnd = time(NULL);
 		do { /* start thread main loop */
 			aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
+			auto interval_start = std::chrono::steady_clock::now();
 			do { /* aggregate loop */
 				/* fetch readings from meter and calculate delta */
 				n = mtr->read(rds, details->max_readings);
@@ -174,8 +177,14 @@ void * reading_thread(void *arg) {
 			}
 
 			if (mtr->interval() > 0) {
-				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-				sleep(mtr->interval());
+				auto interval_done = std::chrono::steady_clock::now();
+				std::chrono::steady_clock::duration left, took;
+				took = interval_done - interval_start;
+				left = - took + std::chrono::seconds(mtr->interval());
+				print(log_info, "Reading interval %i seconds, reading took %lli ms, waiting %lli ms", mtr->name(), mtr->interval(),
+						std::chrono::duration_cast<std::chrono::milliseconds>(took).count(),
+						std::chrono::duration_cast<std::chrono::milliseconds>(left).count());
+				std::this_thread::sleep_for(left);
 			}
 		} while (options.daemon() || options.local() || options.logging() );
 	} catch (std::exception &e) {
