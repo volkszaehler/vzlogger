@@ -39,18 +39,29 @@ class Channel {
 
 	public:
 	typedef vz::shared_ptr<Channel> Ptr;
+	// This shared_ptr is set when a logging_thread for an object of this class is started.
+	// Inside the logging_thread, a Channel::Ptr is used. Data is passed via the void*
+	// argument of pthread_create, and thus directly passing a shared pointer will break it.
+	Ptr _this_forthread;
 
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid, ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
-	void start() {
-		pthread_create(&_thread, NULL, &logging_thread, (void *) this);
-		_thread_running = true;
+	// Doesn't touch the object, could also be static, but static breaks google mock.
+	void start(Ptr this_shared) {
+		// Copy the owner's shared pointer for the logging_thread into this member.
+		this_shared->_this_forthread = this_shared;
+		// .. and pass the raw Channel*
+		pthread_create(&this_shared->_thread, NULL, &logging_thread, (void *) this_shared.get());
+		this_shared->_thread_running = true;
 	}
 
 	void join() {
-		pthread_join(_thread, NULL);
-		_thread_running = false;
+		if (_thread_running) {
+			pthread_join(_thread, NULL);
+			_thread_running = false;
+			_this_forthread.reset();
+		}
 	}
 
 	void cancel() { if (running()) pthread_cancel(_thread); }
@@ -71,7 +82,7 @@ class Channel {
 
 	void last(Reading *rd)              { _last = rd;}
 	void push(const Reading &rd)        { _buffer->push(rd); }
-	char *dump(char *dump, size_t len)  { return _buffer->dump(dump, len); }
+	std::string dump()  { return std::move(_buffer->dump()); }
 	Buffer::Ptr buffer()                { return _buffer; }
 
 	size_t size() const { return _buffer->size(); }

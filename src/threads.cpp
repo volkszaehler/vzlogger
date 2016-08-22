@@ -40,12 +40,8 @@
 
 extern Config_Options options;
 
-void reading_thread_cleanup(void *rds) {
-	free(rds);
-}
 
 void * reading_thread(void *arg) {
-	std::vector<Reading> rds;
 	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr  mtr = mapping->meter();
 	time_t aggIntEnd;
@@ -53,14 +49,7 @@ void * reading_thread(void *arg) {
 	size_t n = 0;
 
 	details = meter_get_details(mtr->protocolId());
-
-	/* allocate memory for readings */
-	for (size_t i=0; i< details->max_readings; i++) {
-		Reading rd(mtr->identifier());
-		rds.push_back(rd);
-	}
-
-	//pthread_cleanup_push(&reading_thread_cleanup, rds);
+	std::vector<Reading> rds(details->max_readings, Reading(mtr->identifier()));;
 
 	print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
 	print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
@@ -97,7 +86,6 @@ void * reading_thread(void *arg) {
 				/* insert readings into channel queues */
 				if (n>0)
 				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
-					Reading *add = NULL;
 
 					//print(log_debug, "Check channel %s, n=%d", mtr->name(), ch->name(), n);
 
@@ -117,10 +105,6 @@ void * reading_thread(void *arg) {
 								const std::string uuid = (*ch)->uuid();
 								pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
 								print(log_finest, "added to uuid %s", "push", uuid.c_str());
-							}
-
-							if (add == NULL) {
-								add = &rds[i]; /* remember first reading which has been added to the buffer */
 							}
 						}
 					}
@@ -148,23 +132,8 @@ void * reading_thread(void *arg) {
 
 				/* debugging */
 				if (options.verbosity() >= log_debug) {
-					size_t dump_len = 24;
-					char *dump = (char*)malloc(dump_len);
-
-					if (dump == NULL) {
-						print(log_error, "Cannot allocate buffer", (*ch)->name());
-					}
-
-					while (dump == NULL || (*ch)->dump(dump, dump_len) == NULL) {
-						dump_len *= 1.5;
-						free(dump);
-						dump = (char*)malloc(dump_len);
-					}
-
-					print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
-							(*ch)->size(), dump);
-
-					free(dump);
+					//print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
+							//(*ch)->size(), (*ch)->dump().c_str());
 				}
 
 				// if logging is not enabled we need to empty the ch->buffer here already:
@@ -186,21 +155,15 @@ void * reading_thread(void *arg) {
 	}
 
 	print(log_debug, "Stopped reading. ", mtr->name());
-	//pthread_cleanup_pop(1);
 
 	pthread_exit(0);
 	return NULL;
 }
 
-void logging_thread_cleanup(/*void *arg*/) {
-//	api_handle_t *api = (api_handle_t *) arg;
-
-//	api_free(api);
-}
 
 void * logging_thread(void *arg) { // get's started from Channel::start and stopped via Channel::cancel via pthread_cancel!
-	Channel::Ptr ch;
-	ch.reset(static_cast<Channel *>(arg)); /* casting argument */
+	Channel *__this = static_cast<Channel *>(arg);		// retrieve the pointer to the corresponding Channel
+	Channel::Ptr ch = __this->_this_forthread;			// And get a copy of the Channel owner's shared_ptr for passing it on.
 	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
 				ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
 
@@ -224,8 +187,6 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 		print(log_debug, "Using default volkszaehler api.", ch->name());
 	}
 
-	//pthread_cleanup_push(&logging_thread_cleanup, &api);
-
 	do { /* start thread mainloop */
 		try {
 			ch->wait();
@@ -239,7 +200,6 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 
 	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
-	//pthread_cleanup_pop(1);
 
 	return NULL;
 }

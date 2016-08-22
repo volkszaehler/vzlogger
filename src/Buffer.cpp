@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 #include "float.h" /* double min max */
 #include "common.h"
 
@@ -192,34 +195,26 @@ void Buffer::undelete() {
 	unlock();
 }
 
-char * Buffer::dump(char *dump, size_t len) {
-	size_t pos = 0;
-	dump[pos++] = '{';
+std::string Buffer::dump() {
+	std::ostringstream o;
+	o << '{';
 
 	lock();
-	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-		if (pos < len) {
-			pos += snprintf(dump+pos, len-pos, "%.4f", it->value());
-		}
+	o << std::setprecision(4);
+	for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			o << it->value();
 
 		/* indicate last sent reading */
-		if (pos < len && _sent.end() == it) {
-			dump[pos++] = '!';
-		}
-
+		if (_sent.end() == it) {
+			o << '!';
+		} else {
 		/* add seperator between values */
-		if (pos < len && it != _sent.end()) {
-			dump[pos++] = ',';
+			o << ',';
 		}
 	}
-
-	if (pos+1 < len) {
-		dump[pos++] = '}';
-		dump[pos] = '\0'; /* zero terminated string */
-	} else { unlock(); return NULL; } // otherwise unterminated string
+	o << '}';
 	unlock();
-
-	return (pos < len) ? dump : NULL; /* buffer full? */
+	return o.str();
 }
 
 Buffer::~Buffer() {
