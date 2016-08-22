@@ -81,17 +81,22 @@ int MeterModbus::close() {
 }
 
 ssize_t MeterModbus::read(std::vector<Reading> &rds, size_t n) {
+	bool one_success = false;
 	rds.clear();
 	for (auto&& i : _devices) {
 		slaveid_t slave = i.first;
 		RegisterMap::Ptr regmap = i.second;
 		try {
 			regmap->read(rds, _mbconn, slave);
+			one_success = true;
 		} catch (ModbusException &e) {
 			print(log_error, "Modbus read error slave %d: %s. Skip.", name().c_str(), slave, e.what());
-//			_mbconn->close();
-//			_mbconn->connect();
 		}
+	}
+	if (!one_success) {
+		print(log_error, "Modbus read unsuccessful, re-connecting.", name().c_str());
+		_mbconn->close();
+		_mbconn->connect();
 	}
 	return rds.size();
 }
