@@ -31,20 +31,31 @@ Protocol("modbus"), _libmodbus_debug(false)
 
 	_libmodbus_debug = lookup_optional<bool, OptionList::lookup_bool>(options, "libmodbus_debug", false);
 
-	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", name());
+	json_object *slaves = OptionList::lookup_json_array(options, "devices");
 
-	slaveid_t slaveid = 1;
+//	std::string map = lookup_mandatory<const char *, OptionList::lookup_string>(options, "register_map", name());
+	for(int i = 0; i < json_object_array_length(slaves); i++) {
+		json_object *slave = json_object_array_get_idx(slaves, i);
+		json_object *value;
+		int id;
+		std::string regmap;
+		if (json_object_object_get_ex(slave, "id", &value) &&
+				json_object_get_type(value) == json_type_int) {
+			id = json_object_get_int(value);
+		} else
+			throw vz::OptionNotFoundException("'id' field not found in devices array.");
+		if (json_object_object_get_ex(slave, "regmap", &value) &&
+				json_object_get_type(value) == json_type_string) {
+			regmap = json_object_get_string(value);
+		} else
+			throw vz::OptionNotFoundException("'regmap' field not found in devices array.");
 
-	try {
-		_devices[slaveid] = RegisterMap::findMap(map);
-		print(log_info, "Creating MeterModbus with id %d, RegisterMap %s.", name().c_str(), slaveid, map.c_str());
-		if (map == "imemeter") {
-			slaveid = 2;
-			_devices[slaveid] = RegisterMap::findMap(map);
-			print(log_info, "Creating MeterModbus with id %d, RegisterMap %s.", name().c_str(), slaveid, map.c_str());
+		try {
+			_devices[id] = RegisterMap::findMap(regmap);
+			print(log_info, "Creating MeterModbus with id %d, RegisterMap %s.", name().c_str(), id, regmap.c_str());
+		} catch (std::out_of_range &e) {
+			throw(vz::OptionNotFoundException("Modbus register map invalid."));
 		}
-	} catch (std::out_of_range &e) {
-		throw(std::invalid_argument("Modbus register map invalid."));
 	}
 }
 

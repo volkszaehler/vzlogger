@@ -112,7 +112,7 @@ T lookup_mandatory(const std::list<Option> &olist, const std::string &o, const s
 		v = L(olist, o.c_str());
 	} catch (vz::VZException &e) {
 			print(log_error, "Missing mandatory option: %s", errorcontext.c_str(), o.c_str());
-			throw;
+			throw vz::OptionNotFoundException(e.reason());
 	}
 	return v;
 }
