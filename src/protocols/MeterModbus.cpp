@@ -7,6 +7,8 @@
 #include "protocols/MeterModbus.hpp"
 
 #include <sstream>
+#include <chrono>
+#include <thread>
 
 ModbusException::ModbusException(const std::string& arg)
 : std::runtime_error(arg), _errno(errno) {
@@ -165,6 +167,9 @@ void IMEmeterRegisterMap::read(std::vector<Reading>& rds, ModbusConnection::Ptr 
 	const int reg_len = 59;
 	uint16_t regs[reg_len];
 	int value;
+
+	// This device requires some time of silence on the bus, otherwise it doesn't respond.
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
 	conn->read_registers(reg_offset, reg_len, regs, id);
 
