@@ -82,7 +82,11 @@ MeterModbus::~MeterModbus()
 }
 
 int MeterModbus::open() {
-	_mbconn->connect();
+	try {
+		_mbconn->connect();
+	} catch (ModbusException &e) {
+		print(log_error, "MeterModbus can not connect: %s. Will retry.", name().c_str(), e.what());
+	}
 	if (_libmodbus_debug)
 		_mbconn->debug(true);
 	return SUCCESS;
@@ -108,13 +112,19 @@ ssize_t MeterModbus::read(std::vector<Reading> &rds, size_t n) {
 	}
 	if (!one_success) {
 		print(log_error, "Modbus read unsuccessful, re-connecting.", name().c_str());
-		_mbconn->close();
-		_mbconn->connect();
+		try {
+			_mbconn->close();
+			_mbconn->connect();
+		} catch (ModbusException &e) {
+			print(log_error, "Reconnect failed: %s. Will retry.", name().c_str(), e.what());
+		}
 	}
 	return rds.size();
 }
 
 void ModbusConnection::connect() {
+	if (!_ctx)
+		open();
 	int ret = modbus_connect(_ctx);
 	if (ret < 0) {
 		throw ModbusException("connecting modbus");
@@ -124,19 +134,23 @@ void ModbusConnection::connect() {
 }
 
 void ModbusConnection::close() {
-	if (_connected)
-		modbus_close(_ctx);
-}
-
-ModbusConnection::~ModbusConnection() {
 	if (_ctx) {
-		modbus_close(_ctx);
+		if (_connected) {
+			modbus_close(_ctx);
+			_connected = false;
+		}
 		modbus_free(_ctx);
 		_ctx = NULL;
 	}
 }
 
+ModbusConnection::~ModbusConnection() {
+	close();
+}
+
 void ModbusConnection::read_registers(int addr, int nb, uint16_t *dest, unsigned slave) {
+	if (!_ctx || !_connected)
+		throw(ModbusException("modbus_read_registers not connected."));
 	modbus_set_slave(_ctx, slave);
 	int ret = modbus_read_registers(_ctx, addr, nb, dest);
 	if (ret < 0)
@@ -146,14 +160,16 @@ void ModbusConnection::read_registers(int addr, int nb, uint16_t *dest, unsigned
 void ModbusConnection::debug(bool enable) {
 	modbus_set_debug(_ctx, TRUE);
 }
-ModbusRTUConnection::ModbusRTUConnection(const std::string &device, int baud) {
-	_ctx = modbus_new_rtu(device.c_str(), baud, 'N', 8, 1);
+void ModbusRTUConnection::open() {
+	close();
+	_ctx = modbus_new_rtu(_device.c_str(), _baud, 'N', 8, 1);
 	if (_ctx == NULL)
 		throw ModbusException("creating new rtu");
 }
 
-ModbusTCPConnection::ModbusTCPConnection(const std::string &ip, int port) {
-	_ctx = modbus_new_tcp(ip.c_str(), port);
+void ModbusTCPConnection::open() {
+	close();
+	_ctx = modbus_new_tcp(_ip.c_str(), _port);
 	if (_ctx == NULL)
 		throw ModbusException("creating new tcp");
 }

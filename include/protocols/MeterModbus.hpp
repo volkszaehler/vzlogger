@@ -37,6 +37,7 @@ public:
 		return _ctx;
 	}
 
+	virtual void open() = 0;
 	virtual void connect();
 	virtual void close();
 	virtual void read_registers(int addr, int nb, uint16_t *dest, unsigned slave);
@@ -48,14 +49,22 @@ private:
 
 class ModbusRTUConnection : public ModbusConnection
 {
+	std::string _device;
+	int _baud;
 public:
-	ModbusRTUConnection(const std::string &device, int baud);
+	ModbusRTUConnection(const std::string &device, int baud)
+	: _device(device), _baud(baud) {}
+	virtual void open();
 };
 
 class ModbusTCPConnection : public ModbusConnection
 {
+	std::string _ip;
+	int _port;
 public:
-	ModbusTCPConnection(const std::string &ip, int port = 502);
+	ModbusTCPConnection(const std::string &ip, int port = 502)
+	: _ip(ip), _port(port) {}
+	virtual void open();
 };
 
 class RegisterMap
