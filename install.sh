@@ -120,6 +120,7 @@ for binary in "${deps[@]}"; do
 	else
 		echo
 		echo " $binary: not found. Please install to use this script (e.g. sudo apt-get install $binary)."
+		echo " For complete list of build requirements please check http://wiki.volkszaehler.org/software/controller/vzlogger/installation_cpp-version"
 		exit 1
 	fi
 done
