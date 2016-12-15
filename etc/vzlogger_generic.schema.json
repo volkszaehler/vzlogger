@@ -150,6 +150,22 @@
             }]
         },
 
+        "meterhostordev": {
+			"title": "Choose the connection to your meter.",
+			"oneOf": [{
+				"host": {
+					"type": "string",
+					"description": "ip addr of the meter (if not directly connected)"
+					}
+				},{
+                "device": {
+					"type": "string",
+					"description": "device the meter is connected to. E.g. /dev/ttyUSB0"
+					}
+				}
+			]
+		}
+
 
         "meterS0": {
             "title": "S0 based meter",
@@ -222,13 +238,7 @@
                         "type": "string",
                         "enum": ["d0"]
                     },
-                    "device": {
-                        "type": "string",
-                        "description": "device the meter is connected to. E.g. /dev/ttyUSB0"
-                    },
-                    "host": {
-                        "type": "string",
-                        "description": "ip addr of the meter (if not directly connected)"
+                    "$ref": "#/definitions/meterhostordev",
                     },
                     "dump_file": {
                         "type": "string",
@@ -291,13 +301,7 @@
                             "type": "string",
                             "enum": ["sml"]
                         },
-                        "host": {
-                            "type": "string",
-                            "description": "ip addr of the meter (if not directly connected)"
-                        },
-                        "device": {
-                            "type": "string",
-                            "description": "device the meter is connected to. E.g. /dev/ttyUSB0"
+                        "$ref": "#/definitions/meterhostordev",
                         },
                         "pullseq": {
                             "type": "string",
