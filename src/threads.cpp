@@ -59,7 +59,9 @@ void * reading_thread(void *arg) {
 	try {
 		aggIntEnd = time(NULL);
 		do { /* start thread main loop */
-			aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
+			do {
+				aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
+			} while ( (aggIntEnd < time(NULL)) && (mtr->aggtime() > 0) );
 			do { /* aggregate loop */
 				/* fetch readings from meter and calculate delta */
 				n = mtr->read(rds, details->max_readings);
