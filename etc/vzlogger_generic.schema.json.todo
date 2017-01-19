@@ -9,6 +9,7 @@
                 "aggmode": ["aggtime"],
                 "aggtime": ["aggmode"]
             }
+    JAU it wouldnt work as expexted
   todo: "meters" can be called "sensors" as well
   todo: add regex for uuid (see config_validate_uuid())
     JAU check
