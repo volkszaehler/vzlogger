@@ -894,7 +894,6 @@
             "id": "/verbosity",
             "type": "integer",
             "enum": [0, 5, 10, 15],
-            "description": "log_error or log_warning",
             "default": 0,
             "description": "depth of loging. 0 = log_error or log-warning, 5 = log_info, 10 = log-debug, 15 = log_finest"
         },
@@ -902,7 +901,7 @@
             "id": "/log",
             "type": "string",
             "description": "path to logfile",
-            "default": "/tmp/vzlogger.log",
+            "default": "/tmp/vzlogger.log"
         },
         "push": {
             "$ref": "#/definitions/push"
