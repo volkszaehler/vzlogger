@@ -52,7 +52,8 @@
             "properties": {
                 "uuid": {
                     "type": "string",
-                    "description": "uuid of this channel towards the middleware"
+                    "description": "uuid of this channel towards the middleware",
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
                 },
                 "identifier": {
                     "type": "string",
@@ -133,7 +134,7 @@
                     "$ref": "#/definitions/channels"
                 }
             },
-            "required": []
+            "required": ["enabled"]
         },
 
         "meterInvalid": {
@@ -159,7 +160,8 @@
                 "properties": {
                     "protocol": {
                         "type": "string",
-                        "enum": ["s0"]
+                        "enum": ["s0"],
+                        "default": "s0"
                     },
                     "device": {
                         "type": "string",
@@ -208,27 +210,26 @@
                     }
 
                 },
-                "required": ["protocol", "device"]
+                "required": ["protocol"]
             }]
         },
 
-        "meterD0": {
-            "title": "D0 based meter",
+        "meterD0dev": {
+            "title": "D0 based meter connected by device",
             "allOf": [{
                 "$ref": "#/definitions/meter"
             }, {
                 "properties": {
                     "protocol": {
                         "type": "string",
-                        "enum": ["d0"]
+                        "enum": ["d0"],
+                        "default": "d0"
                     },
                     "device": {
                         "type": "string",
-                        "description": "device the meter is connected to. E.g. /dev/ttyUSB0"
-                    },
-                    "host": {
-                        "type": "string",
-                        "description": "ip addr of the meter (if not directly connected)"
+                        "description": "device the meter is connected to. E.g. /dev/ttyUSB0",
+                        "default": "/dev/lesekopf0",
+                        "pattern": "^/dev/[^/]+(/[^/]+)*$"
                     },
                     "dump_file": {
                         "type": "string",
@@ -277,27 +278,94 @@
                         "default": 0,
                         "description": "Delay in ms to apply before changing the baudrate. Defaults to 0 where tcdrain is used instead of a timeout."
                     }
-                }
+                },
+                "required": ["protocol", "device", "baudrate", "parity"]
             }]
         },
 
-        "meterSML": {
-            "title": "SML based meter",
+        "meterD0host": {
+            "title": "D0 based meter connected by host",
+            "allOf": [{
+                "$ref": "#/definitions/meter"
+            }, {
+                "properties": {
+                    "protocol": {
+                        "type": "string",
+                        "enum": ["d0"],
+                        "default": "d0"
+                    },
+                    "host": {
+                        "type": "string",
+                        "description": "hostname or ip address of the meter"
+                    },
+                    "dump_file": {
+                        "type": "string",
+                        "description": "path/filename of the file for the serial dump"
+                    },
+                    "pullseq": {
+                        "type": "string",
+                        "description": "sequence in hex to send to the meter before each read call. E.g. 2F3F210D0A"
+                    },
+                    "ackseq": {
+                        "type": "string",
+                        "description": "Reply sequence towards the meter. Should indicate the baud rate wanted. Will be send with initial baudrate. E.g. 063030300d0a for 300 baud. Use 'auto' to let vzlogger determine.",
+                        "default": "auto"
+                    },
+                    "baudrate": {
+                        "type": "integer",
+                        "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400],
+                        "default": 300,
+                        "description": "Baudrate to be used to for initial communication with the meter."
+                    },
+                    "baudrate_read": {
+                        "type": "integer",
+                        "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400],
+                        "default": 300,
+                        "description": "Baudrate to be used after initial handshake (pullseq/answer/ackseq). Has to fit to ackseq. Will be determined automatically if ackseq 'auto' is used."
+                    },
+                    "parity": {
+                        "type": "string",
+                        "enum": ["8n1", "7n1", "7e1", "7o1"],
+                        "default": "7e1",
+                        "description": "parity used for serial communication"
+                    },
+                    "wait_sync": {
+                        "type": "string",
+                        "enum": ["end", "off"],
+                        "default": "off",
+                        "description": "Wait once for the sync pattern '!'. Intended for meters that start sending data automatically without pullseq."
+                    },
+                    "read_timeout": {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Read timeout in secs. Data readout is considered finished if no state change after that timeout."
+                    },
+                    "baudrate_change_delay": {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Delay in ms to apply before changing the baudrate. Defaults to 0 where tcdrain is used instead of a timeout."
+                    }
+                },
+                "required": ["protocol", "host", "baudrate", "parity"]
+            }]
+        },
+
+        "meterSMLdev": {
+            "title": "SML based meter connected by device",
             "allOf": [{
                     "$ref": "#/definitions/meter"
                 }, {
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["sml"]
-                        },
-                        "host": {
-                            "type": "string",
-                            "description": "ip addr of the meter (if not directly connected)"
+                            "enum": ["sml"],
+                            "default": "sml"
                         },
                         "device": {
                             "type": "string",
-                            "description": "device the meter is connected to. E.g. /dev/ttyUSB0"
+                            "description": "device the meter is connected to. E.g. /dev/ttyUSB0",
+                            "default": "/dev/lesekopf0",
+                            "pattern": "^/dev/[^/]+(/[^/]+)*$"
                         },
                         "pullseq": {
                             "type": "string",
@@ -315,12 +383,49 @@
                             "default": "8n1",
                             "description": "parity used for serial communication"
                         }
-                    }
+                    },
+                "required": ["protocol", "device", "baudrate", "parity"]
                 }
-
             ]
         },
 
+        "meterSMLhost": {
+            "title": "SML based meter connected by host",
+            "allOf": [{
+                    "$ref": "#/definitions/meter"
+                }, {
+                    "properties": {
+                        "protocol": {
+                            "type": "string",
+                            "enum": ["sml"],
+                            "default": "sml"
+                        },
+                        "host": {
+                            "type": "string",
+                            "description": "hostname or ip address of the meter"
+                        },
+                        "pullseq": {
+                            "type": "string",
+                            "description": "sequence in hex to send to the meter before each read call"
+                        },
+                        "baudrate": {
+                            "type": "integer",
+                            "enum": [50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400],
+                            "default": 9600,
+                            "description": "baudrate for serial communication"
+                        },
+                        "parity": {
+                            "type": "string",
+                            "enum": ["8n1", "7n1", "7e1", "7o1"],
+                            "default": "8n1",
+                            "description": "parity used for serial communication"
+                        }
+                    },
+                "required": ["protocol", "host", "baudrate", "parity"]
+                }
+            ]
+        },
+        
         "meterRandom": {
             "title": "example meter returning random values",
             "allOf": [{
@@ -329,7 +434,8 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["random"]
+                            "enum": ["random"],
+                            "default": "random"
                         },
                         "min": {
                             "type": "number",
@@ -339,7 +445,8 @@
                             "type": "number",
                             "description": "maximum value (floating point) that will be returned. E.g. 10.0"
                         }
-                    }
+                    },
+                "required": ["protocol", "min", "max"]
                 }
 
             ]
@@ -353,7 +460,8 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["file"]
+                            "enum": ["file"],
+                            "default": "file"
                         },
                         "path": {
                             "type": "string",
@@ -369,7 +477,7 @@
                             "default": false
                         }
                     },
-                    "required": ["path"]
+                    "required": ["path", "protocol"]
                 }
 
             ]
@@ -383,7 +491,8 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["exec"]
+                            "enum": ["exec"],
+                            "default": "exec"
                         },
                         "command": {
                             "type": "string",
@@ -394,7 +503,7 @@
                             "description": "optional format string. Supports $v for value, $i for identifier and $t for timestamp. E.g. $i:$v. If empty just a value is read from each line of the file."
                         }
                     },
-                    "required": ["command"]
+                    "required": ["command", "protocol"]
                 }
 
             ]
@@ -408,7 +517,8 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["fluksov2"]
+                            "enum": ["fluksov2"],
+                            "default": "fluksov2"
                         },
                         "fifo": {
                             "type": "string",
@@ -416,7 +526,7 @@
                             "default": "/var/run/spid/delta/out"
                         }
                     },
-                    "required": ["fifo"]
+                    "required": ["fifo", "protocol"]
                 }
 
             ]
@@ -430,9 +540,11 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["w1therm"]
+                            "enum": ["w1therm"],
+                            "default": "w1therm"
                         }
-                    }
+                    },
+                    "required": ["protocol"]
                 }
 
             ]
@@ -446,11 +558,14 @@
                     "properties": {
                         "protocol": {
                             "type": "string",
-                            "enum": ["oms"]
+                            "enum": ["oms"],
+                            "default": "oms"
                         },
                         "device": {
                             "type": "string",
-                            "description": "serial device the meter is connected to. E.g. /dev/ttyUSB0"
+                            "description": "serial device the meter is connected to. E.g. /dev/ttyUSB0",
+                            "default": "/dev/ttyUSB0",
+                            "pattern": "^/dev/[^/]+(/[^/]+)*$"
                         },
                         "baudrate": {
                             "type": "number",
@@ -467,7 +582,7 @@
                             "description": "provide some more debug output on console by calling some libmbus debug functions"
                         }
                     },
-                    "required": ["device", "key"]
+                    "required": ["protocol", "device", "key"]
                 }
 
             ]
@@ -515,7 +630,8 @@
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["circle"]
+                        "enum": ["circle"],
+                        "default": "circle"
                     },
                     "circle": {
                         "type": "object",
@@ -540,7 +656,8 @@
                             }
                         }
                     }
-                }
+                },
+                "required": ["type"]
             }]
         },
 
@@ -552,7 +669,8 @@
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["box"]
+                        "enum": ["box"],
+                        "default": "box"
                     },
                     "box": {
                         "type": "object",
@@ -575,7 +693,8 @@
                             }
                         }
                     }
-                }
+                },
+                "required": ["type"]
             }]
         },
 
@@ -616,13 +735,15 @@
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["needle"]
+                        "enum": ["needle"],
+                        "default": "needle"
                     },
                     "kernelColorString": {
                         "type": "string",
                         "description": "Color conversion 3x3 matrix. Default red channel only (2 -1 -1 0 0 0 0 0 0). First line channel red. Needles are detected for red color after matrix application. See leptonica:pixMultMatrixColor"
                     }
-                }
+                },
+                "required": ["type"]
             }]
         },
 
@@ -634,13 +755,15 @@
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["binary"]
+                        "enum": ["binary"],
+                        "default": "binary"
                     },
                     "kernelColorString": {
                         "type": "string",
                         "description": "Color conversion 3x3 matrix. Default red channel only (2 -1 -1 0 0 0 0 0 0). First line channel red. Rectangle/pixes are detected for red color after matrix application. See leptonica:pixMultMatrixColor"
                     }
-                }
+                },
+                "required": ["type"]
             }]
         },
 
@@ -652,7 +775,8 @@
                 "properties": {
                     "protocol": {
                         "type": "string",
-                        "enum": ["ocr"]
+                        "enum": ["ocr"],
+                        "default": "ocr"
                     },
                     "impulses": {
                         "type": "integer",
@@ -690,7 +814,8 @@
                             }]
                         }
                     }
-                }
+                },
+                "required": ["protocol"]
             }]
         },
 
@@ -712,9 +837,13 @@
                     }, {
                         "$ref": "#/definitions/meterS0"
                     }, {
-                        "$ref": "#/definitions/meterD0"
+                        "$ref": "#/definitions/meterD0dev"
                     }, {
-                        "$ref": "#/definitions/meterSML"
+                        "$ref": "#/definitions/meterD0host"
+                    }, {
+                        "$ref": "#/definitions/meterSMLdev"
+                    }, {
+                        "$ref": "#/definitions/meterSMLhost"
                     }, {
                         "$ref": "#/definitions/meterRandom"
                     }, {
@@ -767,12 +896,13 @@
             "enum": [0, 5, 10, 15],
             "description": "log_error or log_warning",
             "default": 0,
-            "description": "0 = log_error or log-warning, 5 = log_info, 10 = log-debug, 15 = log_finest"
+            "description": "depth of loging. 0 = log_error or log-warning, 5 = log_info, 10 = log-debug, 15 = log_finest"
         },
         "log": {
             "id": "/log",
             "type": "string",
-            "description": "path to log file"
+            "description": "path to logfile",
+            "default": "/tmp/vzlogger.log",
         },
         "push": {
             "$ref": "#/definitions/push"
