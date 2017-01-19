@@ -397,9 +397,6 @@ int main(int argc, char *argv[]) {
 		return (0);
 	}
 
-	// only logging to file if daemonizing
-	options.logging(options.daemon());
-
 	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
 
 	if (options.daemon()) {
