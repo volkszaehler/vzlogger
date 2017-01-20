@@ -68,12 +68,8 @@ void MeterMap::start() {
 
 		print(log_debug, "Meter is opened. Starting channels.", _meter->name());
 		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
-
-			if (options.logging()) {
-				(*it)->start(*it);
-				print(log_debug, "Logging thread started", (*it)->name());
-			} else
-				print(log_debug, "Logging thread not started", (*it)->name());
+			(*it)->start(*it);
+			print(log_debug, "Logging thread started", (*it)->name());
 		}
 		_thread_running = true;
 	} else {

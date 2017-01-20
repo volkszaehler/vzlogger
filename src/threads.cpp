@@ -137,18 +137,13 @@ void * reading_thread(void *arg) {
 					//print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
 							//(*ch)->size(), (*ch)->dump().c_str());
 				}
-
-				// if logging is not enabled we need to empty the ch->buffer here already:
-				if (!options.logging()) {
-					(*ch)->buffer()->clean(false);
-				}
 			}
 
 			if (mtr->interval() > 0) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
 				sleep(mtr->interval());
 			}
-		} while (options.daemon() || options.local() || options.logging() );
+		} while (options.daemon() || options.local());
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
@@ -198,7 +193,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
-	} while (options.logging());
+	} while (true); //endless?!
 
 	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
