@@ -32,6 +32,8 @@
 #include "Config_Options.hpp"
 #include <api/InfluxDB.hpp>
 #include <VZException.hpp>
+#include <api/CurlCallback.hpp>
+#include "CurlSessionProvider.hpp"
 extern Config_Options options;
 
 vz::api::InfluxDB::InfluxDB(
@@ -103,6 +105,26 @@ try {
 		print(log_error, "api InfluxDB requires parameter \"measurement_name\" as string!", ch->name());
 		throw;
 	}
+
+try {
+		_curl_timeout = optlist.lookup_int(pOptions, "timeout");
+		print(log_finest, "api InfluxDB using curl timeout %i", ch->name(), _curl_timeout);
+	} catch (vz::OptionNotFoundException &e) {
+		_curl_timeout = 30;  //seconds
+		print(log_debug, "api InfluxDB will use default timeout %i", ch->name(), _curl_timeout);
+	} catch (vz::VZException &e) {
+		print(log_error, "api InfluxDB requires parameter \"timeout\" as int!", ch->name());
+		throw;
+	}
+
+
+	// build request url
+	_url = _host;
+	_url.append("/write");
+	_url.append("?db=");
+	_url.append(_database);
+	print(log_debug, "api InfluxDB using url %s", ch->name(), _url.c_str());
+
 }
 
 vz::api::InfluxDB::~InfluxDB() // destructor
@@ -111,26 +133,113 @@ vz::api::InfluxDB::~InfluxDB() // destructor
 
 void vz::api::InfluxDB::send()
 {
-	// we need to mark all elements as transmitted/deleted otherwise the Channel::Buffer keeps on growing
+	CURLresponse response;
+	long int http_code;
+	CURLcode curl_code;
+	std::string request_body;
 	Buffer::Ptr buf = channel()->buffer();
+	Buffer::iterator it;
+
+	_api.curl = curlSessionProvider ? curlSessionProvider->get_easy_session(channel()->uuid()) : 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
+	if (!_api.curl) {
+		throw vz::VZException("CURL: cannot create handle.");
+	}
+
+	print(log_finest, "Buffer has %i items", channel()->name(), buf->size());
 	buf->lock();
-	for (	Buffer::iterator it = buf->begin(); it != buf->end(); it++) {
+	for (it = buf->begin(); it != buf->end(); it++) {
+		print(log_finest, "Reading buffer: timestamp %lld value %f", channel()->name(), it->time_ms(), it->value());
+		request_body.append(_measurement_name);
+		request_body.append(",");
+		request_body.append("uuid=");
+		request_body.append(channel()->uuid());
+		request_body.append(" ");
+		request_body.append("value=");
+		request_body.append(std::to_string(it->value()));
+		request_body.append(" ");
+		request_body.append(std::to_string(it->time_ms()));
+		request_body.append("000000"); // needed for correct InfluxDB timestamp
+		request_body.append("\n");
 		it->mark_delete();
 	}
 	buf->unlock();
-	buf->clean();
+	print(log_info, "request body is %s", channel()->name(), request_body.c_str());
+
+	curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
+	//curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
+	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, vz::api::InfluxDB::curl_custom_debug_callback);
+	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
+
+	// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
+	//TODO: this causes block on error
+	curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
+
+	// set timeout to 5 sec. required if next router has an ip-change.
+	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curl_timeout);
+
+	curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body.c_str());
+	//curl_easy_setopt(_api.curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
+	curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, (void *) &response);
+
+	curl_code = curl_easy_perform(_api.curl);
+  print(log_debug, "Influxdb curl terminated", channel()->name());
+	curl_easy_getinfo(_api.curl, CURLINFO_RESPONSE_CODE, &http_code);
+	//print(log_debug, "InfluxDB CURL success", channel()->name());
+
+	if (curl_code == CURLE_OK && (http_code == 200 || http_code == 204)) { // everything is ok
+		print(log_debug, "InfluxDB CURL success", channel()->name());
+	  buf->clean();
+	}
+	else {
+		buf->undelete();
+		print(log_error, "InfluxDB CURL error!", channel()->name());
+	}
+
+	if (curlSessionProvider)
+		curlSessionProvider->return_session(channel()->uuid(), _api.curl);
+}
+
+int vz::api::InfluxDB::curl_custom_debug_callback(
+	CURL *curl
+	, curl_infotype type
+	, char *data
+	, size_t size
+	, void *arg
+	) {
+	Channel *ch = static_cast<Channel *> (arg);
+	char *end = strchr(data, '\n');
+
+	if (data == end) return 0; // skip empty line
+
+	switch (type) {
+			case CURLINFO_TEXT:
+			case CURLINFO_END:
+				if (end) *end = '\0'; // terminate without \n
+				print((log_level_t)(log_debug+5), "CURL: %.*s", ch->name(), (int) size, data);
+				break;
+
+			case CURLINFO_SSL_DATA_IN:
+			case CURLINFO_DATA_IN:
+				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
+				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", ch->name(), data);
+				break;
+
+			case CURLINFO_SSL_DATA_OUT:
+			case CURLINFO_DATA_OUT:
+				data[size]=0;
+				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
+				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", ch->name(), data);
+				break;
+
+			case CURLINFO_HEADER_IN:
+			case CURLINFO_HEADER_OUT:
+				break;
+	}
+
+	return 0;
 }
 
 void vz::api::InfluxDB::register_device()
 {
 }
-
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

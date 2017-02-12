@@ -30,12 +30,15 @@
 #ifndef _InfluxDB_hpp_
 #define _InfluxDB_hpp_
 
+#include <curl/curl.h>
 #include <common.h>
 #include <ApiIF.hpp>
 #include <Options.hpp>
 
 namespace vz {
 	namespace api {
+
+
 
 		class InfluxDB : public ApiIF {
 		public:
@@ -47,13 +50,28 @@ namespace vz {
 			void send();
 
 			void register_device();
+
 		private:
 			std::string _host;
 			std::string _username;
 			std::string _password;
 			std::string _database;
 			std::string _measurement_name;
+			std::string _url;
+			unsigned int _curl_timeout;
+			std::list<Reading> _values;
+			typedef struct {
+				CURL *curl;
+				struct curl_slist *headers;
+			} api_handle_t;
+			api_handle_t _api;
 
+			typedef struct {
+				char *data;
+				size_t size;
+			} CURLresponse;
+
+		static int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
 		}; // class InfluxDB
 
 	} // namespace api
