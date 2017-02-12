@@ -39,6 +39,7 @@
 #include <Config_Options.hpp>
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/InfluxDB.hpp>
 #include <api/Null.hpp>
 #include "threads.h"
 
@@ -131,10 +132,15 @@ void MeterMap::registration() {
 			api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(*ch, (*ch)->options()));
 			print(log_debug, "Using MySmartGrid api.", (*ch)->name());
 		}
+		else if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "influxdb")) {
+			api =  vz::ApiIF::Ptr(new vz::api::InfluxDB(*ch, (*ch)->options()));
+			print(log_debug, "Using InfluxDB api", (*ch)->name());
+		}
 		else if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "null")) {
 			api =  vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
 			print(log_debug, "Using null api- meter data available via local httpd if enabled.", (*ch)->name());
-		} else {
+		}
+		else {
 			if (strcasecmp((*ch)->apiProtocol().c_str(), "volkszaehler"))
 				print(log_error, "Wrong config! api: <%s> is unknown!", (*ch)->name(), (*ch)->apiProtocol().c_str());
 			// try to use volkszaehler api anyhow:
