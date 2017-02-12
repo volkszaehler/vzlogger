@@ -193,7 +193,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
-	} while (!options.daemon());
+	} while (!options:daemon());
 
 	print(log_error, "vzlogger stopped. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
