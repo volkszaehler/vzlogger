@@ -3,6 +3,8 @@
 # Binaries
 /src/vzlogger
 
+/build/*
+
 # Compiled Object files
 *.slo
 *.lo
