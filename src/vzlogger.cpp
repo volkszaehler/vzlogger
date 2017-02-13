@@ -369,8 +369,8 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// always (that's why log_error is used) print version info to log file:
-	print(log_error, "vzlogger v%s based on %s from %s started.", "main",
+	// always (that's why log_none is used) print version info to log file:
+	print(log_none, "vzlogger v%s based on %s from %s started.", "main",
 		  VERSION, g_GIT_SHALONG, g_GIT_LAST_COMMIT_DATE);
 
 	//mappings = (MapContainer::Ptr)(new MapContainer());

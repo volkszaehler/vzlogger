@@ -18,8 +18,9 @@
 
 /* enumerations */
 typedef enum {
-	log_error = -1,
-	log_warning = 0,
+    log_none = 0,
+	log_error = 1,
+	log_warning = 3,
 	log_info = 5,
 	log_debug = 10,
 	log_finest = 15
