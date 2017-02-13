@@ -3,6 +3,7 @@
 # Binaries
 /src/vzlogger
 
+# out of source build directory
 /build/*
 
 # Compiled Object files
