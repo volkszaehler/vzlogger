@@ -69,12 +69,8 @@ void MeterMap::start() {
 
 		print(log_debug, "Meter is opened. Starting channels.", _meter->name());
 		for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
-
-			if (options.logging()) {
-				(*it)->start(*it);
-				print(log_debug, "Logging thread started", (*it)->name());
-			} else
-				print(log_debug, "Logging thread not started", (*it)->name());
+			(*it)->start(*it);
+			print(log_debug, "Logging thread started", (*it)->name());
 		}
 		_thread_running = true;
 	} else {
@@ -139,8 +135,7 @@ void MeterMap::registration() {
 		else if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "null")) {
 			api =  vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
 			print(log_debug, "Using null api- meter data available via local httpd if enabled.", (*ch)->name());
-		}
-		else {
+		} else {
 			if (strcasecmp((*ch)->apiProtocol().c_str(), "volkszaehler"))
 				print(log_error, "Wrong config! api: <%s> is unknown!", (*ch)->name(), (*ch)->apiProtocol().c_str());
 			// try to use volkszaehler api anyhow:

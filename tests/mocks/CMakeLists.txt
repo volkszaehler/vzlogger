@@ -44,7 +44,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${MICROHTTPD_LIBRARY} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-target_link_libraries(mock_metermap
+target_link_libraries(mock_metermap 
 		${GTEST_LIBS_DIR}/libgtest.a
 		${GMOCK_LIBS_DIR}/libgmock.a
 		pthread

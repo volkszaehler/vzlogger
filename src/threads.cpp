@@ -149,7 +149,7 @@ void * reading_thread(void *arg) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
 				sleep(mtr->interval());
 			}
-		} while (options.daemon() || options.local() || options.logging() );
+		} while (options.daemon() || options.local());
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
@@ -203,7 +203,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
-	} while (options.logging());
+	} while (true); //endless?!
 
 	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
 	pthread_exit(0);
