@@ -138,11 +138,6 @@ void * reading_thread(void *arg) {
 					//print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
 							//(*ch)->size(), (*ch)->dump().c_str());
 				}
-
-				// if logging is not enabled we need to empty the ch->buffer here already:
-				if (!options.logging()) {
-					(*ch)->buffer()->clean(false);
-				}
 			}
 
 			if (mtr->interval() > 0) {
