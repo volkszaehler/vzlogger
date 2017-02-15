@@ -30,6 +30,7 @@
 #ifndef _InfluxDB_hpp_
 #define _InfluxDB_hpp_
 
+//TODO: organize includes
 #include <curl/curl.h>
 #include <common.h>
 #include <ApiIF.hpp>
@@ -39,9 +40,6 @@
 
 namespace vz {
 	namespace api {
-
-
-
 		class InfluxDB : public ApiIF {
 		public:
 			typedef vz::shared_ptr<ApiIF> Ptr;
@@ -54,6 +52,9 @@ namespace vz {
 			void register_device();
 
 		private:
+			CurlResponse *response()   { return _response.get(); }
+
+		private:
 			std::string _host;
 			std::string _username;
 			std::string _password;
@@ -63,7 +64,6 @@ namespace vz {
 			int _max_batch_inserts;
 			unsigned int _curl_timeout;
 			std::list<Reading> _values;
-			CurlResponse *response()   { return _response.get(); }
 			CurlResponse::Ptr _response;
 
 			typedef struct {
@@ -71,14 +71,6 @@ namespace vz {
 				struct curl_slist *headers;
 			} api_handle_t;
 			api_handle_t _api;
-
-			// typedef struct {
-			// 	char *data;
-			// 	size_t size;
-			// } CURLresponse;
-
-		// static int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
-		// static size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 		}; // class InfluxDB
 
 	} // namespace api

@@ -1,6 +1,6 @@
 /***********************************************************************/
 /** @file InfluxDB.cpp
- * Header file for InfluxDB API calls
+ * This is cobbled together from the Volkszaehler and MySmartGrid API...
  *
  * @author Stefan Kuntz
  * @email  Stefan.github@gmail.com
@@ -27,6 +27,7 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+//TODO: organize includes
 #include <stdio.h>
 #include <curl/curl.h>
 #include "Config_Options.hpp"
@@ -36,6 +37,7 @@
 #include "CurlSessionProvider.hpp"
 #include <api/CurlResponse.hpp>
 #include <api/CurlCallback.hpp>
+
 extern Config_Options options;
 
 vz::api::InfluxDB::InfluxDB(
@@ -43,12 +45,12 @@ vz::api::InfluxDB::InfluxDB(
 	std::list<Option> pOptions
 	)
 	: ApiIF(ch)
-	, _response(new vz::api::CurlResponse)
+	, _response(new vz::api::CurlResponse())
 {
 	OptionList optlist;
-	print(log_info, "InfluxDB API initialize", ch->name());
+	print(log_debug, "InfluxDB API initialize", ch->name());
 
-// config file options
+// parse config file options
 try {
 		_host = optlist.lookup_string(pOptions, "host");
 		print(log_finest, "api InfluxDB using host %s", ch->name(), _host.c_str());
@@ -131,7 +133,6 @@ try {
 		throw;
 	}
 
-
 	// build request url
 	_url = _host;
 	_url.append("/write");
@@ -178,16 +179,17 @@ void vz::api::InfluxDB::send()
 		request_body.append(" ");
 		request_body.append(std::to_string(it->time_ms()));
 		request_body.append("000000"); // needed for correct InfluxDB timestamp
-		request_body.append("\n");
+		request_body.append("\n");  // each measurement on new line
 		it->mark_delete();
 		request_body_lines++;
 	}
 	buf->unlock();
 	print(log_finest, "request body is %s", channel()->name(), request_body.c_str());
 
-	_response->clear_response();
-  //TODO: set username and password
-	if(!_username.empty()) {  //TODO: check for empty password too?
+	_response->clear_response(); // initialize with empty response
+
+  // if the username option is set, use curl with HTTP basic auth
+	if(!_username.empty()) {
 		curl_easy_setopt(_api.curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_easy_setopt(_api.curl, CURLOPT_USERNAME, _username.c_str());
 		curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
@@ -206,23 +208,31 @@ void vz::api::InfluxDB::send()
 	curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, response());
 
 	curl_code = curl_easy_perform(_api.curl);
-  print(log_debug, "Influxdb curl terminated", channel()->name());
+  print(log_finest, "Influxdb curl terminated", channel()->name());
 	curl_easy_getinfo(_api.curl, CURLINFO_RESPONSE_CODE, &http_code);
-	//print(log_debug, "InfluxDB CURL success", channel()->name());
 
 	if (curl_code == CURLE_OK && http_code >= 200 && http_code < 300) { // everything is ok
 		print(log_debug, "InfluxDB CURL success", channel()->name());
-	  buf->clean();
+	  buf->clean();  // delete the stuff we just sent to InfluxDB from the buffer
 	}
 	else {
-		buf->undelete();
-		print(log_error, "InfluxDB CURL error!", channel()->name());
+		buf->undelete();  // failure to insert, so dont delete the buffer
+		if(curl_code != CURLE_OK) {
+			print(log_error, "CURL Error: %s", channel()->name(), curl_easy_strerror(curl_code));
+		}
+		print(log_error, "InfluxDB error! - HTTP Status %i", channel()->name(), http_code);
+		if(!_response->get_response().empty()) {
+			print(log_error, "InfluxDB response was %s", channel()->name(), _response->get_response().c_str());
+		}
 	}
 
-	if (curlSessionProvider)
+	if (curlSessionProvider) {
+		// release our curl session
 		curlSessionProvider->return_session(_host + channel()->uuid(), _api.curl);
+	}
 }
 
 void vz::api::InfluxDB::register_device()
 {
+	//TODO: is this needed?
 }
