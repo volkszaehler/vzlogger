@@ -80,7 +80,7 @@ try {
 	} catch (vz::OptionNotFoundException &e) {
 		//print(log_error, "api InfluxDB requires parameter \"password\"!", ch->name());
 		//throw;
-		print(log_debug, "api InluxDB no password set", ch->name());
+		print(log_debug, "api InfluxDB no password set", ch->name());
 		_password = "";
 	} catch (vz::VZException &e) {
 		print(log_error, "api InfluxDB requires parameter \"password\" as string!", ch->name());
@@ -120,6 +120,17 @@ try {
 		throw;
 	}
 
+try {
+		_max_batch_inserts = optlist.lookup_int(pOptions, "max_batch_inserts");
+		print(log_finest, "api InfluxDB using max batch inserts: %i", ch->name(), _max_batch_inserts);
+	} catch (vz::OptionNotFoundException &e) {
+		_max_batch_inserts = 4500;  //max lines per request
+		print(log_debug, "api InfluxDB will use default max_batch_inserts %i", ch->name(), _max_batch_inserts);
+	} catch (vz::VZException &e) {
+		print(log_error, "api InfluxDB requires parameter \"max_batch_inserts\" as int!", ch->name());
+		throw;
+	}
+
 
 	// build request url
 	_url = _host;
@@ -148,10 +159,11 @@ void vz::api::InfluxDB::send()
 	}
 
 	print(log_debug, "Buffer has %i items", channel()->name(), buf->size());
+
 	buf->lock();
 	int request_body_lines = 0;
 	for (it = buf->begin(); it != buf->end(); it++) {
-		if(request_body_lines > 4500) {  // InfluxDB recommends 5000 max. TODO: avoid magic numbers
+		if(request_body_lines >= _max_batch_inserts) {
 			print(log_debug, "reached maximum lines for InfluxDB insertion request.", channel()->name());
 			break;
 		}
@@ -174,18 +186,19 @@ void vz::api::InfluxDB::send()
 	print(log_finest, "request body is %s", channel()->name(), request_body.c_str());
 
 	_response->clear_response();
+  //TODO: set username and password
+	if(!_username.empty()) {  //TODO: check for empty password too?
+		curl_easy_setopt(_api.curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_easy_setopt(_api.curl, CURLOPT_USERNAME, _username.c_str());
+		curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
+	}
 	curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
-	//curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _api.headers);
 	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
-	//curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, vz::api::InfluxDB::curl_custom_debug_callback);
-	//curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, channel().get());
 
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, response());
 	// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
 	curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
-
-	// set timeout to 5 sec. required if next router has an ip-change.
 	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curl_timeout);
 
   curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body.c_str());

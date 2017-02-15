@@ -60,6 +60,7 @@ namespace vz {
 			std::string _database;
 			std::string _measurement_name;
 			std::string _url;
+			int _max_batch_inserts;
 			unsigned int _curl_timeout;
 			std::list<Reading> _values;
 			CurlResponse *response()   { return _response.get(); }
