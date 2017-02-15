@@ -33,6 +33,8 @@
 #include <curl/curl.h>
 #include <common.h>
 #include <ApiIF.hpp>
+#include <api/CurlIF.hpp>
+#include <api/CurlResponse.hpp>
 #include <Options.hpp>
 
 namespace vz {
@@ -60,18 +62,22 @@ namespace vz {
 			std::string _url;
 			unsigned int _curl_timeout;
 			std::list<Reading> _values;
+			CurlResponse *response()   { return _response.get(); }
+			CurlResponse::Ptr _response;
+
 			typedef struct {
 				CURL *curl;
 				struct curl_slist *headers;
 			} api_handle_t;
 			api_handle_t _api;
 
-			typedef struct {
-				char *data;
-				size_t size;
-			} CURLresponse;
+			// typedef struct {
+			// 	char *data;
+			// 	size_t size;
+			// } CURLresponse;
 
-		static int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
+		// static int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
+		// static size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 		}; // class InfluxDB
 
 	} // namespace api
