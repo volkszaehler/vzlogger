@@ -44,7 +44,7 @@ namespace vz {
 		public:
 			typedef vz::shared_ptr<ApiIF> Ptr;
 
-			InfluxDB(Channel::Ptr ch, std::list<Option> options);
+			InfluxDB(const Channel::Ptr &ch, const std::list<Option> &options);
 			~InfluxDB();
 
 			void send();
@@ -62,6 +62,7 @@ namespace vz {
 			std::string _measurement_name;
 			std::string _url;
 			int _max_batch_inserts;
+			int _max_buffer_size;
 			unsigned int _curl_timeout;
 			std::list<Reading> _values;
 			CurlResponse::Ptr _response;
