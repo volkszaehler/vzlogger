@@ -48,8 +48,8 @@ vz::api::InfluxDB::InfluxDB(
 	OptionList optlist;
 	print(log_debug, "InfluxDB API initialize", ch->name());
 
-    // parse config file options
-    try {
+	// parse config file options
+	try {
 			_host = optlist.lookup_string(pOptions, "host");
 			print(log_finest, "api InfluxDB using host %s", ch->name(), _host.c_str());
 		} catch (vz::OptionNotFoundException &e) {
@@ -73,8 +73,8 @@ vz::api::InfluxDB::InfluxDB(
 
 	try {
 			_password = optlist.lookup_string(pOptions, "password");
-			//TODO: remove logging of password
-			print(log_finest, "api InfluxDB using password %s", ch->name(), _password.c_str());
+			//dont log passwords by default
+			//print(log_finest, "api InfluxDB using password %s", ch->name(), _password.c_str());
 		} catch (vz::OptionNotFoundException &e) {
 			//print(log_error, "api InfluxDB requires parameter \"password\"!", ch->name());
 			//throw;
@@ -170,8 +170,6 @@ void vz::api::InfluxDB::send()
 
 	print(log_debug, "Buffer has %i items", channel()->name(), buf->size());
 
-
-
 	//delete items if the buffer gets too big
 	if(buf->size() > (unsigned) _max_buffer_size) {
 		print(log_warning, "Buffer too big (%i items). Deleting items. (This indicates a connection problem)", channel()->name(), buf->size());
@@ -199,8 +197,7 @@ void vz::api::InfluxDB::send()
 		request_body.append(_measurement_name);
 		request_body.append(",uuid=");
 		request_body.append(channel()->uuid());
-		request_body.append(" ");
-		request_body.append("value=");
+		request_body.append(" value=");
 		request_body.append(std::to_string(it->value()));
 		request_body.append(" ");
 		request_body.append(std::to_string(it->time_ms()));
@@ -216,7 +213,7 @@ void vz::api::InfluxDB::send()
 
 		_response->clear_response(); // initialize with empty response
 
-	  // if the username option is set, use curl with HTTP basic auth
+		// if the username option is set, use curl with HTTP basic auth
 		if(!_username.empty()) {
 			curl_easy_setopt(_api.curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 			curl_easy_setopt(_api.curl, CURLOPT_USERNAME, _username.c_str());
@@ -228,20 +225,21 @@ void vz::api::InfluxDB::send()
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, response());
 		// signal-handling in libcurl is NOT thread-safe. so force to deactivated them!
-	  curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
+		curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
 		curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curl_timeout);
 
-	  curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body.c_str());
+		curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body.c_str());
 		curl_easy_setopt(_api.curl, CURLOPT_WRITEFUNCTION, &(vz::api::CurlCallback::write_callback));
 		curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, response());
 
+		// actually send the request to InfluxDB
 		curl_code = curl_easy_perform(_api.curl);
-	  print(log_finest, "Influxdb curl terminated", channel()->name());
+		print(log_finest, "Influxdb curl terminated", channel()->name());
 		curl_easy_getinfo(_api.curl, CURLINFO_RESPONSE_CODE, &http_code);
 
 		if (curl_code == CURLE_OK && http_code >= 200 && http_code < 300) { // everything is ok
 			print(log_debug, "InfluxDB CURL success", channel()->name());
-		  buf->clean();  // delete the stuff we just sent to InfluxDB from the buffer
+			buf->clean();  // delete the stuff we just sent to InfluxDB from the buffer
 		}
 		else {
 			buf->undelete();  // failure to insert, so dont delete the buffer
@@ -255,12 +253,12 @@ void vz::api::InfluxDB::send()
 		}
 	}
 	else {  //there is nothing to send
-		print(log_info, "Nothing to send to InfluxDB api", channel()->name());
+	   	print(log_info, "Nothing to send to InfluxDB api", channel()->name());
 	}
 
 	if (curlSessionProvider) {
-		// release our curl session
-		curlSessionProvider->return_session(_host + channel()->uuid(), _api.curl);
+	  	// release our curl session
+	   	curlSessionProvider->return_session(_host + channel()->uuid(), _api.curl);
 	}
 }
 

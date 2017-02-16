@@ -30,9 +30,8 @@
 #ifndef _InfluxDB_hpp_
 #define _InfluxDB_hpp_
 
-//TODO: organize includes
-#include <curl/curl.h>
 #include <common.h>
+#include <curl/curl.h>
 #include <ApiIF.hpp>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
