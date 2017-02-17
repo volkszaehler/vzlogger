@@ -9,7 +9,9 @@ General channel parameters:
 ---------------------------
 
 Set `"api"` to`"mysmartgrid"` to use the MySmartGrid API.
+
 `"middleware"` defines the MySmartGrid server url.
+
 `"uuid"`       defines the Unique ID of the sensor.
 
 example:
