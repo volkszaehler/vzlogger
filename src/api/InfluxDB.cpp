@@ -252,13 +252,13 @@ void vz::api::InfluxDB::send()
 			}
 		}
 	}
-	else {  //there is nothing to send
-	   	print(log_info, "Nothing to send to InfluxDB api", channel()->name());
+	else {	//there is nothing to send
+		print(log_info, "Nothing to send to InfluxDB api", channel()->name());
 	}
 
 	if (curlSessionProvider) {
-	  	// release our curl session
-	   	curlSessionProvider->return_session(_host + channel()->uuid(), _api.curl);
+		// release our curl session
+		curlSessionProvider->return_session(_host + channel()->uuid(), _api.curl);
 	}
 }
 
