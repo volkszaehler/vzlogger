@@ -147,7 +147,7 @@ void * reading_thread(void *arg) {
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
+		print(log_alert, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
 		pthread_exit(0);
 	}
 
@@ -176,7 +176,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 		print(log_debug, "Using null api- meter data available via local httpd if enabled.", ch->name());
 	} else {
 		if (strcasecmp(ch->apiProtocol().c_str(), "volkszaehler"))
-			print(log_error, "Wrong config! api: <%s> is unknown!", ch->name(), ch->apiProtocol().c_str());
+			print(log_alert, "Wrong config! api: <%s> is unknown!", ch->name(), ch->apiProtocol().c_str());
 		// try to use volkszaehler api anyhow:
 
 		// default == volkszaehler
@@ -190,7 +190,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 			api->send();
 		}
 		catch (std::exception &e) {
-			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
+			print(log_alert, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
 	} while (true); //endless?!

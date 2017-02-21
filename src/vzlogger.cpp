@@ -333,7 +333,7 @@ void register_device() {
 			it->registration();
 		}
 	} catch (std::exception &e) {
-		print(log_error, "Registration failed for %s", "", e.what());
+		print(log_alert, "Registration failed for %s", "", e.what());
 	}
 }
 #ifndef NOMAIN
@@ -369,8 +369,8 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// always (that's why log_none is used) print version info to log file:
-	print(log_none, "vzlogger v%s based on %s from %s started.", "main",
+	// always (that's why log_alert is used) print version info to log file:
+	print(log_alert, "vzlogger v%s based on %s from %s started.", "main",
 		  VERSION, g_GIT_SHALONG, g_GIT_LAST_COMMIT_DATE);
 
 	//mappings = (MapContainer::Ptr)(new MapContainer());
@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
+		print(log_alert, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
 		return EXIT_FAILURE;
 	}
 
@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
 	optind = 0; // otherwise the getopt_long doesn't parse from start!
 	config_parse_cli(argc, argv, &options);
 
-	print(log_error, "log level is %d", "main", options.verbosity());
+	print(log_alert, "log level is %d", "main", options.verbosity());
 
 	curlSessionProvider = new CurlSessionProvider();
 
@@ -412,7 +412,7 @@ int main(int argc, char *argv[]) {
 		FILE *logfd = fopen(options.log().c_str(), "a");
 
 		if (logfd == NULL) {
-			print(log_error, "Cannot open logfile %s: %s", (char*)0, options.log().c_str(), strerror(errno));
+			print(log_alert, "Cannot open logfile %s: %s", (char*)0, options.log().c_str(), strerror(errno));
 			return EXIT_FAILURE;
 		}
 
@@ -434,7 +434,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (mappings.size() <= 0) {
-		print(log_error, "No meters found - quitting!", (char*)0);
+		print(log_alert, "No meters found - quitting!", (char*)0);
 		return EXIT_FAILURE;
 	}
 
@@ -461,7 +461,7 @@ int main(int argc, char *argv[]) {
 
 		// quit if not at least one meter is enabled and working
 		if (mappings.size() - gSkippedFailed <= 0) {
-			print(log_error, "No functional meters found - quitting!", (char*)0);
+			print(log_alert, "No functional meters found - quitting!", (char*)0);
 			return EXIT_FAILURE;
 		}
 
@@ -479,7 +479,7 @@ int main(int argc, char *argv[]) {
 		}
 #endif /* LOCAL_SUPPORT */
 	} catch (std::exception &e) {
-		print(log_error, "Startup failed: %s", "", e.what());
+		print(log_alert, "Startup failed: %s", "", e.what());
 		exit(1);
 	}
 	print(log_debug, "Startup done.", "");

@@ -24,14 +24,14 @@ int MeterOMS::OMSHWif::send_frame(mbus_frame *frame)
 	unsigned char buff[2048];
 	int len;
 	if ((len = mbus_frame_pack(frame, buff, sizeof(buff))) == -1){
-		print(log_error, "send_frame: mbus_frame_pack failed!", "OMS");
+		print(log_alert, "send_frame: mbus_frame_pack failed!", "OMS");
 		return -2;
 	}
 	if (len == write(buff, len)) {
 		print(log_finest, "send_frame (len=%d) ok", "OMS", len);
 		return 0;
 	} else {
-		print(log_error, "write != len", "OMS");
+		print(log_alert, "write != len", "OMS");
 		return -3;
 	}
 }
@@ -99,12 +99,12 @@ MeterOMS::OMSSerialHWif::~OMSSerialHWif()
 bool MeterOMS::OMSSerialHWif::open()
 {
 	if (mbus_serial_connect(_handle) != 0) {
-		print(log_error, "mbus_connect_serial failed!", "OMS");
+		print(log_alert, "mbus_connect_serial failed!", "OMS");
 		return false;
 	}
 
 	if (mbus_serial_set_baudrate(_handle, _baudrate) != 0) {
-		print(log_error, "mbus_serial_set_baudrate failed!", "OMS");
+		print(log_alert, "mbus_serial_set_baudrate failed!", "OMS");
 		return false;
 	}
 
@@ -150,7 +150,7 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 		_device = optlist.lookup_string(options, "device");
 	} catch (vz::VZException &e) {
 		if (!hwif) {
-			print(log_error, "Missing path or invalid type", name().c_str());
+			print(log_alert, "Missing path or invalid type", name().c_str());
 			throw;
 		} // else we use the provided one (e.g. from unit tests)
 	}
@@ -178,11 +178,11 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	try {
 		_key = optlist.lookup_string(options, "key");
 	} catch (vz::VZException &e) {
-			print(log_error, "Missing path or invalid type", name().c_str());
+			print(log_alert, "Missing path or invalid type", name().c_str());
 			throw;
 	}
 	if (_key.length() != 32) {
-		print(log_error, "Key length needs to be 32!", name().c_str());
+		print(log_alert, "Key length needs to be 32!", name().c_str());
 		throw vz::VZException("OMS key length error");
 	}
 
@@ -259,11 +259,11 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 				/* for slave to master messages:
 			mbus_frame_data reply_data;
 			if (mbus_frame_data_parse(&frame2, &reply_data) == -1) {
-				print(log_error, "m-bus data parse error: %s", name().c_str(), mbus_error_str());
+				print(log_alert, "m-bus data parse error: %s", name().c_str(), mbus_error_str());
 			} else {
 				char *xml_res;
 				if ((xml_res = mbus_frame_data_xml(&reply_data)) == NULL) {
-					print(log_error, "failed to generate xml: %s", name().c_str(), mbus_error_str());
+					print(log_alert, "failed to generate xml: %s", name().c_str(), mbus_error_str());
 				} else {
 					print(log_finest, "%s", name().c_str(), xml_res);
 				}
@@ -298,7 +298,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 							aes_decrypt(frame.data+12, 16*nr_enc_16byte_blocks, _aes_key, iv );
 							if (_mbus_debug) mbus_frame_print(&frame);
 							if (frame.length1<=14 || frame.data[12] != 0x2f || frame.data[13] != 0x2f) {
-								print(log_error, "encryption sanity check failed", name().c_str());
+								print(log_alert, "encryption sanity check failed", name().c_str());
 							} else {
 								print(log_finest, "successfully decrypted a frame", name().c_str());
 								mbus_frame_data frame_data;
@@ -419,7 +419,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 
 				// reply with E5h: MBUS_FRAME_ACK_START
 				if (0 != _hwif->send_frame(frame_ack)) {
-					print(log_error, "send_frame failed!", name().c_str());
+					print(log_alert, "send_frame failed!", name().c_str());
 					expect_frame = 0;
 				} else {
 					// how to check for further frame?
@@ -432,7 +432,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 					got_SND_NKE = true;
 					// reply with E5h: MBUS_FRAME_ACK_START
 					if (0 != _hwif->send_frame(frame_ack)) {
-						print(log_error, "send_frame failed!", name().c_str());
+						print(log_alert, "send_frame failed!", name().c_str());
 						expect_frame = 0; // we need to wait for next one
 					} else {
 						// ack send ok: get next one:
@@ -473,12 +473,12 @@ bool MeterOMS::aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsign
 
 	/* Create and initialise the context */
 	if(!(ctx = EVP_CIPHER_CTX_new())) {
-		print(log_error, "EVP_CIPHER_CTX_new failed", name().c_str());
+		print(log_alert, "EVP_CIPHER_CTX_new failed", name().c_str());
 		return false;
 	}
 
 	if(!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)) {
-		print(log_error, "EVP_DecryptInit_ex failed", name().c_str());
+		print(log_alert, "EVP_DecryptInit_ex failed", name().c_str());
 		EVP_CIPHER_CTX_free(ctx);
 		return false;
 	}
@@ -488,14 +488,14 @@ bool MeterOMS::aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsign
 	assert(EVP_CIPHER_CTX_key_length(ctx) == 16);
 
 	if(!EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
-		print(log_error, "EVP_DecryptUpdate failed (len=%d)", name().c_str(), len);
+		print(log_alert, "EVP_DecryptUpdate failed (len=%d)", name().c_str(), len);
 		EVP_CIPHER_CTX_free(ctx);
 		return false;
 	}
 	plaintext_len = len;
 
 	if(!EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
-		print(log_error, "EVP_DecryptFinale_ex failed (len=%d)", name().c_str(), len);
+		print(log_alert, "EVP_DecryptFinale_ex failed (len=%d)", name().c_str(), len);
 		EVP_CIPHER_CTX_free(ctx);
 		return false;
 	}

@@ -59,10 +59,10 @@ vz::api::Volkszaehler::Volkszaehler(
 	try {
 		_middleware = optlist.lookup_string(pOptions, "middleware");
 	} catch (vz::OptionNotFoundException &e) {
-		print(log_error, "api volkszaehler requires parameter \"middleware\" but it's missing!", ch->name());
+		print(log_alert, "api volkszaehler requires parameter \"middleware\" but it's missing!", ch->name());
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_error, "api volkszaehler requires parameter \"middleware\" as string but seems to have different type!", ch->name());
+		print(log_alert, "api volkszaehler requires parameter \"middleware\" as string but seems to have different type!", ch->name());
 		throw;
 	}
 
@@ -71,7 +71,7 @@ vz::api::Volkszaehler::Volkszaehler(
 	} catch (vz::OptionNotFoundException &e) {
 		_curlTimeout = 30; // 30 seconds default
 	} catch (vz::VZException &e) {
-		print(log_error, "api volkszaehler requires parameter \"timeout\" as integer but seems to have different type!", ch->name());
+		print(log_alert, "api volkszaehler requires parameter \"timeout\" as integer but seems to have different type!", ch->name());
 		throw;
 	}
 
@@ -160,12 +160,12 @@ void vz::api::Volkszaehler::send()
 	}
 	else { // error
 		if (curl_code != CURLE_OK) {
-			print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
+			print(log_alert, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
 		}
 		else if (http_code != 200) {
 			char err[255];
 			api_parse_exception(response, err, 255);
-			print(log_error, "CURL Error from middleware: %s", channel()->name(), err);
+			print(log_alert, "CURL Error from middleware: %s", channel()->name(), err);
 		}
 	}
 
@@ -341,7 +341,7 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { // out of memory!
-		print(log_error, "Cannot allocate memory", NULL);
+		print(log_alert, "Cannot allocate memory", NULL);
 		exit(EXIT_FAILURE);
 	}
 

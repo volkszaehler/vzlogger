@@ -116,7 +116,7 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
     bool toRet=true;
     CURL *curl = curlSessionProvider ? curlSessionProvider->get_easy_session(middleware) : 0;
     if (!curl) {
-		print(log_error, "send no curl session!", "push");
+		print(log_alert, "send no curl session!", "push");
         return false;
     }
 
@@ -152,11 +152,11 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
 	}
 	else { // error
 		if (curl_code != CURLE_OK) {
-			print(log_error, "CURL: %s %s", "push", middleware.c_str(), curl_easy_strerror(curl_code));
+			print(log_alert, "CURL: %s %s", "push", middleware.c_str(), curl_easy_strerror(curl_code));
 			toRet = false;
 		}
 		else if (http_code != 200) {
-			print(log_error, "CURL Error from url %s: %d %s", "push", middleware.c_str(), http_code, response.data);
+			print(log_alert, "CURL Error from url %s: %d %s", "push", middleware.c_str(), http_code, response.data);
 			toRet = false;
 		}
 	}
@@ -178,7 +178,7 @@ size_t PushDataServer::curl_custom_write_callback(void *ptr, size_t size, size_t
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { // out of memory!
-		print(log_error, "Cannot allocate memory", NULL);
+		print(log_alert, "Cannot allocate memory", NULL);
 		exit(EXIT_FAILURE);
 	}
 

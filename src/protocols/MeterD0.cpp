@@ -73,11 +73,11 @@ MeterD0::MeterD0(std::list<Option> &options)
 			_device = optlist.lookup_string(options, "device");
 			if ( !_device.length() ) throw vz::VZException("device without length");
 		} catch (vz::VZException &e) {
-			print(log_error, "Missing device or host", name().c_str());
+			print(log_alert, "Missing device or host", name().c_str());
 			throw ;
 		}
 	} catch (vz::VZException &e) {
-		print(log_error, "Missing device or host", name().c_str());
+		print(log_alert, "Missing device or host", name().c_str());
 		throw;
 	}
 	
@@ -153,14 +153,14 @@ MeterD0::MeterD0(std::list<Option> &options)
 				case 115200: _baudrate = B115200; break;
 				case 230400: _baudrate = B230400; break;
 				default:
-					print(log_error, "RW:Invalid baudrate: %i", name().c_str(), baudrate);
+					print(log_alert, "RW:Invalid baudrate: %i", name().c_str(), baudrate);
 					throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
 		// using default value if not specified
 		_baudrate = B9600;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse the baudrate", name().c_str());
+		print(log_alert, "Failed to parse the baudrate", name().c_str());
 		throw;
 	}
 	try {
@@ -186,14 +186,14 @@ MeterD0::MeterD0(std::list<Option> &options)
 				case 115200: _baudrate_read = B115200; break;
 				case 230400: _baudrate_read = B230400; break;
 				default:
-					print(log_error, "RW:Invalid baudrate_read: %i", name().c_str(), baudrate);
+					print(log_alert, "RW:Invalid baudrate_read: %i", name().c_str(), baudrate);
 					throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
 		// using default value if not specified
 		_baudrate_read = _baudrate;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse the baudrate_read", name().c_str());
+		print(log_alert, "Failed to parse the baudrate_read", name().c_str());
 		throw;
 	}
 
@@ -217,7 +217,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 		// using default value if not specified
 		_parity = parity_7e1;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse the parity", name().c_str());
+		print(log_alert, "Failed to parse the parity", name().c_str());
 		throw;
 	}
 
@@ -234,7 +234,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
 		// no fault. default is off
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse wait_sync", name().c_str());
+		print(log_alert, "Failed to parse wait_sync", name().c_str());
 		throw;
 	}
 
@@ -243,7 +243,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
         // use default: 10s from constructor
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse read_timeout", name().c_str());
+		print(log_alert, "Failed to parse read_timeout", name().c_str());
         throw;
     }
 
@@ -252,7 +252,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
         // use default: (disabled) from constructor
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse baudrate_change_delay", name().c_str());
+		print(log_alert, "Failed to parse baudrate_change_delay", name().c_str());
         throw;
     }
 
@@ -267,7 +267,7 @@ int MeterD0::open() {
 	if (_dump_file.length()) {
 		if (_dump_fd) (void)fclose(_dump_fd);
 		_dump_fd = fopen(_dump_file.c_str(), "a"); 
-		if (!_dump_fd) print(log_error, "Failed to open dump_file %s (%d)", name().c_str(), 
+		if (!_dump_fd) print(log_alert, "Failed to open dump_file %s (%d)", name().c_str(), 
 			_dump_file.c_str(), errno);
 		dump_file(CTRL, "opened");
 	}
@@ -613,7 +613,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 				break;
 
 			case END_LINE:
-				print(log_error, "logical error in state machine. reached END_LINE", name().c_str());
+				print(log_alert, "logical error in state machine. reached END_LINE", name().c_str());
 				goto error; // this should never happen
 				break;
 
@@ -706,7 +706,7 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 						rds[number_of_tuples].time();
 						number_of_tuples++;
 					} catch (vz::VZException &e) {
-						print(log_error, "Failed to parse obis code (%s)", name().c_str(), obis_code);
+						print(log_alert, "Failed to parse obis code (%s)", name().c_str(), obis_code);
 					}
 				break;
 				case 'L': // nobreak; // L, P not supported yet
@@ -724,12 +724,12 @@ ssize_t MeterD0::read(std::vector<Reading>& rds, size_t max_readings) {
 	}// end while
 
 	// Read terminated
-	print(log_error, "read timed out!, context: %i, bytes read: %i, last byte 0x%x",
+	print(log_alert, "read timed out!, context: %i, bytes read: %i, last byte 0x%x",
 			name().c_str(),context,byte_iterator,lastbyte);
 	return number_of_tuples; // in any case return the number of readings. there might be some valid ones.
 
 error:
-	print(log_error, "Something unexpected happened: %s:%i!", name().c_str(), __FUNCTION__, __LINE__);
+	print(log_alert, "Something unexpected happened: %s:%i!", name().c_str(), __FUNCTION__, __LINE__);
 	return number_of_tuples; // return number of good readings so far.
 }
 
@@ -741,7 +741,7 @@ int MeterD0::_openSocket(const char *node, const char *service) {
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		print(log_error, "socket(): %s", name().c_str(), strerror(errno));
+		print(log_alert, "socket(): %s", name().c_str(), strerror(errno));
 		return ERR;
 	}
 
@@ -751,7 +751,7 @@ int MeterD0::_openSocket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		print(log_error, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
+		print(log_alert, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
 		return ERR;
 	}
 
@@ -764,7 +764,7 @@ int MeterD0::_openDevice(struct termios *old_tio, speed_t baudrate) {
 
 	int fd = ::open(device(), O_RDWR);
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
+		print(log_alert, "open(%s): %s", name().c_str(), device(), strerror(errno));
 		return ERR;
 	}
 
