@@ -288,6 +288,6 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo
 		echo "could not find vzlogger.service in /etc/systemd/system/"
 		echo "we recommend to configure vzlogger as a service"
-        echo "for further details: man systemd"
+        echo "for further details: man systemd or wiki.volkszaehler.org"
 	fi
 fi
