@@ -284,11 +284,10 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo "make sure to restart vzlogger"
 	fi
 
-	if ! grep -q vzlogger /etc/inittab; then
+	if [ ! -e "/etc/systemd/system/vzlogger.service" ]; then
 		echo
-		echo "could not find vzlogger in /etc/inittab"
-		echo "if you want vzlogger to start automatically add the following line to /etc/inittab"
-		echo "vz:235:respawn:/usr/local/bin/vzlogger -d"
-		echo "activate using `init q`"
+		echo "could not find vzlogger.service in /etc/systemd/system/"
+		echo "we recommend to configure vzlogger as a service"
+        echo "for further details: man systemd"
 	fi
 fi
