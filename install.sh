@@ -53,6 +53,7 @@ shopt -s nocasematch
 ###############################
 # some defaults
 lib_dir=libs
+build_dir=build
 vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
 
@@ -247,20 +248,29 @@ popd
 if [ -z "$1" ] || contains "$*" vzlogger; then
 	echo
 	echo "building and installing vzlogger"
+    
+    if [ ! -d "$build_dir" ]; then
+        echo "creating folder $build_dir"
+        mkdir "$build_dir"
+    fi
+    
+    pushd "$build_dir"
 
-	if contains "$*" clean; then
-		echo "clearing cmake cache"
-		rm CMakeCache.txt
-	fi
+        if contains "$*" clean; then
+            echo "clearing cmake cache"
+            rm CMakeCache.txt
+        fi
 
-	echo
-	echo "building vzlogger"
-	cmake .
-	make
+        echo
+        echo "building vzlogger"
+        cmake ..
+        make
 
-	echo
-	echo "installing vzlogger"
-	sudo make install
+        echo
+        echo "installing vzlogger"
+        sudo make install
+        
+    popd
 
 	if [ ! -e "$vzlogger_conf" ]; then
 		echo
