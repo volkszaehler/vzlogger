@@ -146,7 +146,7 @@ void vz::api::Volkszaehler::send()
 	// check response
 	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
 		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
-		if (_values.size() <= MAX_CHUNK_SIZE) {
+		if (_values.size() <= (size_t) MAX_CHUNK_SIZE) {
 			print(log_finest, "emptied all (%d) values", channel()->name(), _values.size());
 			_values.clear();
 		} else {

@@ -3,6 +3,10 @@
 # Binaries
 /src/vzlogger
 
+# directorys from install.sh
+/libs/*
+/build/*
+
 # Compiled Object files
 *.slo
 *.lo
