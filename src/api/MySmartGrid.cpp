@@ -202,13 +202,13 @@ void vz::api::MySmartGrid::send()
 	else { /* error */
 		channel()->buffer()->undelete();
 		if (curl_code != CURLE_OK) {
-			print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
+			print(log_alert, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
 		}
 		else if (http_code != 200) {
 // 502 - Bad gateway
 			char err[255];
 			api_parse_exception(err, 255);
-			print(log_error, "Error from middleware: %s", channel()->name(), err);
+			print(log_alert, "Error from middleware: %s", channel()->name(), err);
 		}
 
 	}
@@ -302,13 +302,13 @@ void vz::api::MySmartGrid::_send(
 	else { /* error */
 		channel()->buffer()->undelete();
 		if (curl_code != CURLE_OK) {
-			print(log_error, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
+			print(log_alert, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
 		}
 		else if (http_code != 200) {
 			// 502 - Bad gateway
 			char err[255];
 			api_parse_exception(err, 255);
-			print(log_error, "Error from middleware: %s", channel()->name(), err);
+			print(log_alert, "Error from middleware: %s", channel()->name(), err);
 		}
 
 	}

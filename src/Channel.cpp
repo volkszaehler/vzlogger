@@ -80,7 +80,7 @@ Channel::Channel(
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Missing or invalid aggmode (%s)", name(), oss.str().c_str());
+		print(log_alert, "Missing or invalid aggmode (%s)", name(), oss.str().c_str());
 		throw;
 	}
 
@@ -92,7 +92,7 @@ Channel::Channel(
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Invalid parameter duplicates (%s)", name(), oss.str().c_str());
+		print(log_alert, "Invalid parameter duplicates (%s)", name(), oss.str().c_str());
 		throw;
 	}
 

@@ -45,7 +45,7 @@ MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_fifo = strdup(FLUKSOV2_DEFAULT_FIFO); /* use default path */
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse fifo", name().c_str());
+		print(log_alert, "Failed to parse fifo", name().c_str());
 		throw;
 	}
 }
@@ -61,7 +61,7 @@ int MeterFluksoV2::open() {
 	_fd = ::open(_fifo, O_RDONLY);
 
 	if (_fd < 0) {
-		print(log_error, "open(%s): %s", name().c_str(), _fifo, strerror(errno));
+		print(log_alert, "open(%s): %s", name().c_str(), _fifo, strerror(errno));
 		return ERR;
 	}
 
@@ -84,7 +84,7 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 	do {
 		bytes = _read_line(_fd, line, 64); /* blocking read of a complete line */
 		if (bytes < 0) {
-			print(log_error, "read_line(%s): %s", name().c_str(), _fifo, strerror(errno));
+			print(log_alert, "read_line(%s): %s", name().c_str(), _fifo, strerror(errno));
 			return bytes; /* an error occured, pass through to caller */
 		}
 	} while (bytes == 0);

@@ -109,7 +109,7 @@ int MeterW1therm::open()
 {
 	if (!_hwif) return ERR;
 	if (!_hwif->scanW1devices()) {
-		print(log_error, "scanW1devices failed!", name().c_str());
+		print(log_alert, "scanW1devices failed!", name().c_str());
 		return ERR;
 	}
 	print(log_info, "open found %d w1 devices", name().c_str(), _hwif->W1devices().size());

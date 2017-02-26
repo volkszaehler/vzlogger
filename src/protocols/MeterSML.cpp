@@ -69,11 +69,11 @@ MeterSML::MeterSML(std::list<Option> options)
 		try {
 			_device = optlist.lookup_string(options, "device");
 		} catch (vz::VZException &e){
-			print(log_error, "Missing device or host", name().c_str());
+			print(log_alert, "Missing device or host", name().c_str());
 			throw ;
 		}
 	} catch (vz::VZException &e) {
-		print(log_error, "Missing device or host", name().c_str());
+		print(log_alert, "Missing device or host", name().c_str());
 		throw;
 	}
 	try {
@@ -120,14 +120,14 @@ MeterSML::MeterSML(std::list<Option> options)
 				case 115200: _baudrate = B115200; break;
 				case 230400: _baudrate = B230400; break;
 				default:
-					print(log_error, "Invalid baudrate: %i", name().c_str(), baudrate);
+					print(log_alert, "Invalid baudrate: %i", name().c_str(), baudrate);
 					throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_baudrate = B9600;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse the baudrate", name().c_str());
+		print(log_alert, "Failed to parse the baudrate", name().c_str());
 		throw;
 	}
 
@@ -150,7 +150,7 @@ MeterSML::MeterSML(std::list<Option> options)
 		/* using default value if not specified */
 		_parity = parity_8n1;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse the parity", name().c_str());
+		print(log_alert, "Failed to parse the parity", name().c_str());
 		throw;
 	}
 
@@ -285,13 +285,13 @@ int MeterSML::_openSocket(const char *node, const char *service) {
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		print(log_error, "socket(): %s", name().c_str(), strerror(errno));
+		print(log_alert, "socket(): %s", name().c_str(), strerror(errno));
 		return ERR;
 	}
 
 	int rc = getaddrinfo(node, service, NULL, &ais);
 	if (rc != 0) {
-		print(log_error, "getaddrinfo(%s, %s): %s", name().c_str(), node, service, gai_strerror(rc));
+		print(log_alert, "getaddrinfo(%s, %s): %s", name().c_str(), node, service, gai_strerror(rc));
 		return ERR;
 	}
 
@@ -300,7 +300,7 @@ int MeterSML::_openSocket(const char *node, const char *service) {
 
 	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (res < 0) {
-		print(log_error, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
+		print(log_alert, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
 		return ERR;
 	}
 
@@ -314,7 +314,7 @@ int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 
 	int fd = ::open(device(), O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", name().c_str(), device(), strerror(errno));
+		print(log_alert, "open(%s): %s", name().c_str(), device(), strerror(errno));
 		return ERR;
 	}
 

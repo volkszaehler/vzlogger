@@ -53,10 +53,10 @@ vz::api::InfluxDB::InfluxDB(
 			_host = optlist.lookup_string(pOptions, "host");
 			print(log_finest, "api InfluxDB using host %s", ch->name(), _host.c_str());
 		} catch (vz::OptionNotFoundException &e) {
-			print(log_error, "api InfluxDB requires parameter \"host\"!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"host\"!", ch->name());
 			throw;
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"host\" as string!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"host\" as string!", ch->name());
 			throw;
 		}
 
@@ -67,7 +67,7 @@ vz::api::InfluxDB::InfluxDB(
 			print(log_finest, "api InfluxDB no username set", ch->name());
 			_username = "";
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"username\" as string!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"username\" as string!", ch->name());
 			throw;
 		}
 
@@ -76,12 +76,12 @@ vz::api::InfluxDB::InfluxDB(
 			//dont log passwords by default
 			//print(log_finest, "api InfluxDB using password %s", ch->name(), _password.c_str());
 		} catch (vz::OptionNotFoundException &e) {
-			//print(log_error, "api InfluxDB requires parameter \"password\"!", ch->name());
+			//print(log_alert, "api InfluxDB requires parameter \"password\"!", ch->name());
 			//throw;
 			print(log_finest, "api InfluxDB no password set", ch->name());
 			_password = "";
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"password\" as string!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"password\" as string!", ch->name());
 			throw;
 		}
 
@@ -92,7 +92,7 @@ vz::api::InfluxDB::InfluxDB(
 			print(log_finest, "api InfluxDB will use default database \"vzlogger\"", ch->name());
 			_database = "vzlogger";
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"database\" as string!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"database\" as string!", ch->name());
 			throw;
 		}
 
@@ -103,7 +103,7 @@ vz::api::InfluxDB::InfluxDB(
 			print(log_finest, "api InfluxDB will use default measurement name \"vzlogger\"", ch->name());
 			_measurement_name = "vzlogger";
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"measurement_name\" as string!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"measurement_name\" as string!", ch->name());
 			throw;
 		}
 
@@ -114,7 +114,7 @@ vz::api::InfluxDB::InfluxDB(
 			_curl_timeout = 30;  //seconds
 			print(log_finest, "api InfluxDB will use default timeout %i", ch->name(), _curl_timeout);
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"timeout\" as int!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"timeout\" as int!", ch->name());
 			throw;
 		}
 
@@ -125,7 +125,7 @@ vz::api::InfluxDB::InfluxDB(
 			_max_batch_inserts = 4500;  //max lines per request
 			print(log_finest, "api InfluxDB will use default max_batch_inserts %i", ch->name(), _max_batch_inserts);
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"max_batch_inserts\" as int!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"max_batch_inserts\" as int!", ch->name());
 			throw;
 		}
 
@@ -136,7 +136,7 @@ vz::api::InfluxDB::InfluxDB(
 			_max_buffer_size = _max_batch_inserts*100;  //max items in buffer
 			print(log_finest, "api InfluxDB will use default max_buffer_size %i", ch->name(), _max_buffer_size);
 		} catch (vz::VZException &e) {
-			print(log_error, "api InfluxDB requires parameter \"max_buffer_size\" as int!", ch->name());
+			print(log_alert, "api InfluxDB requires parameter \"max_buffer_size\" as int!", ch->name());
 			throw;
 		}
 

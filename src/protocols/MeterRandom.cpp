@@ -49,7 +49,7 @@ MeterRandom::MeterRandom(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_min = 0;
 	} catch (vz::VZException &e) {
-		print(log_error, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
+		print(log_alert, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
 		throw;
 	}
 
@@ -58,7 +58,7 @@ MeterRandom::MeterRandom(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_max = 0;
 	} catch (vz::VZException &e) {
-		print(log_error, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
+		print(log_alert, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
 		throw;
 	}
 }

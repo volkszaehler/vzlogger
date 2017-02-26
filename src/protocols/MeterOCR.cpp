@@ -207,7 +207,7 @@ MeterOCR::Recognizer::Recognizer(const std::string &str_type, struct json_object
 		// boundingboxes is mandatory
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'boundingboxes'", "ocr");
+		print(log_alert, "Failed to parse 'boundingboxes'", "ocr");
 		throw;
 	}
 }
@@ -648,7 +648,7 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 		try {
 			_file = optlist.lookup_string(options, "file");
 		} catch (vz::VZException &e) {
-			print(log_error, "Missing image file name", name().c_str());
+			print(log_alert, "Missing image file name", name().c_str());
 			throw;
 		}
 	}
@@ -658,7 +658,7 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
 		// use default (off)
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'generate_debug_image'", name().c_str());
+		print(log_alert, "Failed to parse 'generate_debug_image'", name().c_str());
 		throw;
 	}
 	
@@ -667,7 +667,7 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
 		// keep default
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'impulses'", name().c_str());
+		print(log_alert, "Failed to parse 'impulses'", name().c_str());
 		throw;
 	}
 	
@@ -676,10 +676,10 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
 		// keep default (0.0)
 	} catch (vz::InvalidTypeException &e) {
-		print(log_error, "Invalid type for 'rotate'", name().c_str());
+		print(log_alert, "Invalid type for 'rotate'", name().c_str());
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'rotate'", name().c_str());
+		print(log_alert, "Failed to parse 'rotate'", name().c_str());
 		throw;
 	}
 
@@ -703,7 +703,7 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 	} catch (vz::OptionNotFoundException &e) {
 		// autofix is optional (default none)
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'autofix'", name().c_str());
+		print(log_alert, "Failed to parse 'autofix'", name().c_str());
 		throw;
 	}
 	
@@ -742,10 +742,10 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 		}
 	} catch (vz::OptionNotFoundException &e) {
 		// recognizer is mandatory
-		//print(log_error, "Config parameter 'recognizer' missing!", name().c_str());
+		//print(log_alert, "Config parameter 'recognizer' missing!", name().c_str());
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'recognizer'", name().c_str());
+		print(log_alert, "Failed to parse 'recognizer'", name().c_str());
 		throw;
 	}
 }
@@ -787,31 +787,31 @@ int MeterOCR::open() {
 	} else { // v4l2 device:
 		struct stat st;
 		if (-1 == stat(_file.c_str(), &st)) {
-			print(log_error, "cannot identify '%s'", name().c_str(), _file.c_str());
+			print(log_alert, "cannot identify '%s'", name().c_str(), _file.c_str());
 			return ERR;
 		}
 		if (!S_ISCHR(st.st_mode)) {
-			print(log_error, "'%s' is no device", name().c_str(), _file.c_str());
+			print(log_alert, "'%s' is no device", name().c_str(), _file.c_str());
 			return ERR;
 		}
 
 		_v4l2_fd = ::open( _file.c_str(), O_RDWR | O_NONBLOCK, 0 );
 
 		if (-1 == _v4l2_fd) {
-			print(log_error, "cannot open '%s': %d , %s", name().c_str(), _file.c_str(),
+			print(log_alert, "cannot open '%s': %d , %s", name().c_str(), _file.c_str(),
 				  errno, strerror(errno));
 			return ERR;
 		}
 
 		if (!checkCapV4L2Dev()) {
-			print(log_error, "capabilities of '%s' not sufficient", name().c_str(), _file.c_str());
+			print(log_alert, "capabilities of '%s' not sufficient", name().c_str(), _file.c_str());
 			::close(_v4l2_fd);
 			_v4l2_fd = -1;
 			return ERR;
 		}
 
 		if (!initV4L2Dev(_v4l2_cap_size_x, _v4l2_cap_size_y)) {
-			print(log_error, "couldn't init' '%s'", name().c_str(), _file.c_str());
+			print(log_alert, "couldn't init' '%s'", name().c_str(), _file.c_str());
 			::close(_v4l2_fd);
 			_v4l2_fd = -1;
 			return ERR;
@@ -836,7 +836,7 @@ bool MeterOCR::checkCapV4L2Dev()
 	struct v4l2_capability cap;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_QUERYCAP, &cap)) {
 		if (EINVAL == errno) {
-			print(log_error, "'%s' is no V4L2 device", name().c_str(), _file.c_str());
+			print(log_alert, "'%s' is no V4L2 device", name().c_str(), _file.c_str());
 		} else {
 			print(log_error, "error %d, %s at VIDIOC_QUERYCAP", name().c_str(), errno, strerror(errno));
 		}
@@ -844,11 +844,11 @@ bool MeterOCR::checkCapV4L2Dev()
 	}
 	print(log_info, "'%s' has capabilities: 0x%x", name().c_str(), _file.c_str(), cap.capabilities);
 	if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-		print(log_error, "'%s' does not support V4L2_CAP_VIDEO_CAPTURE", name().c_str(), _file.c_str());
+		print(log_alert, "'%s' does not support V4L2_CAP_VIDEO_CAPTURE", name().c_str(), _file.c_str());
 		return false;
 	}
 	if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-		print(log_error, "'%s' does not support V4L2_CAP_STREAMING", name().c_str(), _file.c_str());
+		print(log_alert, "'%s' does not support V4L2_CAP_STREAMING", name().c_str(), _file.c_str());
 		return false;
 	}
 
@@ -856,7 +856,7 @@ bool MeterOCR::checkCapV4L2Dev()
 	struct v4l2_streamparm streamparm;
 	streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_G_PARM, &streamparm)) {
-		print(log_error, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
+		print(log_alert, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	print(log_info, "g_parm: capability=%d, capturemode=%d, timeperframe = %d/%d, extendedmode=%d", name().c_str(),
@@ -866,7 +866,7 @@ bool MeterOCR::checkCapV4L2Dev()
 		  streamparm.parm.capture.timeperframe.denominator,
 		  streamparm.parm.capture.extendedmode);
 	if (!(streamparm.parm.capture.capability & V4L2_CAP_TIMEPERFRAME)) {
-		print(log_error, "'%s' does not support V4L2_CAP_TIMEPERFRAME", name().c_str(), _file.c_str());
+		print(log_alert, "'%s' does not support V4L2_CAP_TIMEPERFRAME", name().c_str(), _file.c_str());
 		return false;
 	}
 
@@ -887,7 +887,7 @@ bool MeterOCR::checkCapV4L2Dev()
 	} while (r == 0);
 
 	if (!has_yuyv) {
-		print(log_error, "'%s' does not support V4L2_PIX_FMT_YUYV", name().c_str(), _file.c_str());
+		print(log_alert, "'%s' does not support V4L2_PIX_FMT_YUYV", name().c_str(), _file.c_str());
 		return false;
 	}
 
@@ -902,7 +902,7 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 	struct v4l2_streamparm streamparm;
 	streamparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_G_PARM, &streamparm)) {
-		print(log_error, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
+		print(log_alert, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	streamparm.parm.capture.capturemode = 0; // we don't need MODE_HIGHQUALITY
@@ -910,12 +910,12 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 	streamparm.parm.capture.timeperframe.numerator = 1;
 	streamparm.parm.capture.timeperframe.denominator = _v4l2_fps;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_S_PARM, &streamparm)) {
-		print(log_error, "error %d, %s at VIDIOC_S_PARM", name().c_str(), errno, strerror(errno));
+		print(log_alert, "error %d, %s at VIDIOC_S_PARM", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	// read again to check:
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_G_PARM, &streamparm)) {
-		print(log_error, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
+		print(log_alert, "error %d, %s at VIDIOC_G_PARM", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	print(log_info, "set to timeperframe=%d/%d", name().c_str(),
@@ -946,14 +946,14 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 	fmt.fmt.pix.field = V4L2_FIELD_NONE;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_S_FMT, &fmt)) {
-		print(log_error, "couldn't set VIDIOC_S_FMT %d, %s", name().c_str(), errno, strerror(errno));
+		print(log_alert, "couldn't set VIDIOC_S_FMT %d, %s", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 
 	memset(&fmt, 0, sizeof(fmt));
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_G_FMT, &fmt)) {
-		print(log_error, "couldn't set VIDIOC_G_FMT %d, %s", name().c_str(), errno, strerror(errno));
+		print(log_alert, "couldn't set VIDIOC_G_FMT %d, %s", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	print(log_info, "set to w=%d, h=%d, pixelformat=%x, bytesperline=%d, field=%d", name().c_str(),
@@ -961,11 +961,11 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 		  fmt.fmt.pix.bytesperline, fmt.fmt.pix.field);
 	if (w != fmt.fmt.pix.width || h != fmt.fmt.pix.height || fmt.fmt.pix.bytesperline != (w*2)
 			|| V4L2_FIELD_NONE != fmt.fmt.pix.field) {
-		print(log_error, "wrong fmt pix!", name().c_str());
+		print(log_alert, "wrong fmt pix!", name().c_str());
 		return false;
 	}
 	if (V4L2_PIX_FMT_YUYV != fmt.fmt.pix.pixelformat) {
-		print(log_error, "wrong pixelformat!", name().c_str());
+		print(log_alert, "wrong pixelformat!", name().c_str());
 		return false;
 	}
 
@@ -977,7 +977,7 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 	cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 	if (-1 == xioctl (_v4l2_fd, VIDIOC_CROPCAP, &cropcap)) {
-		print(log_error, "error %d, %s at VIDIOC_CROPCAP", name().c_str(), errno, strerror(errno));
+		print(log_alert, "error %d, %s at VIDIOC_CROPCAP", name().c_str(), errno, strerror(errno));
 		return false;
 	}
 	print(log_info, "cropcap.defrect=(%d,%d)x(%d,%d)", name().c_str(),
@@ -991,7 +991,7 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 	bool supportscrop=true;
 	if (-1 == xioctl (_v4l2_fd, VIDIOC_S_CROP, &crop)) {
 		supportscrop = false;
-		print(log_error, "cropping not supported. Error %d, %s at VIDIOC_S_CROP", name().c_str(), errno, strerror(errno));
+		print(log_alert, "cropping not supported. Error %d, %s at VIDIOC_S_CROP", name().c_str(), errno, strerror(errno));
 	}
 
 	// now set cropping to wanted rectangle: todo
@@ -1010,27 +1010,27 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_REQBUFS, &req)) {
 		if (EINVAL == errno) {
-			print(log_error, "'%s'' does not support memory mapping", name().c_str(), _file.c_str());
+			print(log_alert, "'%s'' does not support memory mapping", name().c_str(), _file.c_str());
 			return false;
 		} else {
-			print(log_error, "couldn't set VIDIOC_S_FMT %d, %s", name().c_str(), errno, strerror(errno));
+			print(log_alert, "couldn't set VIDIOC_S_FMT %d, %s", name().c_str(), errno, strerror(errno));
 			return false;
 		}
 	}
 
 	if (req.count < 2) {
-		print(log_error, "Insufficient buffer memory on '%s'",
+		print(log_alert, "Insufficient buffer memory on '%s'",
 			  name().c_str(), _file.c_str());
 		return false;
 	}
 	if (_v4l2_buffers) {
-			print(log_error, "v4l2_buffers already init!", name().c_str());
+			print(log_alert, "v4l2_buffers already init!", name().c_str());
 			return false;
 	}
 	_v4l2_buffers = (MeterOCR::buffer*)calloc(req.count, sizeof(*_v4l2_buffers));
 
 	 if (!_v4l2_buffers) {
-			 print(log_error, "Out of memory", name().c_str());
+			 print(log_alert, "Out of memory", name().c_str());
 			 return false;
 	 }
 
@@ -1056,7 +1056,7 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 					  _v4l2_fd, buf.m.offset);
 
 		 if (MAP_FAILED == _v4l2_buffers[_v4l2_nbuffers].start) {
-			 print(log_error, "mmap failed", name().c_str());
+			 print(log_alert, "mmap failed", name().c_str());
 			 return false;
 		 }
 	 }
@@ -1071,13 +1071,13 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h)
 		 buf.index = i;
 
 		 if (-1 == xioctl(_v4l2_fd, VIDIOC_QBUF, &buf)) {
-			 print(log_error, "VIDIOC_QBUF failed", name().c_str());
+			 print(log_alert, "VIDIOC_QBUF failed", name().c_str());
 			 return false;
 		 }
 	 }
 	 enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	 if (-1 == xioctl(_v4l2_fd, VIDIOC_STREAMON, &type)) {
-		 print(log_error, "VIDIOC_QBUF failed", name().c_str());
+		 print(log_alert, "VIDIOC_QBUF failed", name().c_str());
 		 return false;
 	 }
 
@@ -1149,7 +1149,7 @@ bool MeterOCR::readV4l2Frame(Pix *&image, bool first_time)
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_DQBUF, &buf)) {
 		switch (errno) {
 		case EAGAIN:
-			print(log_error, "VIDIOC_DQBUF failed with EAGAIN", name().c_str());
+			print(log_alert, "VIDIOC_DQBUF failed with EAGAIN", name().c_str());
 			return false;
 
 		case EIO:
@@ -1158,13 +1158,13 @@ bool MeterOCR::readV4l2Frame(Pix *&image, bool first_time)
 			/* fall through */
 
 		default:
-			print(log_error, "VIDIOC_DQBUF failed", name().c_str());
+			print(log_alert, "VIDIOC_DQBUF failed", name().c_str());
 			return false;
 		}
 	}
 
 	if(buf.index >= _v4l2_nbuffers) {
-		print(log_error, "buf.index >= nbuffers!", name().c_str());
+		print(log_alert, "buf.index >= nbuffers!", name().c_str());
 		return false;
 	}
 
@@ -1174,7 +1174,7 @@ bool MeterOCR::readV4l2Frame(Pix *&image, bool first_time)
 	if (!image) {
 		// return buffer:
 		if (-1 == xioctl(_v4l2_fd, VIDIOC_QBUF, &buf)) {
-			print(log_error, "VIDIOC_QBUF failed", name().c_str());
+			print(log_alert, "VIDIOC_QBUF failed", name().c_str());
 		}
 		return false;
 	}
@@ -1204,7 +1204,7 @@ bool MeterOCR::readV4l2Frame(Pix *&image, bool first_time)
 	}
 	// return buffer:
 	if (-1 == xioctl(_v4l2_fd, VIDIOC_QBUF, &buf)) {
-		print(log_error, "VIDIOC_QBUF failed", name().c_str());
+		print(log_alert, "VIDIOC_QBUF failed", name().c_str());
 		return false;
 	}
 
@@ -1408,7 +1408,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 				pixWriteStreamJpeg(fp, pixt, 100, 0); // 100, 0: 390ms (680kb)
 				fclose(fp);
 			}else
-				print(log_error, "couldn't open debug file", "ocr");
+				print(log_alert, "couldn't open debug file", "ocr");
 
 		}
 //		pixWrite(outfilename.c_str(), pixt, IFF_TIFF_LZW);
@@ -1452,7 +1452,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 								pixWriteStreamJpeg(fp, image, 100, 0); // 100, 0: 390ms (680kb)
 								fclose(fp);
 							}else
-								print(log_error, "couldn't open debug file", "ocr");
+								print(log_alert, "couldn't open debug file", "ocr");
 
 						}
 					}
@@ -1555,7 +1555,7 @@ bool MeterOCR::autofixDetection(Pix *image_org, int &dX, int&dY, PIXA *debugPixa
 			print(log_debug, "autofixDetection: dX=%d, dY=%d\n", name().c_str(), dX, dY);
 			return true;
 		}
-		print(log_error, "autofixDetection: not found!\n", name().c_str());
+		print(log_alert, "autofixDetection: not found!\n", name().c_str());
 	}
 	return false;
 }

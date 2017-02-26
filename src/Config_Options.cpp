@@ -81,7 +81,7 @@ void Config_Options::config_parse(
 	/* open configuration file */
 	FILE *file = fopen(_config.c_str(), "r");
 	if (file == NULL) {
-		print(log_error, "Cannot open configfile %s: %s", NULL, _config.c_str(), strerror(errno)); /* why didn't the file open? */
+		print(log_alert, "Cannot open configfile %s: %s", NULL, _config.c_str(), strerror(errno)); /* why didn't the file open? */
 		throw vz::VZException("Cannot open configfile.");
 	}
 	else {
@@ -105,7 +105,7 @@ void Config_Options::config_parse(
 			std::string strline(buf);
 			if (!std::all_of(strline.begin(), strline.end(), isspace)) {
 #endif
-				print(log_error, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
+				print(log_alert, "extra data after end of configuration in %s:%d", NULL, _config.c_str(), line);
 				throw vz::VZException("extra data after end of configuration");
 			}
 		} else {
@@ -113,7 +113,7 @@ void Config_Options::config_parse(
 			json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 			if (json_tok->err > 1) {
-				print(log_error, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
+				print(log_alert, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
 				json_object_put(json_cfg);
 				json_cfg=0;
 				throw vz::VZException("Parse configuaration failed.");
@@ -165,7 +165,7 @@ void Config_Options::config_parse(
 						_channel_index = json_object_get_boolean(local_value);
 					}
 					else {
-						print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+						print(log_alert, "Ignoring invalid field or type: %s=%s (%s)",
 									NULL, key, json_object_get_string(local_value), option_type_str[local_type]);
 					}
 				}
@@ -185,7 +185,7 @@ void Config_Options::config_parse(
 					print(log_error, "Ignoring push entry due to empty array or duplicate section", "push");
 			}
 			else {
-				print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+				print(log_alert, "Ignoring invalid field or type: %s=%s (%s)",
 							NULL, key, json_object_get_string(value), option_type_str[type]);
 			}
 		}
@@ -193,7 +193,7 @@ void Config_Options::config_parse(
 		json_object_put(json_cfg); /* free allocated memory */
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "parse configuration failed due to:", "",  oss.str().c_str());
+		print(log_alert, "parse configuration failed due to:", "",  oss.str().c_str());
 		throw;
 	}
 
@@ -265,18 +265,18 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 		else { /* all other options will be passed to meter_init() */
 			Option option(key, value);
 			options.push_back(option);
-			//print(log_error, "Ignoring invalid field or type: %s=%s (%s)",
+			//print(log_alert, "Ignoring invalid field or type: %s=%s (%s)",
 			//	NULL, key, json_object_get_string(value), option_type_str[type]);
 		}
 	}
 
 	/* check uuid and middleware */
 	if (uuid == NULL) {
-		print(log_error, "Missing UUID", NULL);
+		print(log_alert, "Missing UUID", NULL);
 		throw vz::VZException("Missing UUID");
 	}
 	if (!config_validate_uuid(uuid)) {
-		print(log_error, "Invalid UUID: %s", NULL, uuid);
+		print(log_alert, "Invalid UUID: %s", NULL, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
 	// check if identifier is set. If not, use default
@@ -299,7 +299,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping)
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Invalid id: %s due to: '%s'", NULL, id_str, oss.str().c_str());
+		print(log_alert, "Invalid id: %s due to: '%s'", NULL, id_str, oss.str().c_str());
 		throw vz::VZException("Invalid reader.");
 	}
 

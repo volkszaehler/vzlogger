@@ -40,7 +40,7 @@ MeterFile::MeterFile(std::list<Option> options)
 	try {
 		_path = optlist.lookup_string(options, "path");
 	} catch (vz::VZException &e) {
-		print(log_error, "Missing path or invalid type", name().c_str());
+		print(log_alert, "Missing path or invalid type", name().c_str());
 		throw;
 	}
 
@@ -92,7 +92,7 @@ MeterFile::MeterFile(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_format = ""; // use default format
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse format", name().c_str());
+		print(log_alert, "Failed to parse format", name().c_str());
 		throw;
 	}
 
@@ -103,10 +103,10 @@ MeterFile::MeterFile(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_rewind = FALSE; // do not rewind file by default
 	} catch (vz::InvalidTypeException &e) {
-		print(log_error, "Invalid type for 'rewind'", name().c_str());
+		print(log_alert, "Invalid type for 'rewind'", name().c_str());
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse 'rewind'", name().c_str());
+		print(log_alert, "Failed to parse 'rewind'", name().c_str());
 		throw;
 	}
 }
@@ -119,7 +119,7 @@ int MeterFile::open() {
 	_fd = fopen(path(), "r");
 
 	if (_fd == NULL) {
-		print(log_error, "fopen(%s): %s", name().c_str(), path(), strerror(errno));
+		print(log_alert, "fopen(%s): %s", name().c_str(), path(), strerror(errno));
 		return ERR;
 	}
 
