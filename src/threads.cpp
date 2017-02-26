@@ -32,6 +32,7 @@
 #include <ApiIF.hpp>
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/InfluxDB.hpp>
 #include <api/Null.hpp>
 #ifdef LOCAL_SUPPORT
 #include "local.h"
@@ -147,7 +148,7 @@ void * reading_thread(void *arg) {
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_error, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
+		print(log_alert, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
 		pthread_exit(0);
 	}
 
@@ -171,12 +172,16 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
 		print(log_debug, "Using MySmartGrid api.", ch->name());
 	}
+	else if (0 == strcasecmp(ch->apiProtocol().c_str(), "influxdb")) {
+		api =  vz::ApiIF::Ptr(new vz::api::InfluxDB(ch, ch->options()));
+		print(log_debug, "Using InfluxDB api", ch->name());
+	}
 	else if (0 == strcasecmp(ch->apiProtocol().c_str(), "null")) {
 		api =  vz::ApiIF::Ptr(new vz::api::Null(ch, ch->options()));
 		print(log_debug, "Using null api- meter data available via local httpd if enabled.", ch->name());
 	} else {
 		if (strcasecmp(ch->apiProtocol().c_str(), "volkszaehler"))
-			print(log_error, "Wrong config! api: <%s> is unknown!", ch->name(), ch->apiProtocol().c_str());
+			print(log_alert, "Wrong config! api: <%s> is unknown!", ch->name(), ch->apiProtocol().c_str());
 		// try to use volkszaehler api anyhow:
 
 		// default == volkszaehler
@@ -190,7 +195,7 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 			api->send();
 		}
 		catch (std::exception &e) {
-			print(log_error, "Logging thread failed due to: %s", ch->name(), e.what());
+			print(log_alert, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
 
 	} while (true); //endless?!

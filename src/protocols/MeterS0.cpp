@@ -108,7 +108,7 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	} catch (vz::OptionNotFoundException &e) {
 		_resolution = 1000;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse resolution", "");
+		print(log_alert, "Failed to parse resolution", "");
 		throw;
 	}
 	if (_resolution < 1) throw vz::VZException("Resolution must be greater than 0.");
@@ -118,7 +118,7 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	} catch (vz::OptionNotFoundException &e) {
 		_debounce_delay_ms = 30;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse debounce_delay", "");
+		print(log_alert, "Failed to parse debounce_delay", "");
 		throw;
 	}
 	if (_debounce_delay_ms < 0) throw vz::VZException("debounce_delay must not be negative.");
@@ -128,7 +128,7 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	} catch (vz::OptionNotFoundException &e) {
 		// keep default 1e5;
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse nonblocking_delay", "");
+		print(log_alert, "Failed to parse nonblocking_delay", "");
 		throw;
 	}
 	if (_nonblocking_delay_ns < 100) throw vz::VZException("nonblocking_delay must not be <100ns.");
@@ -138,7 +138,7 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	} catch (vz::OptionNotFoundException &e) {
 		// keep default init value (false)
 	} catch (vz::VZException &e) {
-		print(log_error, "Failed to parse send_zero", "");
+		print(log_alert, "Failed to parse send_zero", "");
 		throw;
 	}
 
@@ -225,7 +225,7 @@ void MeterS0::counter_thread()
 		policy = SCHED_FIFO; // different approach would be PR_SET_TIMERSLACK with 1ns (default 50us)
 		param.sched_priority = sched_get_priority_max(policy);
 		if (0!= pthread_setschedparam(pthread_self(), policy, &param) ) {
-			print(log_error, "failed to set policy to SCHED_FIFO for counter_thread", name().c_str());
+			print(log_alert, "failed to set policy to SCHED_FIFO for counter_thread", name().c_str());
 		}
 	}
 
@@ -436,7 +436,7 @@ MeterS0::HWIF_UART::HWIF_UART(const std::list<Option> &options) :
 	try {
 		_device = optlist.lookup_string(options, "device");
 	} catch (vz::VZException &e) {
-		print(log_error, "Missing device or invalid type", "");
+		print(log_alert, "Missing device or invalid type", "");
 		throw;
 	}
 }
@@ -452,7 +452,7 @@ bool MeterS0::HWIF_UART::_open()
 	int fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY);
 
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", "", _device.c_str(), strerror(errno));
+		print(log_alert, "open(%s): %s", "", _device.c_str(), strerror(errno));
 		return false;
 	}
 
@@ -543,7 +543,7 @@ bool MeterS0::HWIF_MMAP::_open()
 {
 	int mem_fd = -1;
 	if ((mem_fd = ::open("/dev/mem", O_RDWR|O_SYNC)) < 0) {
-	   print( log_error, "can't open /dev/mem \n", "MMAP" );
+	   print( log_alert, "can't open /dev/mem \n", "MMAP" );
 	   return false;
 	}
 
@@ -559,7 +559,7 @@ bool MeterS0::HWIF_MMAP::_open()
 	::close(mem_fd); //No need to keep mem_fd open after mmap
 
 	if (gpio_map == MAP_FAILED) {
-	   print( log_error, "mmap error %p errno=%d\n", "MMAP", gpio_map, errno);
+	   print( log_alert, "mmap error %p errno=%d\n", "MMAP", gpio_map, errno);
 	   return false;
 	}
 
@@ -666,7 +666,7 @@ bool MeterS0::HWIF_GPIO::_open()
 
 	fd = ::open( _device.c_str(), O_RDONLY | O_EXCL); // EXCL really needed?
 	if (fd < 0) {
-		print(log_error, "open(%s): %s", "", _device.c_str(), strerror(errno));
+		print(log_alert, "open(%s): %s", "", _device.c_str(), strerror(errno));
 		return false;
 	}
 

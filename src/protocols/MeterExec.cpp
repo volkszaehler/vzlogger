@@ -45,7 +45,7 @@ MeterExec::MeterExec(std::list<Option> options)
 	try {
 		_command = optlist.lookup_string(options, "command");
 	} catch (vz::VZException &e) {
-		print(log_error, "MeterExec::MeterExec: Missing command or invalid type", name().c_str());
+		print(log_alert, "MeterExec::MeterExec: Missing command or invalid type", name().c_str());
 		throw;
 	}
 
@@ -103,7 +103,7 @@ MeterExec::MeterExec(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_format = ""; // use default format
 	} catch (vz::VZException &e) {
-		print(log_error, "MeterExec::MeterExec: Failed to parse format", name().c_str());
+		print(log_alert, "MeterExec::MeterExec: Failed to parse format", name().c_str());
 		throw;
 	}
 }
@@ -114,9 +114,9 @@ MeterExec::~MeterExec() {
 int MeterExec::open() {
 #ifndef METEREXEC_ROOTACCESS
 	if(geteuid() == 0) {
-		print(log_error, "MeterExec::open: MeterExec protocol cannot be run with root privileges!", name().c_str());
-		print(log_error, "                 If you really want this, compile vzlogger with:", name().c_str());
-		print(log_error, "                 'cmake -D METEREXEC_ROOTACCESS=true .'", name().c_str());
+		print(log_alert, "MeterExec::open: MeterExec protocol cannot be run with root privileges!", name().c_str());
+		print(log_alert, "                 If you really want this, compile vzlogger with:", name().c_str());
+		print(log_alert, "                 'cmake -D METEREXEC_ROOTACCESS=true .'", name().c_str());
 		return ERR;
 	}
 #else
@@ -127,7 +127,7 @@ int MeterExec::open() {
 	_pipe = popen(command(), "r");
 
 	if (_pipe == NULL) {
-		print(log_error, "MeterExec::open: popen(%s): %s", name().c_str(), command(), strerror(errno));
+		print(log_alert, "MeterExec::open: popen(%s): %s", name().c_str(), command(), strerror(errno));
 		return ERR;
 	}
 
