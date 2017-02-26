@@ -1,0 +1,36 @@
+/**
+ * vzlogger configuration example for InfluxDB 
+ *
+ * use proper encoded JSON with javascript comments
+ *
+ * take a look at the wiki for detailed information:
+ * http://wiki.volkszaehler.org/software/controller/vzlogger#configuration
+*/
+
+{
+    // ... for general vzlogger settings see vzlogger.conf
+
+    "meters": [
+        // examples for InfluxDB as storage
+        {
+            // See vzlogger.conf for complete meter configuration options
+
+            "enabled": true,                 // disabled meters will be ignored
+            "protocol": "sml",               // see 'vzlogger -h' for list of available protocols
+            "device": "/dev/ttyAMA0",
+            "channels": [{
+                "api": "influxdb", // use the InfluxDB api
+                "uuid": "01234567-9abc-def0-1234-56789abcdefe", // use the uuid command to generate this
+                "identifier" : "1-0:16.7.0", // OBIS code for "power" 
+                "host": "127.0.0.1:8086",                       // This assumes that InfluxDB is running on localhost
+                //"database": "vzlogger",                       // Optional: make sure this database exists in InfluxDB
+                //"measurement_name": "vz_measurement",         // Optional: It is recommended that all your meters have the same InfluxDB measurement name
+                //"username": "example",                        // Optional: When InfluxDB Auth is enabled you need to set the correct user and password
+                //"password": "secure",
+                //"max_batch_inserts": 4500,                    // Optional: Max number of measurements per request. No need to change this
+                //"max_buffer_size": 450000,                    // Optional: Max number of measurements to be cached when InfluxDB is not available
+                //"timeout": 30,                                // Optional: Time in seconds after which requests to InfluxDB time out
+            }]
+        },
+    ]
+}

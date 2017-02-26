@@ -32,6 +32,7 @@
 #include <ApiIF.hpp>
 #include <api/Volkszaehler.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/InfluxDB.hpp>
 #include <api/Null.hpp>
 #ifdef LOCAL_SUPPORT
 #include "local.h"
@@ -170,6 +171,10 @@ void * logging_thread(void *arg) { // get's started from Channel::start and stop
 	if (0 == strcasecmp(ch->apiProtocol().c_str(), "mysmartgrid")) {
 		api =  vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options()));
 		print(log_debug, "Using MySmartGrid api.", ch->name());
+	}
+	else if (0 == strcasecmp(ch->apiProtocol().c_str(), "influxdb")) {
+		api =  vz::ApiIF::Ptr(new vz::api::InfluxDB(ch, ch->options()));
+		print(log_debug, "Using InfluxDB api", ch->name());
 	}
 	else if (0 == strcasecmp(ch->apiProtocol().c_str(), "null")) {
 		api =  vz::ApiIF::Ptr(new vz::api::Null(ch, ch->options()));

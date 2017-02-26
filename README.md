@@ -1,5 +1,5 @@
-vzlogger...
-
+vzlogger
+=========
   * is a part of the volkszaehler.org smart meter
   * is a tool to read and log measurements of a wide variety of smart meters and sensors to the volkszaehler.org middleware
   * can run as a daemon or via cron
@@ -8,6 +8,8 @@ vzlogger...
 
 Feel free to implement support your own hardware ;)
 
+Installation
+---------------
 To install, follow the detailed installation instructions at http://wiki.volkszaehler.org/software/controller/vzlogger/installation_cpp-version
 
 If you're impatient you can quickstart using (Debian Wheezy):
@@ -23,7 +25,9 @@ Then run the installation:
 
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
-
+    
+Mailing List
+-------------
 If you have questions, contact the volkszaehler mailing lists:
 
   * Users mailing list: volkszaehler@lists.volkszaehler.org
