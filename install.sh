@@ -56,6 +56,7 @@ lib_dir=libs
 build_dir=build
 vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
+systemd_unit=/etc/systemd/system/vzlogger.system
 
 ###############################
 # functions
@@ -284,10 +285,17 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo "make sure to restart vzlogger"
 	fi
 
-	if [ ! -e "/etc/systemd/system/vzlogger.service" ]; then
+	if [ ! -e "$systemd_unit" ]; then
 		echo
-		echo "could not find vzlogger.service in /etc/systemd/system/"
-		echo "we recommend to configure vzlogger as a service"
-        echo "for further details: man systemd or wiki.volkszaehler.org"
+		echo "could not find $systemd_unit"
+		echo "it is recommended to configure a vzlogger systemd service"
+		echo
+
+		read -p "add the systemd unit file? [y/N]" -n 1 -r
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			echo
+			echo "installing systemd unit file"
+			sudo sed -e "s|/etc/vzlogger.conf|$vzlogger_conf|g" < ./etc/vzlogger.service > $systemd_unit
+		fi
 	fi
 fi
