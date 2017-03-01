@@ -56,6 +56,7 @@ lib_dir=libs
 build_dir=build
 vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
+systemd_unit=/etc/systemd/system/vzlogger.system
 
 ###############################
 # functions
@@ -272,6 +273,20 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
         
     popd
 
+	if [ ! -e "$systemd_unit" ]; then
+		echo
+		echo "could not find $systemd_unit"
+		echo "it is recommended to configure a vzlogger systemd service"
+		echo
+
+		read -p "add the systemd unit file? [y/N]" -n 1 -r
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			echo
+			echo "installing systemd unit file"
+			sudo sed -e "s|/etc/vzlogger.conf|$vzlogger_conf|g" < ./etc/vzlogger.service > $systemd_unit
+		fi
+	fi
+
 	if [ ! -e "$vzlogger_conf" ]; then
 		echo
 		echo "could not find global config file $vzlogger_conf"
@@ -282,13 +297,5 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		echo
 		echo "vzlogger is already running"
 		echo "make sure to restart vzlogger"
-	fi
-
-	if ! grep -q vzlogger /etc/inittab; then
-		echo
-		echo "could not find vzlogger in /etc/inittab"
-		echo "if you want vzlogger to start automatically add the following line to /etc/inittab"
-		echo "vz:235:respawn:/usr/local/bin/vzlogger -d"
-		echo "activate using `init q`"
 	fi
 fi
