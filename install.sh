@@ -273,18 +273,6 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
         
     popd
 
-	if [ ! -e "$vzlogger_conf" ]; then
-		echo
-		echo "could not find global config file $vzlogger_conf"
-		echo "make sure to configure vzlogger before running (see etc/vzlogger.conf)"
-	fi
-
-	if [ -n "$(pidof vzlogger)" ]; then
-		echo
-		echo "vzlogger is already running"
-		echo "make sure to restart vzlogger"
-	fi
-
 	if [ ! -e "$systemd_unit" ]; then
 		echo
 		echo "could not find $systemd_unit"
@@ -297,5 +285,17 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 			echo "installing systemd unit file"
 			sudo sed -e "s|/etc/vzlogger.conf|$vzlogger_conf|g" < ./etc/vzlogger.service > $systemd_unit
 		fi
+	fi
+
+	if [ ! -e "$vzlogger_conf" ]; then
+		echo
+		echo "could not find global config file $vzlogger_conf"
+		echo "make sure to configure vzlogger before running (see etc/vzlogger.conf)"
+	fi
+
+	if [ -n "$(pidof vzlogger)" ]; then
+		echo
+		echo "vzlogger is already running"
+		echo "make sure to restart vzlogger"
 	fi
 fi
