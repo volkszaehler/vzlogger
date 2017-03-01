@@ -1,0 +1,12 @@
+[Unit]
+Description=vzlogger
+After=syslog.target network.target
+After=mysql.service ntp.service
+
+[Service]
+ExecStart=/usr/local/bin/vzlogger -c /etc/vzlogger.conf
+ExecReload=/bin/kill -HUP $MAINPID
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
