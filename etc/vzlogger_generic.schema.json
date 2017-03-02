@@ -137,6 +137,11 @@
                     "type": "string",
                     "description": "secret key to use to talk to MySmartGrid api."
                 },
+                "interval": {
+                    "type": "integer",
+                    "default": 300,
+                    "description": "time between 2 logtuples"
+                },
                 "type": {
                     "type": "string",
                     "enum": ["device", "sensor"],
