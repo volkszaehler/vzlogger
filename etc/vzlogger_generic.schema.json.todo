@@ -3,16 +3,6 @@
 
   todo: for some meter (with periodic=true) interval needs to be positive
   todo: for some meter interval is not allowed
-  todo: for meter the option skip is actually called "allowskip"?
-    JAU check
-  todo: dependency for aggmode!=none and aggtime             "dependencies": {
-                "aggmode": ["aggtime"],
-                "aggtime": ["aggmode"]
-            }
-    JAU it wouldnt work as expexted
   todo: "meters" can be called "sensors" as well
-  todo: add regex for uuid (see config_validate_uuid())
-    JAU check
-  todo: meterD0 needs device or host
-    JAU check
+  
   */
