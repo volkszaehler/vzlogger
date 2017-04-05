@@ -56,7 +56,7 @@ lib_dir=libs
 build_dir=build
 vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
-systemd_unit=/etc/systemd/system/vzlogger.system
+systemd_unit=/etc/systemd/system/vzlogger.service
 
 ###############################
 # functions
