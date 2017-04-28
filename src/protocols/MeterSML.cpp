@@ -93,7 +93,13 @@ MeterSML::MeterSML(std::list<Option> options)
 		/* using default value if not specified */
 		_pull = "";
 	}
-
+	try {
+		_use_local_time = optlist.lookup_bool(options, "use_local_time");
+	}
+	catch (vz::OptionNotFoundException &e) {
+		/* using default value if not specified */
+		_use_local_time = false;
+	}
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
@@ -265,7 +271,7 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 
 		// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
 		struct timeval tv;
-		if (entry->val_time) { /* use time from meter */
+		if (!_use_local_time && entry->val_time) { /* use time from meter */
 			tv.tv_sec = *entry->val_time->data.timestamp;
 			tv.tv_usec = 0;
 		}
