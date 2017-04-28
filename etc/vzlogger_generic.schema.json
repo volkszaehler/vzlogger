@@ -508,6 +508,11 @@
                             "enum": ["8n1", "7n1", "7e1", "7o1"],
                             "default": "8n1",
                             "description": "parity used for serial communication"
+                        },
+                        "use_local_time": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "use the local time for reading timestamp?"
                         }
                     },
                 "required": ["protocol", "device", "baudrate", "parity"]
@@ -545,6 +550,11 @@
                             "enum": ["8n1", "7n1", "7e1", "7o1"],
                             "default": "8n1",
                             "description": "parity used for serial communication"
+                        },
+                        "use_local_time": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "use the local time for reading timestamp?"
                         }
                     },
                 "required": ["protocol", "host", "baudrate", "parity"]
