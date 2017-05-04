@@ -61,7 +61,8 @@ protected:
 	speed_t _baudrate;
 	parity_type_t _parity;
 	std::string _pull;
-
+	bool _use_local_time;
+	
 	int _fd;	/* file descriptor of port */
 	struct termios _old_tio;	/* required to reset port */
 
