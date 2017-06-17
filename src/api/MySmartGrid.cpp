@@ -575,14 +575,24 @@ void vz::api::MySmartGrid::hmac_sha1(
 	, const unsigned char *data
 	,size_t dataLen
 	) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	HMAC_CTX hmacContext;
 
 	HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
 	HMAC_Update(&hmacContext, data, dataLen);
+#else
+	HMAC_CTX *hmacContext = HMAC_CTX_new();
 
+	HMAC_Init_ex(hmacContext, secretKey(), strlen(secretKey()), EVP_sha1(),NULL);
+	HMAC_Update(hmacContext, data, dataLen);
+#endif
 	unsigned char out[EVP_MAX_MD_SIZE];
 	unsigned int len = EVP_MAX_MD_SIZE;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	HMAC_Final(&hmacContext, out, &len);
+#else
+	HMAC_Final(hmacContext, out, &len);
+#endif
 	char ret[2*EVP_MAX_MD_SIZE];
 	memset(ret, 0, sizeof(ret));
 
@@ -593,6 +603,10 @@ void vz::api::MySmartGrid::hmac_sha1(
 //strncat(ret, s, sizeof(ret));
 	}
 	snprintf(digest, 255/*sizeof(digest)*/, "X-Digest: %s", ret);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	HMAC_CTX_free(hmacContext);
+	hmacContext=NULL;
+#endif
 }
 
 
