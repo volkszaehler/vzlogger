@@ -140,14 +140,23 @@ vz::api::InfluxDB::InfluxDB(
 			throw;
 		}
 
+	CURL *curlhelper = curl_easy_init();
+	if(!curlhelper) {
+		throw vz::VZException("CURL: cannot create handle for urlencode.");
+	}
+	char *database_urlencoded = curl_easy_escape(curlhelper, _database.c_str(), 0);
+	if(!database_urlencoded) {
+		throw vz::VZException("Cannot url-encode database name.");
+	}
+
 	// build request url
 	_url = _host;
 	_url.append("/write");
 	_url.append("?db=");
-	_url.append(_database);
+	_url.append(database_urlencoded);
 	_url.append("&precision=ms");
 	print(log_debug, "api InfluxDB using url %s", ch->name(), _url.c_str());
-
+	curl_free(database_urlencoded);
 }
 
 vz::api::InfluxDB::~InfluxDB() // destructor
