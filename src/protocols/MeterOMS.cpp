@@ -142,7 +142,9 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	// init openssl:
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms();
-	OPENSSL_config(NULL);
+#if OPENSSL_API_COMPAT < 0x10100000L
+	OPENSSL_config(NULL); // not needed anylonger with current openssl versions
+#endif
 
 	// parse options:
 	// expect device and key
