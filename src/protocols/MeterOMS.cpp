@@ -140,10 +140,14 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	print(log_debug, "Using libmbus version %s", name().c_str(), mbus_get_current_version());
 
 	// init openssl:
+#if OPENSSL_VERSION_NUMBER >= 0x10100003L
+	OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, NULL);
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms(); // should be called after init
+#else
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms();
-#if OPENSSL_API_COMPAT < 0x10100000L
-	OPENSSL_config(NULL); // not needed anylonger with current openssl versions
+	OPENSSL_config(NULL);
 #endif
 
 	// parse options:
