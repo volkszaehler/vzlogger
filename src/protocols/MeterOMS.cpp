@@ -13,6 +13,7 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/ssl.h>
 #include "protocols/MeterOMS.hpp"
 
 // send_frame: similar to mbus_serial_send_frame from libmbus!
