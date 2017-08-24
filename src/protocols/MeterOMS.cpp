@@ -13,6 +13,7 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/ssl.h>
 #include "protocols/MeterOMS.hpp"
 
 // send_frame: similar to mbus_serial_send_frame from libmbus!
@@ -140,9 +141,15 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	print(log_debug, "Using libmbus version %s", name().c_str(), mbus_get_current_version());
 
 	// init openssl:
+#if OPENSSL_VERSION_NUMBER >= 0x10100003L
+	OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, NULL);
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms(); // should be called after init
+#else
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms();
 	OPENSSL_config(NULL);
+#endif
 
 	// parse options:
 	// expect device and key
