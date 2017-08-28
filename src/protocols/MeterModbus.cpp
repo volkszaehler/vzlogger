@@ -195,10 +195,10 @@ void IMEmeterRegisterMap::read(std::vector<Reading>& rds, ModbusConnection::Ptr 
 	uint16_t regs[reg_len];
 	int value;
 
+	conn->read_registers(reg_offset, reg_len, regs, id);
+
 	// This device requires some time of silence on the bus, otherwise it doesn't respond.
 	std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
-	conn->read_registers(reg_offset, reg_len, regs, id);
 
 	value = MODBUS_GET_INT32_FROM_INT16(regs, 4116 - reg_offset);
 	rds.push_back(Reading(value * 0.01, new ModbusReadingIdentifier(id, "CurrentPowerW")));
