@@ -23,7 +23,8 @@ For Debian Jessie be sure to add:
 
 For Debian Stretch use:
 
-    sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev libgnutls28-dev libgcrypt20-dev libmicrohttp-dev
+    sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev \
+      libgnutls28-dev libgcrypt20-dev libmicrohttp-dev libsasl2-dev
 
 Then run the installation:
 
