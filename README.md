@@ -21,6 +21,10 @@ For Debian Jessie be sure to add:
 
     sudo apt-get install libgcrypt20-dev
 
+For Debian Stretch use:
+
+    sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev libgnutls28-dev libgcrypt20-dev libmicrohttp-dev
+
 Then run the installation:
 
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
