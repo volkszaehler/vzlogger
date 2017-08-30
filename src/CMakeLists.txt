@@ -53,6 +53,7 @@ if( MBUS_FOUND )
     target_link_libraries(vzlogger ${MBUS_LIBRARY})
 endif( MBUS_FOUND )
 target_link_libraries(vzlogger ${OCR_LIBRARIES})
+target_link_libraries(vzlogger modbus)
 
 if(LOCAL_SUPPORT)
 target_link_libraries(vzlogger ${MICROHTTPD_LIBRARY})
@@ -71,6 +72,7 @@ if( TARGET )
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
 target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES} )
+
 
 # add programs to the install target 
 INSTALL(PROGRAMS 

@@ -62,6 +62,17 @@ Reading::Reading(
 }
 
 Reading::Reading(
+	double pValue
+	, ReadingIdentifier *pIndentifier
+	)
+		: _deleted(false)
+		, _value(pValue)
+{
+	time();
+	_identifier.reset(pIndentifier);
+}
+
+Reading::Reading(
 	const Reading &orig
 	) :
 		_deleted(orig._deleted)
@@ -119,6 +130,7 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 			case meter_protocol_s0:
 			case meter_protocol_ocr:
 			case meter_protocol_w1therm:
+			case meter_protocol_modbus:
 				rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
 				break;
 

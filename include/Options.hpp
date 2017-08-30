@@ -5,6 +5,7 @@
 #include <iostream>
 #include <list>
 #include <json-c/json.h>
+#include <common.h>
 
 class Option {
 
@@ -87,20 +88,45 @@ public:
 	typedef std::list<Option>::iterator iterator;
 	typedef std::list<Option>::const_iterator const_iterator;
 
-	const Option& lookup(std::list<Option> const &options, const std::string &key) const;
-	const char *lookup_string(std::list<Option> const &options, const char *key) const;
-	const char *lookup_string_tolower(std::list<Option> const &options, const char *key) const;
-	int    lookup_int(std::list<Option> const &options, const char *key) const;
-	bool   lookup_bool(std::list<Option> const &options, const char *key) const;
-	double lookup_double(std::list<Option> const &options, const char *key) const;
-	struct json_object *lookup_json_array(std::list<Option> const &options, const char *key) const;
-	struct json_object *lookup_json_object(std::list<Option> const &options, const char *key) const; 
-	void dump(std::list<Option> const &options);
+	static const Option& lookup(std::list<Option> const &options, const std::string &key);
+	static const char *lookup_string(std::list<Option> const &options, const char *key);
+	static const char *lookup_string_tolower(std::list<Option> const &options, const char *key);
+	static int    lookup_int(std::list<Option> const &options, const char *key);
+	static bool   lookup_bool(std::list<Option> const &options, const char *key);
+	static double lookup_double(std::list<Option> const &options, const char *key);
+	static struct json_object *lookup_json_array(std::list<Option> const &options, const char *key);
+	static struct json_object *lookup_json_object(std::list<Option> const &options, const char *key);
+	static void dump(std::list<Option> const &options);
 
-	void parse();
+	static void parse();
 
 protected:
 
 };
+
+
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T lookup_mandatory(const std::list<Option> &olist, const std::string &o, const std::string &errorcontext) {
+	T v;
+	try {
+		v = L(olist, o.c_str());
+	} catch (vz::VZException &e) {
+			print(log_error, "Missing mandatory option: %s", errorcontext.c_str(), o.c_str());
+			throw;
+	}
+	return v;
+}
+
+template <typename T, T (*L)(const std::list<Option> &, const char *)>
+T lookup_optional(const std::list<Option> &olist, const std::string &o, const T &def) {
+	T v;
+	try {
+		v = L(olist, o.c_str());
+	} catch (vz::VZException &e) {
+		return def;
+	}
+	return v;
+}
+
 
 #endif /* _OPTIONS_H_ */
