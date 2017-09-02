@@ -102,11 +102,13 @@ void ModbusConnection::connect() {
 	if (ret < 0) {
 		throw ModbusException("connecting modbus");
 	}
+	_connected = true;
 
 }
 
 void ModbusConnection::close() {
-	modbus_close(_ctx);
+	if (_connected)
+		modbus_close(_ctx);
 }
 
 ModbusConnection::~ModbusConnection() {
@@ -149,9 +151,9 @@ void OpRegisterMap::read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, 
 	uint16_t regs[10];
 
 	conn->read_registers(40799, 10, regs, id);
-	rds.push_back(Reading(regs[9] / 10.0, new StringIdentifier("T")));
-	rds.push_back(Reading(regs[2], new StringIdentifier("P")));
-	rds.push_back(Reading(regs[8], new StringIdentifier("E")));
+	rds.push_back(Reading(regs[9] / 10.0, new ModbusReadingIdentifier(id, "T")));
+	rds.push_back(Reading(regs[2], new ModbusReadingIdentifier(id, "P")));
+	rds.push_back(Reading(regs[8], new ModbusReadingIdentifier(id, "E")));
 }
 
 void IMEmeterRegisterMap::read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, unsigned id) {
@@ -163,13 +165,46 @@ void IMEmeterRegisterMap::read(std::vector<Reading>& rds, ModbusConnection::Ptr 
 	conn->read_registers(reg_offset, reg_len, regs, id);
 
 	value = MODBUS_GET_INT32_FROM_INT16(regs, 4116 - reg_offset);
-	rds.push_back(Reading(value * 0.01, new StringIdentifier("Current Power")));
+	rds.push_back(Reading(value * 0.01, new ModbusReadingIdentifier(id, "CurrentPowerW")));
 
 	value = MODBUS_GET_INT32_FROM_INT16(regs, 4128 - reg_offset);
-	rds.push_back(Reading(value, new StringIdentifier("TotalExpWh")));
+	rds.push_back(Reading(value, new ModbusReadingIdentifier(id, "TotalExpWh")));
 
 	value = MODBUS_GET_INT32_FROM_INT16(regs, 4124 - reg_offset);
-	rds.push_back(Reading(value, new StringIdentifier("TotalImpWh")));
+	rds.push_back(Reading(value, new ModbusReadingIdentifier(id, "TotalImpWh")));
 
 }
 
+void ModbusReadingIdentifier::parse(const std::string& s)
+{
+	std::istringstream ss(s);
+	char c;
+	ss >> _slaveid >> c >> _name;
+}
+
+ModbusReadingIdentifier::ModbusReadingIdentifier(const std::string& conf)
+: _slaveid(0)
+{
+	parse(conf);
+	print(log_info, "ModbusReadingIdentifier, slave %d name %s", "modbus", _slaveid, _name.c_str());
+}
+
+bool ModbusReadingIdentifier::operator ==(const ReadingIdentifier& cmp) const
+{
+	const ModbusReadingIdentifier *ri = dynamic_cast<const ModbusReadingIdentifier*>(&cmp);
+	return ri &&
+			ri->_name == _name &&
+			ri->_slaveid == _slaveid;
+}
+
+const std::string ModbusReadingIdentifier::toString() {
+	std::ostringstream ss;
+	ss << _slaveid << ":" << _name;
+	return ss.str();
+}
+
+size_t ModbusReadingIdentifier::unparse(char *buffer, size_t n) {
+	size_t l = toString().copy(buffer, n);
+	buffer[n-1] = '\0';
+	return l;
+}

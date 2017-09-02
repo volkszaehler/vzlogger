@@ -194,11 +194,11 @@ Meter::Meter(std::list<Option> pOptions) :
 		_protocol = vz::protocol::Protocol::Ptr(new MeterOMS(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
 		break;
+#endif
 	case meter_protocol_modbus:
 		_protocol = vz::protocol::Protocol::Ptr(new MeterModbus(pOptions));
-		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		_identifier = ReadingIdentifier::Ptr(new ModbusReadingIdentifier());
 		break;
-#endif
 		default:
 			break;
 	}

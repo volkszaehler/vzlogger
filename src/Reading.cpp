@@ -32,6 +32,9 @@
 
 #include "VZException.hpp"
 #include "Reading.hpp"
+#include "common.h"
+#include "protocols/MeterModbus.hpp"
+
 
 Reading::Reading()
 		: _deleted(false)
@@ -98,7 +101,13 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 			case meter_protocol_d0:
 			case meter_protocol_sml:
 			case meter_protocol_oms:
-				rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis(string)));
+				try {
+					rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis(string)));
+				}
+				catch (vz::VZException &e) {
+					print(log_info, e.what(), "OMS");
+					rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
+				}
 				break;
 
 			case meter_protocol_fluksov2: {
@@ -130,8 +139,10 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 			case meter_protocol_s0:
 			case meter_protocol_ocr:
 			case meter_protocol_w1therm:
-			case meter_protocol_modbus:
 				rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
+				break;
+			case meter_protocol_modbus:
+				rid = ReadingIdentifier::Ptr(new ModbusReadingIdentifier(string));
 				break;
 
 			default: /* ignore other protocols which do not provide id's */
