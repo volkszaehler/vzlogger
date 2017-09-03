@@ -20,6 +20,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/protocols/MeterSML.cpp
 	../../src/protocols/MeterFluksoV2.cpp
 	../../src/protocols/MeterW1therm.cpp
+	../../src/protocols/MeterModbus.cpp
 	../../src/Reading.cpp
 	../../src/Obis.cpp
 	../../src/ltqnorm.cpp
@@ -50,6 +51,7 @@ target_link_libraries(mock_metermap
 		${JSON_LIBRARY}
 		${LIBUUID}
 		dl
+		modbus
 	  )
 if(SML_FOUND)
   target_link_libraries(mock_metermap ${SML_LIBRARY})

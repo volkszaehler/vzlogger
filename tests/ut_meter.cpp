@@ -19,6 +19,7 @@
 #include "../src/protocols/MeterRandom.cpp"
 #include "../src/protocols/MeterS0.cpp"
 #include "../src/protocols/MeterFluksoV2.cpp"
+#include "../src/protocols/MeterModbus.cpp"
 #include "../src/ltqnorm.cpp"
 
 
@@ -39,6 +40,7 @@ TEST(meter, meter_lookup_protocol)
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("s0", NULL));
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("sml", NULL));
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("fluksov2", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("modbus", NULL));
 
 	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("d01", NULL));
 	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("", NULL));

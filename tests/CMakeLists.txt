@@ -48,6 +48,8 @@ if(SML_FOUND)
   target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})
 endif(SML_FOUND)
 
+target_link_libraries(vzlogger_unit_tests modbus)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
 add_subdirectory(mocks)
