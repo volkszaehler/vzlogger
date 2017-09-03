@@ -119,22 +119,4 @@ public:
 	virtual void read(std::vector<Reading>& rds, ModbusConnection::Ptr conn, unsigned id);
 };
 
-class ModbusReadingIdentifier : public ReadingIdentifier {
-	MeterModbus::slaveid_t _slaveid;
-	std::string _name;
-	void parse(const std::string& s);
-public:
-	ModbusReadingIdentifier()
-	:_slaveid(0) {}
-	ModbusReadingIdentifier(MeterModbus::slaveid_t slave, const std::string& name)
-	: _slaveid(slave), _name(name) {}
-	ModbusReadingIdentifier(const std::string& conf);
-	virtual ~ModbusReadingIdentifier(){};
-
-	virtual size_t unparse(char *buffer, size_t n);
-	virtual bool operator==( ReadingIdentifier const &cmp) const;
-
-	virtual const std::string toString();
-
-};
 #endif /* METERMODBUS_H_ */

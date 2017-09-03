@@ -277,3 +277,38 @@ size_t NilIdentifier::unparse(char *buffer, size_t n) {
 //buffer[0] = '\0';
 	//return strlen(buffer);
 }
+
+void ModbusReadingIdentifier::parse(const std::string& s)
+{
+	std::istringstream ss(s);
+	char c;
+	ss >> _slaveid >> c >> _name;
+}
+
+ModbusReadingIdentifier::ModbusReadingIdentifier(const std::string& conf)
+: _slaveid(0)
+{
+	parse(conf);
+	print(log_info, "ModbusReadingIdentifier, slave %d name %s", "modbus", _slaveid, _name.c_str());
+}
+
+bool ModbusReadingIdentifier::operator ==(const ReadingIdentifier& cmp) const
+{
+	const ModbusReadingIdentifier *ri = dynamic_cast<const ModbusReadingIdentifier*>(&cmp);
+	return ri &&
+			ri->_name == _name &&
+			ri->_slaveid == _slaveid;
+}
+
+const std::string ModbusReadingIdentifier::toString() {
+	std::ostringstream ss;
+	ss << _slaveid << ":" << _name;
+	return ss.str();
+}
+
+size_t ModbusReadingIdentifier::unparse(char *buffer, size_t n) {
+	size_t l = toString().copy(buffer, n);
+	buffer[n-1] = '\0';
+	return l;
+}
+
