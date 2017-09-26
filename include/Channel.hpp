@@ -82,7 +82,7 @@ class Channel {
 
 	void last(Reading *rd)              { _last = rd;}
 	void push(const Reading &rd)        { _buffer->push(rd); }
-	std::string dump()  { return std::move(_buffer->dump()); }
+        std::string dump()  { return _buffer->dump(); }
 	Buffer::Ptr buffer()                { return _buffer; }
 
 	size_t size() const { return _buffer->size(); }
