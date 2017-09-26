@@ -199,7 +199,7 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	int j=0;
 	for (int i=0; i<32; ++i) {
 		const char c = _key[i];
-		int v;
+		int v=0;
 		if (c >= '0' && c <= '9')
 			v = c-'0';
 		else if (c >= 'a' && c <= 'f')
