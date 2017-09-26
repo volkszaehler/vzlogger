@@ -144,7 +144,7 @@ vz::api::MySmartGrid::~MySmartGrid()
 
 void vz::api::MySmartGrid::send()
 {
-	json_object *json_obj;
+	json_object *json_obj = NULL;
 	char digest[255];
 
 	const char *json_str;
