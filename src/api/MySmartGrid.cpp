@@ -598,7 +598,7 @@ void vz::api::MySmartGrid::hmac_sha1(
 
 	for (size_t i=0; i<len; i++) {
 		char s[4];
-		snprintf(s, 3, "%02x:", out[i]);
+        snprintf(s, 3, "%02x", out[i]); // format string was "%02x:" but size was only 3 so last : was not printed
 		strncat(ret, s, 2*len);
 //strncat(ret, s, sizeof(ret));
 	}
