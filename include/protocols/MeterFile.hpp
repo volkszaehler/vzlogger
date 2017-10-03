@@ -45,8 +45,10 @@ public:
 	std::string _path;
 	std::string _format;
 	int _rewind;
+	int _interval;
 
 	FILE *_fd;
+	int _notify_fd;
 };
 
 #endif /* _FILE_H_ */

@@ -56,7 +56,7 @@ int Meter::instances=0;
 static const meter_details_t protocols[] = {
 /*  aliasdescriptionmax_rdsperiodic
 	===============================================================================================*/
-	METER_DETAIL(file, File, "Read from file or fifo",32,true),
+	METER_DETAIL(file, File, "Read from file or fifo",32,false),
 	METER_DETAIL(exec, Exec, "Parse program output",32,false),
 	METER_DETAIL(random, Random, "Generate random values with a random walk",1,true),
 	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo",16,false),
