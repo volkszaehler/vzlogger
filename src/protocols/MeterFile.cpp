@@ -38,12 +38,14 @@
 #include <VZException.hpp>
 
 MeterFile::MeterFile(std::list<Option> options)
-        : Protocol("file"),_notify_fd(-1)
+		: Protocol("file"),_notify_fd(-1)
 {
 	OptionList optlist;
 
 	try {
 		_path = optlist.lookup_string(options, "path");
+
+
 	} catch (vz::VZException &e) {
 		print(log_alert, "Missing path or invalid type", name().c_str());
 		throw;
@@ -84,7 +86,7 @@ MeterFile::MeterFile(std::list<Option> options)
 
 					case '%':
 						scanf_format[j++] = '%'; // add double %% to escape a conversion identifier
-						// nobreak;
+			// fallthrough
 					default:
 						scanf_format[j++] = config_format[i]; // just copying
 			}
@@ -134,11 +136,20 @@ MeterFile::~MeterFile() {
 
 int MeterFile::open() {
 
-        _notify_fd = -1;
-	if ( _interval <= 0 ) _notify_fd = inotify_init1(0);
+	_notify_fd = -1;
+	if ( _interval <= 0 ) {
+		_notify_fd = inotify_init1(0);
+		print(log_debug, "Watching file \"%s\" for changes", name().c_str(), path());
+	}
 
 	if (_notify_fd != -1) {
-	  inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE); // use IN_ONESHOT and retrigger after read?
+		if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+			// Error: unable to add inotify watch, fall back to interval mechanism
+			print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+			(void)::close(_notify_fd);
+			_notify_fd = -1;
+			_interval=1;	// assume interval length of 1 sec
+		}
 	}
 
 	_fd = fopen(path(), "r");
@@ -153,9 +164,9 @@ int MeterFile::open() {
 
 int MeterFile::close() {
 
-        if (_notify_fd != -1) {
-	  (void)::close(_notify_fd);
-	  _notify_fd = -1;
+	if (_notify_fd != -1) {
+		(void)::close(_notify_fd);
+		_notify_fd = -1;
 	}
 
 	return fclose(_fd);
@@ -169,21 +180,33 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 	// wait for file change via inotify
 	const int EVENTSIZE = sizeof(struct inotify_event) + NAME_MAX + 1;
 	if (_notify_fd!=-1){
-	  // read all events from fd:
-	  char buf[EVENTSIZE *5];
-	  ssize_t len;
-	  int nr_events;
-	  do{
-            nr_events = 0;
-            len = ::read(_notify_fd, buf, sizeof(buf));
-            const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
-            for (char *ptr = buf; ptr < buf + len;
-		 ptr += sizeof(struct inotify_event) + event->len) {
-	      ++nr_events;
-	      event = (const struct inotify_event *) ptr;
-	      print(log_debug, "got inotify_event %x", "file", event->mask);
-            }
-	  } while(len>0 && nr_events>=5); // if 5 events received there might be some more pending.
+		// read all events from fd:
+		char buf[EVENTSIZE *5];
+		ssize_t len;
+		int nr_events;
+		do{
+			nr_events = 0;
+			len = ::read(_notify_fd, buf, sizeof(buf));	// read will block until inotify event occurs
+			const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
+			for (char *ptr = buf; ptr < buf + len; ptr += sizeof(struct inotify_event) + event->len) {
+				++nr_events;
+				event = (const struct inotify_event *) ptr;
+				print(log_debug, "got inotify_event %x", "file", event->mask);
+				if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
+					// File has been moved or deleted, therefore new inotify watch needed
+					if (_notify_fd != -1) {
+						(void)::close(_notify_fd);
+						if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+							// Error: unable to add inotify watch, fall back to interval mechanism
+							print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+							(void)::close(_notify_fd);
+							_notify_fd = -1;
+							_interval=1;	// assume interval length of 1 sec
+						}
+					}
+				}
+			}
+		} while (len>0 && nr_events>=5); // if 5 events received there might be some more pending.
 	}
 
 	// reset file pointer to beginning of file
