@@ -21,6 +21,7 @@ TEST(MeterFile, basic) {
 	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
+	options.push_back(Option("interval", 1));
 	
 	// test without format option
 	MeterFile m(options);
@@ -68,6 +69,7 @@ TEST(MeterFile, format1) {
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$v"));
+	options.push_back(Option("interval", 1));
 	
 	MeterFile m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
@@ -113,6 +115,7 @@ TEST(MeterFile, format2) {
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$i : $v"));
+	options.push_back(Option("interval", 1));
 	
 	MeterFile m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;
@@ -174,6 +177,7 @@ TEST(MeterFile, format3) {
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char*)"$t;$i : $v"));
+	options.push_back(Option("interval", 1));
 	
 	MeterFile m(options);
 	ASSERT_STREQ(m.path(), tempfilename) << "devicename not eq " << tempfilename;

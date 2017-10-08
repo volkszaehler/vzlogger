@@ -197,27 +197,27 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 				len = ::read(_notify_fd, buf, sizeof(buf));	// read will block until inotify event occurs
 				if (len>0)
 					nr_events++;
-			}
-			else
-				len = 0;
 
-			const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
+				const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
 
-			print(log_debug, "got inotify_event %x", "file", event->mask);
+				print(log_debug, "got inotify_event %x", "file", event->mask);
 
-			if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
-				// File has been moved or deleted, therefore new inotify watch needed
-				if (_notify_fd != -1) {
-					(void)::close(_notify_fd);
-					if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
-						// Error: unable to add inotify watch, fall back to interval mechanism
-						print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+				if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
+					// File has been moved or deleted, therefore new inotify watch needed
+					if (_notify_fd != -1) {
 						(void)::close(_notify_fd);
-						_notify_fd = -1;
-						_interval=1;	// assume interval length of 1 sec
+						if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+							// Error: unable to add inotify watch, fall back to interval mechanism
+							print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+							(void)::close(_notify_fd);
+							_notify_fd = -1;
+							_interval=1;	// assume interval length of 1 sec
+						}
 					}
 				}
 			}
+			else
+				len = 0;
 
 		} while (len>0);
 	}
