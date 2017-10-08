@@ -178,7 +178,7 @@ size_t PushDataServer::curl_custom_write_callback(void *ptr, size_t size, size_t
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { // out of memory!
-		print(log_alert, "Cannot allocate memory", NULL);
+        print(log_alert, "Cannot allocate memory response->size=%d realsize=%d", "push", response->size, realsize);
 		exit(EXIT_FAILURE);
 	}
 
