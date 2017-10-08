@@ -121,6 +121,7 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
     }
 
     CURLresponse response;
+    response.size = 0;
     response.data = 0;
     CURLcode curl_code;
     long int http_code;
