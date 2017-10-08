@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <sys/inotify.h>
 #include <sys/time.h>
 #include <sys/inotify.h>
@@ -181,32 +182,44 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 	const int EVENTSIZE = sizeof(struct inotify_event) + NAME_MAX + 1;
 	if (_notify_fd!=-1){
 		// read all events from fd:
-		char buf[EVENTSIZE *5];
+		char buf[EVENTSIZE];
 		ssize_t len;
-		int nr_events;
+
+		int nr_events = 0;
 		do{
-			nr_events = 0;
-			len = ::read(_notify_fd, buf, sizeof(buf));	// read will block until inotify event occurs
+			int totalPending = 0;
+			if (nr_events) {
+				// no blocking expected on 2nd call
+				(void)ioctl(_notify_fd, FIONREAD, &totalPending);
+			}
+
+			if (nr_events==0 || totalPending>0) {
+				len = ::read(_notify_fd, buf, sizeof(buf));	// read will block until inotify event occurs
+				if (len>0)
+					nr_events++;
+			}
+			else
+				len = 0;
+
 			const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
-			for (char *ptr = buf; ptr < buf + len; ptr += sizeof(struct inotify_event) + event->len) {
-				++nr_events;
-				event = (const struct inotify_event *) ptr;
-				print(log_debug, "got inotify_event %x", "file", event->mask);
-				if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
-					// File has been moved or deleted, therefore new inotify watch needed
-					if (_notify_fd != -1) {
+
+			print(log_debug, "got inotify_event %x", "file", event->mask);
+
+			if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
+				// File has been moved or deleted, therefore new inotify watch needed
+				if (_notify_fd != -1) {
+					(void)::close(_notify_fd);
+					if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+						// Error: unable to add inotify watch, fall back to interval mechanism
+						print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
 						(void)::close(_notify_fd);
-						if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
-							// Error: unable to add inotify watch, fall back to interval mechanism
-							print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
-							(void)::close(_notify_fd);
-							_notify_fd = -1;
-							_interval=1;	// assume interval length of 1 sec
-						}
+						_notify_fd = -1;
+						_interval=1;	// assume interval length of 1 sec
 					}
 				}
 			}
-		} while (len>0 && nr_events>=5); // if 5 events received there might be some more pending.
+
+		} while (len>0);
 	}
 
 	// reset file pointer to beginning of file
