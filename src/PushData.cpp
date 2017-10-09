@@ -121,6 +121,7 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
     }
 
     CURLresponse response;
+    response.size = 0;
     response.data = 0;
     CURLcode curl_code;
     long int http_code;
@@ -178,7 +179,7 @@ size_t PushDataServer::curl_custom_write_callback(void *ptr, size_t size, size_t
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { // out of memory!
-		print(log_alert, "Cannot allocate memory", NULL);
+		print(log_alert, "Cannot allocate memory data=%p response->size=%zu realsize=%zu", "push", data, response->size, realsize);
 		exit(EXIT_FAILURE);
 	}
 
