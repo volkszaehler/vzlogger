@@ -23,22 +23,30 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/inotify.h>
 #include <sys/time.h>
+#include <sys/inotify.h>
 #include <errno.h>
+#include <climits>
 
 #include "protocols/MeterFile.hpp"
 #include "Options.hpp"
 #include <VZException.hpp>
 
 MeterFile::MeterFile(std::list<Option> options)
-		: Protocol("file")
+		: Protocol("file"),_notify_fd(-1)
 {
 	OptionList optlist;
 
 	try {
 		_path = optlist.lookup_string(options, "path");
+
+
 	} catch (vz::VZException &e) {
 		print(log_alert, "Missing path or invalid type", name().c_str());
 		throw;
@@ -79,7 +87,7 @@ MeterFile::MeterFile(std::list<Option> options)
 
 					case '%':
 						scanf_format[j++] = '%'; // add double %% to escape a conversion identifier
-                        // fallthrough
+			// fallthrough
 					default:
 						scanf_format[j++] = config_format[i]; // just copying
 			}
@@ -109,12 +117,41 @@ MeterFile::MeterFile(std::list<Option> options)
 		print(log_alert, "Failed to parse 'rewind'", name().c_str());
 		throw;
 	}
+
+	// Get interval. If interval <=0, then use inotify
+	try {
+		_interval = optlist.lookup_int(options, "interval");
+	} catch (vz::OptionNotFoundException &e) {
+		_interval = -1; // use inotify
+	} catch (vz::InvalidTypeException &e) {
+		print(log_alert, "Invalid type for 'interval'", name().c_str());
+		throw;
+	} catch (vz::VZException &e) {
+		print(log_alert, "Failed to parse 'interval'", name().c_str());
+		throw;
+	}
 }
 
 MeterFile::~MeterFile() {
 }
 
 int MeterFile::open() {
+
+	_notify_fd = -1;
+	if ( _interval <= 0 ) {
+		_notify_fd = inotify_init1(0);
+		print(log_debug, "Watching file \"%s\" for changes", name().c_str(), path());
+	}
+
+	if (_notify_fd != -1) {
+		if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+			// Error: unable to add inotify watch, fall back to interval mechanism
+			print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+			(void)::close(_notify_fd);
+			_notify_fd = -1;
+			_interval=1;	// assume interval length of 1 sec
+		}
+	}
 
 	_fd = fopen(path(), "r");
 
@@ -128,15 +165,62 @@ int MeterFile::open() {
 
 int MeterFile::close() {
 
+	if (_notify_fd != -1) {
+		(void)::close(_notify_fd);
+		_notify_fd = -1;
+	}
+
 	return fclose(_fd);
 }
 
 ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 
-	// TODO use inotify to block reading until file changes
-
 	char line[256], *endptr;
 	char *string=0;
+
+	// wait for file change via inotify
+	const int EVENTSIZE = sizeof(struct inotify_event) + NAME_MAX + 1;
+	if (_notify_fd!=-1){
+		// read all events from fd:
+		char buf[EVENTSIZE];
+		ssize_t len;
+
+		int nr_events = 0;
+		do{
+			int totalPending = 0;
+			if (nr_events) {
+				// no blocking expected on 2nd call
+				(void)ioctl(_notify_fd, FIONREAD, &totalPending);
+			}
+
+			if (nr_events==0 || totalPending>0) {
+				len = ::read(_notify_fd, buf, sizeof(buf));	// read will block until inotify event occurs
+				if (len>0)
+					nr_events++;
+
+				const struct inotify_event *event = (struct inotify_event *)(&buf[0]);
+
+				print(log_debug, "got inotify_event %x", "file", event->mask);
+
+				if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF)) {
+					// File has been moved or deleted, therefore new inotify watch needed
+					if (_notify_fd != -1) {
+						(void)::close(_notify_fd);
+						if (inotify_add_watch(_notify_fd, path(), IN_CLOSE_WRITE | IN_DELETE_SELF | IN_MOVE_SELF) < 0) {
+							// Error: unable to add inotify watch, fall back to interval mechanism
+							print(log_alert, "inotify_add_watch(%s): %s", name().c_str(), path(), strerror(errno));
+							(void)::close(_notify_fd);
+							_notify_fd = -1;
+							_interval=1;	// assume interval length of 1 sec
+						}
+					}
+				}
+			}
+			else
+				len = 0;
+
+		} while (len>0);
+	}
 
 	// reset file pointer to beginning of file
 	if (_rewind) {
