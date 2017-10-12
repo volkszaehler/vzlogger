@@ -276,8 +276,9 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			tv.tv_usec = 0;
 			rd->time(tv);
 		} else {
-         		/* use local time */
+			/* use local time */
 			gettimeofday(&tv, NULL);
+			tv.tv_usec = 0;
 			std::vector<Reading>::iterator last;
 			for(last = _last_readings.begin(); last != _last_readings.end(); ++last) {
 				if(*(last->identifier()) == *(rd->identifier())) {
@@ -294,7 +295,6 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 					break;
 				}
 			}
-			tv.tv_usec = 0;
 			rd->time(tv);
 
 			// keep track of readings
