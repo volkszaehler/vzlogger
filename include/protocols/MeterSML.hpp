@@ -61,7 +61,7 @@ protected:
 	speed_t _baudrate;
 	parity_type_t _parity;
 	std::string _pull;
-   Reading _last_reading;
+	std::vector<Reading> _last_readings;
 	bool _use_local_time;
 	
 	int _fd;	/* file descriptor of port */

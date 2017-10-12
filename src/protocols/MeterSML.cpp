@@ -274,18 +274,35 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 		if (!_use_local_time && entry->val_time) { /* use time from meter */
 			tv.tv_sec = *entry->val_time->data.timestamp;
 			tv.tv_usec = 0;
-		}
-		else {
-			if(rd->value() == _last_reading.value()) {
-				// No power consumption since the last reading! Timestamp has to be equal with the last reading.
-				tv.tv_sec = _last_reading.time_s();
-				tv.tv_usec = 0;
-			} else {
-				gettimeofday(&tv, NULL); /* use local time */
+			rd->time(tv);
+		} else {
+         		/* use local time */
+			gettimeofday(&tv, NULL);
+			std::vector<Reading>::iterator last;
+			for(last = _last_readings.begin(); last != _last_readings.end(); ++last) {
+				if(*(last->identifier()) == *(rd->identifier())) {
+					if(last->value() == rd->value()) {
+						// No power consumption since the last reading! Timestamp has to be equal with the last reading.
+						print(log_debug,"Keep timestamp of %s",name().c_str(),rid->toString().c_str());
+						tv.tv_sec = last->time_s();
+					} else {
+						// update history entry
+						print(log_debug,"Update history of %s",name().c_str(),rid->toString().c_str());
+						last->time(tv);
+						last->value(rd->value());
+					}
+					break;
+				}
+			}
+			tv.tv_usec = 0;
+			rd->time(tv);
+
+			// keep track of readings
+			if(last == _last_readings.end()) {
+				print(log_debug,"Add %s to the history",name().c_str(),rid->toString().c_str());
+				_last_readings.push_back(*rd);
 			}
 		}
-		rd->time(tv);
-		_last_reading = *rd;
 		return true;
 	}
 	return false;
