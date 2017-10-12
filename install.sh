@@ -283,7 +283,8 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			echo
 			echo "installing systemd unit file"
-			sudo sed -e "s|/etc/vzlogger.conf|$vzlogger_conf|g" < ./etc/vzlogger.service > $systemd_unit
+			sudo cp ./etc/vzlogger.service "$systemd_unit"
+			sudo sed -ie "s|/etc/vzlogger.conf|$vzlogger_conf|g" "$systemd_unit"
 		fi
 	fi
 
