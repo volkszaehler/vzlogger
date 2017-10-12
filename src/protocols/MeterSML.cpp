@@ -276,16 +276,16 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			tv.tv_usec = 0;
 		}
 		else {
-         if(rd->value() == _last_reading->value()) {
-            // No power consumption since the last reading! Timestamp has to be equal with the last reading.
-            tv.tv_sec = _last_reading->time_s();
-            tv.tv_usec = 0;
-         } else {
-            gettimeofday(&tv, NULL); /* use local time */
-         }
+			if(rd->value() == _last_reading.value()) {
+				// No power consumption since the last reading! Timestamp has to be equal with the last reading.
+				tv.tv_sec = _last_reading.time_s();
+				tv.tv_usec = 0;
+			} else {
+				gettimeofday(&tv, NULL); /* use local time */
+			}
 		}
 		rd->time(tv);
-      _last_reading = *rd;
+		_last_reading = *rd;
 		return true;
 	}
 	return false;
