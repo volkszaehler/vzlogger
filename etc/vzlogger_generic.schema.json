@@ -46,10 +46,39 @@
             "required": ["enabled"]
         },
 
-        "channel": {
+        "channelNULL": {
             "type": "object",
-            "title": "channel",
+            "title": "no channel, just local-httpd",
             "properties": {
+                "api": {
+                    "type": "string",
+                    "enum": ["null"],
+                    "default": "null",
+                    "description": "middleware api to be used."
+                },
+                "uuid": {
+                    "type": "string",
+                    "description": "uuid of this channel for index:false ",
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "identifier": {
+                    "type": "string",
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                }
+            },
+            "required": ["api", "identifier"]
+        },
+
+        "channelVZ": {
+            "type": "object",
+            "title": "channel for volkszaehler",
+            "properties": {
+                "api": {
+                    "type": "string",
+                    "enum": ["volkszaehler"],
+                    "default": "volkszaehler",
+                    "description": "middleware/api/database to be used."
+                },
                 "uuid": {
                     "type": "string",
                     "description": "uuid of this channel towards the middleware",
@@ -59,36 +88,15 @@
                     "type": "string",
                     "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
                 },
-                "api": {
-                    "type": "string",
-                    "enum": ["volkszaehler", "mysmartgrid", "null"],
-                    "default": "volkszaehler",
-                    "description": "middleware api to be used. Defaults to volkszaehler.org"
-                },
                 "middleware": {
                     "type": "string",
                     "default": "http://localhost/middleware.php",
                     "description": "path/url to the api/middleware"
                 },
-                "secretKey": {
-                    "type": "string",
-                    "description": "secret key to use to talk to MySmartGrid api."
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["device", "sensor"],
-                    "default": "device",
-                    "description": "type of connected meter. Only needed for MySmartGrid api."
-                },
-                "scaler": {
-                    "type": "integer",
-                    "default": 1,
-                    "description": "scaling factor to use. Only needed for MySmartGrid api."
-                },
                 "aggmode": {
                     "type": "string",
                     "enum": ["avg", "max", "sum", "none"],
-                    "description": "Mittelwert fuer Leistung, MAX fuer Zaehler, SUM fuer Counter",
+                    "description": "AVeraGe for power (W), MAXimum for meter (Wh), SUMmary for counter (S0)",
                     "default": "none"
                 },
                 "duplicates": {
@@ -98,7 +106,126 @@
                     "description": "default 0 (send duplicate values), >0 = send duplicate values only each <duplicates> seconds. Activate only for abs. counter values (Zaehlerstaende) and not for impulses!"
                 }
             },
-            "required": ["uuid", "identifier"]
+            "required": ["api", "uuid", "identifier", "middleware", "aggmode", "duplicates"]
+        },
+
+        "channelmySmartGrid": {
+            "type": "object",
+            "title": "channel for mySmartGrid",
+            "properties": {
+                "api": {
+                    "type": "string",
+                    "enum": ["mysmartgrid"],
+                    "default": "volkszaehler",
+                    "description": "middleware/api/database to be used. Defaults to volkszaehler.org"
+                },
+                "uuid": {
+                    "type": "string",
+                    "description": "uuid of this channel towards the middleware",
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "identifier": {
+                    "type": "string",
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                },
+                "middleware": {
+                    "type": "string",
+                    "default": "https://api.mysmartgrid.de:8443",
+                    "description": "path/url to the api/middleware"
+                },
+                "secretKey": {
+                    "type": "string",
+                    "description": "secret key to use to talk to MySmartGrid api."
+                },
+                "interval": {
+                    "type": "integer",
+                    "default": 300,
+                    "description": "time between 2 logtuples"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["device", "sensor"],
+                    "default": "device",
+                    "description": "type of connected meter."
+                },
+                "scaler": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "scaling factor to use."
+                },
+                "aggmode": {
+                    "type": "string",
+                    "enum": ["avg", "max", "sum", "none"],
+                    "description": "AVeraGe for power (W), MAXimum for meter (Wh), SUMmary for counter (S0)",
+                    "default": "none"
+                }
+            },
+            "required": ["api", "uuid", "identifier", "middleware", "type", "scaler", "duplicates"]
+        },
+
+        "channelInFluxDB": {
+            "type": "object",
+            "title": "channel for InFluxDB",
+            "properties": {
+                "api": {
+                    "type": "string",
+                    "enum": ["influxdb"],
+                    "default": "influxdb",
+                    "description": "middleware/api/database to be used."
+                },
+                "uuid": {
+                    "type": "string",
+                    "description": "uuid of this channel towards the middleware",
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                },
+                "identifier": {
+                    "type": "string",
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                },
+                "host": {
+                    "type": "string",
+                    "default": "http://localhost:8086",
+                    "description": "path/url to the database"
+                },
+                "database": {
+                    "type": "string",
+                    "description": "i.e. vzlogger, make sure this database exists in InfluxDB"
+                },
+                "measurement_name": {
+                    "type": "string",
+                    "description": "i.e. vz_measurement, it is recommended that all your meters have the same InfluxDB measurement name"
+                },
+                "username": {
+                    "type": "string",
+                    "description": "When InfluxDB Auth is enabled you need to set the correct user and password"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "When InfluxDB Auth is enabled you need to set the correct user and password"
+                },
+                "max_batch_inserts": {
+                    "type": "integer",
+                    "default": 4500,
+                    "description": "Max number of measurements per request. No need to change this"
+                },
+                "max_buffer_size": {
+                    "type": "integer",
+                    "default": 450000,
+                    "description": "Max number of measurements to be cached when InfluxDB is not available"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "default": 30,
+                    "description": "Time in seconds after which requests to InfluxDB time out"
+                },
+                "aggmode": {
+                    "type": "string",
+                    "enum": ["avg", "max", "sum", "none"],
+                    "description": "AVeraGe for power (W), MAXimum for meter (Wh), SUMmary for counter (S0)",
+                    "default": "none"
+                }
+            },
+            "required": ["api", "uuid", "identifier", "host"]
         },
 
         "meter": {
@@ -150,7 +277,6 @@
                 }
             }]
         },
-
 
         "meterS0": {
             "title": "S0 based meter",
@@ -382,6 +508,11 @@
                             "enum": ["8n1", "7n1", "7e1", "7o1"],
                             "default": "8n1",
                             "description": "parity used for serial communication"
+                        },
+                        "use_local_time": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "use the local time for reading timestamp?"
                         }
                     },
                 "required": ["protocol", "device", "baudrate", "parity"]
@@ -419,6 +550,11 @@
                             "enum": ["8n1", "7n1", "7e1", "7o1"],
                             "default": "8n1",
                             "description": "parity used for serial communication"
+                        },
+                        "use_local_time": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "use the local time for reading timestamp?"
                         }
                     },
                 "required": ["protocol", "host", "baudrate", "parity"]
@@ -823,7 +959,13 @@
             "type": "array",
             "items": {
                 "oneOf": [{
-                    "$ref": "#/definitions/channel"
+                    "$ref": "#/definitions/channelNULL"
+                },{
+                    "$ref": "#/definitions/channelVZ"
+                },{
+                    "$ref": "#/definitions/channelmySmartGrid"
+                },{
+                    "$ref": "#/definitions/channelInFluxDB"
                 }]
             }
         },
@@ -863,6 +1005,7 @@
                 ]
             }
         },
+        
         "push": {
             "type": "array",
             "minItems": 0,
@@ -901,7 +1044,7 @@
             "id": "/log",
             "type": "string",
             "description": "path to logfile",
-            "default": "/tmp/vzlogger.log"
+            "default": "/var/log/vzlogger.log"
         },
         "push": {
             "$ref": "#/definitions/push"
