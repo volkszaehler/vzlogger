@@ -12,3 +12,6 @@ set(api_srcs
 )
 
 add_library(vz-api ${api_srcs})
+install(TARGETS vz-api
+	ARCHIVE DESTINATION lib/static COMPONENT libraries
+	LIBRARY DESTINATION lib COMPONENT libraries)

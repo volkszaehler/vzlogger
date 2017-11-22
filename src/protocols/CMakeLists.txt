@@ -38,3 +38,6 @@ set(proto_srcs
 )
 
 add_library(proto ${proto_srcs})
+install(TARGETS proto
+	LIBRARY DESTINATION lib COMPONENT libraries
+	ARCHIVE DESTINATION lib/static COMPONENT libraries)
