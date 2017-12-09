@@ -70,6 +70,10 @@ OPTION(METEREXEC_ROOTACCESS
   "compile MeterExec protocol to use root privileges for script calls (def=no)])"
   Off)
 
+OPTION(BUILD_TEST
+  "build unit tests (def=on)])"
+  On)
+
 # find dependencies
 # libsml
 if( ENABLE_SML )
@@ -164,7 +168,12 @@ add_subdirectory(src)
 
 find_package(Git)
 
-set(ENABLE_GOOGLEMOCK TRUE)
+if( BUILD_TEST )
+	set(ENABLE_GOOGLEMOCK TRUE)
+else()
+	set(ENABLE_GOOGLEMOCK FALSE)
+endif()
+
 #disable unit tests on gcc4.6 (problems with googlemock 1.7)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # require at least gcc 4.8
