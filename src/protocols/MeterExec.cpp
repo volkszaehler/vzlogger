@@ -153,8 +153,8 @@ ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 	_pipe = popen(command(), "r");
 
 	if (_pipe) {
-		while(!feof(_pipe)) {
-			while (fgets(buffer, 256, _pipe)) {
+		while(i<n && !feof(_pipe)) {
+			while (i<n && fgets(buffer, 256, _pipe)) {
 				char *nl;
 				if ((nl = strrchr(buffer, '\n'))) *nl = '\0'; // remove trailing newlines
 				if ((nl = strrchr(buffer, '\r'))) *nl = '\0';
