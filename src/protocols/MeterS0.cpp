@@ -463,7 +463,7 @@ bool MeterS0::HWIF_UART::_open()
 	struct termios tio;
 	memset(&tio, 0, sizeof(struct termios));
 
-	tio.c_cflag = B300 | CS8 | CLOCAL | CREAD;
+	tio.c_cflag = B9600 | CS8 | CLOCAL | CREAD;
 	tio.c_iflag = IGNPAR;
 	tio.c_oflag = 0;
 	tio.c_lflag = 0;
