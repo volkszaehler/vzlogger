@@ -25,6 +25,7 @@
                 "host": "127.0.0.1:8086",                       // This assumes that InfluxDB is running on localhost
                 //"database": "vzlogger",                       // Optional: make sure this database exists in InfluxDB
                 //"measurement_name": "vz_measurement",         // Optional: It is recommended that all your meters have the same InfluxDB measurement name
+                //"tags": "foo=bar,example=42",                 // Optional: Additional tags to append when inserting data
                 //"username": "example",                        // Optional: When InfluxDB Auth is enabled you need to set the correct user and password
                 //"password": "secure",
                 //"max_batch_inserts": 4500,                    // Optional: Max number of measurements per request. No need to change this
