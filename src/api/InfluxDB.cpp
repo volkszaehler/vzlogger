@@ -108,6 +108,17 @@ vz::api::InfluxDB::InfluxDB(
 		}
 
 	try {
+			_tags = optlist.lookup_string(pOptions, "tags");
+			print(log_finest, "api InfluxDB using tags %s", ch->name(), _tags.c_str());
+		} catch (vz::OptionNotFoundException &e) {
+			print(log_finest, "api InfluxDB will not use any tags", ch->name());
+			_tags = "";
+		} catch (vz::VZException &e) {
+			print(log_alert, "api InfluxDB requires parameter \"tags\" as string!", ch->name());
+			throw;
+		}
+
+	try {
 			_curl_timeout = optlist.lookup_int(pOptions, "timeout");
 			print(log_finest, "api InfluxDB using curl timeout %i", ch->name(), _curl_timeout);
 		} catch (vz::OptionNotFoundException &e) {
@@ -207,6 +218,10 @@ void vz::api::InfluxDB::send()
 		request_body.append(_measurement_name);
 		request_body.append(",uuid=");
 		request_body.append(channel()->uuid());
+		if (!_tags.empty()) {
+			request_body.append(",");
+			request_body.append(_tags);
+		}
 		request_body.append(" value=");
 		request_body.append(std::to_string(it->value()));
 		request_body.append(" ");

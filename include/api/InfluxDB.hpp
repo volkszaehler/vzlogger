@@ -59,6 +59,7 @@ namespace vz {
 			std::string _password;
 			std::string _database;
 			std::string _measurement_name;
+			std::string _tags;
 			std::string _url;
 			int _max_batch_inserts;
 			int _max_buffer_size;
