@@ -195,6 +195,10 @@
                     "type": "string",
                     "description": "i.e. vz_measurement, it is recommended that all your meters have the same InfluxDB measurement name"
                 },
+                "tags": {
+                    "type": "string",
+                    "description": "Additional tags to append when inserting data. E.g. 'meter=main,location=home'"
+                },
                 "username": {
                     "type": "string",
                     "description": "When InfluxDB Auth is enabled you need to set the correct user and password"
