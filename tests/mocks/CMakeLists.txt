@@ -42,7 +42,13 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	${mock_oms_sources}
 )
 
-target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${MICROHTTPD_LIBRARY} ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
+
+if (MICROHTTPD_FOUND)
+    target_link_libraries(mock_metermap ${MICROHTTPD_LIBRARY})
+endif(MICROHTTPD_FOUND)
+
+target_link_libraries(mock_metermap ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 target_link_libraries(mock_metermap 
 		${GTEST_LIBS_DIR}/libgtest.a
