@@ -63,7 +63,7 @@
                 },
                 "identifier": {
                     "type": "string",
-                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0 (for sml) or Impulse (for s0)"
                 }
             },
             "required": ["api", "identifier"]
@@ -86,7 +86,7 @@
                 },
                 "identifier": {
                     "type": "string",
-                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0 (for sml) or Impulse (for s0)"
                 },
                 "middleware": {
                     "type": "string",
@@ -126,7 +126,7 @@
                 },
                 "identifier": {
                     "type": "string",
-                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0 (for sml) or Impulse (for s0)"
                 },
                 "middleware": {
                     "type": "string",
@@ -180,7 +180,7 @@
                 },
                 "identifier": {
                     "type": "string",
-                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0"
+                    "description": "identifier of this channel from the meter. E.g. 1-0:1.8.0 (for sml) or Impulse (for s0)"
                 },
                 "host": {
                     "type": "string",
@@ -300,7 +300,7 @@
                     "gpio": {
                         "type": "integer",
                         "default": -1,
-                        "description": "Number of GPIO port to be used. If this is set >-1 then device is ignored."
+                        "description": "Number of GPIO port to be used. If this is set >-1 device will be ignored."
                     },
                     "mmap": {
                         "type": "string",
