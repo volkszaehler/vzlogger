@@ -144,7 +144,7 @@ vz::api::MySmartGrid::~MySmartGrid()
 
 void vz::api::MySmartGrid::send()
 {
-	json_object *json_obj;
+	json_object *json_obj = NULL;
 	char digest[255];
 
 	const char *json_str;
@@ -575,24 +575,38 @@ void vz::api::MySmartGrid::hmac_sha1(
 	, const unsigned char *data
 	,size_t dataLen
 	) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	HMAC_CTX hmacContext;
 
 	HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
 	HMAC_Update(&hmacContext, data, dataLen);
+#else
+	HMAC_CTX *hmacContext = HMAC_CTX_new();
 
+	HMAC_Init_ex(hmacContext, secretKey(), strlen(secretKey()), EVP_sha1(),NULL);
+	HMAC_Update(hmacContext, data, dataLen);
+#endif
 	unsigned char out[EVP_MAX_MD_SIZE];
 	unsigned int len = EVP_MAX_MD_SIZE;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	HMAC_Final(&hmacContext, out, &len);
+#else
+	HMAC_Final(hmacContext, out, &len);
+#endif
 	char ret[2*EVP_MAX_MD_SIZE];
 	memset(ret, 0, sizeof(ret));
 
 	for (size_t i=0; i<len; i++) {
 		char s[4];
-		snprintf(s, 3, "%02x:", out[i]);
+        snprintf(s, 3, "%02x", out[i]); // format string was "%02x:" but size was only 3 so last : was not printed
 		strncat(ret, s, 2*len);
 //strncat(ret, s, sizeof(ret));
 	}
 	snprintf(digest, 255/*sizeof(digest)*/, "X-Digest: %s", ret);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	HMAC_CTX_free(hmacContext);
+	hmacContext=NULL;
+#endif
 }
 
 

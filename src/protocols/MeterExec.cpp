@@ -90,7 +90,7 @@ MeterExec::MeterExec(std::list<Option> options)
 
 					case '%':
 						scanf_format[j++] = '%'; // add double %% to escape a conversion identifier
-						// nobreak;
+                        // fallthrough
 					default:
 						scanf_format[j++] = config_format[i]; // just copying
 			}

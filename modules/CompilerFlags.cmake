@@ -102,11 +102,23 @@ else(NOT WIN32)
 endif(NOT WIN32)
 
 # check for specific c++ features:
-include(CheckCXXSourceRuns)
-check_cxx_source_runs("
-      #include <regex>
+if(CMAKE_CROSSCOMPILING)
+	include(CheckCXXSourceCompiles)
+	check_cxx_source_compiles("
+		  #include <regex>
 
-      int main() {
-        return std::regex_match(\"test\", std::regex(\"\^\\\\\\\\s*(//(.*|)|\$)\"));
-      }
-" HAVE_CPP_REGEX)
+		  int main() {
+		    return std::regex_match(\"test\", std::regex(\"\^\\\\\\\\s*(//(.*|)|\$)\"));
+		  }
+	" HAVE_CPP_REGEX )
+else(CMAKE_CROSSCOMPILING)
+	include(CheckCXXSourceRuns)
+	check_cxx_source_runs("
+		  #include <regex>
+
+		  int main() {
+		    return std::regex_match(\"test\", std::regex(\"\^\\\\\\\\s*(//(.*|)|\$)\"));
+		  }
+	" HAVE_CPP_REGEX)
+endif(CMAKE_CROSSCOMPILING)
+
