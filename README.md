@@ -26,6 +26,11 @@ For Debian Stretch use:
     sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev \
       libgnutls28-dev libgcrypt20-dev libmicrohttpd-dev libsasl2-dev
 
+Ubuntu 18.04LTS (bionic) needs an additional:
+
+   sudo apt-get install libunistring-dev
+(this might be needed on others now as well as we link unconditionally against libunistring)
+
 Then run the installation:
 
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh

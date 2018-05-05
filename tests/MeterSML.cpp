@@ -12,21 +12,7 @@
 
 #include "../src/protocols/MeterSML.cpp"
 
-int writes_hex(int fd, const char *str)
-{
-	int toret=0;
-	// expect each string as a hexdump. two chars for each byte:
-	int len = strlen(str);
-	EXPECT_EQ(0, len%2); // strlen should be even.
-	for (int i=0; i<len; i+=2){
-		unsigned char c;
-		sscanf(&str[i], "%2hhx", &c);
-		int r = write(fd, &c, 1);
-		if (r==-1) return r;
-		toret += r;
-	}
-	return toret;
-}
+int writes_hex(int fd, const char *str); // impl. in MeterD0.cpp
 
 TEST(MeterSML, EMH_basic) {
 	char tempfilename[L_tmpnam+1];
