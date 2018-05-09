@@ -280,7 +280,22 @@ TEST(MeterD0, LandisGyr_basic) {
 	EXPECT_EQ(0, unlink(tempfilename));
 }
 
-int writes_hex(int fd, const char *str);
+int writes_hex(int fd, const char *str)
+{
+        int toret=0;
+        // expect each string as a hexdump. two chars for each byte:
+        int len = strlen(str);
+        EXPECT_EQ(0, len%2); // strlen should be even.
+        for (int i=0; i<len; i+=2){
+                unsigned char c;
+                sscanf(&str[i], "%2hhx", &c);
+                int r = write(fd, &c, 1);
+                if (r==-1) return r;
+                toret += r;
+        }
+        return toret;
+}
+
 
 TEST(MeterD0, ACE3000_basic) {
 	char tempfilename[L_tmpnam+1];

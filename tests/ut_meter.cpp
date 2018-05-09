@@ -37,7 +37,9 @@ TEST(meter, meter_lookup_protocol)
 
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("random", NULL));
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("s0", NULL));
+#ifdef SML_SUPPORT 
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("sml", NULL));
+#endif
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("fluksov2", NULL));
 
 	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("d01", NULL));

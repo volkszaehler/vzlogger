@@ -33,7 +33,7 @@ before_install:
   - make
   - sudo make install
   - cd ..
-  - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime
+  - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime libunistring-dev
 # -- get libsml --
   - git clone https://github.com/volkszaehler/libsml.git # or github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
   - cd libsml 

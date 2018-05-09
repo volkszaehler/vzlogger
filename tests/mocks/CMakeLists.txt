@@ -10,6 +10,11 @@ elseif( OMS_SUPPORT )
   set(mock_oms_sources "")
 endif( OMS_SUPPORT )
 
+if(SML_FOUND)
+  set(mock_sml_sources ../../src/protocols/MeterSML.cpp)
+elseif(SML_FOUND)
+  set(mock_sml_sources "")
+endif(SML_FOUND)
 
 add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Options.cpp
 	../../src/protocols/MeterD0.cpp
@@ -17,7 +22,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/protocols/MeterExec.cpp
 	../../src/protocols/MeterS0.cpp
 	../../src/protocols/MeterRandom.cpp
-	../../src/protocols/MeterSML.cpp
+	${mock_sml_sources}
 	../../src/protocols/MeterFluksoV2.cpp
 	../../src/protocols/MeterW1therm.cpp
 	../../src/Reading.cpp
@@ -48,7 +53,7 @@ if (MICROHTTPD_FOUND)
     target_link_libraries(mock_metermap ${MICROHTTPD_LIBRARY})
 endif(MICROHTTPD_FOUND)
 
-target_link_libraries(mock_metermap ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(mock_metermap unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 target_link_libraries(mock_metermap 
 		${GTEST_LIBS_DIR}/libgtest.a
