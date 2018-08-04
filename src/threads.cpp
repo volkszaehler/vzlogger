@@ -37,6 +37,9 @@
 #ifdef LOCAL_SUPPORT
 #include "local.h"
 #endif
+#ifdef ENABLE_MQTT
+#include "mqtt.hpp"
+#endif
 #include "PushData.hpp"
 
 extern Config_Options options;
@@ -109,6 +112,12 @@ void * reading_thread(void *arg) {
 								pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
 								print(log_finest, "added to uuid %s", "push", uuid.c_str());
 							}
+#ifdef ENABLE_MQTT
+							// update mqtt values as well:
+							if (mqttClient) {
+								mqttClient->publish((*ch), rds[i]);
+							}
+#endif
 						}
 					}
 
@@ -130,6 +139,23 @@ void * reading_thread(void *arg) {
 					add_ch_to_localbuffer(*(*ch)); // add this ch data to the local buffer
 				}
 #endif
+#ifdef ENABLE_MQTT
+				// update mqtt values as well:
+				if (mqttClient)
+				{
+					Buffer::Ptr buf = (*ch)->buffer();
+					Buffer::iterator it;
+					for (it = buf->begin(); it != buf->end(); ++it)
+					{
+						Reading &r = *it;
+						if (!r.deleted())
+						{
+							mqttClient->publish((*ch), r, true);
+						}
+					}
+				}
+#endif
+
 				/* notify webserver and logging thread */
 				(*ch)->notify();
 

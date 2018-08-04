@@ -4,6 +4,13 @@ if(LOCAL_SUPPORT)
   set(mock_local_srcs ../../src/local.cpp)
 endif(LOCAL_SUPPORT)
 
+if(ENABLE_MQTT)
+	set(mock_mqtt_sources ../../src/mqtt.cpp)
+else(ENABLE_MQTT)
+	set(mock_mqtt_sources "")
+endif(ENABLE_MQTT)
+
+
 if( OMS_SUPPORT )
   set(mock_oms_sources ../../src/protocols/MeterOMS.cpp)
 elseif( OMS_SUPPORT )
@@ -45,6 +52,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	../../src/PushData.cpp
 	${mock_local_srcs}
 	${mock_oms_sources}
+	${mock_mqtt_sources}
 )
 
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
@@ -55,7 +63,7 @@ endif(MICROHTTPD_FOUND)
 
 target_link_libraries(mock_metermap unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-target_link_libraries(mock_metermap 
+target_link_libraries(mock_metermap
 		${GTEST_LIBS_DIR}/libgtest.a
 		${GMOCK_LIBS_DIR}/libgmock.a
 		pthread
@@ -69,6 +77,10 @@ endif(SML_FOUND)
 if(MBUS_FOUND)
     target_link_libraries(mock_metermap ${MBUS_LIBRARY})
 endif(MBUS_FOUND)
+if(ENABLE_MQTT)
+	target_link_libraries(mock_metermap ${MQTT_LIBRARY})
+endif(ENABLE_MQTT)
+
 
 add_executable(mock_MeterW1therm
     mock_MeterW1therm.cpp
