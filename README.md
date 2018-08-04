@@ -31,11 +31,14 @@ Ubuntu 18.04LTS (bionic) needs an additional:
    sudo apt-get install libunistring-dev
 (this might be needed on others now as well as we link unconditionally against libunistring)
 
+If you want to use MQTT support:
+  sudo apt-get install libmosquitto-dev
+
 Then run the installation:
 
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
-    
+
 Mailing List
 -------------
 If you have questions, contact the volkszaehler mailing lists:

@@ -4,6 +4,9 @@
 /* Local interface */
 #cmakedefine LOCAL_SUPPORT 1
 
+/* mqtt support */
+#cmakedefine ENABLE_MQTT 1
+
 /* Name of package */
 #define PACKAGE "vzlogger"
 
