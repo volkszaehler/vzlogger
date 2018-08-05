@@ -286,6 +286,7 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 		return;
 
 	// search for cached values:
+	std::unique_lock<std::mutex> lock(_chMapMutex);
 	auto it = _chMap.find(ch->name());
 	if (it == _chMap.end())
 	{
@@ -323,6 +324,7 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 	std::string &topic = aggregate ? entry._fullTopicAgg : entry._fullTopicRaw;
 	if ((entry._sendAgg and aggregate) or (entry._sendRaw && !aggregate))
 	{
+		lock.unlock(); // we can unlock here already
 		std::string payload = std::to_string(rds.value());
 		print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 

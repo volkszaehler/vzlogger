@@ -7,6 +7,7 @@
 #define __mqtt_hpp_
 
 #include <string>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 #include "Channel.hpp"
@@ -60,6 +61,7 @@ class MqttClient
 		std::vector<std::pair<std::string, std::string>> _announceValues;
 		void generateNames(const std::string &prefix, Channel &ch);
 	};
+	std::mutex _chMapMutex;
 	std::unordered_map<std::string, ChannelEntry> _chMap;
 };
 
