@@ -115,6 +115,12 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 		}
 		else
 		{
+			// tell mosquitto that it should be thread safe:
+			int res = mosquitto_threaded_set(_mcs, true);
+			if (res != MOSQ_ERR_SUCCESS)
+			{
+				print(log_warning, "mosquitto_threaded_set returned %d!", "mqtt", res);
+			}
 			// set username&pwd
 			if ((_user.length() or _pwd.length()) and mosquitto_username_pw_set(_mcs, _user.c_str(), _pwd.c_str()) !=
 														  MOSQ_ERR_SUCCESS)
@@ -135,7 +141,7 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 			});
 
 			// now connect. we use sync interface with spe. thread calling mosquitto_loop
-			int res = mosquitto_connect(_mcs, _host.c_str(), _port, _keepalive);
+			res = mosquitto_connect(_mcs, _host.c_str(), _port, _keepalive);
 			if (res != MOSQ_ERR_SUCCESS)
 			{
 				print(log_alert, "mosquitto_connect failed. res=%d (%s)! Stopped!", "mqtt",
