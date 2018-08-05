@@ -230,19 +230,29 @@ MqttClient::~MqttClient()
 
 void MqttClient::ChannelEntry::generateNames(const std::string &prefix, Channel &ch)
 {
+	_announceValues.clear();
 	_fullTopicRaw = prefix;
 	_fullTopicRaw += ch.name(); // todo this converts from std::string to const char and back...
-	// todo use ch.identifier based name here? (e.g. to get obis code?)
-
+	_fullTopicRaw += '/';
+	if (ch.identifier())
+	{
+		char unparseBuf[200];
+		unparseBuf[0] = 0;
+		if (ch.identifier()->unparse(unparseBuf, sizeof(unparseBuf)))
+		{
+			_announceValues.emplace_back("id", unparseBuf);
+		}
+		print(log_finest, "generateNames: ch.name()=%s ch.identifier.toString==%s unparse=%s", "mqtt", ch.name(),
+			ch.identifier()->toString().c_str(), unparseBuf);
+	}
 	_sendAgg = ch.buffer() && ch.buffer()->get_aggmode() != Buffer::aggmode::NONE;
 
 	_fullTopicAgg = _fullTopicRaw;
 	_announceName = _fullTopicRaw;
 
-	_fullTopicRaw += "/raw";
-	_fullTopicAgg += "/agg";
-	_announceName += "/uuid";
-	_announceValue = ch.uuid();
+	_fullTopicRaw += "raw";
+	_fullTopicAgg += "agg";
+	_announceValues.emplace_back("uuid", ch.uuid());
 }
 
 void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
@@ -271,19 +281,23 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 	assert(it != _chMap.end());
 	ChannelEntry &entry = (*it).second;
 	// do we need to announce the uuid?
-	if (!entry._announced && entry._announceName.length())
+	if (!entry._announced && entry._announceValues.size())
 	{
-		int res = mosquitto_publish(_mcs, 0,
-									entry._announceName.c_str(),
-									entry._announceValue.length(),
-									entry._announceValue.c_str(), 0, _retain);
-		if (res != MOSQ_ERR_SUCCESS)
+		for (auto &v : entry._announceValues)
 		{
-			print(log_finest, "mosquitto_publish announce returned %d", "mqtt", res);
-		}
-		else
-		{
-			entry._announced = true;
+			std::string name = entry._announceName + v.first;
+			int res = mosquitto_publish(_mcs, 0,
+										name.c_str(),
+										v.second.length(),
+										v.second.c_str(), 0, _retain);
+			if (res != MOSQ_ERR_SUCCESS)
+			{
+				print(log_finest, "mosquitto_publish announce %s returned %d", "mqtt", name.c_str(), res);
+			}
+			else
+			{
+				entry._announced = true; // if one can be announced we treat it successfull
+			}
 		}
 	}
 

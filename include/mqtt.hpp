@@ -8,6 +8,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "Channel.hpp"
 #include "Reading.hpp"
 
@@ -56,7 +57,7 @@ class MqttClient
 		std::string _fullTopicRaw;
 		std::string _fullTopicAgg;
 		std::string _announceName;
-		std::string _announceValue;
+		std::vector<std::pair<std::string, std::string>> _announceValues;
 		void generateNames(const std::string &prefix, Channel &ch);
 	};
 	std::unordered_map<std::string, ChannelEntry> _chMap;
