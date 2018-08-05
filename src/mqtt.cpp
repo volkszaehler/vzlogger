@@ -188,9 +188,28 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 			res = mosquitto_connect(_mcs, _host.c_str(), _port, _keepalive);
 			if (res != MOSQ_ERR_SUCCESS)
 			{
-				print(log_alert, "mosquitto_connect failed. res=%d (%s)! Stopped!", "mqtt",
-					  res, strerror(errno));
-				_enabled = false;
+				switch (res)
+				{
+					case MOSQ_ERR_CONN_REFUSED: // mqtt might accept us later only.
+						print(log_warning, "mosquitto_connect failed. res=%d (%s)! Trying anyhow.", "mqtt",
+							res, strerror(errno));
+					break;
+					case MOSQ_ERR_ERRNO:
+						if (errno == 111) // con refused:
+						{
+							print(log_warning, "mosquitto_connect failed. res=%d (%d %s)! Trying anyhow.", "mqtt",
+								res, errno, strerror(errno));
+						} else {
+							print(log_alert, "mosquitto_connect failed. res=%d (%d %s)! Stopped!", "mqtt",
+								res, errno, strerror(errno));
+							_enabled = false;
+						}
+						break;
+					default:
+						print(log_alert, "mosquitto_connect failed. res=%d! Stopped!", "mqtt", res);
+						_enabled = false;
+					break;
+				}
 			}
 		}
 	}
