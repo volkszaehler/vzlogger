@@ -65,6 +65,8 @@ MeterSML::MeterSML(std::list<Option> options)
 	/* connection */
 	try {
 		_host = optlist.lookup_string(options, "host");
+		if (!_host.length())
+			throw vz::OptionNotFoundException("host empty"); // treat empty host as missing
 	} catch (vz::OptionNotFoundException &e) {
 		try {
 			_device = optlist.lookup_string(options, "device");
