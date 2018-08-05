@@ -35,6 +35,11 @@ class MqttClient
 	int _keepalive = 10;
 	std::string _user;
 	std::string _pwd;
+	std::string _cafile;
+	std::string _capath;
+	std::string _certfile;
+	std::string _keyfile;
+	std::string _keypass;
 	bool _retain = false;
 	bool _rawAndAgg = false;
 	std::string _topic;

@@ -57,6 +57,26 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 			{
 				_pwd = json_object_get_string(local_value);
 			}
+			else if (strcmp(key, "cafile") == 0 && local_type == json_type_string)
+			{
+				_cafile = json_object_get_string(local_value);
+			}
+			else if (strcmp(key, "capath") == 0 && local_type == json_type_string)
+			{
+				_capath = json_object_get_string(local_value);
+			}
+			else if (strcmp(key, "certfile") == 0 && local_type == json_type_string)
+			{
+				_certfile = json_object_get_string(local_value);
+			}
+			else if (strcmp(key, "keyfile") == 0 && local_type == json_type_string)
+			{
+				_keyfile = json_object_get_string(local_value);
+			}
+			else if (strcmp(key, "keypass") == 0 && local_type == json_type_string)
+			{
+				_keypass = json_object_get_string(local_value);
+			}
 			else if (strcmp(key, "topic") == 0 && local_type == json_type_string)
 			{
 				_topic = json_object_get_string(local_value);
@@ -129,6 +149,30 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 					  "mosquitto_username_pw_set failed! Continuing anyhow.", "mqtt");
 			}
 
+			if ((_cafile.length() or _capath.length()) or (_certfile.length() and _keyfile.length()))
+			{
+				// try to set tls:
+				static const std::string keypass = _keypass;
+				res = mosquitto_tls_set( _mcs, _cafile.length() ? _cafile.c_str() : nullptr,
+					_capath.length() ? _capath.c_str() : nullptr,
+					_certfile.length() ? _certfile.c_str() : nullptr,
+					_keyfile.length() ? _keyfile.c_str() : nullptr,
+					[](char *buf, int size, int rwflag, void *userdata)
+					{
+						int len = static_cast<int>(keypass.length());
+						print(log_finest, "mosquitto_tls_set onpasswd (size=%d) called. keypass len=%d", "mqtt", size, len);
+						if (len>size)
+							len = size;
+						if (len)
+							memcpy(buf, keypass.data(), len);
+						return len;
+					});
+				if (res != MOSQ_ERR_SUCCESS)
+				{
+					print(log_warning, "mosquitto_tls_set returned error %d!", "mqtt", res);
+				}
+			}
+
 			mosquitto_connect_callback_set(_mcs, [](struct mosquitto *mosq, void *obj, int res) {
 				static_cast<MqttClient *>(obj)->connect_callback(mosq, res);
 			});
@@ -170,7 +214,7 @@ MqttClient::~MqttClient()
 
 	if (_mcs)
 	{
-		assert(endMqttClientThread);
+		assert(!_enabled or endMqttClientThread);
 
 		mosquitto_disconnect(_mcs);
 		// we call mosquitto_loop at least once here as the thread should be stopped already:
