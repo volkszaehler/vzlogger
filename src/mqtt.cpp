@@ -271,7 +271,9 @@ void MqttClient::ChannelEntry::generateNames(const std::string &prefix, Channel 
 
 	_fullTopicRaw += "raw";
 	_fullTopicAgg += "agg";
-	_announceValues.emplace_back("uuid", ch.uuid());
+	std::string uuid = ch.uuid();
+	if (uuid.length())
+		_announceValues.emplace_back("uuid", uuid);
 }
 
 void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
