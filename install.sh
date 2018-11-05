@@ -264,7 +264,7 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 
         echo
         echo "building vzlogger"
-        cmake ..
+        cmake -DBUILD_TEST=off ..
         make
 
         echo
