@@ -134,6 +134,7 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
   , _hwif (hwif)
   , _aes_key(0)
   , _mbus_debug(false)
+  , _use_local_time(false)
   , _last_timestamp(0.0)
 {
 	OptionList optlist;
@@ -178,6 +179,12 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif) :
 	try {
 		_mbus_debug = optlist.lookup_bool(options, "mbus_debug");
 	} catch (vz::VZException &e) {
+		// keep default
+	}
+
+	try {
+		_use_local_time = optlist.lookup_bool(options, "use_local_time");
+	} catch (vz::OptionNotFoundException &e) {
 		// keep default
 	}
 
@@ -349,7 +356,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret<n) {
 												rds[ret].identifier(new ObisIdentifier("1.8.0"));
 												rds[ret].value(get_record_value(record));
-												if (timeFromMeter>1.0)
+												if (timeFromMeter>1.0 && !_use_local_time)
 													rds[ret].time_from_double(timeFromMeter);
 												else
 													rds[ret].time();
@@ -365,7 +372,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.8.0"));
 												rds[ret].value(get_record_value(record));
-												if (timeFromMeter>1.0)
+												if (timeFromMeter>1.0 && !_use_local_time)
 													rds[ret].time_from_double(timeFromMeter);
 												else
 													rds[ret].time();
@@ -381,7 +388,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("1.7.0"));
 												rds[ret].value(get_record_value(record));
-												if (timeFromMeter>1.0)
+												if (timeFromMeter>1.0 && !_use_local_time)
 													rds[ret].time_from_double(timeFromMeter);
 												else
 													rds[ret].time();
@@ -397,7 +404,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n)
 											if (ret < n) {
 												rds[ret].identifier(new ObisIdentifier("2.7.0"));
 												rds[ret].value(get_record_value(record));
-												if (timeFromMeter>1.0)
+												if (timeFromMeter>1.0 && !_use_local_time)
 													rds[ret].time_from_double(timeFromMeter);
 												else
 													rds[ret].time();
