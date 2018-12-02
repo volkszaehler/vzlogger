@@ -65,6 +65,7 @@ protected:
 	unsigned char *_aes_key;
 	std::string _device;
 	bool _mbus_debug;
+	bool _use_local_time;
 	double _last_timestamp;
 };
 
