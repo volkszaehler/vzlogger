@@ -720,6 +720,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "provide some more debug output on console by calling some libmbus debug functions"
+                        },
+                        "use_local_time": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "use the local time for reading timestamp?"
                         }
                     },
                     "required": ["protocol", "device", "key"]
