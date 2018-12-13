@@ -12,4 +12,4 @@ Set `"api"` to`"influxdb"` to use the InfluxDB API.
 `"uuid"` is the unique channel ID. Use the `uuid` or `uuidgen` command to generate one.
 
 For optional parameters such as `username` or `password` have a look at the
-example config file is available at [`etc/vzlogger.conf.InfluxDB`](https://github.com/volkszaehler/vzlogger/blob/influxdb/etc/vzlogger.conf.InfluxDB)
+example config file is available at [`etc/vzlogger.conf.InfluxDB`](https://github.com/volkszaehler/vzlogger/blob/master/etc/vzlogger.conf.InfluxDB)
