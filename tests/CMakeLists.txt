@@ -23,13 +23,19 @@ if( NOT ENABLE_SML )
 list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif( NOT ENABLE_SML)
 
+if(ENABLE_MQTT)
+	set(MQTT_SOURCES ../src/mqtt.cpp)
+else(ENABLE_MQTT)
+	set(MQTT_SOURCES "")
+endif(ENABLE_MQTT)
+
 if( OMS_SUPPORT )
   set(oms_sources ../src/protocols/MeterOMS.cpp)
 elseif( OMS_SUPPORT )
   set(oms_sources "")
 endif( OMS_SUPPORT )
 
-add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources})
+add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources} ${MQTT_SOURCES})
 
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
@@ -47,6 +53,10 @@ endif( OMS_SUPPORT )
 if(SML_FOUND)
   target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})
 endif(SML_FOUND)
+
+if(ENABLE_MQTT)
+	target_link_libraries(vzlogger_unit_tests ${MQTT_LIBRARY})
+endif(ENABLE_MQTT)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 

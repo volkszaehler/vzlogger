@@ -53,6 +53,11 @@
 #ifdef LOCAL_SUPPORT
 #include "local.h"
 #endif /* LOCAL_SUPPORT */
+
+#ifdef ENABLE_MQTT
+#include "mqtt.hpp"
+#endif
+
 #include "gitSha1.h"
 
 MapContainer mappings;		// mapping between meters and channels
@@ -250,6 +255,9 @@ void quit(int sig) {
 	//gStop = true;
 	mappings.quit(sig);
 	end_push_data_thread();
+#ifdef ENABLE_MQTT
+	end_mqtt_client_thread();
+#endif
 }
 
 /**
@@ -343,6 +351,9 @@ void register_device() {
  */
 int main(int argc, char *argv[]) {
 	pthread_t _pushdata_thread=0;
+#ifdef ENABLE_MQTT
+	pthread_t _mqtt_client_thread = 0;
+#endif
 
 	/* bind signal handler */
 	struct sigaction action;
@@ -449,6 +460,16 @@ int main(int argc, char *argv[]) {
 		print(log_finest, "No pushDataServer defined.", "push");
 	}
 
+#ifdef ENABLE_MQTT
+	if (mqttClient) {
+		int ret = pthread_create(&_mqtt_client_thread, NULL, mqtt_client_thread, (void *)0);
+		if (ret)
+			print(log_error, "Error %d creating mqtt_client_thread!", "mqtt", ret);
+		else
+			print(log_finest, "mqtt_client_thread created.", "mqtt");
+	}
+#endif
+
 	print(log_debug, "===> Start meters", "");
 	try {
 		// open connection meters & start threads
@@ -522,6 +543,20 @@ int main(int argc, char *argv[]) {
 			print(log_finest, "deleted pushdataList", "");
 		}
 	}
+
+#ifdef ENABLE_MQTT
+	if (_mqtt_client_thread) {
+		end_mqtt_client_thread();
+		print(log_finest, "Waiting for mqtt_client_thread to stop...", "mqtt");
+		pthread_join(_mqtt_client_thread, NULL);
+		print(log_finest, "mqtt_client_thread stopped", "mqtt");
+	}
+	if (mqttClient) {
+		delete mqttClient;
+		mqttClient = 0;
+		print(log_finest, "deleted mqttClient", "mqtt");
+	}
+#endif
 
 	if (curlSessionProvider) {
 		print(log_finest, "Trying to delete curlSessionProvider...", "");

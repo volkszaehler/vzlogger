@@ -67,6 +67,7 @@ class Buffer {
 	inline void have_newValues() { _newValues =  true; }
 
 	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
+	inline aggmode get_aggmode() const { return _aggmode; }
 
 	private:
 	Buffer(const Buffer &); // don't allow copy constructor

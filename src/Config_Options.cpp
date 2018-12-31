@@ -28,10 +28,13 @@
 #include <ctype.h>
 #include <regex>
 
+#include "config.hpp"
 #include <Config_Options.hpp>
 #include "Channel.hpp"
 #include <VZException.hpp>
-
+#ifdef ENABLE_MQTT
+#include "mqtt.hpp"
+#endif
 
 static const char *option_type_str[] = { "null", "boolean", "double", "int", "object", "array", "string" };
 
@@ -184,6 +187,22 @@ void Config_Options::config_parse(
 				} else
 					print(log_error, "Ignoring push entry due to empty array or duplicate section", "push");
 			}
+#ifdef ENABLE_MQTT
+			else if ((strcmp(key, "mqtt") == 0) && type == json_type_object ) {
+				if (!mqttClient)
+				{
+					mqttClient = new MqttClient(value);
+					if (!mqttClient->isConfigured())
+					{
+						delete mqttClient;
+						mqttClient = 0;
+						print(log_debug, "mqtt client not configured. stopped.", "mqtt");
+					}
+				}
+				else
+					print(log_error, "Ignoring mqtt entry due to empty array or duplicate section", "mqtt");
+			}
+#endif
 			else {
 				print(log_alert, "Ignoring invalid field or type: %s=%s (%s)",
 							NULL, key, json_object_get_string(value), option_type_str[type]);

@@ -68,7 +68,7 @@ class Channel {
 
 	bool running() const { return _thread_running; }
 
-	const char* name()                  { return _name.c_str(); }
+	const char* name() const            { return _name.c_str(); }
 	std::list<Option> &options()        { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {

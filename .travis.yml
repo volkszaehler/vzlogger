@@ -3,8 +3,8 @@ dist: trusty
 
 language: cpp
 
-compiler: 
-    - clang 
+compiler:
+    - clang
     - gcc
 
 env:
@@ -36,11 +36,11 @@ before_install:
   - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime libunistring-dev
 # -- get libsml --
   - git clone https://github.com/volkszaehler/libsml.git # or github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
-  - cd libsml 
+  - cd libsml
   - # git checkout develop # only dev branch seems to work
   - make
 # -- install libsml --
-  - sudo cp sml/lib/libsml.* /usr/lib/. 
+  - sudo cp sml/lib/libsml.* /usr/lib/.
   - sudo cp -R sml/include/* /usr/include/.
   - sudo cp sml.pc /usr/lib/pkgconfig/.
   - cd ..
@@ -63,5 +63,10 @@ before_install:
   - sudo make install
   - cd ..
   - sudo apt-get install -y lcov
+
+# -- install libmosquitto-dev
+  - sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libmosquitto-dev
 script:
   - cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
