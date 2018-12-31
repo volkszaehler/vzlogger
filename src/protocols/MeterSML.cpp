@@ -166,6 +166,7 @@ MeterSML::MeterSML(std::list<Option> options)
 
 MeterSML::MeterSML(const MeterSML &proto)
 		: Protocol(proto)
+		,_fd(ERR)
 		, BUFFER_LEN(SML_BUFFER_LEN)
 {
 }
@@ -182,7 +183,10 @@ int MeterSML::open() {
 		char *addr = strdup(host());
 		const char *node = strsep(&addr, ":");
 		const char *service = strsep(&addr, ":");
-		if (node == NULL && service == NULL) return -1;
+		if (node == NULL && service == NULL) {
+			free(addr);
+			return -1;
+		}
 		_fd = _openSocket(node, service);
 		free(addr);
 	}
@@ -197,6 +201,16 @@ int MeterSML::close() {
 	}
 
 	return ::close(_fd);
+}
+
+bool MeterSML::reopen() {
+	print(log_warning, "reopen called. current fd=%d", name().c_str(), _fd);
+	if (_fd != ERR) {
+		(void)close(); // we ignore errors on close
+	}
+	(void)open();
+	print(log_info, "after reopen fd=%d", name().c_str(), _fd);
+	return _fd != ERR;
 }
 
 ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
@@ -215,6 +229,14 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 	/* wait until we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+
+	if (0 == bytes) {
+		// try to reopen. see issue #362
+		if (reopen()) {
+			bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+			print(log_info, "sml_transport_read returned len=%d after reopen", name().c_str(), bytes);
+		}
+	}
 
 	if (bytes < 16) {
 		print(log_error, "short message from sml_transport_read len=%d", name().c_str(), bytes);
