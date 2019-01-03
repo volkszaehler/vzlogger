@@ -222,6 +222,14 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_get_list_response *body;
 	sml_list *entry;
 
+	if (_fd < 0) {
+		if (!reopen()) {
+			// sleep a little bit to prevent busy looping
+			sleep(1);
+			return 0;
+		}
+	}
+
 	if (_pull.size()) {
 		int wlen = write(_fd,_pull.c_str(),_pull.size());
 		print(log_debug,"sending pullsequenz send (len:%d is:%d).", name().c_str(), _pull.size(), wlen);
