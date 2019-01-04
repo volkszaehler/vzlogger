@@ -343,21 +343,30 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 	if ((entry._sendAgg and aggregate) or (entry._sendRaw && !aggregate))
 	{
 		lock.unlock(); // we can unlock here already
-                std::string payload;
-                if (_timestamp) {
-                        payload = std::to_string(rds.time_ms()) + " " + std::to_string(rds.value());
-                }
-                else {
-                        payload = std::to_string(rds.value());
-                }
+        std::string payload;
+		struct json_object* payload_obj = NULL;
+
+        if (_timestamp) {
+	        payload_obj = json_object_new_object();
+	        json_object_object_add(payload_obj, "timestamp", json_object_new_int64(rds.time_ms()));
+			json_object_object_add(payload_obj, "value", json_object_new_double(rds.value()));
+	        payload = json_object_to_json_string(payload_obj);
+        }
+        else {
+            payload = std::to_string(rds.value());
+        }
 
 		print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 
-                int res = mosquitto_publish(_mcs, 0,
-                                            topic.c_str(), payload.length(), payload.c_str(), _qos, _retain);
+        int res = mosquitto_publish(_mcs, 0,
+                    topic.c_str(), payload.length(), payload.c_str(), _qos, _retain);
 		if (res != MOSQ_ERR_SUCCESS)
 		{
 			print(log_finest, "mosquitto_publish returned %d", "mqtt", res);
+		}
+		if (payload_obj != NULL)
+		{
+	        json_object_put(payload_obj);
 		}
 	}
 }
