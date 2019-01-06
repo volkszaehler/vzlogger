@@ -8,7 +8,7 @@
  * @author Steffen Vogel <info@steffenvogel.de>
  * @author Juri Glass
  * @author Mathias Runge
- * @author Nadim El Sayed 
+ * @author Nadim El Sayed
  */
 /*
  * This file is part of volkzaehler.org
@@ -26,7 +26,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _SML_H_
 #define _SML_H_
 
@@ -54,7 +54,7 @@ public:
 
 	const char *host() const { return _host.c_str(); }
 	const char *device() const { return _device.c_str(); }
-  
+
 protected:
 	std::string _host;
 	std::string _device;
@@ -62,11 +62,17 @@ protected:
 	parity_type_t _parity;
 	std::string _pull;
 	bool _use_local_time;
-	
+
 	int _fd;	/* file descriptor of port */
 	struct termios _old_tio;	/* required to reset port */
 
 	const int BUFFER_LEN;
+
+	/**
+	 * @brief reopen the underlying device. We do this to workaround issue #362
+	 * @return true if reopen was successful. False otherwise.
+	 * */
+	bool reopen();
 
 	/**
 	 * Parses SML list entry and stores it in reading pointed by rd
