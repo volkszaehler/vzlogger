@@ -15,7 +15,7 @@ To install, follow the detailed installation instructions at http://wiki.volksza
 If you're impatient you can quickstart using (Debian Wheezy):
 
     sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev \
-      libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf
+      libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf libunistring-dev
 
 For Debian Jessie be sure to add:
 
@@ -24,7 +24,7 @@ For Debian Jessie be sure to add:
 For Debian Stretch use:
 
     sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev \
-      libgnutls28-dev libgcrypt20-dev libmicrohttpd-dev libsasl2-dev
+      libgnutls28-dev libgcrypt20-dev libmicrohttpd-dev libsasl2-dev libunistring-dev
 
 Ubuntu 18.04LTS (bionic) needs an additional:
 
