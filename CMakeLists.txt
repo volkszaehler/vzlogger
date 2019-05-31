@@ -216,7 +216,7 @@ else()
     message(WARNING "googletest based unit tests disabled due to missing git. Please install git.")
  endif(ENABLE_GOOGLEMOCK)
 endif()
-add_test(vzlogger_unit_tests tests/vzlogger_unit_tests)
+add_test(NAME vzlogger_unit_tests COMMAND vzlogger_unit_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 ### print some output for the user
 message("")
