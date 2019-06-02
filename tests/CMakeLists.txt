@@ -37,6 +37,8 @@ endif( OMS_SUPPORT )
 
 add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources} ${MQTT_SOURCES})
 
+add_dependencies(vzlogger_unit_tests googletest googlemock)
+
 target_link_libraries(vzlogger_unit_tests
     ${GTEST_LIBS_DIR}/libgtest.a
     ${GMOCK_LIBS_DIR}/libgmock.a

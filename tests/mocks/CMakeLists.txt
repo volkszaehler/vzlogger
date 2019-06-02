@@ -55,6 +55,8 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	${mock_mqtt_sources}
 )
 
+add_dependencies(mock_metermap googletest googlemock)
+
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
 
 if (MICROHTTPD_FOUND)
@@ -90,6 +92,8 @@ add_executable(mock_MeterW1therm
     ../../src/Options.cpp
 )
 
+add_dependencies(mock_MeterW1therm googletest googlemock)
+
 target_link_libraries(mock_MeterW1therm
 		${GTEST_LIBS_DIR}/libgtest.a
 		${GMOCK_LIBS_DIR}/libgmock.a
@@ -110,6 +114,9 @@ add_executable(mock_MeterOMS
 	../../src/Obis.cpp
 	../../src/Options.cpp
 )
+
+add_dependencies(mock_MeterOMS googletest googlemock)
+
 target_link_libraries(mock_MeterOMS
 		${GTEST_LIBS_DIR}/libgtest.a
 		${GMOCK_LIBS_DIR}/libgmock.a
@@ -131,6 +138,8 @@ add_executable(mock_MeterS0
 	../../src/Obis.cpp
 	../../src/Options.cpp
 )
+
+add_dependencies(mock_MeterS0 googletest googlemock)
 
 target_link_libraries(mock_MeterS0
 		${GTEST_LIBS_DIR}/libgtest.a
