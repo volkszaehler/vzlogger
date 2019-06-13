@@ -35,6 +35,8 @@
 #include "CurlSessionProvider.hpp"
 #include <api/CurlCallback.hpp>
 #include <api/CurlResponse.hpp>
+#include <iomanip>
+#include <sstream>
 
 extern Config_Options options;
 
@@ -151,6 +153,17 @@ vz::api::InfluxDB::InfluxDB(
 			throw;
 		}
 
+	try {
+			_send_uuid = optlist.lookup_bool(pOptions, "send_uuid");
+			print(log_finest, "api InfluxDB using send_uuid: %s", ch->name(), _send_uuid ? "true" : "false");
+		} catch (vz::OptionNotFoundException &e) {
+			_send_uuid = true;
+			print(log_finest, "api InfluxDB will use default send_uuid %s", ch->name(), _send_uuid ? "true" : "false");
+		} catch (vz::VZException &e) {
+			print(log_alert, "api InfluxDB requires parameter \"send_uuid\" as bool!", ch->name());
+			throw;
+		}
+
 	CURL *curlhelper = curl_easy_init();
 	if(!curlhelper) {
 		throw vz::VZException("CURL: cannot create handle for urlencode.");
@@ -216,14 +229,18 @@ void vz::api::InfluxDB::send()
 		}
 		print(log_finest, "Reading buffer: timestamp %lld value %f", channel()->name(), it->time_ms(), it->value());
 		request_body.append(_measurement_name);
-		request_body.append(",uuid=");
-		request_body.append(channel()->uuid());
+		if (_send_uuid) {
+			request_body.append(",uuid=");
+			request_body.append(channel()->uuid());
+		}
 		if (!_tags.empty()) {
 			request_body.append(",");
 			request_body.append(_tags);
 		}
 		request_body.append(" value=");
-		request_body.append(std::to_string(it->value()));
+		std::stringstream value_str;
+		value_str << std::fixed << std::setprecision(6) << it->value();
+		request_body.append(value_str.str());
 		request_body.append(" ");
 		request_body.append(std::to_string(it->time_ms()));
 		request_body.append("\n"); // each measurement on new line
