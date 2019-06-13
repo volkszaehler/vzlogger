@@ -245,7 +245,8 @@ void vz::api::InfluxDB::send()
 			curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
 		}
 		curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
-		curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
+		curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity() > 0);
+		curl_easy_setopt(_api.curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, response());
