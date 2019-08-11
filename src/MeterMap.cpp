@@ -92,6 +92,7 @@ bool MeterMap::stopped() {
 			_meter->close();
 			return true;
 		}
+		return !_thread_running; // it might have been stopped by cancel already!
 	}
 	return false;
 }

@@ -62,7 +62,6 @@
 
 MapContainer mappings;		// mapping between meters and channels
 Config_Options options;		// global application options
-bool gStop = false;
 size_t gSkippedFailed = 0;	// disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
@@ -252,7 +251,6 @@ void daemonize() {
  * Threads gets joined in main()
  */
 void quit(int sig) {
-	//gStop = true;
 	mappings.quit(sig);
 	end_push_data_thread();
 #ifdef ENABLE_MQTT
@@ -506,13 +504,19 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "Startup done.", "");
 
 	try {
-		do {
+		bool oneRunning;
+		do
+		{
+			oneRunning = false;
 			/* wait for all threads to terminate */
 			for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
-				bool ret = it->stopped();
-				if (ret) gStop = true;
+				(void) it->stopped();
+				if (it->running()) {
+					print(log_info, "stopped returned but still running", "");
+					oneRunning = true;
+				}
 			}
-		} while (!gStop);
+		} while (oneRunning);
 	} catch (std::exception &e) {
 		print(log_error, "Main loop failed for %s", "", e.what());
 	}
