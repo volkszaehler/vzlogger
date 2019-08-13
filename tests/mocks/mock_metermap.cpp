@@ -53,7 +53,7 @@ TEST(mock_metermap, basic_open_close_enabled)
 	MeterMap m (mtr);
 	m.start();
 	m.cancel();
-	EXPECT_FALSE(m.stopped()); // TODO this looks like a bug!
+	EXPECT_FALSE(m.running());
 }
 
 
@@ -72,7 +72,7 @@ TEST(mock_metermap, basic_open_close_not_enabled)
 	MeterMap m (mtr);
 	m.start();
 	m.cancel();
-	EXPECT_FALSE(m.stopped()); // TODO this looks like a bug!
+	EXPECT_FALSE(m.running());
 }
 
 TEST(mock_metermap, one_channel)
@@ -108,7 +108,7 @@ TEST(mock_metermap, one_channel)
 	m.start();
 	usleep(100000); // give reading thread a chance. todo better cancel that synchronizes with readingthread
 	m.cancel();
-	EXPECT_FALSE(m.stopped()); // TODO this looks like a bug!
+	EXPECT_FALSE(m.running());
 }
 
 // test whether the read data get's only into the proper channels: (two channel can have same id)
@@ -157,7 +157,6 @@ TEST(mock_metermap, reading_in_proper_channel)
 	m.start();
 	usleep(100000);
 	m.cancel();
-
 }
 
 }
