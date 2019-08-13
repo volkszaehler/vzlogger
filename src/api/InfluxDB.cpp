@@ -237,9 +237,8 @@ void vz::api::InfluxDB::send()
 			request_body.append(",");
 			request_body.append(_tags);
 		}
-		request_body.append(" value=");
 		std::stringstream value_str;
-		value_str << std::fixed << std::setprecision(6) << it->value();
+		value_str << " value=" << std::fixed << std::setprecision(6) << it->value();
 		request_body.append(value_str.str());
 		request_body.append(" ");
 		request_body.append(std::to_string(it->time_ms()));
@@ -262,7 +261,9 @@ void vz::api::InfluxDB::send()
 			curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
 		}
 		curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
-		curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity() > 0);
+		if (options.verbosity() > 0) {
+			curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, 1L);
+		}
 		curl_easy_setopt(_api.curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
