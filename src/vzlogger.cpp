@@ -62,7 +62,6 @@
 
 MapContainer mappings;		// mapping between meters and channels
 Config_Options options;		// global application options
-bool gStop = false;
 size_t gSkippedFailed = 0;	// disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
@@ -247,13 +246,20 @@ void daemonize() {
 }
 
 /**
- * Cancel threads
- *
- * Threads gets joined in main()
+ * signal handler that is called e.g on
+ * an intended stop by systemd.
+ * We just indicate to the threads that they should
+ * end.
+ * Threads itself gets joined in main()
  */
-void quit(int sig) {
-	//gStop = true;
-	mappings.quit(sig);
+
+volatile bool mainLoopEndThreads = false;
+
+void signalHandlerQuit(int sig) {
+	// this is a signal handler. We're only allowed to call
+	// async-signal-safe functions. see e.g. man 7 signal-safety
+	mainLoopEndThreads = true;
+	//mappings.quit(sig);
 	end_push_data_thread();
 #ifdef ENABLE_MQTT
 	end_mqtt_client_thread();
@@ -359,7 +365,7 @@ int main(int argc, char *argv[]) {
 	struct sigaction action;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
-	action.sa_handler = quit;
+	action.sa_handler = signalHandlerQuit;
 	gStartLogBuf = new std::stringbuf;
 
 #ifdef LOCAL_SUPPORT
@@ -506,13 +512,37 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "Startup done.", "");
 
 	try {
-		do {
-			/* wait for all threads to terminate */
+		bool cancelledThreads = false;
+		bool oneRunning;
+		do
+		{
+			oneRunning = false;
+			// see whether at least one thread is still running:
 			for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
-				bool ret = it->stopped();
-				if (ret) gStop = true;
+				if (it->running()) {
+					oneRunning = true;
+				}
 			}
-		} while (!gStop);
+			// shall we stop the threads?
+			if (mainLoopEndThreads and !cancelledThreads) {
+				print(log_info, "main loop indicating all mappings to quit", "");
+				cancelledThreads = true;
+				for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
+					if (it->running()) {
+						it->cancel();
+					}
+				}
+			} else { // !mainLoopEndThreads or cancelledThread already
+				if (oneRunning) {
+					// at least one thread still running and we're not asked
+					// to stop yet. So let's wait a bit to avoid busy looping
+					if (mainLoopEndThreads) {
+						print(log_info, "main loop waiting for running threads...", "");
+					}
+					::sleep(1); // 1s should be ok. will introduce a shutdown latency >1s
+				}
+			}
+		} while (oneRunning);
 	} catch (std::exception &e) {
 		print(log_error, "Main loop failed for %s", "", e.what());
 	}
