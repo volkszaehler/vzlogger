@@ -79,39 +79,22 @@ void MeterMap::start() {
 	}
 }
 
-bool MeterMap::stopped() {
-	if (_meter->isEnabled()  && running()) {
-		if (pthread_join(_thread, NULL) == 0) {
-			_thread_running = false;
-
-			// join channel-threads
-			for (iterator it = _channels.begin(); it!=_channels.end(); it++) {
-				(*it)->cancel();
-				(*it)->join();
-			}
-			_meter->close();
-			return true;
-		}
-	}
-	return false;
-}
-
 void MeterMap::cancel() { // get's called from MapContainer::quit that get's called from sigint handler ::quit
-	print(log_finest, "MeterMap::cancel entered...", "main");
+	print(log_finest, "MeterMap::cancel entered...", _meter->name());
 	if (_meter->isEnabled() && running()) {
 		for (iterator it = _channels.begin(); it != _channels.end(); it++) {
 			(*it)->cancel(); // stops the logging_thread via pthread_cancel
 			(*it)->join();
 		}
-		print(log_finest, "MeterMap::cancel wait for readingthread", "main");
+		print(log_finest, "MeterMap::cancel wait for readingthread", _meter->name());
 		pthread_cancel(_thread); // readingthread
 		pthread_join(_thread, NULL);
 		_thread_running = false;
-		print(log_finest, "MeterMap::cancel wait for meter::close", "main");
+		print(log_finest, "MeterMap::cancel wait for meter::close", _meter->name());
 		_meter->close();
 		//_channels.clear();
 	}
-	print(log_finest, "MeterMap::cancel finished.", "main");
+	print(log_finest, "MeterMap::cancel finished.", _meter->name());
 }
 
 void MeterMap::registration() {
