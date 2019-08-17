@@ -164,6 +164,17 @@ vz::api::InfluxDB::InfluxDB(
 			throw;
 		}
 
+	try {
+		_ssl_verifypeer = optlist.lookup_bool(pOptions, "ssl_verifypeer");
+		print(log_finest, "api InfluxDB using ssl_verifypeer: %s", ch->name(), _ssl_verifypeer ? "true" : "false");
+	} catch (vz::OptionNotFoundException &e) {
+		_ssl_verifypeer = true;
+		print(log_finest, "api InfluxDB will use default ssl_verifypeer %s", ch->name(), _ssl_verifypeer ? "true" : "false");
+	} catch (vz::VZException &e) {
+		print(log_alert, "api InfluxDB requires parameter \"_ssl_verifypeer\" as bool!", ch->name());
+		throw;
+	}
+
 	CURL *curlhelper = curl_easy_init();
 	if(!curlhelper) {
 		throw vz::VZException("CURL: cannot create handle for urlencode.");
@@ -261,10 +272,8 @@ void vz::api::InfluxDB::send()
 			curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
 		}
 		curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
-		if (options.verbosity() > 0) {
-			curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, 1L);
-		}
-		curl_easy_setopt(_api.curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity() > 0);
+		curl_easy_setopt(_api.curl, CURLOPT_SSL_VERIFYPEER, _ssl_verifypeer);
 
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, &(vz::api::CurlCallback::debug_callback));
 		curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, response());
