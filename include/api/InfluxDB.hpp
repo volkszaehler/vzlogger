@@ -64,6 +64,8 @@ namespace vz {
 			int _max_batch_inserts;
 			int _max_buffer_size;
 			unsigned int _curl_timeout;
+			bool _send_uuid;
+			bool _ssl_verifypeer;
 			std::list<Reading> _values;
 			CurlResponse::Ptr _response;
 
