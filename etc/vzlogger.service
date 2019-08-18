@@ -5,7 +5,7 @@ After=mysql.service ntp.service
 
 [Service]
 ExecStart=/usr/local/bin/vzlogger -c /etc/vzlogger.conf
-ExecReload=/bin/kill -HUP $MAINPID
+ExecReload=
 StandardOutput=null
 
 [Install]
