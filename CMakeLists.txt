@@ -294,6 +294,11 @@ INSTALL(FILES README.md COPYING DESTINATION
   share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
 )
 
+INSTALL(FILES etc/vzlogger.conf DESTINATION /etc)
+INSTALL(FILES etc/vzlogger.conf.InfluxDB etc/vzlogger.conf.meterOCR etc/vzlogger.conf.meterOMS etc/vzlogger.conf.mySmartGrid DESTINATION
+  share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
+)
+
 # add clean-all target that removes the cached files from cmake as well (see e.g. issue #186)
 add_custom_target(clean-all
     COMMAND ${CMAKE_BUILD_TOOL} clean

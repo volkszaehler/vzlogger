@@ -16,7 +16,6 @@ DESC="smartmetering server"
 NAME=vzlogger
 DAEMON=/usr/bin/vzlogger
 DAEMON_ARGS="-d"          # Arguments to run the daemon with
-#PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 USER=vzlogger
 GROUP=vzlogger
