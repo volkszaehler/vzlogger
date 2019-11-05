@@ -71,6 +71,15 @@ Reading::Reading(
 {
 }
 
+Reading &Reading::operator=(const Reading &orig)
+{
+	_deleted = orig._deleted;
+	_value = orig._value;
+	_time = orig._time;
+	_identifier = orig._identifier;
+	return *this;
+}
+
 void Reading::time_from_double(double const &ts)
 {
 	double integral;
