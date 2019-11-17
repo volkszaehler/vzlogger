@@ -92,12 +92,3 @@ class Buffer {
 };
 
 #endif /* _BUFFER_H_ */
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

@@ -346,12 +346,3 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 
 	return realsize;
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

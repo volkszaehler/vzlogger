@@ -85,12 +85,3 @@ void vz::api::CurlResponse::split_response(size_t n) {
 	_header = _response_data.substr(0, n);
 	_body = _response_data.substr(n);
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

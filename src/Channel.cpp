@@ -96,12 +96,3 @@ Channel::~Channel() {
 	// this hangs is the readingthread was pthread_cancelled during wait!
 	// pthread_cond_destroy(&condition);
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

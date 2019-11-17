@@ -222,12 +222,3 @@ Buffer::~Buffer() {
 	if (_last_avg)
 		delete _last_avg;
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

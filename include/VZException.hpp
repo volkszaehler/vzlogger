@@ -85,12 +85,3 @@ class TimeOut : public ConnectionException {
 
 } // namespace vz
 #endif /* _VZException_hpp_ */
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

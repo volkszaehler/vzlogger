@@ -65,12 +65,3 @@ class CurlResponse {
 } // namespace api
 } // namespace vz
 #endif /* _CurlResponse_hpp_ */
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

@@ -50,12 +50,3 @@ void vz::api::Null::send() {
 }
 
 void vz::api::Null::register_device() {}
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */
