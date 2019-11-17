@@ -82,6 +82,22 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false)
 				_topic = json_object_get_string(local_value);
 				// todo check for no $ at start and no / at end
 			}
+			else if (strcmp(key, "qos") == 0 && local_type == json_type_int)
+			{
+				int qos = json_object_get_int(local_value);
+				if (qos >= 0 && qos <= 2)
+				{
+					_qos = qos;
+				}
+				else
+				{
+					print(log_alert, "Ignoring invalid QoS value %d, assuming default", NULL, qos);
+				}
+			}
+			else if (strcmp(key, "timestamp") == 0 && local_type == json_type_boolean)
+			{
+				_timestamp = json_object_get_boolean(local_value);
+			}
 			else
 			{
 				print(log_alert, "Ignoring invalid field or type: %s=%s", NULL, key,
@@ -309,9 +325,9 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 		{
 			std::string name = entry._announceName + v.first;
 			int res = mosquitto_publish(_mcs, 0,
-										name.c_str(),
-										v.second.length(),
-										v.second.c_str(), 0, _retain);
+						    name.c_str(),
+						    v.second.length(),
+						    v.second.c_str(), _qos, _retain);
 			if (res != MOSQ_ERR_SUCCESS)
 			{
 				print(log_finest, "mosquitto_publish announce %s returned %d", "mqtt", name.c_str(), res);
@@ -327,14 +343,30 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate)
 	if ((entry._sendAgg and aggregate) or (entry._sendRaw && !aggregate))
 	{
 		lock.unlock(); // we can unlock here already
-		std::string payload = std::to_string(rds.value());
+        std::string payload;
+		struct json_object* payload_obj = NULL;
+
+        if (_timestamp) {
+	        payload_obj = json_object_new_object();
+	        json_object_object_add(payload_obj, "timestamp", json_object_new_int64(rds.time_ms()));
+			json_object_object_add(payload_obj, "value", json_object_new_double(rds.value()));
+	        payload = json_object_to_json_string(payload_obj);
+        }
+        else {
+            payload = std::to_string(rds.value());
+        }
+
 		print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 
-		int res = mosquitto_publish(_mcs, 0,
-									topic.c_str(), payload.length(), payload.c_str(), 0, _retain);
+        int res = mosquitto_publish(_mcs, 0,
+                    topic.c_str(), payload.length(), payload.c_str(), _qos, _retain);
 		if (res != MOSQ_ERR_SUCCESS)
 		{
 			print(log_finest, "mosquitto_publish returned %d", "mqtt", res);
+		}
+		if (payload_obj != NULL)
+		{
+	        json_object_put(payload_obj);
 		}
 	}
 }

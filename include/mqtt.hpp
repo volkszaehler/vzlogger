@@ -45,6 +45,8 @@ class MqttClient
 	bool _retain = false;
 	bool _rawAndAgg = false;
 	std::string _topic;
+	int _qos = 0;
+	bool _timestamp = false;
 
 	bool _isConnected  = false;
 
