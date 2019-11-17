@@ -82,6 +82,6 @@ script:
   - if [ -n "$BUILD" ]; then cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test; fi
   - |
     if [ -n "$FORMAT" ]; then
-      clang-format -i include/* src/*
+      clang-format -i include/**/*.{h,hpp} src/**/*.cpp tests/**/*.{cpp,hpp}
       test -z "$(git status --porcelain)" || (git status; git diff; false)
     fi
