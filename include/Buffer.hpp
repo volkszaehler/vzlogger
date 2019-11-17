@@ -28,15 +28,15 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
+#include <list>
 #include <pthread.h>
 #include <sys/time.h>
-#include <list>
 
 #include <Reading.hpp>
 
 class Buffer {
 
-	public:
+  public:
 	typedef vz::shared_ptr<Buffer> Ptr;
 	typedef std::list<Reading>::iterator iterator;
 	typedef std::list<Reading>::const_iterator const_iterator;
@@ -54,45 +54,41 @@ class Buffer {
 	std::string dump();
 
 	inline iterator begin() { return _sent.begin(); }
-	inline iterator end()   { return _sent.end(); }
-	inline size_t size() { lock(); size_t s = _sent.size(); unlock(); return s; }
+	inline iterator end() { return _sent.end(); }
+	inline size_t size() {
+		lock();
+		size_t s = _sent.size();
+		unlock();
+		return s;
+	}
 
 	inline bool newValues() const { return _newValues; }
 	inline void clear_newValues() { _newValues = false; }
 
-	inline void lock()   { pthread_mutex_lock(&_mutex); }
+	inline void lock() { pthread_mutex_lock(&_mutex); }
 	inline void unlock() { pthread_mutex_unlock(&_mutex); }
 	inline void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
 
-	inline void have_newValues() { _newValues =  true; }
+	inline void have_newValues() { _newValues = true; }
 
-	inline void set_aggmode(Buffer::aggmode m) {_aggmode=m;}
+	inline void set_aggmode(Buffer::aggmode m) { _aggmode = m; }
 	inline aggmode get_aggmode() const { return _aggmode; }
 
-	private:
-	Buffer(const Buffer &); // don't allow copy constructor
-	Buffer & operator=(const Buffer &); // and no assignment op.
+  private:
+	Buffer(const Buffer &);            // don't allow copy constructor
+	Buffer &operator=(const Buffer &); // and no assignment op.
 
 	std::list<Reading> _sent;
 	bool _newValues;
 
 	Buffer::aggmode _aggmode;
 
-	size_t _keep;	/**< number of readings to cache for local interface */
+	size_t _keep; /**< number of readings to cache for local interface */
 
 	pthread_mutex_t _mutex;
 
-	Reading *_last_avg; // keeps value and time from last reading from aggregate call for aggmode AVG
+	Reading
+		*_last_avg; // keeps value and time from last reading from aggregate call for aggmode AVG
 };
 
 #endif /* _BUFFER_H_ */
-
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

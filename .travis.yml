@@ -1,72 +1,87 @@
 sudo: required
-dist: trusty
+dist: xenial
 
 language: cpp
 
-compiler:
-    - clang
-    - gcc
-
-env:
-  - CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=0
-  - CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+addons:
+  apt:
+    sources:
+    - llvm-toolchain-trusty
+    packages:
+    - clang-format-9
 
 matrix:
-  exclude:
-  - compiler: clang
-    env: CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+  include:
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+    compiler: clang
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+    compiler: gcc
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=0
+    compiler: gcc
+  - env: FORMAT=1
 
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-# uncomment for ubuntu precise. not needed for >=trusty - if [ "$CXX" = "g++" ]; then sudo apt-get install -y -qq g++-4.8; export CXX="g++-4.8" CC="gcc-4.8"; else echo "yes" | sudo add-apt-repository 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main'; echo "yes" | sudo add-apt-repository 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main'; wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -; sudo apt-get update; sudo apt-get install -qq --allow-unauthenticated llvm-3.6 llvm-3.6-dev clang-3.6 libstdc++-4.8-dev; export CXX="clang++-3.6" CC="clang-3.6"; fi
-  - if [ "$USE_GCC7" = "1" ]; then sudo apt-get install -y -qq g++-7; export CXX="g++-7" CC="gcc-7"; fi
-  - $CXX --version
-# install json-c
-  - sudo apt-get install -y build-essential
-  - sudo apt-get install -y wget
-  - sudo apt-get install -y libtool
-  - git clone -b json-c-0.12 https://github.com/json-c/json-c
-  - cd json-c
-  - sh autogen.sh
-  - ./configure
-  - make
-  - sudo make install
-  - cd ..
-  - sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime libunistring-dev
-# -- get libsml --
-  - git clone https://github.com/volkszaehler/libsml.git # or github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
-  - cd libsml
-  - # git checkout develop # only dev branch seems to work
-  - make
-# -- install libsml --
-  - sudo cp sml/lib/libsml.* /usr/lib/.
-  - sudo cp -R sml/include/* /usr/include/.
-  - sudo cp sml.pc /usr/lib/pkgconfig/.
-  - cd ..
+  - clang-format --version
 
-# -- install leptonica
-  - sudo apt-get install -y libpng-dev libtiff-dev
-  - wget http://www.leptonica.org/source/leptonica-1.71.tar.gz
-  - tar -zxvf leptonica-1.71.tar.gz
-  - cd leptonica-1.71
-  - ./configure --disable-programs
-  - make
-  - sudo make install
-  - sudo ldconfig
-  - cd ..
+install:
+  - |
+    if [ -n "$BUILD" ]; then
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+      sudo apt-get update -qq
+      if [ "$USE_GCC7" = "1" ]; then sudo apt-get install -y -qq g++-7; export CXX="g++-7" CC="gcc-7"; fi
+      $CXX --version
+      # install json-c
+      sudo apt-get install -y build-essential
+      sudo apt-get install -y wget
+      sudo apt-get install -y libtool
+      git clone -b json-c-0.12 https://github.com/json-c/json-c
+      cd json-c
+      sh autogen.sh
+      ./configure
+      make
+      sudo make install
+      cd ..
+      sudo apt-get install -y libcurl4-openssl-dev openssl libmicrohttpd-dev uuid-dev uuid-runtime libunistring-dev
+      # -- get libsml --
+      git clone https://github.com/volkszaehler/libsml.git # or github.com/TheCount/libsml.git # or https://github.com/dailab/libsml.git
+      cd libsml
+      # git checkout develop # only dev branch seems to work
+      make
+      # -- install libsml --
+      sudo cp sml/lib/libsml.* /usr/lib/.
+      sudo cp -R sml/include/* /usr/include/.
+      sudo cp sml.pc /usr/lib/pkgconfig/.
+      cd ..
 
-# -- install libmbus
-  - git clone https://github.com/rscada/libmbus
-  - cd libmbus
-  - ./build.sh
-  - sudo make install
-  - cd ..
-  - sudo apt-get install -y lcov
+      # -- install leptonica
+      sudo apt-get install -y libpng-dev libtiff-dev
+      wget http://www.leptonica.org/source/leptonica-1.71.tar.gz
+      tar -zxvf leptonica-1.71.tar.gz
+      cd leptonica-1.71
+      ./configure --disable-programs
+      make
+      sudo make install
+      sudo ldconfig
+      cd ..
 
-# -- install libmosquitto-dev
-  - sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libmosquitto-dev
+      # -- install libmbus
+      git clone https://github.com/rscada/libmbus
+      cd libmbus
+      ./build.sh
+      sudo make install
+      cd ..
+      sudo apt-get install -y lcov
+
+      # -- install libmosquitto-dev
+      sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
+      sudo apt-get update -qq
+      sudo apt-get install -qq libmosquitto-dev
+    fi
+
 script:
-  - cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test
+  - if [ -n "$BUILD" ]; then cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test; fi
+  - |
+    if [ -n "$FORMAT" ]; then
+      clang-format -i include/**/*.{h,hpp} src/**/*.cpp tests/**/*.{cpp,hpp}
+      test -z "$(git status --porcelain)" || (git status; git diff; false)
+    fi

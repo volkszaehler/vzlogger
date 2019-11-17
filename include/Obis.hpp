@@ -22,26 +22,27 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
-	
+
 #ifndef _OBIS_H_
 #define _OBIS_H_
 
 #include <string>
 
-#define OBIS_STR_LEN (6*3+5+1)
+#define OBIS_STR_LEN (6 * 3 + 5 + 1)
 
 class Obis {
-	public:
-	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e, unsigned char f);
-	Obis(const char *strClear); /* attention: no hex codes inside the strings! Only special characters "C, F, L, P" allowed. */
-	Obis(); // initializes to "not given" = all DC/255.
+  public:
+	Obis(unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned char e,
+		 unsigned char f);
+	Obis(const char *strClear); /* attention: no hex codes inside the strings! Only special
+								   characters "C, F, L, P" allowed. */
+	Obis();                     // initializes to "not given" = all DC/255.
 
-	//static Obis lookup(const char *alias);
-
+	// static Obis lookup(const char *alias);
 
 	/* regex: A-BB:CC.DD.EE([*&]FF)? */
 	size_t unparse(char *buffer, size_t n);
-	const std::string toString()  ;
+	const std::string toString();
 
 	bool operator==(const Obis &rhs) const;
 
@@ -49,16 +50,16 @@ class Obis {
 	bool isAllNotGiven() const; // check whether all are not given (=DC/255)
 	bool isValid() const;
 
-	private:
+  private:
 	int parse(const char *str);
 	int lookup_alias(const char *alias);
 
-	private:
+  private:
 	union {
 		unsigned char _raw[6];
 		struct {
 			unsigned char media, channel, indicator, mode, quantities;
-			unsigned char storage;	/* not used in Germany */
+			unsigned char storage; /* not used in Germany */
 		} groups;
 	} _obisId;
 };
@@ -69,6 +70,6 @@ typedef struct {
 	const char *desc;
 } obis_alias_t;
 
-obis_alias_t * obis_get_aliases();
+obis_alias_t *obis_get_aliases();
 
 #endif /* _OBIS_H_ */

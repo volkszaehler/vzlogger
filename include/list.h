@@ -22,23 +22,22 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _LIST_H_
 #define _LIST_H_
 
 #include "exception.h"
 
-template<class T>
-class List {
+template <class T> class List {
 
-protected:
+  protected:
 	class Node; /* protected forward declaration */
 
-public:
+  public:
 	class Iterator; /* public forward declaration */
 	typedef Iterator iterator;
 
-	List() : size(0), head(NULL), tail(NULL) { };
+	List() : size(0), head(NULL), tail(NULL){};
 	~List() { clear(); };
 
 	Iterator push(T data) {
@@ -54,8 +53,7 @@ public:
 		if (head == NULL) { /* empty list */
 			newNode->prev = NULL;
 			head = newNode;
-		}
-		else {
+		} else {
 			newNode->prev = tail;
 			tail->next = newNode;
 		}
@@ -82,47 +80,49 @@ public:
 	}
 
 	size_t length() const { return size; };
-	void clear() { while (size > 0) { pop(); } };
+	void clear() {
+		while (size > 0) {
+			pop();
+		}
+	};
 
 	/* Iterators */
 	Iterator begin() { return Iterator(head); };
 	Iterator end() { return Iterator(NULL); };
 
-protected:
+  protected:
 	size_t size;
 	Node *head, *tail;
 };
 
-template<class T>
-class List<T>::Node {
+template <class T> class List<T>::Node {
 	friend class List<T>;
 	friend class List<T>::Iterator;
 
-protected:
+  protected:
 	T data;
 	Node *next, *prev;
 };
 
-template<class T>
-class List<T>::Iterator {
+template <class T> class List<T>::Iterator {
 	friend class List<T>;
 
-public:
-	Iterator() : cur(NULL) { };
+  public:
+	Iterator() : cur(NULL){};
 
-	bool operator==(Iterator const& i) const { return (cur == i.cur); };
-	bool operator!=(Iterator const& i) const { return (cur != i.cur); };
+	bool operator==(Iterator const &i) const { return (cur == i.cur); };
+	bool operator!=(Iterator const &i) const { return (cur != i.cur); };
 
-	T* operator->() const { return &cur->data; };
-	T& operator*() const { return cur->data; };
+	T *operator->() const { return &cur->data; };
+	T &operator*() const { return cur->data; };
 
 	Iterator operator++() {
 		cur = cur->next;
 		return *this;
 	};
 
-protected:
-	Iterator(Node *node) : cur(node) { };
+  protected:
+	Iterator(Node *node) : cur(node){};
 
 	Node *cur;
 };

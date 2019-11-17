@@ -26,53 +26,42 @@
 #ifndef _CurlResponse_hpp_
 #define _CurlResponse_hpp_
 
-#include <shared_ptr.hpp>
 #include <curl/curl.h>
+#include <shared_ptr.hpp>
 
 namespace vz {
-	namespace api {
+namespace api {
 
-		class CurlResponse {
-		public:
-			typedef vz::shared_ptr<CurlResponse> Ptr;
+class CurlResponse {
+  public:
+	typedef vz::shared_ptr<CurlResponse> Ptr;
 
-			CurlResponse() : _header(""), _body(""){ clear_response(); };
-			~CurlResponse() {};
+	CurlResponse() : _header(""), _body("") { clear_response(); };
+	~CurlResponse(){};
 
-			const std::string get_response() { return _response_data; }
-			const std::string body() const   { return _body; }
-			const std::string header() const { return _header; }
+	const std::string get_response() { return _response_data; }
+	const std::string body() const { return _body; }
+	const std::string header() const { return _header; }
 
-			void clear_response() { _response_data.clear(); }
-			void split_response(size_t n);
+	void clear_response() { _response_data.clear(); }
+	void split_response(size_t n);
 
-			// callbacks
-			void header_callback(const std::string &data);
-			void write_callback(const std::string &data);
-			void debug_callback(curl_infotype infotype, const std::string &data);
-			int  progress_callback(void *clientp, double dltotal, double dlnow
-														 , double ultotal, double ulnow);
+	// callbacks
+	void header_callback(const std::string &data);
+	void write_callback(const std::string &data);
+	void debug_callback(curl_infotype infotype, const std::string &data);
+	int progress_callback(void *clientp, double dltotal, double dlnow, double ultotal,
+						  double ulnow);
 
-		protected:
-			void response(const std::string &v) { _response_data = v; }
+  protected:
+	void response(const std::string &v) { _response_data = v; }
 
-		private:
-			std::string _response_data;
-			std::string _header;
-			std::string _body;
+  private:
+	std::string _response_data;
+	std::string _header;
+	std::string _body;
+};
 
-		};
-    
-	} // namespace vz
+} // namespace api
 } // namespace vz
 #endif /* _CurlResponse_hpp_ */
-
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

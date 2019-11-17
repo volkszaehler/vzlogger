@@ -35,27 +35,30 @@
 
 #include <termios.h>
 
-#include <protocols/Protocol.hpp>
 #include "Obis.hpp"
+#include <protocols/Protocol.hpp>
 
 class MeterSML : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterSML(std::list<Option> options);
 	MeterSML(const MeterSML &mtr);
 	virtual ~MeterSML();
 
-//	MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" << std::endl; return (*this); }
+	// MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" <<
+	// std::endl; return (*this); }
 
 	int open();
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
-	virtual bool allowInterval() const { return false; } // don't allow conf setting interval with sml
+	virtual bool allowInterval() const {
+		return false;
+	} // don't allow conf setting interval with sml
 
 	const char *host() const { return _host.c_str(); }
 	const char *device() const { return _device.c_str(); }
 
-protected:
+  protected:
 	std::string _host;
 	std::string _device;
 	speed_t _baudrate;
@@ -63,8 +66,8 @@ protected:
 	std::string _pull;
 	bool _use_local_time;
 
-	int _fd;	/* file descriptor of port */
-	struct termios _old_tio;	/* required to reset port */
+	int _fd;                 /* file descriptor of port */
+	struct termios _old_tio; /* required to reset port */
 
 	const int BUFFER_LEN;
 
@@ -102,6 +105,5 @@ protected:
 	 */
 	int _openSocket(const char *node, const char *service);
 };
-
 
 #endif /* _SML_H_ */

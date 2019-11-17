@@ -22,15 +22,14 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _EXCEPTION_H_
 #define _EXCEPTION_H_
 
 class Exception {
 
-public:
-	Exception(const char * msg);
-
+  public:
+	Exception(const char *msg);
 };
 
 #endif /* _EXCEPTION_H_ */

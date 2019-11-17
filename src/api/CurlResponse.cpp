@@ -23,87 +23,65 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
 #include <iostream>
+#include <string.h>
 
 #include <api/CurlResponse.hpp>
 #include <common.h>
 
+void vz::api::CurlResponse::header_callback(const std::string &data) {}
 
-void vz::api::CurlResponse::header_callback(
-	const std::string &data
-	) {
-}
+void vz::api::CurlResponse::write_callback(const std::string &data) { _response_data.append(data); }
 
-void vz::api::CurlResponse::write_callback(
-	const std::string &data
-	) {
-	_response_data.append( data );
-
-}
-
-void vz::api::CurlResponse::debug_callback( 
-	curl_infotype type
-	, const std::string &data_str
-	) {
-	const char *data=data_str.c_str();
+void vz::api::CurlResponse::debug_callback(curl_infotype type, const std::string &data_str) {
+	const char *data = data_str.c_str();
 
 	char *end = strchr((char *)data, '\n');
 
-	if (data == end) return; /* skip empty line */
+	if (data == end)
+		return; /* skip empty line */
 
 	switch (type) {
-			case CURLINFO_TEXT:
-			case CURLINFO_END:
-				if (end) *end = '\0'; /* terminate without \n */
-				print((log_level_t)(log_debug+5), "CURL: %.*s", "CURL", (int) data_str.size(), data);
-				break;
+	case CURLINFO_TEXT:
+	case CURLINFO_END:
+		if (end)
+			*end = '\0'; /* terminate without \n */
+		print((log_level_t)(log_debug + 5), "CURL: %.*s", "CURL", (int)data_str.size(), data);
+		break;
 
-			case CURLINFO_SSL_DATA_IN:
-				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", "CURL", (unsigned long) data_str.size());
-				break;
-			case CURLINFO_DATA_IN:
-				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", "CURL", (unsigned long) data_str.size());
-				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", "CURL", data);
-				break;
+	case CURLINFO_SSL_DATA_IN:
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes", "CURL",
+			  (unsigned long)data_str.size());
+		break;
+	case CURLINFO_DATA_IN:
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes", "CURL",
+			  (unsigned long)data_str.size());
+		print((log_level_t)(log_debug + 5), "CURL: Received '%s' bytes", "CURL", data);
+		break;
 
-			case CURLINFO_SSL_DATA_OUT:
-				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", "CURL", (unsigned long) data_str.size());
-				break;
-			case CURLINFO_DATA_OUT:
-				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", "CURL", (unsigned long) data_str.size());
-				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", "CURL", data);
-				break;
+	case CURLINFO_SSL_DATA_OUT:
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes.. ", "CURL",
+			  (unsigned long)data_str.size());
+		break;
+	case CURLINFO_DATA_OUT:
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes.. ", "CURL",
+			  (unsigned long)data_str.size());
+		print((log_level_t)(log_debug + 5), "CURL: Sent '%s' bytes", "CURL", data);
+		break;
 
-			case CURLINFO_HEADER_IN:
-			case CURLINFO_HEADER_OUT:
-				print((log_level_t)(log_debug+5), "CURL: Header '%s' bytes", "CURL", data);
-				break;
+	case CURLINFO_HEADER_IN:
+	case CURLINFO_HEADER_OUT:
+		print((log_level_t)(log_debug + 5), "CURL: Header '%s' bytes", "CURL", data);
+		break;
 	}
-
 }
 
-int vz::api::CurlResponse::progress_callback(
-	void *clientp
-	, double dltotal
-	, double dlnow
-	, double ultotal
-	, double ulnow
-	) {
+int vz::api::CurlResponse::progress_callback(void *clientp, double dltotal, double dlnow,
+											 double ultotal, double ulnow) {
 	return 0;
 }
 
 void vz::api::CurlResponse::split_response(size_t n) {
 	_header = _response_data.substr(0, n);
-	_body   = _response_data.substr(n);
+	_body = _response_data.substr(n);
 }
-
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

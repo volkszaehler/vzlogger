@@ -33,40 +33,20 @@
 
 extern Config_Options options;
 
-vz::api::Null::Null(
-	Channel::Ptr ch,
-	std::list<Option> pOptions
-	)
-	: ApiIF(ch)
-{
-}
+vz::api::Null::Null(Channel::Ptr ch, std::list<Option> pOptions) : ApiIF(ch) {}
 
-vz::api::Null::~Null()
-{
-}
+vz::api::Null::~Null() {}
 
-void vz::api::Null::send()
-{
-	// we need to mark all elements as transmitted/deleted otherwise the Channel::Buffer keeps on growing
+void vz::api::Null::send() {
+	// we need to mark all elements as transmitted/deleted otherwise the Channel::Buffer keeps on
+	// growing
 	Buffer::Ptr buf = channel()->buffer();
 	buf->lock();
-	for (	Buffer::iterator it = buf->begin(); it != buf->end(); it++) {
+	for (Buffer::iterator it = buf->begin(); it != buf->end(); it++) {
 		it->mark_delete();
 	}
 	buf->unlock();
 	buf->clean();
 }
 
-void vz::api::Null::register_device()
-{
-}
-
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */
+void vz::api::Null::register_device() {}

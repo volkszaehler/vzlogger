@@ -27,23 +27,22 @@
 #include <map>
 
 #include <json-c/json.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
-#include "vzlogger.h"
 #include "Channel.hpp"
 #include "local.h"
+#include "vzlogger.h"
 #include <MeterMap.hpp>
 #include <VZException.hpp>
 #include <pthread.h>
 
 extern Config_Options options;
 
-class ChannelData
-{
-public:
-	ChannelData(const int64_t &t, const double &v) : _t(t), _v(v) {};
+class ChannelData {
+  public:
+	ChannelData(const int64_t &t, const double &v) : _t(t), _v(v){};
 	int64_t _t;
 	double _v;
 };
@@ -55,19 +54,20 @@ MAP_UUID_ChannelData localbuffer;
 
 void shrink_localbuffer() // remove old data in the local buffer
 {
-	if (options.buffer_length()>=0){ // time based localbuffer. keep buffer_length secs
+	if (options.buffer_length() >= 0) { // time based localbuffer. keep buffer_length secs
 		Reading rnow;
 		rnow.time(); // sets to "now"
-		int64_t minT = rnow.time_ms() - (1000*options.buffer_length()); // now - time to keep in buffer
+		int64_t minT =
+			rnow.time_ms() - (1000 * options.buffer_length()); // now - time to keep in buffer
 
 		pthread_mutex_lock(&localbuffer_mutex);
 
 		MAP_UUID_ChannelData::iterator it = localbuffer.begin();
-		for (;it!=localbuffer.end(); ++it) {
+		for (; it != localbuffer.end(); ++it) {
 			LIST_ChannelData &l = it->second;
 			LIST_ChannelData::iterator lit = l.begin();
 
-			while (lit!=l.end() && ((lit->_t) < minT))
+			while (lit != l.end() && ((lit->_t) < minT))
 				lit = l.erase(lit);
 		}
 
@@ -75,8 +75,7 @@ void shrink_localbuffer() // remove old data in the local buffer
 	}
 }
 
-void add_ch_to_localbuffer(Channel &ch)
-{
+void add_ch_to_localbuffer(Channel &ch) {
 	pthread_mutex_lock(&localbuffer_mutex);
 	LIST_ChannelData &l = localbuffer[ch.uuid()];
 
@@ -89,23 +88,24 @@ void add_ch_to_localbuffer(Channel &ch)
 			l.push_back(ChannelData(r.time_ms(), r.value()));
 		}
 	}
-	if (options.buffer_length()<0) { // max size based localbuffer. keep max -buffer_length items
-		while (l.size() > static_cast<unsigned int> (-(options.buffer_length())))
+	if (options.buffer_length() < 0) { // max size based localbuffer. keep max -buffer_length items
+		while (l.size() > static_cast<unsigned int>(-(options.buffer_length())))
 			l.pop_front();
 	}
 
 	pthread_mutex_unlock(&localbuffer_mutex);
 }
 
-json_object * api_json_tuples(const char *uuid) {
+json_object *api_json_tuples(const char *uuid) {
 
-	if (!uuid) return NULL;
+	if (!uuid)
+		return NULL;
 	pthread_mutex_lock(&localbuffer_mutex);
 	LIST_ChannelData &l = localbuffer[uuid];
 
 	print(log_debug, "==> number of tuples: %d", uuid, l.size());
 
-	if (l.size() < 1 ) {
+	if (l.size() < 1) {
 		pthread_mutex_unlock(&localbuffer_mutex);
 		return NULL;
 	}
@@ -124,30 +124,22 @@ json_object * api_json_tuples(const char *uuid) {
 	return json_tuples;
 }
 
-
-int handle_request(
-	void *cls
-	, struct MHD_Connection *connection
-	, const char *url
-	, const char *method
-	, const char *version
-	, const char *upload_data
-	, size_t *upload_data_size
-	, void **con_cls
-	) {
+int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+				   const char *method, const char *version, const char *upload_data,
+				   size_t *upload_data_size, void **con_cls) {
 
 	int status;
 	int response_code = MHD_HTTP_NOT_FOUND;
 
 	// mapping between meters and channels
-	MapContainer *mappings = static_cast<MapContainer*>(cls);
+	MapContainer *mappings = static_cast<MapContainer *>(cls);
 
 	struct MHD_Response *response;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
 	try {
-		print(log_info, "Local request received: method=%s url=%s mode=%s",
-					"http", method, url, mode);
+		print(log_info, "Local request received: method=%s url=%s mode=%s", "http", method, url,
+			  mode);
 
 		if (strcmp(method, "GET") == 0) {
 
@@ -162,41 +154,51 @@ int handle_request(
 			if (strcmp(url, "/") == 0) {
 				if (options.channel_index()) {
 					show_all = TRUE;
-				}
-				else {
+				} else {
 					json_exception = json_object_new_object();
 
-					json_object_object_add(json_exception, "message", json_object_new_string("channel index is disabled"));
+					json_object_object_add(json_exception, "message",
+										   json_object_new_string("channel index is disabled"));
 					json_object_object_add(json_exception, "code", json_object_new_int(0));
 				}
 			}
 
 			shrink_localbuffer(); // in case the channel return very few/seldom data
 
-			for (MapContainer::iterator mapping = mappings->begin(); mapping!=mappings->end(); mapping++) {
-				for (MeterMap::iterator ch = mapping->begin(); ch!=mapping->end(); ch++) {
+			for (MapContainer::iterator mapping = mappings->begin(); mapping != mappings->end();
+				 mapping++) {
+				for (MeterMap::iterator ch = mapping->begin(); ch != mapping->end(); ch++) {
 					if (strcmp((*ch)->uuid(), uuid) == 0 || show_all) {
 						response_code = MHD_HTTP_OK;
 
-// blocking until new data arrives (comet-like blocking of HTTP response)
+						// blocking until new data arrives (comet-like blocking of HTTP response)
 						if (mode && strcmp(mode, "comet") == 0) {
-// TODO wait only options.comet_timeout()!
-//							gettimeofday(&tp, NULL);
-//							ts.tv_sec  = tp.tv_sec + options.comet_timeout();
-//							ts.tv_nsec = tp.tv_usec * 1000;
+							// TODO wait only options.comet_timeout()!
+							// gettimeofday(&tp, NULL);
+							// ts.tv_sec = tp.tv_sec + options.comet_timeout();
+							// ts.tv_nsec = tp.tv_usec * 1000;
 
-//							(*ch)->wait(); // TODO not usefull with show_all! Wait only if this channel empty?
+							// (*ch)->wait(); // TODO not usefull with
+							// 			   // show_all! Wait only if this channel empty?
 						}
 
 						struct json_object *json_ch = json_object_new_object();
 
-						json_object_object_add(json_ch, "uuid", json_object_new_string((*ch)->uuid()));
-						json_object_object_add(json_ch, "last", json_object_new_int64((*ch)->time_ms())); // return here in ms as well
-						json_object_object_add(json_ch, "interval", json_object_new_int(mapping->meter()->interval()));
-						json_object_object_add(json_ch, "protocol", json_object_new_string(meter_get_details(mapping->meter()->protocolId())->name));
+						json_object_object_add(json_ch, "uuid",
+											   json_object_new_string((*ch)->uuid()));
+						json_object_object_add(
+							json_ch, "last",
+							json_object_new_int64((*ch)->time_ms())); // return here in ms as well
+						json_object_object_add(json_ch, "interval",
+											   json_object_new_int(mapping->meter()->interval()));
+						json_object_object_add(
+							json_ch, "protocol",
+							json_object_new_string(
+								meter_get_details(mapping->meter()->protocolId())->name));
 
 						struct json_object *json_tuples = api_json_tuples((*ch)->uuid());
-						if (json_tuples) json_object_object_add(json_ch, "tuples", json_tuples);
+						if (json_tuples)
+							json_object_object_add(json_ch, "tuples", json_tuples);
 
 						json_object_array_add(json_data, json_ch);
 					}
@@ -212,15 +214,18 @@ int handle_request(
 			}
 
 			json_str = json_object_to_json_string(json_obj);
-			response = MHD_create_response_from_buffer(strlen(json_str), static_cast<void *>(const_cast<char *> (json_str)), MHD_RESPMEM_MUST_COPY);
+			response = MHD_create_response_from_buffer(
+				strlen(json_str), static_cast<void *>(const_cast<char *>(json_str)),
+				MHD_RESPMEM_MUST_COPY);
 			json_object_put(json_obj);
 
 			MHD_add_response_header(response, "Content-type", "application/json");
-		}
-		else {
+		} else {
 			char *response_str = strdup("not implemented\n");
 
-			response = MHD_create_response_from_buffer(strlen(response_str), static_cast<void *>(const_cast<char *> (response_str)), MHD_RESPMEM_MUST_COPY);
+			response = MHD_create_response_from_buffer(
+				strlen(response_str), static_cast<void *>(const_cast<char *>(response_str)),
+				MHD_RESPMEM_MUST_COPY);
 			response_code = MHD_HTTP_METHOD_NOT_ALLOWED;
 
 			MHD_add_response_header(response, "Content-type", "text/text");

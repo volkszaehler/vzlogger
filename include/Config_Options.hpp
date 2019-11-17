@@ -35,80 +35,87 @@
 
 #include <MeterMap.hpp>
 #include <Options.hpp>
-#include <meter_protocol.hpp>
 #include <PushData.hpp>
+#include <meter_protocol.hpp>
 
 /**
  * General options from CLI
  */
 class Config_Options {
-public:
+  public:
 	Config_Options();
 	Config_Options(const std::string filename);
-	~Config_Options() { if (_pds) delete _pds; };
+	~Config_Options() {
+		if (_pds)
+			delete _pds;
+	};
 
-/**
- * Parse JSON formatted configuration file
- *
- * @param const char *filename the path of the configuration file
- * @param list_t *mappings a pointer to a list, where new channel<->meter mappings should be stored
- * @param config_options_t *options a pointer to a structure of global configuration options
- * @return int non-zero on success
- */
+	/**
+	 * Parse JSON formatted configuration file
+	 *
+	 * @param const char *filename the path of the configuration file
+	 * @param list_t *mappings a pointer to a list, where new channel<->meter mappings should be
+	 * stored
+	 * @param config_options_t *options a pointer to a structure of global configuration options
+	 * @return int non-zero on success
+	 */
 	void config_parse(MapContainer &mappings);
 	void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
-	void config_parse_channel(Json& jso, MeterMap &metermap);
+	void config_parse_channel(Json &jso, MeterMap &metermap);
 
 	// getter
 	const std::string &config() const { return _config; }
 	const std::string &log() const { return _log; }
 	FILE *logfd() { return _logfd; }
-	const int &port()      const { return _port; }
+	const int &port() const { return _port; }
 	const int &verbosity() const { return _verbosity; }
 	const int &comet_timeout() const { return _comet_timeout; }
 	const int &buffer_length() const { return _buffer_length; }
 	int retry_pause() const { return _retry_pause; }
 
 	bool channel_index() const { return _channel_index; }
-	bool daemon()    const { return _daemon; }
-	bool local()     const { return _local; }
-	bool logging()   const { return _logging; }
+	bool daemon() const { return _daemon; }
+	bool local() const { return _local; }
+	bool logging() const { return _logging; }
 
-	bool doRegistration()   const { return _doRegistration; }
+	bool doRegistration() const { return _doRegistration; }
 
 	// setter
 	void config(const std::string &v) { _config = v; }
-	void log(const std::string &v)    { _log = v; }
-	void logfd(FILE *fd)              { _logfd = fd; }
-	void port(const int v)      { _port = v; }
-	void verbosity(int v) { if (v>=0) _verbosity = v; }
+	void log(const std::string &v) { _log = v; }
+	void logfd(FILE *fd) { _logfd = fd; }
+	void port(const int v) { _port = v; }
+	void verbosity(int v) {
+		if (v >= 0)
+			_verbosity = v;
+	}
 
-	void daemon(const bool v)    { _daemon = v; }
-	void local(const bool v)     { _local = v; }
-	void logging(const bool v)    { _logging = v; }
+	void daemon(const bool v) { _daemon = v; }
+	void local(const bool v) { _local = v; }
+	void logging(const bool v) { _logging = v; }
 
-	void doRegistration(const bool v)    { _doRegistration = v; }
+	void doRegistration(const bool v) { _doRegistration = v; }
 
 	PushDataServer *pushDataServer() const { return _pds; }
 
-private:
-	std::string _config;	// filename of configuration
-	std::string _log;		// filename for logging
+  private:
+	std::string _config; // filename of configuration
+	std::string _log;    // filename for logging
 	FILE *_logfd;
 	PushDataServer *_pds;
 
-	int _port;				// TCP port for local interface
-	int _verbosity;			// verbosity level
-	int _comet_timeout;		// in seconds; 
-	int _buffer_length;		// in seconds; how long to buffer readings for local interfalce
-	int _retry_pause;		// in seconds; how long to pause after an unsuccessful HTTP request
+	int _port;          // TCP port for local interface
+	int _verbosity;     // verbosity level
+	int _comet_timeout; // in seconds;
+	int _buffer_length; // in seconds; how long to buffer readings for local interfalce
+	int _retry_pause;   // in seconds; how long to pause after an unsuccessful HTTP request
 
 	// boolean bitfields, padding at the end of struct
-	int _channel_index:1;	// give a index of all available channels via local interface
-	int _daemon:1;			// run in background
-	int _local:1;			// enable local interface
-	int _logging:1;			// start logging threads, depends on local & daemon
-	int _doRegistration:1;	// start logging threads, depends on local & daemon
+	int _channel_index : 1;  // give a index of all available channels via local interface
+	int _daemon : 1;         // run in background
+	int _local : 1;          // enable local interface
+	int _logging : 1;        // start logging threads, depends on local & daemon
+	int _doRegistration : 1; // start logging threads, depends on local & daemon
 };
 
 /**
@@ -119,7 +126,7 @@ private:
  * @param option a pointer to a uninitialized option_t structure
  * @return 0 on succes, <0 on error
  */
-//int option_init(struct json_object *jso, char *key,  Option *option);
+// int option_init(struct json_object *jso, char *key,  Option *option);
 
 /**
  * Validate UUID
@@ -129,6 +136,5 @@ private:
  * @return int non-zero on success
  */
 int config_validate_uuid(const char *uuid);
-
 
 #endif /* _CONFIG_H_ */

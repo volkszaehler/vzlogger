@@ -12,11 +12,10 @@
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */
 
-#include <glob.h>
 #include "protocols/MeterW1therm.hpp"
+#include <glob.h>
 
-bool MeterW1therm::W1sysHWif::scanW1devices()
-{
+bool MeterW1therm::W1sysHWif::scanW1devices() {
 	// scan directory /sys/bus/w1/devices for all devices starting with the W1_THERM
 	// supported family codes:
 	// W1_THERM_DS18S20 0x10
@@ -32,9 +31,10 @@ bool MeterW1therm::W1sysHWif::scanW1devices()
 	// let's try using glob()
 	glob_t glob_res;
 	size_t strl = strlen("/sys/bus/w1/devices/");
-	if (0 == glob("/sys/bus/w1/devices/{10,22,28,3b,42}-*", GLOB_BRACE|GLOB_NOSORT, NULL, &glob_res) ) {
+	if (0 ==
+		glob("/sys/bus/w1/devices/{10,22,28,3b,42}-*", GLOB_BRACE | GLOB_NOSORT, NULL, &glob_res)) {
 
-		for (unsigned int i=0; i<glob_res.gl_pathc; ++i) {
+		for (unsigned int i = 0; i < glob_res.gl_pathc; ++i) {
 			if (strlen(glob_res.gl_pathv[i]) > strl) {
 				char *str = glob_res.gl_pathv[i] + strl;
 				_devices.push_back(std::string(str));
@@ -45,12 +45,12 @@ bool MeterW1therm::W1sysHWif::scanW1devices()
 	}
 
 	// for now we return false is the list is empty
-	if (_devices.size() > 0) return true;
+	if (_devices.size() > 0)
+		return true;
 	return false;
 }
 
-bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value)
-{
+bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value) {
 	bool toret = false;
 	// read from /sys/bus/w1/devices/<device>/w1_slave
 	std::string dev("/sys/bus/w1/devices/");
@@ -58,7 +58,7 @@ bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value)
 	dev.append("/w1_slave");
 
 	FILE *fp;
-	if ((fp = fopen( dev.c_str(), "r" )) == NULL) {
+	if ((fp = fopen(dev.c_str(), "r")) == NULL) {
 		print(log_debug, "couldn't open %s for reading", "w1t", dev.c_str());
 		return false;
 	}
@@ -75,9 +75,9 @@ bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value)
 				char *pos = strstr(buffer, "t=");
 				if (pos) {
 					pos += 2;
-					value = atof(pos)/1000;
+					value = atof(pos) / 1000;
 					toret = true;
-					print(log_finest, "read %f from %s (%s)", "w1t", value, dev.c_str(), pos-2);
+					print(log_finest, "read %f from %s (%s)", "w1t", value, dev.c_str(), pos - 2);
 				}
 			} else {
 				print(log_debug, "couldn't read 2nd line from %s", "w1t", dev.c_str());
@@ -92,22 +92,20 @@ bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value)
 	return toret;
 }
 
-
-MeterW1therm::MeterW1therm(const std::list<Option> &options, W1HWif *hwif) :
-	Protocol("w1t")
-  , _hwif (hwif)
-{
-	if (!_hwif) _hwif = new W1sysHWif();
+MeterW1therm::MeterW1therm(const std::list<Option> &options, W1HWif *hwif)
+	: Protocol("w1t"), _hwif(hwif) {
+	if (!_hwif)
+		_hwif = new W1sysHWif();
 }
 
-MeterW1therm::~MeterW1therm()
-{
-	if (_hwif) delete _hwif;
+MeterW1therm::~MeterW1therm() {
+	if (_hwif)
+		delete _hwif;
 }
 
-int MeterW1therm::open()
-{
-	if (!_hwif) return ERR;
+int MeterW1therm::open() {
+	if (!_hwif)
+		return ERR;
 	if (!_hwif->scanW1devices()) {
 		print(log_alert, "scanW1devices failed!", name().c_str());
 		return ERR;
@@ -116,24 +114,23 @@ int MeterW1therm::open()
 	return SUCCESS;
 }
 
-int MeterW1therm::close()
-{
-	return SUCCESS;
-}
+int MeterW1therm::close() { return SUCCESS; }
 
-ssize_t MeterW1therm::read(std::vector<Reading> &rds, size_t n)
-{
+ssize_t MeterW1therm::read(std::vector<Reading> &rds, size_t n) {
 	ssize_t ret = 0;
-	if (!_hwif) return 0;
+	if (!_hwif)
+		return 0;
 
 	// todo add a scanW1devices() e.g. each minute?
 
 	const std::list<std::string> &list = _hwif->W1devices();
 
-	for (std::list<std::string>::const_iterator it= list.cbegin(); it!=list.cend() && static_cast<size_t>(ret)<n; ++it) {
+	for (std::list<std::string>::const_iterator it = list.cbegin();
+		 it != list.cend() && static_cast<size_t>(ret) < n; ++it) {
 		double value;
 		if (_hwif->readTemp(*it, value)) {
-			print(log_finest, "reading w1 device %s returned %f", name().c_str(), (*it).c_str(), value);
+			print(log_finest, "reading w1 device %s returned %f", name().c_str(), (*it).c_str(),
+				  value);
 			rds[ret].identifier(new StringIdentifier(*it));
 			rds[ret].time();
 			rds[ret].value(value);

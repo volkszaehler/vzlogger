@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
@@ -32,7 +32,7 @@ double ltqnorm(double p); /* forward declaration */
 
 class MeterRandom : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterRandom(std::list<Option> options);
 	virtual ~MeterRandom();
 
@@ -40,7 +40,7 @@ public:
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
-protected:
+  protected:
 	double _min;
 	double _max;
 	double _last;

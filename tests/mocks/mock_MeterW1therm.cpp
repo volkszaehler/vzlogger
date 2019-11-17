@@ -1,32 +1,29 @@
 #include <gmock/gmock.h>
-	using ::testing::Eq;
-	using ::testing::Return;
-	using ::testing::ReturnRef;
-	using ::testing::InSequence;
-	using ::testing::_;
-	using ::testing::AtLeast;
+using ::testing::_;
+using ::testing::AtLeast;
+using ::testing::Eq;
+using ::testing::InSequence;
+using ::testing::Return;
+using ::testing::ReturnRef;
 
 #include <gtest/gtest.h>
-	using ::testing::Test;
+using ::testing::Test;
 
 #include "Meter.hpp"
 #include "protocols/MeterW1therm.hpp"
 
-namespace mock_MeterW1therm
-{
+namespace mock_MeterW1therm {
 
-class mock_W1hwif : public MeterW1therm::W1HWif
-{
-public:
-	mock_W1hwif() {};
-	virtual ~mock_W1hwif() {};
+class mock_W1hwif : public MeterW1therm::W1HWif {
+  public:
+	mock_W1hwif(){};
+	virtual ~mock_W1hwif(){};
 	MOCK_METHOD0(scanW1devices, bool());
 	MOCK_CONST_METHOD0(W1devices, const std::list<std::string> &());
 	MOCK_METHOD2(readTemp, bool(const std::string &dev, double &value));
 };
 
-TEST(mock_MeterW1therm, basic_fail_scanW1devices)
-{
+TEST(mock_MeterW1therm, basic_fail_scanW1devices) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -34,11 +31,10 @@ TEST(mock_MeterW1therm, basic_fail_scanW1devices)
 	EXPECT_CALL(*hwif, W1devices()).Times(0);
 	MeterW1therm m(opt, hwif);
 	ASSERT_EQ(ERR, m.open()); // if scanW1devices returns false open has to return ERR
-	m.close(); // this might be called and should not cause problems
+	m.close();                // this might be called and should not cause problems
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_empty)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_empty) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -53,8 +49,7 @@ TEST(mock_MeterW1therm, basic_scanW1devices_empty)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_1nok)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_1nok) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -71,8 +66,7 @@ TEST(mock_MeterW1therm, basic_scanW1devices_1nok)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_2nok)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_2nok) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -90,8 +84,7 @@ TEST(mock_MeterW1therm, basic_scanW1devices_2nok)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_1ok)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_1ok) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -108,8 +101,7 @@ TEST(mock_MeterW1therm, basic_scanW1devices_1ok)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_2ok_n1)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_2ok_n1) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -127,8 +119,7 @@ TEST(mock_MeterW1therm, basic_scanW1devices_2ok_n1)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
-TEST(mock_MeterW1therm, basic_scanW1devices_2ok)
-{
+TEST(mock_MeterW1therm, basic_scanW1devices_2ok) {
 	mock_W1hwif *hwif = new mock_W1hwif();
 	std::list<Option> opt;
 
@@ -147,12 +138,10 @@ TEST(mock_MeterW1therm, basic_scanW1devices_2ok)
 	ASSERT_EQ(SUCCESS, m.close());
 }
 
+} // namespace mock_MeterW1therm
 
-} // namespace
-
-void print(log_level_t l, char const*s1, char const*s2, ...)
-{
-//	if (l!= log_debug)
+void print(log_level_t l, char const *s1, char const *s2, ...) {
+	//	if (l!= log_debug)
 	{
 		fprintf(stdout, "\n  %s:", s2);
 		va_list argp;
@@ -163,9 +152,9 @@ void print(log_level_t l, char const*s1, char const*s2, ...)
 	}
 }
 
-int main(int argc, char** argv) {
-  // The following line must be executed to initialize Google Mock
-  // (and Google Test) before running the tests.
-  ::testing::InitGoogleMock(&argc, argv);
-  return RUN_ALL_TESTS();
+int main(int argc, char **argv) {
+	// The following line must be executed to initialize Google Mock
+	// (and Google Test) before running the tests.
+	::testing::InitGoogleMock(&argc, argv);
+	return RUN_ALL_TESTS();
 }

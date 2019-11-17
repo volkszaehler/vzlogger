@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include "gtest/gtest.h"
 #include "Options.hpp"
 #include "protocols/MeterSML.hpp"
+#include "gtest/gtest.h"
 
 // this is a dirty hack. we should think about better ways/rules to link against the
 // test objects.
@@ -15,13 +15,13 @@
 int writes_hex(int fd, const char *str); // impl. in MeterD0.cpp
 
 TEST(MeterSML, EMH_basic) {
-	char tempfilename[L_tmpnam+1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	char tempfilename[L_tmpnam + 1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterSML m(options);
 	ASSERT_STREQ(m.device(), tempfilename) << "devicename not eq " << tempfilename;
-	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR|S_IWUSR));
+	ASSERT_EQ(0, mkfifo(tempfilename, S_IRUSR | S_IWUSR));
 	int fd = open(tempfilename, O_RDWR);
 	ASSERT_NE(-1, fd);
 	ASSERT_NE(-1, m.open());
@@ -31,7 +31,13 @@ TEST(MeterSML, EMH_basic) {
 	rds.resize(10);
 
 	// write one good data set
-	writes_hex(fd, "1B1B1B1B010101017607003600001AFA6200620072630101760101070036044808FE09303232383038313601016331ED007607003600001AFB62006200726307017701093032323830383136017262016504487D897677078181C78203FF0101010104454D480177070100000000FF010101010930323238303831360177070100010801FF63018001621E52FF560008D1CF1B0177070100010802FF63018001621E52FF560000004E9C01770700006001FFFF010101010B303030323238303831360177070100010700FF0101621B52FF550000007001010163D201007607003600001AFC6200620072630201710163077A00001B1B1B1B1A019D37");
+	writes_hex(
+		fd, "1B1B1B1B010101017607003600001AFA6200620072630101760101070036044808FE093032323830383136"
+			"01016331ED007607003600001AFB62006200726307017701093032323830383136017262016504487D8976"
+			"77078181C78203FF0101010104454D480177070100000000FF010101010930323238303831360177070100"
+			"010801FF63018001621E52FF560008D1CF1B0177070100010802FF63018001621E52FF560000004E9C0177"
+			"0700006001FFFF010101010B303030323238303831360177070100010700FF0101621B52FF550000007001"
+			"010163D201007607003600001AFC6200620072630201710163077A00001B1B1B1B1A019D37");
 	/*
 	 * manual parsing of input data:
 	 * 1B1B1B1B
@@ -137,29 +143,25 @@ TEST(MeterSML, EMH_basic) {
 	// check obis data:
 	ReadingIdentifier *p = rds[0].identifier().get();
 	double value = rds[0].value();
-	EXPECT_LE(fabs(14796777.1-value), 0.1);
-	ObisIdentifier *o = dynamic_cast<ObisIdentifier*>(p);
-	ASSERT_NE((ObisIdentifier*)0, o);
-	EXPECT_TRUE(Obis(1, 0, 1, 8, 1, 255)==(o->obis()));
+	EXPECT_LE(fabs(14796777.1 - value), 0.1);
+	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
+	ASSERT_NE((ObisIdentifier *)0, o);
+	EXPECT_TRUE(Obis(1, 0, 1, 8, 1, 255) == (o->obis()));
 
-	o = dynamic_cast<ObisIdentifier*>(rds[1].identifier().get());
-	ASSERT_NE((ObisIdentifier*)0, o);
+	o = dynamic_cast<ObisIdentifier *>(rds[1].identifier().get());
+	ASSERT_NE((ObisIdentifier *)0, o);
 	value = rds[1].value();
 	EXPECT_EQ(2012.4, value);
-	EXPECT_TRUE(Obis(1, 0, 1, 8, 2, 255)==(o->obis()));
+	EXPECT_TRUE(Obis(1, 0, 1, 8, 2, 255) == (o->obis()));
 
-	o = dynamic_cast<ObisIdentifier*>(rds[2].identifier().get());
-	ASSERT_NE((ObisIdentifier*)0, o);
+	o = dynamic_cast<ObisIdentifier *>(rds[2].identifier().get());
+	ASSERT_NE((ObisIdentifier *)0, o);
 	value = rds[2].value();
-	EXPECT_LE(fabs(11.2-value), 0.1);
-	EXPECT_TRUE(Obis(1, 0, 1, 7, 0, 255)==(o->obis()));
-
+	EXPECT_LE(fabs(11.2 - value), 0.1);
+	EXPECT_TRUE(Obis(1, 0, 1, 7, 0, 255) == (o->obis()));
 
 	EXPECT_EQ(0, m.close());
 
 	EXPECT_EQ(0, close(fd));
 	EXPECT_EQ(0, unlink(tempfilename));
 }
-
-
-

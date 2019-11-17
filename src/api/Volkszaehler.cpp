@@ -28,30 +28,24 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
 #include <curl/curl.h>
 #include <json-c/json.h>
-#include <sys/time.h>
 #include <math.h>
+#include <stddef.h>
+#include <sys/time.h>
 #include <unistd.h>
 
-#include <VZException.hpp>
 #include "Config_Options.hpp"
-#include <api/Volkszaehler.hpp>
 #include "CurlSessionProvider.hpp"
+#include <VZException.hpp>
+#include <api/Volkszaehler.hpp>
 
 extern Config_Options options;
 
 const int MAX_CHUNK_SIZE = 64;
 
-vz::api::Volkszaehler::Volkszaehler(
-	Channel::Ptr ch,
-	std::list<Option> pOptions
-	)
-	: ApiIF(ch)
-	, _last_timestamp(0)
-	, _lastReadingSent (0)
-{
+vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
+	: ApiIF(ch), _last_timestamp(0), _lastReadingSent(0) {
 	OptionList optlist;
 	char agent[255];
 
@@ -59,10 +53,14 @@ vz::api::Volkszaehler::Volkszaehler(
 	try {
 		_middleware = optlist.lookup_string(pOptions, "middleware");
 	} catch (vz::OptionNotFoundException &e) {
-		print(log_alert, "api volkszaehler requires parameter \"middleware\" but it's missing!", ch->name());
+		print(log_alert, "api volkszaehler requires parameter \"middleware\" but it's missing!",
+			  ch->name());
 		throw;
 	} catch (vz::VZException &e) {
-		print(log_alert, "api volkszaehler requires parameter \"middleware\" as string but seems to have different type!", ch->name());
+		print(log_alert,
+			  "api volkszaehler requires parameter \"middleware\" as string but seems to have "
+			  "different type!",
+			  ch->name());
 		throw;
 	}
 
@@ -71,12 +69,15 @@ vz::api::Volkszaehler::Volkszaehler(
 	} catch (vz::OptionNotFoundException &e) {
 		_curlTimeout = 30; // 30 seconds default
 	} catch (vz::VZException &e) {
-		print(log_alert, "api volkszaehler requires parameter \"timeout\" as integer but seems to have different type!", ch->name());
+		print(log_alert,
+			  "api volkszaehler requires parameter \"timeout\" as integer but seems to have "
+			  "different type!",
+			  ch->name());
 		throw;
 	}
 
 	// prepare header, uuid & url
-	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());	// build user agent
+	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version()); // build user agent
 	_url = _middleware;
 	_url.append("/data/");
 	_url.append(channel()->uuid());
@@ -86,16 +87,14 @@ vz::api::Volkszaehler::Volkszaehler(
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
-
 }
 
-vz::api::Volkszaehler::~Volkszaehler()
-{
-	if (_lastReadingSent) delete _lastReadingSent;
+vz::api::Volkszaehler::~Volkszaehler() {
+	if (_lastReadingSent)
+		delete _lastReadingSent;
 }
 
-void vz::api::Volkszaehler::send()
-{
+void vz::api::Volkszaehler::send() {
 	CURLresponse response;
 	json_object *json_obj;
 
@@ -109,12 +108,14 @@ void vz::api::Volkszaehler::send()
 
 	json_obj = api_json_tuples(channel()->buffer());
 	json_str = json_object_to_json_string(json_obj);
-	if (json_str == NULL || strcmp(json_str, "null")==0) {
+	if (json_str == NULL || strcmp(json_str, "null") == 0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		return;
 	}
 
-	_api.curl = curlSessionProvider ? curlSessionProvider->get_easy_session(_middleware) : 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
+	_api.curl = curlSessionProvider
+					? curlSessionProvider->get_easy_session(_middleware)
+					: 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
 	if (!_api.curl) {
 		throw vz::VZException("CURL: cannot create handle.");
 	}
@@ -130,12 +131,11 @@ void vz::api::Volkszaehler::send()
 	// set timeout to 5 sec. required if next router has an ip-change.
 	curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curlTimeout);
 
-
 	print(log_debug, "JSON request body: %s", channel()->name(), json_str);
 
 	curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, json_str);
 	curl_easy_setopt(_api.curl, CURLOPT_WRITEFUNCTION, curl_custom_write_callback);
-	curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, (void *) &response);
+	curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, (void *)&response);
 
 	curl_code = curl_easy_perform(_api.curl);
 	curl_easy_getinfo(_api.curl, CURLINFO_RESPONSE_CODE, &http_code);
@@ -146,23 +146,21 @@ void vz::api::Volkszaehler::send()
 	// check response
 	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
 		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
-		if (_values.size() <= (size_t) MAX_CHUNK_SIZE) {
+		if (_values.size() <= (size_t)MAX_CHUNK_SIZE) {
 			print(log_finest, "emptied all (%d) values", channel()->name(), _values.size());
 			_values.clear();
 		} else {
 			// remove only the first MAX_CHUNK_SIZE values:
-			for (int i=0; i<MAX_CHUNK_SIZE;++i)
+			for (int i = 0; i < MAX_CHUNK_SIZE; ++i)
 				_values.pop_front();
 			print(log_finest, "emptied MAX_CHUNK_SIZE values", channel()->name());
 		}
 		// clear buffer-readings
-		//channel()->buffer.sent = last->next;
-	}
-	else { // error
+		// channel()->buffer.sent = last->next;
+	} else { // error
 		if (curl_code != CURLE_OK) {
 			print(log_alert, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
-		}
-		else if (http_code != 200) {
+		} else if (http_code != 200) {
 			char err[255];
 			api_parse_exception(response, err, 255);
 			print(log_alert, "CURL Error from middleware: %s", channel()->name(), err);
@@ -175,16 +173,14 @@ void vz::api::Volkszaehler::send()
 
 	if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
-					channel()->name(), options.retry_pause());
+			  channel()->name(), options.retry_pause());
 		sleep(options.retry_pause());
 	}
 }
 
-void vz::api::Volkszaehler::register_device() {
-}
+void vz::api::Volkszaehler::register_device() {}
 
-
-json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
+json_object *vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 
 	Buffer::iterator it;
 
@@ -198,8 +194,9 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	for (it = buf->begin(); it != buf->end(); it++) {
 		timestamp = it->time_ms();
 		print(log_debug, "compare: %lld %lld", channel()->name(), _last_timestamp, timestamp);
-		// we can only add/consider a timestamp if the ms resolution is different than from previous one:
-		if (_last_timestamp < timestamp ) {
+		// we can only add/consider a timestamp if the ms resolution is different than from previous
+		// one:
+		if (_last_timestamp < timestamp) {
 			if (0 == duplicates) { // send all values
 				_values.push_back(*it);
 				_last_timestamp = timestamp;
@@ -216,7 +213,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 					// a) timestamp
 					// b) duplicate value
 					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
-							(r.value() != _lastReadingSent->value())) {
+						(r.value() != _lastReadingSent->value())) {
 						// send the current one:
 						_values.push_back(r);
 						_last_timestamp = timestamp;
@@ -232,7 +229,7 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	buf->unlock();
 	buf->clean();
 
-	if (_values.size() < 1 ) {
+	if (_values.size() < 1) {
 		return NULL;
 	}
 
@@ -249,7 +246,8 @@ json_object * vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 		if (nrTuples >= MAX_CHUNK_SIZE)
 			break;
 	}
-	print(log_finest, "copied %d/%d values for middleware transmission", channel()->name(), nrTuples, _values.size());
+	print(log_finest, "copied %d/%d values for middleware transmission", channel()->name(),
+		  nrTuples, _values.size());
 
 	return json_tuples;
 }
@@ -262,31 +260,30 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 	json_obj = json_tokener_parse_ex(json_tok, response.data, response.size);
 
 	if (json_tok->err == json_tokener_success) {
-	  bool found = json_object_object_get_ex(json_obj, "exception", &json_obj);
-	  if (found && json_obj) {
-		struct json_object *j2;
-		std::string err_type;
-		if (json_object_object_get_ex(json_obj, "type", &j2)){
-			err_type = json_object_get_string(j2);
-		  }
-		  std::string err_message;
-		  if (json_object_object_get_ex(json_obj, "message", &j2)){
-			err_message = json_object_get_string(j2);
-		  }
-		  snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
-		  // evaluate error
-		  if (err_type == "UniqueConstraintViolationException") {
-			  if (err_message.find("Duplicate entry") ) {
-				  print(log_warning, "Middleware says duplicated value. Removing first entry!", channel()->name());
-				  _values.pop_front();
-			  }
-		  }
-	  }
-	  else {
-		  strncpy(err, "Missing exception", n);
-	  }
-	}
-	else {
+		bool found = json_object_object_get_ex(json_obj, "exception", &json_obj);
+		if (found && json_obj) {
+			struct json_object *j2;
+			std::string err_type;
+			if (json_object_object_get_ex(json_obj, "type", &j2)) {
+				err_type = json_object_get_string(j2);
+			}
+			std::string err_message;
+			if (json_object_object_get_ex(json_obj, "message", &j2)) {
+				err_message = json_object_get_string(j2);
+			}
+			snprintf(err, n, "'%s': '%s'", err_type.c_str(), err_message.c_str());
+			// evaluate error
+			if (err_type == "UniqueConstraintViolationException") {
+				if (err_message.find("Duplicate entry")) {
+					print(log_warning, "Middleware says duplicated value. Removing first entry!",
+						  channel()->name());
+					_values.pop_front();
+				}
+			}
+		} else {
+			strncpy(err, "Missing exception", n);
+		}
+	} else {
 		strncpy(err, json_tokener_error_desc(json_tok->err), n);
 	}
 
@@ -294,42 +291,40 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 	json_tokener_free(json_tok);
 }
 
-
-int vz::api::curl_custom_debug_callback(
-	CURL *curl
-	, curl_infotype type
-	, char *data
-	, size_t size
-	, void *arg
-	) {
-	Channel *ch = static_cast<Channel *> (arg);
+int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size,
+										void *arg) {
+	Channel *ch = static_cast<Channel *>(arg);
 	char *end = strchr(data, '\n');
 
-	if (data == end) return 0; // skip empty line
+	if (data == end)
+		return 0; // skip empty line
 
 	switch (type) {
-			case CURLINFO_TEXT:
-			case CURLINFO_END:
-				if (end) *end = '\0'; // terminate without \n
-				print((log_level_t)(log_debug+5), "CURL: %.*s", ch->name(), (int) size, data);
-				break;
+	case CURLINFO_TEXT:
+	case CURLINFO_END:
+		if (end)
+			*end = '\0'; // terminate without \n
+		print((log_level_t)(log_debug + 5), "CURL: %.*s", ch->name(), (int)size, data);
+		break;
 
-			case CURLINFO_SSL_DATA_IN:
-			case CURLINFO_DATA_IN:
-				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
-				print((log_level_t)(log_debug+5), "CURL: Received '%s' bytes", ch->name(), data);
-				break;
+	case CURLINFO_SSL_DATA_IN:
+	case CURLINFO_DATA_IN:
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes", ch->name(),
+			  (unsigned long)size);
+		print((log_level_t)(log_debug + 5), "CURL: Received '%s' bytes", ch->name(), data);
+		break;
 
-			case CURLINFO_SSL_DATA_OUT:
-			case CURLINFO_DATA_OUT:
-				data[size]=0;
-				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
-				print((log_level_t)(log_debug+5), "CURL: Sent '%s' bytes", ch->name(), data);
-				break;
+	case CURLINFO_SSL_DATA_OUT:
+	case CURLINFO_DATA_OUT:
+		data[size] = 0;
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes.. ", ch->name(),
+			  (unsigned long)size);
+		print((log_level_t)(log_debug + 5), "CURL: Sent '%s' bytes", ch->name(), data);
+		break;
 
-			case CURLINFO_HEADER_IN:
-			case CURLINFO_HEADER_OUT:
-				break;
+	case CURLINFO_HEADER_IN:
+	case CURLINFO_HEADER_OUT:
+		break;
 	}
 
 	return 0;
@@ -351,12 +346,3 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 
 	return realsize;
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

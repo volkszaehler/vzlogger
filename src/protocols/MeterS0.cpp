@@ -23,30 +23,23 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/time.h>
 #include <time.h>
-#include <errno.h>
-#include <poll.h>
-#include <sys/mman.h>
+#include <unistd.h>
 
-#include "protocols/MeterS0.hpp"
 #include "Options.hpp"
+#include "protocols/MeterS0.hpp"
 #include <VZException.hpp>
 
 MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
-		: Protocol("s0")
-		, _hwif(hwif)
-		, _hwif_dir(hwif_dir)
-		, _counter_thread_stop(false)
-		, _send_zero(false)
-		, _debounce_delay_ms(0)
-		, _nonblocking_delay_ns(1e5)
-		, _first_impulse(true)
-{
+	: Protocol("s0"), _hwif(hwif), _hwif_dir(hwif_dir), _counter_thread_stop(false),
+	  _send_zero(false), _debounce_delay_ms(0), _nonblocking_delay_ns(1e5), _first_impulse(true) {
 	OptionList optlist;
 
 	// check which HWIF to use:
@@ -60,7 +53,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	if (!_hwif) {
 		try {
 			gpiopin = optlist.lookup_int(options, "gpio");
-			if (gpiopin >=0) use_gpio = true;
+			if (gpiopin >= 0)
+				use_gpio = true;
 		} catch (vz::VZException &e) {
 			// ignore
 		}
@@ -71,7 +65,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 				if (mmap == "rpi2" || mmap == "rpi" || mmap == "rpi1") {
 					use_mmap = true;
 				} else {
-					print(log_error, "unknown option for mmap (%s). Falling back to normal gpio.", name().c_str(), mmap.c_str());
+					print(log_error, "unknown option for mmap (%s). Falling back to normal gpio.",
+						  name().c_str(), mmap.c_str());
 				}
 			} catch (vz::VZException &e) {
 				// ignore
@@ -97,9 +92,9 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 				throw vz::VZException("gpio_dir must not be equal to gpio");
 			}
 			if (use_mmap) {
-				_hwif_dir = new HWIF_MMAP( gpiodirpin, mmap);
+				_hwif_dir = new HWIF_MMAP(gpiodirpin, mmap);
 			} else
-				_hwif_dir = new HWIF_GPIO( gpiodirpin, options);
+				_hwif_dir = new HWIF_GPIO(gpiodirpin, options);
 		}
 	}
 
@@ -111,7 +106,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		print(log_alert, "Failed to parse resolution", "");
 		throw;
 	}
-	if (_resolution < 1) throw vz::VZException("Resolution must be greater than 0.");
+	if (_resolution < 1)
+		throw vz::VZException("Resolution must be greater than 0.");
 
 	try {
 		_debounce_delay_ms = optlist.lookup_int(options, "debounce_delay");
@@ -121,7 +117,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		print(log_alert, "Failed to parse debounce_delay", "");
 		throw;
 	}
-	if (_debounce_delay_ms < 0) throw vz::VZException("debounce_delay must not be negative.");
+	if (_debounce_delay_ms < 0)
+		throw vz::VZException("debounce_delay must not be negative.");
 
 	try {
 		_nonblocking_delay_ns = optlist.lookup_int(options, "nonblocking_delay");
@@ -131,7 +128,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		print(log_alert, "Failed to parse nonblocking_delay", "");
 		throw;
 	}
-	if (_nonblocking_delay_ns < 100) throw vz::VZException("nonblocking_delay must not be <100ns.");
+	if (_nonblocking_delay_ns < 100)
+		throw vz::VZException("nonblocking_delay must not be <100ns.");
 
 	try {
 		_send_zero = optlist.lookup_bool(options, "send_zero");
@@ -141,17 +139,16 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 		print(log_alert, "Failed to parse send_zero", "");
 		throw;
 	}
-
 }
 
-MeterS0::~MeterS0()
-{
-	if (_hwif) delete _hwif;
-	if (_hwif_dir) delete _hwif_dir;
+MeterS0::~MeterS0() {
+	if (_hwif)
+		delete _hwif;
+	if (_hwif_dir)
+		delete _hwif_dir;
 }
 
-void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res)
-{
+void timespec_sub(const struct timespec &a, const struct timespec &b, struct timespec &res) {
 	res.tv_sec = a.tv_sec - b.tv_sec;
 	res.tv_nsec = a.tv_nsec - b.tv_nsec;
 	if (res.tv_nsec < 0) {
@@ -160,8 +157,7 @@ void timespec_sub(const struct timespec &a, const struct timespec &b, struct tim
 	}
 }
 
-void timespec_add(struct timespec &a, const struct timespec &b)
-{
+void timespec_add(struct timespec &a, const struct timespec &b) {
 	a.tv_sec += b.tv_sec;
 	a.tv_nsec += b.tv_nsec;
 	// normalize nsec
@@ -171,8 +167,7 @@ void timespec_add(struct timespec &a, const struct timespec &b)
 	}
 }
 
-unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b)
-{
+unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b) {
 	unsigned long ret;
 	ret = a.tv_sec - b.tv_sec;
 	if (a.tv_nsec < b.tv_nsec) {
@@ -186,10 +181,9 @@ unsigned long timespec_sub_ms(const struct timespec &a, const struct timespec &b
 	return ret;
 }
 
-void timespec_add_ms(struct timespec &a, unsigned long ms)
-{
-	a.tv_sec += ms/1000ul;
-	a.tv_nsec += (ms%1000ul)*1000000ul;
+void timespec_add_ms(struct timespec &a, unsigned long ms) {
+	a.tv_sec += ms / 1000ul;
+	a.tv_nsec += (ms % 1000ul) * 1000000ul;
 	// normalize nsec
 	while (a.tv_nsec >= 1000000000l) {
 		++a.tv_sec;
@@ -197,23 +191,21 @@ void timespec_add_ms(struct timespec &a, unsigned long ms)
 	}
 }
 
-void MeterS0::check_ref_for_overflow()
-{
+void MeterS0::check_ref_for_overflow() {
 	// check whether _ms_last_impulse get's too long
 	// and has risk for overflow (roughly once a month with 32bit unsigned long)
 
-	if (_ms_last_impulse > (1ul<<30)) {
+	if (_ms_last_impulse > (1ul << 30)) {
 		// now we enter a race condition so there might be wrong impulse now!
-		timespec_add_ms(_time_last_ref, 1ul<<30 );
+		timespec_add_ms(_time_last_ref, 1ul << 30);
 		_ms_last_impulse -= 1ul << 30;
-
 	}
 }
 
-void MeterS0::counter_thread()
-{
+void MeterS0::counter_thread() {
 	// _hwif exists and open() succeeded
-	print(log_finest, "Counter thread started with %s hwif", name().c_str(), _hwif->is_blocking() ? "blocking" : "non blocking");
+	print(log_finest, "Counter thread started with %s hwif", name().c_str(),
+		  _hwif->is_blocking() ? "blocking" : "non blocking");
 
 	bool is_blocking = _hwif->is_blocking();
 
@@ -222,44 +214,52 @@ void MeterS0::counter_thread()
 		int policy;
 		struct sched_param param;
 		pthread_getschedparam(pthread_self(), &policy, &param);
-		policy = SCHED_FIFO; // different approach would be PR_SET_TIMERSLACK with 1ns (default 50us)
+		policy =
+			SCHED_FIFO; // different approach would be PR_SET_TIMERSLACK with 1ns (default 50us)
 		param.sched_priority = sched_get_priority_max(policy);
-		if (0!= pthread_setschedparam(pthread_self(), policy, &param) ) {
-			print(log_alert, "failed to set policy to SCHED_FIFO for counter_thread", name().c_str());
+		if (0 != pthread_setschedparam(pthread_self(), policy, &param)) {
+			print(log_alert, "failed to set policy to SCHED_FIFO for counter_thread",
+				  name().c_str());
 		}
 	}
 
-	// read current state from hwif: (this is needed for gpio if as well to reset waitForImpulse after startup (see bug #229)
+	// read current state from hwif: (this is needed for gpio if as well to reset waitForImpulse
+	// after startup (see bug #229)
 	int cur_state = _hwif->status();
 
-	int last_state = (cur_state >= 0) ? cur_state : 0; // use current state if it is valid else assume low edge
+	int last_state =
+		(cur_state >= 0) ? cur_state : 0; // use current state if it is valid else assume low edge
 	const int nonblocking_delay_ns = _nonblocking_delay_ns;
-	while(!_counter_thread_stop) {
+	while (!_counter_thread_stop) {
 		if (is_blocking) {
 			bool timeout = false;
-			if (_hwif->waitForImpulse( timeout )) {
+			if (_hwif->waitForImpulse(timeout)) {
 				// something has happened on the hardwareinterface (hwif)
-				// because of the bouncing of the contact we still can not decide if it is a rising edge event
-				// that's why we have to debounce first...
-				if (!timeout && (_debounce_delay_ms > 0) ){
+				// because of the bouncing of the contact we still can not decide if it is a rising
+				// edge event that's why we have to debounce first...
+				if (!timeout && (_debounce_delay_ms > 0)) {
 					// nanosleep _debounce_delay_ms
 					struct timespec ts;
-					ts.tv_sec = _debounce_delay_ms/1000;
-					ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+					ts.tv_sec = _debounce_delay_ms / 1000;
+					ts.tv_nsec = (_debounce_delay_ms % 1000) * 1e6;
 					struct timespec rem;
-					while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+					while ((-1 == nanosleep(&ts, &rem)) && (errno == EINTR)) {
 						ts = rem;
 					}
 				}
 				//  ... and then going on with our work
 				struct timespec temp_ts;
 				clock_gettime(CLOCK_REALTIME, &temp_ts);
-				_ms_last_impulse = timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
+				_ms_last_impulse =
+					timespec_sub_ms(temp_ts, _time_last_ref); // uses atomic operator=
 
-				if (_hwif->status()!=0) {                         // check if value of gpio is set (or not supported/error (-1) for e.g. UART HWIF -> rising edge event (or error in case we accept the trigger)
-					if (_hwif_dir && ( _hwif_dir->status()>0 ) ) // check if second hardware interface has caused the event
+				if (_hwif->status() !=
+					0) { // check if value of gpio is set (or not supported/error (-1) for e.g. UART
+						 // HWIF -> rising edge event (or error in case we accept the trigger)
+					if (_hwif_dir && (_hwif_dir->status() >
+									  0)) // check if second hardware interface has caused the event
 						++_impulses_neg;
-					else                                         // main hardware interface caused the event
+					else // main hardware interface caused the event
 						++_impulses;
 				}
 			}
@@ -267,18 +267,19 @@ void MeterS0::counter_thread()
 			int state = _hwif->status();
 			if ((state >= 0) && (state != last_state)) {
 				if (last_state == 0) { // low->high edge found
-//  auch hier muss wahrscheinlich erst das debouncing erfolgen, bevor es zur Auswertung kommt !!
-					if (_hwif_dir && (_hwif_dir->status()>0))
+					//  auch hier muss wahrscheinlich erst das debouncing erfolgen, bevor es zur
+					//  Auswertung kommt !!
+					if (_hwif_dir && (_hwif_dir->status() > 0))
 						++_impulses_neg;
 					else
 						++_impulses;
-					if (_debounce_delay_ms > 0){
+					if (_debounce_delay_ms > 0) {
 						// nanosleep _debounce_delay_ms
 						struct timespec ts;
-						ts.tv_sec = _debounce_delay_ms/1000;
-						ts.tv_nsec = (_debounce_delay_ms%1000)*1e6;
+						ts.tv_sec = _debounce_delay_ms / 1000;
+						ts.tv_nsec = (_debounce_delay_ms % 1000) * 1e6;
 						struct timespec rem;
-						while ( (-1 == nanosleep(&ts, &rem)) && (errno == EINTR) ) {
+						while ((-1 == nanosleep(&ts, &rem)) && (errno == EINTR)) {
 							ts = rem;
 						}
 					}
@@ -287,24 +288,29 @@ void MeterS0::counter_thread()
 			} else { // error reading gpio status or status same as previous one
 				struct timespec ts;
 				ts.tv_sec = 0;
-				ts.tv_nsec = nonblocking_delay_ns; // 5*(1e3) needed for up to 30kHz! 1e3 -> <1mhz, 1e4 -> <100kHz, 1e5 -> <10kHz
-				nanosleep(&ts, NULL); // we can ignore any errors here
+				ts.tv_nsec = nonblocking_delay_ns; // 5*(1e3) needed for up to 30kHz! 1e3 -> <1mhz,
+												   // 1e4 -> <100kHz, 1e5 -> <10kHz
+				nanosleep(&ts, NULL);              // we can ignore any errors here
 			}
 		} // non blocking case
-	} // while
+	}     // while
 	print(log_finest, "Counter thread stopped with %d imp", name().c_str(), _impulses.load());
 }
 
 int MeterS0::open() {
 
-	if (!_hwif) return ERR;
-	if (!_hwif->_open()) return ERR;
-	if (_hwif_dir && (!_hwif_dir->_open())) return ERR;
+	if (!_hwif)
+		return ERR;
+	if (!_hwif->_open())
+		return ERR;
+	if (_hwif_dir && (!_hwif_dir->_open()))
+		return ERR;
 
 	_impulses = 0;
 	_impulses_neg = 0;
 
-	clock_gettime(CLOCK_REALTIME, &_time_last_read); // we use realtime as this is returned as well (clock_monotonic would be better but...)
+	clock_gettime(CLOCK_REALTIME, &_time_last_read); // we use realtime as this is returned as well
+													 // (clock_monotonic would be better but...)
 	// store current time as last_time. Next read will return after 1s.
 	_time_last_ref = _time_last_read;
 	_ms_last_impulse = 0;
@@ -325,8 +331,10 @@ int MeterS0::close() {
 	if (_counter_thread.joinable())
 		_counter_thread.join(); // wait for thread
 
-	if (!_hwif) return ERR;
-	if (_hwif_dir) _hwif_dir->_close(); // ignore errors
+	if (!_hwif)
+		return ERR;
+	if (_hwif_dir)
+		_hwif_dir->_close(); // ignore errors
 
 	return (_hwif->_close() ? SUCCESS : ERR);
 }
@@ -335,8 +343,10 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	ssize_t ret = 0;
 
-	if (!_hwif) return 0;
-	if (n<4) return 0; // would be worth a debug msg!
+	if (!_hwif)
+		return 0;
+	if (n < 4)
+		return 0; // would be worth a debug msg!
 
 	// wait till last+1s (even if we are already later)
 	struct timespec req = _time_last_read;
@@ -345,19 +355,23 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	unsigned int t_imp;
 	unsigned int t_imp_neg;
 	bool is_zero = true;
-	do{
+	do {
 		req.tv_sec += 1;
-		while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL));
+		while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL))
+			;
 		// check from counter_thread the current impulses:
 		t_imp = _impulses;
 		t_imp_neg = _impulses_neg;
-		if (t_imp > 0 || t_imp_neg > 0 ) {
+		if (t_imp > 0 || t_imp_neg > 0) {
 			is_zero = false;
-			// reduce _impulses to avoid wraps. there is no race cond here as it's ok if _impulses is >0 afterwards if new impulses arrived in the meantime. That's why we don't set to 0!
+			// reduce _impulses to avoid wraps. there is no race cond here as it's ok if _impulses
+			// is >0 afterwards if new impulses arrived in the meantime. That's why we don't set to
+			// 0!
 			_impulses -= t_imp;
 			_impulses_neg -= t_imp_neg;
 		}
-	} while (!_send_zero && (is_zero)); // so we are blocking is send_zero is false and no impulse coming!
+	} while (!_send_zero &&
+			 (is_zero)); // so we are blocking is send_zero is false and no impulse coming!
 	// todo check thread cancellation on program termination
 
 	// we got t_imp and/or t_imp_neq between _time_last_read and req
@@ -372,7 +386,8 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 			struct timespec d1s;
 			timespec_sub(req, _time_last_read, d1s);
 			timespec_add(_time_last_ref, d1s);
-			// this has a little racecond as well (if after existing while loop a impulse returned the ms_last_impulse might have been increased already based on old time_last_ref
+			// this has a little racecond as well (if after existing while loop a impulse returned
+			// the ms_last_impulse might have been increased already based on old time_last_ref
 		}
 
 		// we use the time from last impulse
@@ -386,16 +401,17 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 		req = _time_last_impulse_returned;
 	} else {
 		// we use the time from last read call
-		t1= _time_last_read.tv_sec + _time_last_read.tv_nsec / 1e9;
+		t1 = _time_last_read.tv_sec + _time_last_read.tv_nsec / 1e9;
 		t2 = req.tv_sec + req.tv_nsec / 1e9;
 		_time_last_read = req;
 	}
 
-	if (t2==t1) t2+=0.000001;
+	if (t2 == t1)
+		t2 += 0.000001;
 
 	if (_send_zero || t_imp > 0) {
 		if (!_first_impulse) {
-			double value = (3600000 / ((t2-t1) * _resolution)) * t_imp;
+			double value = (3600000 / ((t2 - t1) * _resolution)) * t_imp;
 			rds[ret].identifier(new StringIdentifier("Power"));
 			rds[ret].time(req);
 			rds[ret].value(value);
@@ -409,7 +425,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 
 	if (_send_zero || t_imp_neg > 0) {
 		if (!_first_impulse) {
-			double value = (3600000 / ((t2-t1) * _resolution)) * t_imp_neg;
+			double value = (3600000 / ((t2 - t1) * _resolution)) * t_imp_neg;
 			rds[ret].identifier(new StringIdentifier("Power_neg"));
 			rds[ret].time(req);
 			rds[ret].value(value);
@@ -420,17 +436,16 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 		rds[ret].value(t_imp_neg);
 		++ret;
 	}
-	if (_first_impulse && ret>0)
+	if (_first_impulse && ret > 0)
 		_first_impulse = false;
 
-	print(log_finest, "Reading S0 - returning %d readings (n=%d n_neg = %d)", name().c_str(), ret, t_imp, t_imp_neg);
+	print(log_finest, "Reading S0 - returning %d readings (n=%d n_neg = %d)", name().c_str(), ret,
+		  t_imp, t_imp_neg);
 
 	return ret;
 }
 
-MeterS0::HWIF_UART::HWIF_UART(const std::list<Option> &options) :
-	_fd(-1)
-{
+MeterS0::HWIF_UART::HWIF_UART(const std::list<Option> &options) : _fd(-1) {
 	OptionList optlist;
 
 	try {
@@ -441,13 +456,12 @@ MeterS0::HWIF_UART::HWIF_UART(const std::list<Option> &options) :
 	}
 }
 
-MeterS0::HWIF_UART::~HWIF_UART()
-{
-	if (_fd>=0) _close();
+MeterS0::HWIF_UART::~HWIF_UART() {
+	if (_fd >= 0)
+		_close();
 }
 
-bool MeterS0::HWIF_UART::_open()
-{
+bool MeterS0::HWIF_UART::_open() {
 	// open port
 	int fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY);
 
@@ -467,8 +481,8 @@ bool MeterS0::HWIF_UART::_open()
 	tio.c_iflag = IGNPAR;
 	tio.c_oflag = 0;
 	tio.c_lflag = 0;
-	tio.c_cc[VMIN]=0;
-	tio.c_cc[VTIME]=10; // 1s timeout see man 3 termios
+	tio.c_cc[VMIN] = 0;
+	tio.c_cc[VTIME] = 10; // 1s timeout see man 3 termios
 
 	tcflush(fd, TCIFLUSH);
 
@@ -479,9 +493,9 @@ bool MeterS0::HWIF_UART::_open()
 	return true;
 }
 
-bool MeterS0::HWIF_UART::_close()
-{
-	if (_fd<0) return false;
+bool MeterS0::HWIF_UART::_close() {
+	if (_fd < 0)
+		return false;
 
 	tcsetattr(_fd, TCSANOW, &_old_tio); // reset serial port
 
@@ -491,9 +505,8 @@ bool MeterS0::HWIF_UART::_close()
 	return true;
 }
 
-bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout)
-{
-	if (_fd<0) {
+bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout) {
+	if (_fd < 0) {
 		timeout = false;
 		return false;
 	}
@@ -504,7 +517,7 @@ bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout)
 
 	// blocking until one character/pulse is read
 	ssize_t ret;
-	ret = ::read( _fd, buf, 8 );
+	ret = ::read(_fd, buf, 8);
 	if (ret < 1) {
 		timeout = false;
 		return false;
@@ -517,50 +530,47 @@ bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout)
 	return true;
 }
 
-#define BLOCK_SIZE (4*1024)
+#define BLOCK_SIZE (4 * 1024)
 #define BCM2708_PERI_BASE_RPI1 0x20000000
 #define BCM2708_PERI_BASE_RPI2 0x3F000000
 
-MeterS0::HWIF_MMAP::HWIF_MMAP(int gpiopin, const std::string &hw) :
-	_gpiopin(gpiopin), _gpio(0), _gpio_base(0)
-{
+MeterS0::HWIF_MMAP::HWIF_MMAP(int gpiopin, const std::string &hw)
+	: _gpiopin(gpiopin), _gpio(0), _gpio_base(0) {
 	// check gpiopin for max value! (todo)
 	// we do mmap in _open only
-	if (hw=="rpi" || hw=="rpi1")
-		_gpio_base = (void *) (BCM2708_PERI_BASE_RPI1 + 0x200000);
+	if (hw == "rpi" || hw == "rpi1")
+		_gpio_base = (void *)(BCM2708_PERI_BASE_RPI1 + 0x200000);
+	else if (hw == "rpi2")
+		_gpio_base = (void *)(BCM2708_PERI_BASE_RPI2 + 0x200000);
 	else
-		if (hw=="rpi2")
-			_gpio_base = (void *) (BCM2708_PERI_BASE_RPI2 + 0x200000);
-	else throw vz::VZException("unknown hw for HWIF_MMAP!");
+		throw vz::VZException("unknown hw for HWIF_MMAP!");
 }
 
-MeterS0::HWIF_MMAP::~HWIF_MMAP()
-{
-	if (_gpio) _close();
+MeterS0::HWIF_MMAP::~HWIF_MMAP() {
+	if (_gpio)
+		_close();
 }
 
-bool MeterS0::HWIF_MMAP::_open()
-{
+bool MeterS0::HWIF_MMAP::_open() {
 	int mem_fd = -1;
-	if ((mem_fd = ::open("/dev/mem", O_RDWR|O_SYNC)) < 0) {
-	   print( log_alert, "can't open /dev/mem \n", "MMAP" );
-	   return false;
+	if ((mem_fd = ::open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+		print(log_alert, "can't open /dev/mem \n", "MMAP");
+		return false;
 	}
 
-	void *gpio_map = mmap(
-	   (void*)NULL,             //Any adddress in our space will do
-	   BLOCK_SIZE,       //Map length
-	   PROT_READ|PROT_WRITE, // Enable reading & writting to mapped memory
-	   MAP_SHARED,       //Shared with other processes
-	   mem_fd,           //File to map
-	   (off_t)_gpio_base         //Offset to GPIO peripheral
+	void *gpio_map = mmap((void *)NULL,           // Any adddress in our space will do
+						  BLOCK_SIZE,             // Map length
+						  PROT_READ | PROT_WRITE, // Enable reading & writting to mapped memory
+						  MAP_SHARED,             // Shared with other processes
+						  mem_fd,                 // File to map
+						  (off_t)_gpio_base       // Offset to GPIO peripheral
 	);
 
-	::close(mem_fd); //No need to keep mem_fd open after mmap
+	::close(mem_fd); // No need to keep mem_fd open after mmap
 
 	if (gpio_map == MAP_FAILED) {
-	   print( log_alert, "mmap error %p errno=%d\n", "MMAP", gpio_map, errno);
-	   return false;
+		print(log_alert, "mmap error %p errno=%d\n", "MMAP", gpio_map, errno);
+		return false;
 	}
 
 	// Always use volatile pointer!
@@ -569,27 +579,24 @@ bool MeterS0::HWIF_MMAP::_open()
 	return true;
 }
 
-bool MeterS0::HWIF_MMAP::_close()
-{
+bool MeterS0::HWIF_MMAP::_close() {
 	// need unmap? todo
 	_gpio = 0;
 	return true;
 }
 
-int MeterS0::HWIF_MMAP::status()
-{
-#define GET_GPIO(g) (*(_gpio+13)&(1<<g)) // 0 if LOW, (1<<g) if HIGH
+int MeterS0::HWIF_MMAP::status() {
+#define GET_GPIO(g) (*(_gpio + 13) & (1 << g)) // 0 if LOW, (1<<g) if HIGH
 
-	return GET_GPIO(_gpiopin)>0 ? 1 : 0;
+	return GET_GPIO(_gpiopin) > 0 ? 1 : 0;
 }
 
-
-MeterS0::HWIF_GPIO::HWIF_GPIO(int gpiopin, const std::list<Option> &options) :
-	_fd(-1), _gpiopin(gpiopin), _configureGPIO(true)
-{
+MeterS0::HWIF_GPIO::HWIF_GPIO(int gpiopin, const std::list<Option> &options)
+	: _fd(-1), _gpiopin(gpiopin), _configureGPIO(true) {
 	OptionList optlist;
 
-	if (_gpiopin <0) throw vz::VZException("invalid (<0) gpio(pin) set");
+	if (_gpiopin < 0)
+		throw vz::VZException("invalid (<0) gpio(pin) set");
 
 	try {
 		_configureGPIO = optlist.lookup_bool(options, "configureGPIO");
@@ -601,34 +608,35 @@ MeterS0::HWIF_GPIO::HWIF_GPIO(int gpiopin, const std::list<Option> &options) :
 	_device.append("/sys/class/gpio/gpio");
 	_device.append(std::to_string(_gpiopin));
 	_device.append("/value");
-
 }
 
-MeterS0::HWIF_GPIO::~HWIF_GPIO()
-{
-	if (_fd>=0) _close();
+MeterS0::HWIF_GPIO::~HWIF_GPIO() {
+	if (_fd >= 0)
+		_close();
 }
 
-bool MeterS0::HWIF_GPIO::_open()
-{
+bool MeterS0::HWIF_GPIO::_open() {
 	std::string name;
 	int fd;
 	unsigned int res;
 
-	if (!::access(_device.c_str(),F_OK)){
+	if (!::access(_device.c_str(), F_OK)) {
 		// exists
 	} else {
 		if (_configureGPIO) {
-			fd = ::open("/sys/class/gpio/export",O_WRONLY);
-			if (fd<0) throw vz::VZException("open export failed");
+			fd = ::open("/sys/class/gpio/export", O_WRONLY);
+			if (fd < 0)
+				throw vz::VZException("open export failed");
 			name.clear();
 			name.append(std::to_string(_gpiopin));
 			name.append("\n");
 
-			res=write(fd,name.c_str(), name.length()+1); // is the trailing zero really needed?
-			if ((name.length()+1)!=res) throw vz::VZException("export failed");
+			res = write(fd, name.c_str(), name.length() + 1); // is the trailing zero really needed?
+			if ((name.length() + 1) != res)
+				throw vz::VZException("export failed");
 			::close(fd);
-		} else return false; // doesn't exist and we shall not configure
+		} else
+			return false; // doesn't exist and we shall not configure
 	}
 
 	// now it exists:
@@ -638,33 +646,42 @@ bool MeterS0::HWIF_GPIO::_open()
 		name.append(std::to_string(_gpiopin));
 		name.append("/direction");
 		fd = ::open(name.c_str(), O_WRONLY);
-		if (fd<0) throw vz::VZException("open direction failed");
-		res=::write(fd,"in\n",3);
-		if (3!=res) throw vz::VZException("set direction failed");
-		if (::close(fd)<0) throw vz::VZException("set direction failed");
+		if (fd < 0)
+			throw vz::VZException("open direction failed");
+		res = ::write(fd, "in\n", 3);
+		if (3 != res)
+			throw vz::VZException("set direction failed");
+		if (::close(fd) < 0)
+			throw vz::VZException("set direction failed");
 
 		name.clear();
 		name.append("/sys/class/gpio/gpio");
 		name.append(std::to_string(_gpiopin));
 		name.append("/edge");
 		fd = ::open(name.c_str(), O_WRONLY);
-		if (fd<0) throw vz::VZException("open edge failed");
-		res=::write(fd,"rising\n",7);
-		if (7!=res) throw vz::VZException("set edge failed");
-		if (::close(fd)<0) throw vz::VZException("set edge failed");
+		if (fd < 0)
+			throw vz::VZException("open edge failed");
+		res = ::write(fd, "rising\n", 7);
+		if (7 != res)
+			throw vz::VZException("set edge failed");
+		if (::close(fd) < 0)
+			throw vz::VZException("set edge failed");
 
 		name.clear();
 		name.append("/sys/class/gpio/gpio");
 		name.append(std::to_string(_gpiopin));
 		name.append("/active_low");
 		fd = ::open(name.c_str(), O_WRONLY);
-		if (fd<0) throw vz::VZException("open active_low failed");
-		res=::write(fd,"0\n",2);
-		if (2!=res) throw vz::VZException("set active_low failed");
-		if (::close(fd)<0) throw vz::VZException("set active_low failed");
+		if (fd < 0)
+			throw vz::VZException("open active_low failed");
+		res = ::write(fd, "0\n", 2);
+		if (2 != res)
+			throw vz::VZException("set active_low failed");
+		if (::close(fd) < 0)
+			throw vz::VZException("set active_low failed");
 	}
 
-	fd = ::open( _device.c_str(), O_RDONLY | O_EXCL); // EXCL really needed?
+	fd = ::open(_device.c_str(), O_RDONLY | O_EXCL); // EXCL really needed?
 	if (fd < 0) {
 		print(log_alert, "open(%s): %s", "", _device.c_str(), strerror(errno));
 		return false;
@@ -675,9 +692,9 @@ bool MeterS0::HWIF_GPIO::_open()
 	return true;
 }
 
-bool MeterS0::HWIF_GPIO::_close()
-{
-	if (_fd<0) return false;
+bool MeterS0::HWIF_GPIO::_close() {
+	if (_fd < 0)
+		return false;
 
 	::close(_fd);
 	_fd = -1;
@@ -688,26 +705,28 @@ bool MeterS0::HWIF_GPIO::_close()
 int MeterS0::HWIF_GPIO::status() // this resets any pending events for waitForImpulse as well!
 {
 	unsigned char buf[2];
-	if (_fd<0) return -1;
-	if (::pread(_fd, buf, 1, 0) < 1) return -2;
-	if (buf[0] != '0') return 1;
+	if (_fd < 0)
+		return -1;
+	if (::pread(_fd, buf, 1, 0) < 1)
+		return -2;
+	if (buf[0] != '0')
+		return 1;
 	return 0;
 }
 
-bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout)
-{
+bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout) {
 	unsigned char buf[2];
-	if (_fd<0) {
+	if (_fd < 0) {
 		timeout = false;
 		return false;
 	}
 
 	struct pollfd poll_fd;
 	poll_fd.fd = _fd;
-	poll_fd.events = POLLPRI|POLLERR;
+	poll_fd.events = POLLPRI | POLLERR;
 	poll_fd.revents = 0;
 
-	int rv = poll(&poll_fd, 1, 1000);    // timeout set to 1s
+	int rv = poll(&poll_fd, 1, 1000); // timeout set to 1s
 	print(log_debug, "MeterS0:HWIF_GPIO:first poll returned %d", "S0", rv);
 	if (rv > 0) {
 		if (poll_fd.revents & POLLPRI) {
@@ -720,11 +739,10 @@ bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout)
 			timeout = false;
 			return false;
 		}
-	} else
-		if (rv == 0) {
-			timeout = true;
-			return false;
-		}
+	} else if (rv == 0) {
+		timeout = true;
+		return false;
+	}
 	timeout = false;
 	return false;
 }

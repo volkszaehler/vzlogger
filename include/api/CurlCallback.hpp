@@ -25,32 +25,23 @@
 
 #ifndef _CurlCallback_hpp_
 #define _CurlCallback_hpp_
-#include <string.h>
 #include <curl/curl.h>
+#include <string.h>
 
 namespace vz {
-	namespace api {
+namespace api {
 
-		class CurlCallback {
-		public:
-			static size_t header_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
-			static size_t write_callback(char *ptr,size_t size,size_t nmemb,void *userdata);
-			static size_t debug_callback(CURL *hCurl, curl_infotype, char *info
-																	 , size_t size, void *userdata );
-			static int    progress_callback(void *clientp, double dltotal, double dlnow
-                                      , double ultotal, double ulnow);
+class CurlCallback {
+  public:
+	static size_t header_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
+	static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
+	static size_t debug_callback(CURL *hCurl, curl_infotype, char *info, size_t size,
+								 void *userdata);
+	static int progress_callback(void *clientp, double dltotal, double dlnow, double ultotal,
+								 double ulnow);
 
-		}; // class 
-      
-	} // namespace vz
+}; // class
+
+} // namespace api
 } // namespace vz
 #endif /* _CurlCallback_hpp_ */
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

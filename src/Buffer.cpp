@@ -25,23 +25,21 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include "float.h" /* double min max */
 #include "common.h"
+#include "float.h" /* double min max */
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "Buffer.hpp"
 
-Buffer::Buffer() :
-		_keep(32), _last_avg(0)
-{
-	_newValues=false;
+Buffer::Buffer() : _keep(32), _last_avg(0) {
+	_newValues = false;
 	pthread_mutex_init(&_mutex, NULL);
-	_aggmode=NONE;
+	_aggmode = NONE;
 }
 
 void Buffer::push(const Reading &rd) {
@@ -51,30 +49,31 @@ void Buffer::push(const Reading &rd) {
 }
 
 void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
-	if (_aggmode == NONE) return;
+	if (_aggmode == NONE)
+		return;
 
 	lock();
 	if (_aggmode == MAX) {
-		Reading *latest=NULL;
-		double aggvalue=DBL_MIN;
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
+		Reading *latest = NULL;
+		double aggvalue = DBL_MIN;
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
 				if (!latest) {
-					latest=&*it;
+					latest = &*it;
 				} else {
 					if (it->time_ms() > latest->time_ms()) {
-						latest=&*it;
+						latest = &*it;
 					}
 				}
-				aggvalue=std::max(aggvalue,it->value());
-				print(log_debug, "%f @ %lld", "MAX",it->value(),it->time_ms());
+				aggvalue = std::max(aggvalue, it->value());
+				print(log_debug, "%f @ %lld", "MAX", it->value(), it->time_ms());
 			}
 		}
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
-				if (&*it==latest) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
+				if (&*it == latest) {
 					it->value(aggvalue);
-					print(log_debug, "RESULT %f @ %lld", "MAX",it->value(),it->time_ms());
+					print(log_debug, "RESULT %f @ %lld", "MAX", it->value(), it->time_ms());
 				} else {
 					it->mark_delete();
 				}
@@ -92,16 +91,16 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 		double aggtimespan = 0.0;
 		unsigned int aggcount = 0;
 		Reading *previous = _last_avg;
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
 				if (!latest) {
-					latest=&*it;
+					latest = &*it;
 				} else {
 					if (it->time_ms() > latest->time_ms()) {
-						latest=&*it;
+						latest = &*it;
 					}
 				}
-				print(log_debug, "[%d] %f @ %lld", "AVG",aggcount,it->value(),it->time_ms());
+				print(log_debug, "[%d] %f @ %lld", "AVG", aggcount, it->value(), it->time_ms());
 				if (previous) {
 					double timespan = ((double)(it->time_ms() - previous->time_ms())) / 1000.0;
 					aggvalue += previous->value() * timespan; // timespan between prev. and this one
@@ -111,43 +110,46 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 				aggcount++;
 			}
 		}
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
-				if (&*it==latest) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
+				if (&*it == latest) {
 					// store the last value before we modify it.
-					if (!_last_avg) _last_avg = new Reading(*it);
-					else *_last_avg = *it;
+					if (!_last_avg)
+						_last_avg = new Reading(*it);
+					else
+						*_last_avg = *it;
 
-					if (aggtimespan>0.0)
-						it->value(aggvalue/aggtimespan);
+					if (aggtimespan > 0.0)
+						it->value(aggvalue / aggtimespan);
 					// else keep current value (if no previous and just single value)
-					print(log_debug, "[%d] RESULT %f @ %lld", "AVG",aggcount,it->value(),it->time_ms());
+					print(log_debug, "[%d] RESULT %f @ %lld", "AVG", aggcount, it->value(),
+						  it->time_ms());
 				} else {
 					it->mark_delete();
 				}
 			}
 		}
 	} else if (_aggmode == SUM) {
-		Reading *latest=NULL;
-		double aggvalue=0;
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
+		Reading *latest = NULL;
+		double aggvalue = 0;
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
 				if (!latest) {
-					latest=&*it;
+					latest = &*it;
 				} else {
 					if (it->time_ms() > latest->time_ms()) {
-						latest=&*it;
+						latest = &*it;
 					}
 				}
-				aggvalue=aggvalue+it->value();
-				print(log_debug, "%f @ %lld", "SUM",it->value(),it->time_ms());
+				aggvalue = aggvalue + it->value();
+				print(log_debug, "%f @ %lld", "SUM", it->value(), it->time_ms());
 			}
 		}
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
-				if (&*it==latest) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
+				if (&*it == latest) {
 					it->value(aggvalue);
-					print(log_debug, "RESULT %f @ %lld", "SUM",it->value(),it->time_ms());
+					print(log_debug, "RESULT %f @ %lld", "SUM", it->value(), it->time_ms());
 				} else {
 					it->mark_delete();
 				}
@@ -155,12 +157,12 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 		}
 	}
 	/* fix timestamp if aggFixedInterval set */
-	if ((aggFixedInterval==true) && (aggtime>0)) {
+	if ((aggFixedInterval == true) && (aggtime > 0)) {
 		struct timeval tv;
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
-			if (! it->deleted()) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
+			if (!it->deleted()) {
 				tv.tv_usec = 0;
-				tv.tv_sec = aggtime * (long int)((it->time_ms()/1000) / aggtime);
+				tv.tv_sec = aggtime * (long int)((it->time_ms() / 1000) / aggtime);
 				it->time(tv);
 			}
 		}
@@ -170,16 +172,14 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 	return;
 }
 
-
 void Buffer::clean(bool deleted_only) {
 	lock();
 	if (deleted_only) {
-		for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
 			if (it->deleted()) {
 				it = _sent.erase(it);
 				it--;
 			}
-
 		}
 	} else {
 		_sent.clear();
@@ -189,7 +189,7 @@ void Buffer::clean(bool deleted_only) {
 
 void Buffer::undelete() {
 	lock();
-	for (iterator it = _sent.begin(); it!= _sent.end(); it++) {
+	for (iterator it = _sent.begin(); it != _sent.end(); it++) {
 		it->reset();
 	}
 	unlock();
@@ -202,13 +202,13 @@ std::string Buffer::dump() {
 	lock();
 	o << std::setprecision(4);
 	for (iterator it = _sent.begin(); it != _sent.end(); it++) {
-			o << it->value();
+		o << it->value();
 
 		/* indicate last sent reading */
 		if (_sent.end() == it) {
 			o << '!';
 		} else {
-		/* add seperator between values */
+			/* add seperator between values */
 			o << ',';
 		}
 	}
@@ -219,14 +219,6 @@ std::string Buffer::dump() {
 
 Buffer::~Buffer() {
 	pthread_mutex_destroy(&_mutex);
-	if (_last_avg) delete _last_avg;
+	if (_last_avg)
+		delete _last_avg;
 }
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

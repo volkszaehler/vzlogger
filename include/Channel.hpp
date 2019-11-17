@@ -29,22 +29,23 @@
 #include <iostream>
 #include <pthread.h>
 
-#include "Reading.hpp"
 #include "Buffer.hpp"
-#include <threads.h>
+#include "Reading.hpp"
 #include <Options.hpp>
 #include <VZException.hpp>
+#include <threads.h>
 
 class Channel {
 
-	public:
+  public:
 	typedef vz::shared_ptr<Channel> Ptr;
 	// This shared_ptr is set when a logging_thread for an object of this class is started.
 	// Inside the logging_thread, a Channel::Ptr is used. Data is passed via the void*
 	// argument of pthread_create, and thus directly passing a shared pointer will break it.
 	Ptr _this_forthread;
 
-	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid, ReadingIdentifier::Ptr pIdentifier);
+	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid,
+			ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
 	// Doesn't touch the object, could also be static, but static breaks google mock.
@@ -52,7 +53,7 @@ class Channel {
 		// Copy the owner's shared pointer for the logging_thread into this member.
 		this_shared->_this_forthread = this_shared;
 		// .. and pass the raw Channel*
-		pthread_create(&this_shared->_thread, NULL, &logging_thread, (void *) this_shared.get());
+		pthread_create(&this_shared->_thread, NULL, &logging_thread, (void *)this_shared.get());
 		this_shared->_thread_running = true;
 	}
 
@@ -64,26 +65,30 @@ class Channel {
 		}
 	}
 
-	void cancel() { if (running()) pthread_cancel(_thread); }
+	void cancel() {
+		if (running())
+			pthread_cancel(_thread);
+	}
 
 	bool running() const { return _thread_running; }
 
-	const char* name() const            { return _name.c_str(); }
-	std::list<Option> &options()        { return _options; }
+	const char *name() const { return _name.c_str(); }
+	std::list<Option> &options() { return _options; }
 
 	ReadingIdentifier::Ptr identifier() {
-		if (_identifier.use_count() < 1) throw vz::VZException("No identifier defined.");
+		if (_identifier.use_count() < 1)
+			throw vz::VZException("No identifier defined.");
 		return _identifier;
 	}
 	int64_t time_ms() const { return _last == NULL ? 0 : _last->time_ms(); }
 
-	const char* uuid() const            { return _uuid.c_str(); }
-	const std::string apiProtocol()     { return _apiProtocol; }
+	const char *uuid() const { return _uuid.c_str(); }
+	const std::string apiProtocol() { return _apiProtocol; }
 
-	void last(Reading *rd)              { _last = rd;}
-	void push(const Reading &rd)        { _buffer->push(rd); }
-        std::string dump()  { return _buffer->dump(); }
-	Buffer::Ptr buffer()                { return _buffer; }
+	void last(Reading *rd) { _last = rd; }
+	void push(const Reading &rd) { _buffer->push(rd); }
+	std::string dump() { return _buffer->dump(); }
+	Buffer::Ptr buffer() { return _buffer; }
 
 	size_t size() const { return _buffer->size(); }
 
@@ -94,8 +99,8 @@ class Channel {
 	}
 	inline void wait() {
 		_buffer->lock();
-		while(!_buffer->newValues() ) {
-			_buffer->wait(&condition); 	// sleep until new data has been read
+		while (!_buffer->newValues()) {
+			_buffer->wait(&condition); // sleep until new data has been read
 		}
 		_buffer->clear_newValues();
 		_buffer->unlock();
@@ -103,25 +108,25 @@ class Channel {
 
 	int duplicates() const { return _duplicates; }
 
-	private:
+  private:
 	static int instances;
-	bool _thread_running;   	// flag if thread is started
+	bool _thread_running; // flag if thread is started
 
-	int id;		 				// only for internal usage & debugging
-	std::string _name;    		// name of the channel
+	int id;            // only for internal usage & debugging
+	std::string _name; // name of the channel
 	std::list<Option> _options;
 
-	Buffer::Ptr _buffer;		// circular queue to buffer readings
+	Buffer::Ptr _buffer; // circular queue to buffer readings
 
-	ReadingIdentifier::Ptr _identifier;	// channel identifier (OBIS, string)
-	Reading *_last;			 	// most recent reading
+	ReadingIdentifier::Ptr _identifier; // channel identifier (OBIS, string)
+	Reading *_last;                     // most recent reading
 
-	pthread_cond_t condition;	// pthread syncronization to notify logging thread and local webserver
-	pthread_t _thread;			// pthread for asynchronus logging
+	pthread_cond_t condition; // pthread syncronization to notify logging thread and local webserver
+	pthread_t _thread;        // pthread for asynchronus logging
 
-	std::string _uuid;			// unique identifier for middleware
-	std::string _apiProtocol;	// protocol of api to use for logging
-	int _duplicates;			// how to handle duplicate values (see conf)
+	std::string _uuid;        // unique identifier for middleware
+	std::string _apiProtocol; // protocol of api to use for logging
+	int _duplicates;          // how to handle duplicate values (see conf)
 };
 
 #endif /* _CHANNEL_H_ */

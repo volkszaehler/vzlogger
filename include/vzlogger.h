@@ -29,9 +29,9 @@
 #include <pthread.h>
 #include <vector>
 
+#include "Channel.hpp"
 #include "Config_Options.hpp"
 #include "Meter.hpp"
-#include "Channel.hpp"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ using namespace std;
 void quit(int sig);
 void daemonize();
 
-void show_usage(char ** argv);
+void show_usage(char **argv);
 void show_aliases();
 
 int options_parse(int argc, char *argv[], Config_Options *options);

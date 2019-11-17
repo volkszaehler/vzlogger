@@ -35,30 +35,30 @@
 
 #include <string>
 
-#include <common.h>
 #include <Channel.hpp>
+#include <common.h>
 
 namespace vz {
-	class ApiIF {
-	public:
-		typedef vz::shared_ptr<ApiIF> Ptr;
+class ApiIF {
+  public:
+	typedef vz::shared_ptr<ApiIF> Ptr;
 
-		ApiIF(Channel::Ptr ch) : _ch(ch){}
-		virtual ~ApiIF(){};
+	ApiIF(Channel::Ptr ch) : _ch(ch) {}
+	virtual ~ApiIF(){};
 
-/** 
- * @brief send measurement values to middleware
- * to be implemented specific API.
- **/
-		virtual void send() = 0;
-		virtual	void register_device()  = 0;
-		
-	protected:
-		Channel::Ptr channel() { return _ch; }
+	/**
+	 * @brief send measurement values to middleware
+	 * to be implemented specific API.
+	 **/
+	virtual void send() = 0;
+	virtual void register_device() = 0;
 
-	private:
-		Channel::Ptr _ch;   /**< pointer to channel where API belongs to */
-	}; //class ApiIF
+  protected:
+	Channel::Ptr channel() { return _ch; }
+
+  private:
+	Channel::Ptr _ch; /**< pointer to channel where API belongs to */
+};                    // class ApiIF
 
 } // namespace vz
 #endif /* _ApiIF_hpp_ */

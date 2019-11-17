@@ -23,32 +23,32 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <curl/curl.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <signal.h>
 #include <stdarg.h>
-#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <signal.h>
-#include <getopt.h>
-#include <curl/curl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <fcntl.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <list>
 #include <sstream>
 
+#include "Channel.hpp"
+#include "CurlSessionProvider.hpp"
+#include "Obis.hpp"
+#include "PushData.hpp"
+#include "threads.h"
+#include "vzlogger.h"
 #include <Config_Options.hpp>
 #include <Meter.hpp>
-#include "Obis.hpp"
-#include "vzlogger.h"
-#include "Channel.hpp"
-#include "threads.h"
-#include "CurlSessionProvider.hpp"
-#include "PushData.hpp"
 
 #ifdef LOCAL_SUPPORT
 #include "local.h"
@@ -60,9 +60,9 @@
 
 #include "gitSha1.h"
 
-MapContainer mappings;		// mapping between meters and channels
-Config_Options options;		// global application options
-size_t gSkippedFailed = 0;	// disabled or failed meters
+MapContainer mappings;     // mapping between meters and channels
+Config_Options options;    // global application options
+size_t gSkippedFailed = 0; // disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
 
@@ -70,17 +70,17 @@ std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is 
  * Command line options
  */
 const struct option long_options[] = {
-	{"config", 	required_argument,	0,	'c'},
-	{"log",		required_argument,	0,	'o'},
-	{"daemon", 	required_argument,	0,	'd'},
+	{"config", required_argument, 0, 'c'},
+	{"log", required_argument, 0, 'o'},
+	{"daemon", required_argument, 0, 'd'},
 #ifdef LOCAL_SUPPORT
-	{"httpd", 	no_argument,		0,	'l'},
-	{"httpd-port",	required_argument,	0,	'p'},
+	{"httpd", no_argument, 0, 'l'},
+	{"httpd-port", required_argument, 0, 'p'},
 #endif /* LOCAL_SUPPORT */
-	{"register",		no_argument,	0,	'r'},
-	{"verbose",	required_argument,	0,	'v'},
-	{"help",	no_argument,		0,	'h'},
-	{"version",	no_argument,		0,	'V'},
+	{"register", no_argument, 0, 'r'},
+	{"verbose", required_argument, 0, 'v'},
+	{"help", no_argument, 0, 'h'},
+	{"version", no_argument, 0, 'V'},
 	{0, 0, 0, 0} /* stop condition for iterator */
 };
 
@@ -108,13 +108,13 @@ const char *long_options_descs[] = {
  * @param id could be NULL for general messages
  * @todo integrate into syslog
  */
-void print(log_level_t level, const char *format, const char *id, ... ) {
+void print(log_level_t level, const char *format, const char *id, ...) {
 	if (level > options.verbosity()) {
 		return; /* skip message if its under the verbosity level */
 	}
 
 	struct timeval now;
-	struct tm * timeinfo;
+	struct tm *timeinfo;
 	char prefix[24];
 	size_t pos = 0;
 
@@ -122,11 +122,11 @@ void print(log_level_t level, const char *format, const char *id, ... ) {
 	timeinfo = localtime(&now.tv_sec);
 
 	/* format timestamp */
-	pos += strftime(prefix+pos, 18, "[%b %d %H:%M:%S]", timeinfo);
+	pos += strftime(prefix + pos, 18, "[%b %d %H:%M:%S]", timeinfo);
 
 	/* format section */
 	if (id) {
-		snprintf(prefix+pos, 8, "[%s]", (char *) id);
+		snprintf(prefix + pos, 8, "[%s]", (char *)id);
 	}
 
 	va_list args;
@@ -148,15 +148,14 @@ void print(log_level_t level, const char *format, const char *id, ... ) {
 		vfprintf(options.logfd(), format, args);
 		fprintf(options.logfd(), "\n");
 		fflush(options.logfd());
-	} else
-		if (gStartLogBuf) {
-			char buf[500];
-			int bufUsed;
-			bufUsed = snprintf(buf, 500, "%-24s", prefix);
-			bufUsed += vsnprintf(buf+bufUsed, bufUsed < 500 ? 500-bufUsed : 0, format, args);
-			bufUsed += snprintf(buf+bufUsed, bufUsed < 500 ? 500-bufUsed : 0, "\n");
-			gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
-		}
+	} else if (gStartLogBuf) {
+		char buf[500];
+		int bufUsed;
+		bufUsed = snprintf(buf, 500, "%-24s", prefix);
+		bufUsed += vsnprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, format, args);
+		bufUsed += snprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, "\n");
+		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
+	}
 	va_end(args);
 }
 
@@ -173,7 +172,8 @@ void show_usage(char *argv[]) {
 	printf("  following options are available:\n");
 	while (op->name && desc) {
 		printf("\t-%c, --%-12s\t%s\n", op->val, op->name, *desc);
-		op++; desc++;
+		op++;
+		desc++;
 	}
 
 	/* protocols */
@@ -213,8 +213,7 @@ void daemonize() {
 	int i = fork();
 	if (i < 0) {
 		exit(EXIT_FAILURE); /* fork error */
-	}
-	else if (i > 0) {
+	} else if (i > 0) {
 		exit(EXIT_SUCCESS); /* parent exits */
 	}
 
@@ -227,10 +226,13 @@ void daemonize() {
 
 	/* handle standart I/O */
 	i = open("/dev/null", O_RDWR);
-	if (dup(i)<0) {}
-	if (dup(i)<0) {}
+	if (dup(i) < 0) {
+	}
+	if (dup(i) < 0) {
+	}
 
-	if (chdir("/")<0) {} /* change working directory */
+	if (chdir("/") < 0) {
+	} /* change working directory */
 	umask(0022);
 
 	/* ignore signals from parent tty */
@@ -259,7 +261,7 @@ void signalHandlerQuit(int sig) {
 	// this is a signal handler. We're only allowed to call
 	// async-signal-safe functions. see e.g. man 7 signal-safety
 	mainLoopEndThreads = true;
-	//mappings.quit(sig);
+	// mappings.quit(sig);
 	end_push_data_thread();
 #ifdef ENABLE_MQTT
 	end_mqtt_client_thread();
@@ -272,61 +274,61 @@ void signalHandlerQuit(int sig) {
  * @param options pointer to structure for options
  * @return int 0 on succes, <0 on error
  */
-int config_parse_cli(int argc, char * argv[], Config_Options * options) {
+int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 	while (1) {
 		int c = getopt_long(argc, argv, "c:o:p:lhrVdfv:", long_options, NULL);
 
 		/* detect the end of the options. */
-		if (c == -1) break;
+		if (c == -1)
+			break;
 
 		switch (c) {
-				case 'v':
-					options->verbosity(atoi(optarg));
-					break;
+		case 'v':
+			options->verbosity(atoi(optarg));
+			break;
 
 #ifdef LOCAL_SUPPORT
-				case 'l':
-					options->local(1);
-					break;
+		case 'l':
+			options->local(1);
+			break;
 
-				case 'p': /* port for local interface */
-					options->port(atoi(optarg));
-					break;
+		case 'p': /* port for local interface */
+			options->port(atoi(optarg));
+			break;
 #endif /* LOCAL_SUPPORT */
 
-				case 'd':
-					options->daemon(1);
-					break;
+		case 'd':
+			options->daemon(1);
+			break;
 
-				case 'c': /* config file */
-					options->config(optarg);
-					break;
+		case 'c': /* config file */
+			options->config(optarg);
+			break;
 
-				case 'o': /* log file */
-					options->log(optarg);
-					break;
+		case 'o': /* log file */
+			options->log(optarg);
+			break;
 
-				case 'V':
-					printf("%s\n", VERSION);
-					printf(" based on git version: %s\n", g_GIT_SHALONG);
-					printf(" last commit date: %s\n", g_GIT_LAST_COMMIT_DATE);
-					exit(EXIT_SUCCESS);
-					break;
+		case 'V':
+			printf("%s\n", VERSION);
+			printf(" based on git version: %s\n", g_GIT_SHALONG);
+			printf(" last commit date: %s\n", g_GIT_LAST_COMMIT_DATE);
+			exit(EXIT_SUCCESS);
+			break;
 
-				case 'r':
-					options->doRegistration(1);
-					break;
+		case 'r':
+			options->doRegistration(1);
+			break;
 
-				case '?':
-				case 'h':
-				default:
-					show_usage(argv);
-					if (c == '?') {
-						exit(EXIT_FAILURE);
-					}
-					else {
-						exit(EXIT_SUCCESS);
-					}
+		case '?':
+		case 'h':
+		default:
+			show_usage(argv);
+			if (c == '?') {
+				exit(EXIT_FAILURE);
+			} else {
+				exit(EXIT_SUCCESS);
+			}
 		}
 	}
 
@@ -356,7 +358,7 @@ void register_device() {
  * The application entrypoint
  */
 int main(int argc, char *argv[]) {
-	pthread_t _pushdata_thread=0;
+	pthread_t _pushdata_thread = 0;
 #ifdef ENABLE_MQTT
 	pthread_t _mqtt_client_thread = 0;
 #endif
@@ -373,12 +375,12 @@ int main(int argc, char *argv[]) {
 	struct MHD_Daemon *httpd_handle = NULL;
 #endif /* LOCAL_SUPPORT */
 
-	sigaction(SIGINT, &action, NULL);	/* catch ctrl-c from terminal */
-	sigaction(SIGHUP, &action, NULL);	/* catch hangup signal */
-	sigaction(SIGTERM, &action, NULL);	/* catch kill signal */
+	sigaction(SIGINT, &action, NULL);  /* catch ctrl-c from terminal */
+	sigaction(SIGHUP, &action, NULL);  /* catch hangup signal */
+	sigaction(SIGTERM, &action, NULL); /* catch kill signal */
 
 	/* initialize ADTs and APIs */
-//	curl_global_init(CURL_GLOBAL_ALL);
+	//	curl_global_init(CURL_GLOBAL_ALL);
 
 	/* parse command line and file options */
 	// TODO command line should have a higher priority as file
@@ -387,10 +389,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	// always (that's why log_alert is used) print version info to log file:
-	print(log_alert, "vzlogger v%s based on %s from %s started.", "main",
-		  VERSION, g_GIT_SHALONG, g_GIT_LAST_COMMIT_DATE);
+	print(log_alert, "vzlogger v%s based on %s from %s started.", "main", VERSION, g_GIT_SHALONG,
+		  g_GIT_LAST_COMMIT_DATE);
 
-	//mappings = (MapContainer::Ptr)(new MapContainer());
+	// mappings = (MapContainer::Ptr)(new MapContainer());
 	try {
 		options.config_parse(mappings);
 	} catch (std::exception &e) {
@@ -417,11 +419,10 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
 
 	if (options.daemon()) {
-		print(log_info, "Daemonize process...", (char*)0);
+		print(log_info, "Daemonize process...", (char *)0);
 		daemonize();
-	}
-	else {
-		print(log_info, "Process not  daemonized...", (char*)0);
+	} else {
+		print(log_info, "Process not  daemonized...", (char *)0);
 	}
 
 	/* open logfile */
@@ -429,7 +430,8 @@ int main(int argc, char *argv[]) {
 		FILE *logfd = fopen(options.log().c_str(), "a");
 
 		if (logfd == NULL) {
-			print(log_alert, "Cannot open logfile %s: %s", (char*)0, options.log().c_str(), strerror(errno));
+			print(log_alert, "Cannot open logfile %s: %s", (char *)0, options.log().c_str(),
+				  strerror(errno));
 			return EXIT_FAILURE;
 		}
 
@@ -442,7 +444,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		options.logfd(logfd);
-		print(log_debug, "Opened logfile %s", (char*)0, options.log().c_str());
+		print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
 	} else {
 		// stop temp logging, continue logging to console only
 		auto temp = gStartLogBuf;
@@ -451,13 +453,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (mappings.size() <= 0) {
-		print(log_alert, "No meters found - quitting!", (char*)0);
+		print(log_alert, "No meters found - quitting!", (char *)0);
 		return EXIT_FAILURE;
 	}
 
 	if (options.pushDataServer()) {
 		pushDataList = new PushDataList();
-		int ret = pthread_create(&_pushdata_thread, NULL, push_data_thread, (void *)options.pushDataServer()); // todo error handling?
+		int ret = pthread_create(&_pushdata_thread, NULL, push_data_thread,
+								 (void *)options.pushDataServer()); // todo error handling?
 		if (ret)
 			print(log_error, "Error %d creating pushdata_thread!", "push", ret);
 		else
@@ -488,7 +491,7 @@ int main(int argc, char *argv[]) {
 
 		// quit if not at least one meter is enabled and working
 		if (mappings.size() - gSkippedFailed <= 0) {
-			print(log_alert, "No functional meters found - quitting!", (char*)0);
+			print(log_alert, "No functional meters found - quitting!", (char *)0);
 			return EXIT_FAILURE;
 		}
 
@@ -496,13 +499,9 @@ int main(int argc, char *argv[]) {
 		// start webserver for local interface
 		if (options.local()) {
 			print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
-			httpd_handle = MHD_start_daemon(
-				MHD_USE_THREAD_PER_CONNECTION,
-				options.port(),
-				NULL, NULL,
-				&handle_request, (void*)&mappings,
-				MHD_OPTION_END
-				);
+			httpd_handle =
+				MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, options.port(), NULL, NULL,
+								 &handle_request, (void *)&mappings, MHD_OPTION_END);
 		}
 #endif /* LOCAL_SUPPORT */
 	} catch (std::exception &e) {
@@ -514,8 +513,7 @@ int main(int argc, char *argv[]) {
 	try {
 		bool cancelledThreads = false;
 		bool oneRunning;
-		do
-		{
+		do {
 			oneRunning = false;
 			// see whether at least one thread is still running:
 			for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++) {
@@ -558,7 +556,7 @@ int main(int argc, char *argv[]) {
 #endif /* LOCAL_SUPPORT */
 
 	/* householding */
-//curl_global_cleanup();
+	// curl_global_cleanup();
 
 	if (pushDataList) {
 

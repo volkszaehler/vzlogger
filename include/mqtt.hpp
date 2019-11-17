@@ -6,25 +6,25 @@
 #ifndef __mqtt_hpp_
 #define __mqtt_hpp_
 
-#include <string>
-#include <mutex>
-#include <unordered_map>
-#include <vector>
 #include "Channel.hpp"
 #include "Reading.hpp"
+#include <mutex>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 struct mosquitto; // forward decl. to avoid pulling the header here
 
-class MqttClient
-{
+class MqttClient {
   public:
 	MqttClient(struct json_object *option);
-	MqttClient() = delete;					 // no default constr.
+	MqttClient() = delete;                   // no default constr.
 	MqttClient(const MqttClient &) = delete; // no copy constr.
 	~MqttClient();
 	bool isConfigured() const;
 
-	void publish(Channel::Ptr ch, Reading &rds, bool aggregate = false); // thread safe, non blocking
+	void publish(Channel::Ptr ch, Reading &rds,
+				 bool aggregate = false); // thread safe, non blocking
   protected:
 	friend void *mqtt_client_thread(void *);
 	void connect_callback(struct mosquitto *mosq, int result);
@@ -48,12 +48,11 @@ class MqttClient
 	int _qos = 0;
 	bool _timestamp = false;
 
-	bool _isConnected  = false;
+	bool _isConnected = false;
 
 	struct mosquitto *_mcs = nullptr; // mosquitto client session data
 
-	struct ChannelEntry
-	{
+	struct ChannelEntry {
 		bool _announced = false;
 		bool _sendRaw = true;
 		bool _sendAgg = true;

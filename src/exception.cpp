@@ -29,6 +29,4 @@
 
 #include "exception.h"
 
-Exception::Exception(const char *msg) {
-	printf("Exception: %s", msg);
-}
+Exception::Exception(const char *msg) { printf("Exception: %s", msg); }

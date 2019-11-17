@@ -6,18 +6,18 @@
  *
  * Copyright (c) 2011 Fraunhofer ITWM
  * All rights reserved.
- * 
- * 
+ *
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -32,71 +32,56 @@
 
 #ifndef _VZException_hpp_
 #define _VZException_hpp_
-#include <string>
 #include <exception>
+#include <string>
 
 namespace vz {
-	class VZException : public std::exception {
-	public:
-		explicit
-		VZException(const std::string& reason) :
-				_reason(reason) {}
-		virtual ~VZException() throw() {}
-		virtual const char* what() const throw() { return reason().c_str(); }
-		virtual const std::string& reason() const { return _reason; }
+class VZException : public std::exception {
+  public:
+	explicit VZException(const std::string &reason) : _reason(reason) {}
+	virtual ~VZException() throw() {}
+	virtual const char *what() const throw() { return reason().c_str(); }
+	virtual const std::string &reason() const { return _reason; }
 
-	protected:
-		std::string _reason;
-	};
+  protected:
+	std::string _reason;
+};
 
-	// Option invalid type
-	class InvalidTypeException : public vz::VZException{
-	public:
-		InvalidTypeException(const std::string& reason) :
-				vz::VZException(reason) {}
-		virtual ~InvalidTypeException() throw() {}
+// Option invalid type
+class InvalidTypeException : public vz::VZException {
+  public:
+	InvalidTypeException(const std::string &reason) : vz::VZException(reason) {}
+	virtual ~InvalidTypeException() throw() {}
 
-	protected:
-	};
+  protected:
+};
 
-	// Option item not found
-	class OptionNotFoundException : public vz::VZException{
-	public:
-		OptionNotFoundException(const std::string& reason) :
-				vz::VZException(reason) {}
-		virtual ~OptionNotFoundException() throw() {}
+// Option item not found
+class OptionNotFoundException : public vz::VZException {
+  public:
+	OptionNotFoundException(const std::string &reason) : vz::VZException(reason) {}
+	virtual ~OptionNotFoundException() throw() {}
 
-	protected:
-	};
+  protected:
+};
 
+// Connection failed
+class ConnectionException : public vz::VZException {
+  public:
+	ConnectionException(const std::string &reason) : vz::VZException(reason) {}
+	virtual ~ConnectionException() throw() {}
 
-	// Connection failed
-	class ConnectionException : public vz::VZException{
-	public:
-		ConnectionException(const std::string& reason) :
-				vz::VZException(reason) {}
-		virtual ~ConnectionException() throw() {}
+  protected:
+};
 
-	protected:
-	};
+// Timedout
+namespace connection {
+class TimeOut : public ConnectionException {
+	TimeOut(const std::string &reason) : ConnectionException(reason) {}
+	virtual ~TimeOut() throw() {}
+};
 
-	// Timedout
-	namespace connection {
-		class TimeOut : public ConnectionException {
-			TimeOut(const std::string& reason) : ConnectionException(reason) {}
-			virtual ~TimeOut() throw() {}
-		};
-    
-	} // namespace connection 
+} // namespace connection
 
 } // namespace vz
 #endif /* _VZException_hpp_ */
-
-/*
- * Local variables:
- *  tab-width: 2
- *  c-indent-level: 2
- *  c-basic-offset: 2
- *  project-name: vzlogger
- * End:
- */

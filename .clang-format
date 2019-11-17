@@ -1,0 +1,6 @@
+BasedOnStyle: LLVM
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForContinuationAndIndentation
+AlignTrailingComments: true
