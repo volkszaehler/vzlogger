@@ -52,8 +52,8 @@ int MeterOMS::OMSHWif::receive_frame(mbus_frame *frame) {
 		if (data_size > 0) {
 			len += data_size;
 			rem = mbus_parse(frame, data, len);
-			//			print(log_finest, "mbus_parse returned %d (%s)", "OMS", rem,
-			//mbus_error_str());
+			// print(log_finest, "mbus_parse returned %d (%s)", "OMS", rem,
+			// mbus_error_str());
 		} else {
 			print(log_debug, "partial data (%d) received but %d remaining", "OMS", len, rem);
 			return MBUS_RECV_RESULT_ERROR;

@@ -174,12 +174,12 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 						// blocking until new data arrives (comet-like blocking of HTTP response)
 						if (mode && strcmp(mode, "comet") == 0) {
 							// TODO wait only options.comet_timeout()!
-							//							gettimeofday(&tp, NULL);
-							//							ts.tv_sec  = tp.tv_sec +
-							//options.comet_timeout(); 							ts.tv_nsec = tp.tv_usec * 1000;
+							// gettimeofday(&tp, NULL);
+							// ts.tv_sec = tp.tv_sec + options.comet_timeout();
+							// ts.tv_nsec = tp.tv_usec * 1000;
 
-							//							(*ch)->wait(); // TODO not usefull with show_all! Wait
-							//only if this channel empty?
+							// (*ch)->wait(); // TODO not usefull with
+							// 			   // show_all! Wait only if this channel empty?
 						}
 
 						struct json_object *json_ch = json_object_new_object();

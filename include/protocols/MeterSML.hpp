@@ -45,8 +45,8 @@ class MeterSML : public vz::protocol::Protocol {
 	MeterSML(const MeterSML &mtr);
 	virtual ~MeterSML();
 
-	//	MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" <<
-	//std::endl; return (*this); }
+	// MeterSML& operator=(const MeterSML&proto) {  std::cout<<"====>MeterSML - equal!" <<
+	// std::endl; return (*this); }
 
 	int open();
 	int close();
