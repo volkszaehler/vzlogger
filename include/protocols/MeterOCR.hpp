@@ -23,28 +23,27 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _MeterOCR_H_
 #define _MeterOCR_H_
 
-#include <stdio.h>
 #include <cfloat>
 #include <map>
 #include <protocols/Protocol.hpp>
+#include <stdio.h>
 
 #if OCR_TESSERACT_SUPPORT
-namespace tesseract
-{
-	class TessBaseAPI;
+namespace tesseract {
+class TessBaseAPI;
 }
 #endif
 
 typedef struct Pix PIX;
 typedef struct Pixa PIXA;
 
-class Reads{
-public:
-	Reads() : value(0.0), min_conf(DBL_MAX) {};
+class Reads {
+  public:
+	Reads() : value(0.0), min_conf(DBL_MAX){};
 	double value;
 	std::string conf_id;
 	double min_conf;
@@ -56,111 +55,127 @@ extern int debounce(int iprev, double fnew);
 
 class MeterOCR : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterOCR(const std::list<Option> &options);
 	virtual ~MeterOCR();
 
 	int open();
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
-  
-    void set_forced_file_changed() {_forced_file_changed = true; }
+
+	void set_forced_file_changed() { _forced_file_changed = true; }
+
   private:
-
-    friend class MeterOCR_Test;
-    bool isNotifiedFileChanged();
+	friend class MeterOCR_Test;
+	bool isNotifiedFileChanged();
 	bool autofixDetection(PIX *image, int &dX, int &dY, PIXA *debugPixa);
-	int calcImpulses( const double &value, const double &oldValue) const;
+	int calcImpulses(const double &value, const double &oldValue) const;
 
-  // class for the parameters:
-class BoundingBox
-{
-public:
-	BoundingBox (struct json_object *jb);
-	static bool compare(const BoundingBox &f, const BoundingBox &s);
-	std::string identifier;
-	std::string conf_id;
-	int scaler;
-	bool digit;
-	enum BoxType {BOX, CIRCLE};
-	BoxType boxType;
-	int x1, y1, x2, y2; // for box
-	int cx, cy, cr; // for circle
-static const int MIN_RADIUS = 10;
-	float offset; // for circle
-	bool autocenter;
-	int ac_dx, ac_dy;
+	// class for the parameters:
+	class BoundingBox {
+	  public:
+		BoundingBox(struct json_object *jb);
+		static bool compare(const BoundingBox &f, const BoundingBox &s);
+		std::string identifier;
+		std::string conf_id;
+		int scaler;
+		bool digit;
+		enum BoxType { BOX, CIRCLE };
+		BoxType boxType;
+		int x1, y1, x2, y2; // for box
+		int cx, cy, cr;     // for circle
+		static const int MIN_RADIUS = 10;
+		float offset; // for circle
+		bool autocenter;
+		int ac_dx, ac_dy;
+	};
 
-};
+	typedef std::list<BoundingBox> StdListBB;
 
-typedef std::list<BoundingBox> StdListBB;
+	class Recognizer {
+	  public:
+		Recognizer(const std::string &type, struct json_object *);
+		virtual bool recognize(PIX *image, int dX, int dY, ReadsMap &reads,
+							   const ReadsMap *old_reads, PIXA *debugPixa) = 0;
+		virtual ~Recognizer(){};
+		virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) = 0;
 
-class Recognizer
-{
-public:
-	Recognizer(const std::string &type, struct json_object *);
-	virtual bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads, PIXA *debugPixa ) = 0;
-	virtual ~Recognizer(){};
-	virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY)=0;
-protected:
-	void saveDebugImage(PIXA* debugPixa, PIX* img, const char *title);
-	std::string _type;
-	StdListBB _boxes;
-};
+	  protected:
+		void saveDebugImage(PIXA *debugPixa, PIX *img, const char *title);
+		std::string _type;
+		StdListBB _boxes;
+	};
 
 #if OCR_TESSERACT_SUPPORT
-class RecognizerTesseract : public Recognizer
-{
-public:
-	RecognizerTesseract(struct json_object *);
-	bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads, PIXA *debugPixa );
-	virtual ~RecognizerTesseract();
-	virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) { minX = _min_x1; minY = _min_y1; maxX = _max_x2; maxY = _max_y2; };
-protected:
-	bool initTesseract();
-	bool deinitTesseract();
-	
-	tesseract::TessBaseAPI *api;
-	double _gamma;
-	int _gamma_min;
-	int _gamma_max;
-	int _min_x1, _max_x2, _min_y1, _max_y2;
-	bool _all_digits;
+	class RecognizerTesseract : public Recognizer {
+	  public:
+		RecognizerTesseract(struct json_object *);
+		bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads,
+					   PIXA *debugPixa);
+		virtual ~RecognizerTesseract();
+		virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) {
+			minX = _min_x1;
+			minY = _min_y1;
+			maxX = _max_x2;
+			maxY = _max_y2;
+		};
 
-	
-};
+	  protected:
+		bool initTesseract();
+		bool deinitTesseract();
+
+		tesseract::TessBaseAPI *api;
+		double _gamma;
+		int _gamma_min;
+		int _gamma_max;
+		int _min_x1, _max_x2, _min_y1, _max_y2;
+		bool _all_digits;
+	};
 #endif
 
-class RecognizerNeedle : public Recognizer
-{
-public:
-	RecognizerNeedle(struct json_object *);
-	bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads, PIXA *debugPixa );
-	virtual ~RecognizerNeedle();
-	virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) { minX = _min_x; minY = _min_y; maxX = _max_x; maxY = _max_y; };
-protected:
-	friend class MeterOCR_Test;
-	int roundBasedOnSmallerDigits(const int curNr, const double &fnr, const double &smaller, int &conf) const;
-	int _min_x, _min_y, _max_x, _max_y;	
-	std::string _kernelColorString; // for kernelCreateFromString
-	static const unsigned int RED_COLOR_LIMIT = 0x80000000;
-};
+	class RecognizerNeedle : public Recognizer {
+	  public:
+		RecognizerNeedle(struct json_object *);
+		bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads,
+					   PIXA *debugPixa);
+		virtual ~RecognizerNeedle();
+		virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) {
+			minX = _min_x;
+			minY = _min_y;
+			maxX = _max_x;
+			maxY = _max_y;
+		};
 
-class RecognizerBinary : public Recognizer
-{
-public:
-	RecognizerBinary(struct json_object *);
-	bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads, PIXA *debugPixa );
-	virtual ~RecognizerBinary();
-	virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) { minX = _min_x; minY = _min_y; maxX = _max_x; maxY = _max_y; };
-protected:
-	friend class MeterOCR_Test;
-	int _min_x, _min_y, _max_x, _max_y;
-	std::string _kernelColorString; // for kernelCreateFromString
-	bool _last_state;
-	unsigned long _EDGE_HIGH;
-	unsigned long _EDGE_LOW;
-};
+	  protected:
+		friend class MeterOCR_Test;
+		int roundBasedOnSmallerDigits(const int curNr, const double &fnr, const double &smaller,
+									  int &conf) const;
+		int _min_x, _min_y, _max_x, _max_y;
+		std::string _kernelColorString; // for kernelCreateFromString
+		static const unsigned int RED_COLOR_LIMIT = 0x80000000;
+	};
+
+	class RecognizerBinary : public Recognizer {
+	  public:
+		RecognizerBinary(struct json_object *);
+		bool recognize(PIX *image, int dX, int dY, ReadsMap &reads, const ReadsMap *old_reads,
+					   PIXA *debugPixa);
+		virtual ~RecognizerBinary();
+		virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) {
+			minX = _min_x;
+			minY = _min_y;
+			maxX = _max_x;
+			maxY = _max_y;
+		};
+
+	  protected:
+		friend class MeterOCR_Test;
+		int _min_x, _min_y, _max_x, _max_y;
+		std::string _kernelColorString; // for kernelCreateFromString
+		bool _last_state;
+		unsigned long _EDGE_HIGH;
+		unsigned long _EDGE_LOW;
+	};
 
 	bool checkCapV4L2Dev();
 	bool initV4L2Dev(unsigned int w, unsigned int h);
@@ -183,10 +198,10 @@ protected:
 	int _v4l2_cap_size_y;
 	int _min_x, _min_y, _max_x, _max_y;
 	int _notify_fd;
-    bool _forced_file_changed;
+	bool _forced_file_changed;
 	int _impulses;
 	double _rotate;
-	std::list<Recognizer*> _recognizer;
+	std::list<Recognizer *> _recognizer;
 	int _autofix_range, _autofix_x, _autofix_y;
 	ReadsMap *_last_reads;
 	bool _generate_debug_image;

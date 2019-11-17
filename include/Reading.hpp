@@ -26,41 +26,41 @@
 #ifndef _READING_H_
 #define _READING_H_
 
-#include <string>
 #include <sstream>
+#include <string>
 
-#include <sys/time.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "Obis.hpp"
-#include <shared_ptr.hpp>
 #include <meter_protocol.hpp>
+#include <shared_ptr.hpp>
 
 #define MAX_IDENTIFIER_LEN 255
 
 /* Identifiers */
 class ReadingIdentifier {
-public:
+  public:
 	typedef vz::shared_ptr<ReadingIdentifier> Ptr;
 	virtual ~ReadingIdentifier(){};
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-	virtual bool operator==( ReadingIdentifier const &cmp) const;
-	bool compare( ReadingIdentifier const *lhs,  ReadingIdentifier const *rhs) const;
+	virtual bool operator==(ReadingIdentifier const &cmp) const;
+	bool compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const;
 
-	virtual const std::string toString()  = 0;
+	virtual const std::string toString() = 0;
 
-protected:
-	explicit ReadingIdentifier() {};
+  protected:
+	explicit ReadingIdentifier(){};
 
-private:
-//ReadingIdentifier (const ReadingIdentifier& original);
-//ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
+  private:
+	// ReadingIdentifier (const ReadingIdentifier& original);
+	// ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
 };
 
 class ObisIdentifier : public ReadingIdentifier {
 
-public:
+  public:
 	typedef vz::shared_ptr<ObisIdentifier> Ptr;
 
 	ObisIdentifier() {}
@@ -77,67 +77,68 @@ public:
 
 	const Obis &obis() const { return _obis; }
 
-private:
-	//ObisIdentifier (const ObisIdentifier& original);
-	//ObisIdentifier& operator= (const ObisIdentifier& rhs);
+  private:
+	// ObisIdentifier (const ObisIdentifier& original);
+	// ObisIdentifier& operator= (const ObisIdentifier& rhs);
 
-protected:
+  protected:
 	Obis _obis;
 };
 
 class StringIdentifier : public ReadingIdentifier {
-public:
+  public:
 	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
 
 	void parse(const char *buffer);
 	size_t unparse(char *buffer, size_t n);
 	bool operator==(StringIdentifier const &cmp) const;
-	const std::string toString()  {
+	const std::string toString() {
 		std::ostringstream oss;
 		oss << "StringIdentifier:";
 		return oss.str();
 	};
-protected:
+
+  protected:
 	std::string _string;
 };
 
-
 class ChannelIdentifier : public ReadingIdentifier {
 
-public:
+  public:
 	ChannelIdentifier() {}
 	ChannelIdentifier(int channel) : _channel(channel) {}
 
 	void parse(const char *string);
 	size_t unparse(char *buffer, size_t n);
 	bool operator==(ChannelIdentifier const &cmp) const;
-	const std::string toString()  {
+	const std::string toString() {
 		std::ostringstream oss;
 		oss << "ChannelIdentifier:";
 		return oss.str();
 	};
 
-protected:
+  protected:
 	int _channel;
 };
 
 class NilIdentifier : public ReadingIdentifier {
-public:
+  public:
 	NilIdentifier() {}
 	size_t unparse(char *buffer, size_t n);
 	bool operator==(NilIdentifier const &cmp) const;
-	const std::string toString()  {
+	const std::string toString() {
 		std::ostringstream oss;
 		oss << "NilIdentifier";
 		return oss.str();
 	};
-private:
+
+  private:
 };
 
 class Reading {
 
-public:
+  public:
 	typedef vz::shared_ptr<Reading> Ptr;
 	Reading();
 	Reading(ReadingIdentifier::Ptr pIndentifier);
@@ -146,35 +147,42 @@ public:
 	Reading &operator=(const Reading &orig);
 
 	bool deleted() const { return _deleted; }
-	void  mark_delete()        { _deleted = true; }
-	void  reset()              { _deleted = false; }
+	void mark_delete() { _deleted = true; }
+	void reset() { _deleted = false; }
 
 	void value(const double &v) { _value = v; }
-	double value() const  { return _value; }
+	double value() const { return _value; }
 
-	int64_t time_ms() const { return ((int64_t) _time.tv_sec)*1e3 + (_time.tv_usec / 1e3); };
-	const long &time_s() const { return _time.tv_sec; }; // return only the seconds (always rounding down)
+	int64_t time_ms() const { return ((int64_t)_time.tv_sec) * 1e3 + (_time.tv_usec / 1e3); };
+	const long &time_s() const {
+		return _time.tv_sec;
+	}; // return only the seconds (always rounding down)
 	void time() { gettimeofday(&_time, NULL); }
 	void time(struct timeval const &v) { _time = v; }
-	void time(struct timespec const &v) { _time.tv_sec = v.tv_sec; _time.tv_usec = v.tv_nsec / 1e3; }
+	void time(struct timespec const &v) {
+		_time.tv_sec = v.tv_sec;
+		_time.tv_usec = v.tv_nsec / 1e3;
+	}
 	// not needed yet: void time_from_ms( int64_t &ms );
-	void time_from_double( double const &d);
+	void time_from_double(double const &d);
 
-	void identifier(ReadingIdentifier *rid)  { _identifier.reset(rid); }
+	void identifier(ReadingIdentifier *rid) { _identifier.reset(rid); }
 	const ReadingIdentifier::Ptr identifier() { return _identifier; }
 
-/**
- * Print identifier to buffer for debugging/dump
- *
- * @return the amount of bytes used in buffer
- */
-    size_t unparse(/*meter_protocol_t protocol,*/ char *buffer, size_t n);
+	/**
+	 * Print identifier to buffer for debugging/dump
+	 *
+	 * @return the amount of bytes used in buffer
+	 */
+	size_t unparse(/*meter_protocol_t protocol,*/ char *buffer, size_t n);
 
-    bool operator==(const Reading &rhs) const {return (_deleted == rhs._deleted) && (_value == rhs._value) &&
-                (_time.tv_sec == rhs._time.tv_sec) && (_time.tv_usec == rhs._time.tv_usec);}
+	bool operator==(const Reading &rhs) const {
+		return (_deleted == rhs._deleted) && (_value == rhs._value) &&
+			   (_time.tv_sec == rhs._time.tv_sec) && (_time.tv_usec == rhs._time.tv_usec);
+	}
 
-protected:
-	bool   _deleted;
+  protected:
+	bool _deleted;
 	double _value;
 	struct timeval _time;
 	ReadingIdentifier::Ptr _identifier;
@@ -188,6 +196,5 @@ protected:
  * @return 0 on success, < 0 on error
  */
 ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string);
-
 
 #endif /* _READING_H_ */

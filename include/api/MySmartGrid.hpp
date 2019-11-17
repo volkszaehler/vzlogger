@@ -35,87 +35,87 @@
 
 #include <ApiIF.hpp>
 #include <Options.hpp>
+#include <Reading.hpp>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
-#include <Reading.hpp>
 
 namespace vz {
-	namespace api {
-		const short chn_type_device = 10;
-		const short chn_type_sensor = 20;
+namespace api {
+const short chn_type_device = 10;
+const short chn_type_sensor = 20;
 
-		class MySmartGrid : public ApiIF {
-		public:
-			typedef vz::shared_ptr<MySmartGrid> Ptr;
+class MySmartGrid : public ApiIF {
+  public:
+	typedef vz::shared_ptr<MySmartGrid> Ptr;
 
-			MySmartGrid(Channel::Ptr ch, std::list<Option> options);
-			~MySmartGrid();
-	
-			void send();
+	MySmartGrid(Channel::Ptr ch, std::list<Option> options);
+	~MySmartGrid();
 
-			void register_device();
-			
-			const std::string middleware() const { return _middleware; }
+	void send();
 
-		private:
-			void _send(const std::string &url, json_object *json_obj);
-			
-			/**
-			 * Parses JSON encoded exception and stores describtion in err
-			 */
-			void api_parse_exception(char *err, size_t n);
+	void register_device();
 
-			/**
-			 *  api configured as device
-			 */
-			json_object *_apiDevice(Buffer::Ptr buf);
-	
-			/**
-			 *  api configured as sensor
-			 */
-			json_object *_apiSensor(Buffer::Ptr buf);
+	const std::string middleware() const { return _middleware; }
 
-			json_object * _json_object_registration();
-			json_object * _json_object_heartbeat();
-			json_object * _json_object_event(Buffer::Ptr buf);
-			json_object * _json_object_sensor(const std::string &sensorName);
-			json_object * _json_object_measurements(Buffer::Ptr buf);
+  private:
+	void _send(const std::string &url, json_object *json_obj);
 
-			void _api_header();
+	/**
+	 * Parses JSON encoded exception and stores describtion in err
+	 */
+	void api_parse_exception(char *err, size_t n);
 
-			void hmac_sha1(char *digest, const unsigned char *data,size_t dataLen);
+	/**
+	 *  api configured as device
+	 */
+	json_object *_apiDevice(Buffer::Ptr buf);
 
-			CurlResponse *response()   { return _response.get(); }
+	/**
+	 *  api configured as sensor
+	 */
+	json_object *_apiSensor(Buffer::Ptr buf);
 
-			void convertUuid(const std::string uuidIn, std::string &uuidOut);
-			void convertUuid(const std::string uuid);
-			const char *uuid() const      { return _uuid.c_str(); }
-			const char *secretKey() const { return _secretKey.c_str(); }
-	
-			int interval() const    { return _interval; }
-			time_t first_ts() const { return _first_ts; }
+	json_object *_json_object_registration();
+	json_object *_json_object_heartbeat();
+	json_object *_json_object_event(Buffer::Ptr buf);
+	json_object *_json_object_sensor(const std::string &sensorName);
+	json_object *_json_object_measurements(Buffer::Ptr buf);
 
-		private:
-			std::string _middleware; /**< url to MySmartGrid Server */
-			std::string _uuid;       /**< unique sensor id */
-			std::string _deviceId;   /**< deviceid */
-			std::string _secretKey;  /**< secretkey for signing messages */
-			int   _interval;         /**<  time between 2 logmessages (sec.) */
-			short _channelType;      /**< Type of channel device or sensor */
-			unsigned int _scaler;    /**< scaling faktor for values */
-			
-			CurlIF _curlIF;
-			CurlResponse::Ptr _response;
-	
-			// Volatil
-			std::list<Reading> _values;
+	void _api_header();
 
-			time_t _first_ts;
-			long _first_counter;
-			long _last_counter;
-	
-		}; //class MySmartGrid
-	
-	} // namespace api
+	void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen);
+
+	CurlResponse *response() { return _response.get(); }
+
+	void convertUuid(const std::string uuidIn, std::string &uuidOut);
+	void convertUuid(const std::string uuid);
+	const char *uuid() const { return _uuid.c_str(); }
+	const char *secretKey() const { return _secretKey.c_str(); }
+
+	int interval() const { return _interval; }
+	time_t first_ts() const { return _first_ts; }
+
+  private:
+	std::string _middleware; /**< url to MySmartGrid Server */
+	std::string _uuid;       /**< unique sensor id */
+	std::string _deviceId;   /**< deviceid */
+	std::string _secretKey;  /**< secretkey for signing messages */
+	int _interval;           /**<  time between 2 logmessages (sec.) */
+	short _channelType;      /**< Type of channel device or sensor */
+	unsigned int _scaler;    /**< scaling faktor for values */
+
+	CurlIF _curlIF;
+	CurlResponse::Ptr _response;
+
+	// Volatil
+	std::list<Reading> _values;
+
+	time_t _first_ts;
+	long _first_counter;
+	long _last_counter;
+
+}; // class MySmartGrid
+
+} // namespace api
 } // namespace vz
 #endif /* _MySmartGrid_hpp_ */

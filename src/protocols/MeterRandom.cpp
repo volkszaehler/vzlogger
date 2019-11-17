@@ -25,19 +25,17 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
 #include <sys/time.h>
+#include <time.h>
 
-#include "protocols/MeterRandom.hpp"
 #include "Options.hpp"
+#include "protocols/MeterRandom.hpp"
 #include <VZException.hpp>
 
-MeterRandom::MeterRandom(std::list<Option> options)
-		: Protocol("random")
-{
+MeterRandom::MeterRandom(std::list<Option> options) : Protocol("random") {
 	OptionList optlist;
 
 	_min = 0;
@@ -49,7 +47,8 @@ MeterRandom::MeterRandom(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_min = 0;
 	} catch (vz::VZException &e) {
-		print(log_alert, "Min value has to be a floating point number (e.g. '40.0')", name().c_str());
+		print(log_alert, "Min value has to be a floating point number (e.g. '40.0')",
+			  name().c_str());
 		throw;
 	}
 
@@ -58,13 +57,13 @@ MeterRandom::MeterRandom(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		_max = 0;
 	} catch (vz::VZException &e) {
-		print(log_alert, "Max value has to be a floating point number (e.g. '40.0')", name().c_str());
+		print(log_alert, "Max value has to be a floating point number (e.g. '40.0')",
+			  name().c_str());
 		throw;
 	}
 }
 
-MeterRandom::~MeterRandom() {
-}
+MeterRandom::~MeterRandom() {}
 
 int MeterRandom::open() {
 
@@ -74,15 +73,13 @@ int MeterRandom::open() {
 	return SUCCESS; /* can't fail */
 }
 
-int MeterRandom::close() {
-
-	return SUCCESS;
-}
+int MeterRandom::close() { return SUCCESS; }
 
 ssize_t MeterRandom::read(std::vector<Reading> &rds, size_t n) {
-	if (rds.size() < 1) return -1;
+	if (rds.size() < 1)
+		return -1;
 
-	double step = ltqnorm((float) rand() / RAND_MAX);
+	double step = ltqnorm((float)rand() / RAND_MAX);
 	double newval = _last + step;
 
 	/* check boundaries */

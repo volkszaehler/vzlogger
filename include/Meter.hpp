@@ -28,20 +28,20 @@
 #include <list>
 #include <vector>
 
-#include <Reading.hpp>
-#include <Options.hpp>
 #include <Channel.hpp>
-#include <shared_ptr.hpp>
+#include <Options.hpp>
+#include <Reading.hpp>
 #include <meter_protocol.hpp>
 #include <protocols/Protocol.hpp>
+#include <shared_ptr.hpp>
 
 class Meter {
 
-public:
+  public:
 	typedef vz::shared_ptr<Meter> Ptr;
 
 	Meter(std::list<Option> options);
-//	Meter(const Meter *mtr);
+	//	Meter(const Meter *mtr);
 	virtual ~Meter();
 
 	virtual void open();
@@ -66,16 +66,16 @@ public:
 	int aggtime() const { return _aggtime; }
 	bool aggFixedInterval() const { return _aggFixedInterval; }
 
-private:
-	static int instances;                   // meter instance id (increasing counter)
+  private:
+	static int instances; // meter instance id (increasing counter)
 	// bool _thread_running;   				// flag if thread is started
 
-	int id;                                 // meter id
-	std::string _name;                      // meter name
-	bool _enable;                           // true if meter is disabled (default)
+	int id;            // meter id
+	std::string _name; // meter name
+	bool _enable;      // true if meter is disabled (default)
 
-	meter_protocol_t _protocol_id;          // meter protocol id
-	vz::protocol::Protocol::Ptr _protocol;  // meter protocol
+	meter_protocol_t _protocol_id;         // meter protocol id
+	vz::protocol::Protocol::Ptr _protocol; // meter protocol
 
 	ReadingIdentifier::Ptr _identifier;
 
@@ -85,23 +85,23 @@ private:
 	int _aggtime;
 	bool _aggFixedInterval;
 
-	std::vector<Channel> channels;          // channel for logging
+	std::vector<Channel> channels; // channel for logging
 };
 
 typedef struct {
 	const meter_protocol_t id;
-	const char *name;						// short identifier for protocol
-	const char *desc;						// more detailed description
-	const size_t max_readings;				// how many readings can be read with 1 call
-	const bool periodic;					// does this meter has be triggered periodically?
+	const char *name;          // short identifier for protocol
+	const char *desc;          // more detailed description
+	const size_t max_readings; // how many readings can be read with 1 call
+	const bool periodic;       // does this meter has be triggered periodically?
 } meter_details_t;
 
 /**
  * Get list of available meter types
  */
 
-int meter_lookup_protocol(const char* name, meter_protocol_t *protocol);
-const meter_details_t * meter_get_protocols();
-const meter_details_t * meter_get_details(meter_protocol_t protocol);
+int meter_lookup_protocol(const char *name, meter_protocol_t *protocol);
+const meter_details_t *meter_get_protocols();
+const meter_details_t *meter_get_details(meter_protocol_t protocol);
 
 #endif /* _METER_H_ */

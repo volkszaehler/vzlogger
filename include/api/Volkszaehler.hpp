@@ -33,78 +33,78 @@
 #ifndef _Volkszaehler_hpp_
 #define _Volkszaehler_hpp_
 
-#include <stdint.h>
 #include <curl/curl.h>
 #include <json-c/json.h>
+#include <stdint.h>
 
+#include "Buffer.hpp"
 #include <ApiIF.hpp>
 #include <Options.hpp>
-#include "Buffer.hpp"
 
 namespace vz {
-	namespace api {
+namespace api {
 
-		typedef struct {
-			char *data;
-			size_t size;
-		} CURLresponse;
+typedef struct {
+	char *data;
+	size_t size;
+} CURLresponse;
 
-		typedef struct {
-			CURL *curl;
-			struct curl_slist *headers;
-		} api_handle_t;
+typedef struct {
+	CURL *curl;
+	struct curl_slist *headers;
+} api_handle_t;
 
-		class Volkszaehler : public ApiIF {
-		public:
-			typedef vz::shared_ptr<ApiIF> Ptr;
+class Volkszaehler : public ApiIF {
+  public:
+	typedef vz::shared_ptr<ApiIF> Ptr;
 
-			Volkszaehler(Channel::Ptr ch, std::list<Option> options);
-			~Volkszaehler();
+	Volkszaehler(Channel::Ptr ch, std::list<Option> options);
+	~Volkszaehler();
 
-			void send();
+	void send();
 
-			void register_device();
+	void register_device();
 
-			const std::string middleware() const { return _middleware; }
+	const std::string middleware() const { return _middleware; }
 
-		private:
-			std::string _middleware;
-			unsigned int _curlTimeout;
-			std::string _url;
+  private:
+	std::string _middleware;
+	unsigned int _curlTimeout;
+	std::string _url;
 
-			/**
-			 * Create JSON object of tuples
-			 *
-			 * @param buf	the buffer our readings are stored in (required for mutex)
-			 * @return the json_object (has to be free'd)
-			 */
-			json_object * api_json_tuples(Buffer::Ptr buf);
+	/**
+	 * Create JSON object of tuples
+	 *
+	 * @param buf	the buffer our readings are stored in (required for mutex)
+	 * @return the json_object (has to be free'd)
+	 */
+	json_object *api_json_tuples(Buffer::Ptr buf);
 
-      /**
-       * Parses JSON encoded exception and stores describtion in err
-       */
-       	friend class Volkszaehler_Test;
-       	void api_parse_exception(CURLresponse response, char *err, size_t n);
+	/**
+	 * Parses JSON encoded exception and stores describtion in err
+	 */
+	friend class Volkszaehler_Test;
+	void api_parse_exception(CURLresponse response, char *err, size_t n);
 
+  private:
+	api_handle_t _api;
 
-		private:
-			api_handle_t _api;
+	// Volatil
+	std::list<Reading> _values;
+	int64_t _last_timestamp; /**< remember last timestamp */
+	// duplicate support:
+	Reading *_lastReadingSent;
 
-          // Volatil
-			std::list<Reading> _values;
-		  int64_t _last_timestamp; /**< remember last timestamp */
-          // duplicate support:
-          Reading *_lastReadingSent;
+}; // class Volkszaehler
 
-		}; //class Volkszaehler
+/**
+ * Reformat CURLs debugging output
+ */
+int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size,
+							   void *custom);
 
-    /**
-     * Reformat CURLs debugging output
-     */
-		int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
+size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 
-		size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
-
-	} // namespace api
+} // namespace api
 } // namespace vz
 #endif /* _Volkszaehler_hpp_ */

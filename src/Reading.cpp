@@ -25,54 +25,32 @@
 
 #include <iostream>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "VZException.hpp"
 #include "Reading.hpp"
+#include "VZException.hpp"
 
-Reading::Reading()
-		: _deleted(false)
-		, _value(0)
-{
+Reading::Reading() : _deleted(false), _value(0) {
 	_time.tv_sec = 0;
 	_time.tv_usec = 0;
 }
 
 Reading::Reading(ReadingIdentifier::Ptr pIndentifier)
-		: _deleted(false)
-		, _value(0)
-		, _identifier(pIndentifier)
-{
+	: _deleted(false), _value(0), _identifier(pIndentifier) {
 	_time.tv_sec = 0;
 	_time.tv_usec = 0;
 }
-Reading::Reading(
-	double pValue
-	, struct timeval pTime
-	, ReadingIdentifier::Ptr pIndentifier
-	)
-		: _deleted(false)
-		, _value(pValue)
-		, _time(pTime)
-		, _identifier(pIndentifier)
-{
-}
+Reading::Reading(double pValue, struct timeval pTime, ReadingIdentifier::Ptr pIndentifier)
+	: _deleted(false), _value(pValue), _time(pTime), _identifier(pIndentifier) {}
 
-Reading::Reading(
-	const Reading &orig
-	) :
-		_deleted(orig._deleted)
-		, _value(orig._value)
-		, _time(orig._time)
-		, _identifier (orig._identifier)
-{
-}
+Reading::Reading(const Reading &orig)
+	: _deleted(orig._deleted), _value(orig._value), _time(orig._time),
+	  _identifier(orig._identifier) {}
 
-Reading &Reading::operator=(const Reading &orig)
-{
+Reading &Reading::operator=(const Reading &orig) {
 	_deleted = orig._deleted;
 	_value = orig._value;
 	_time = orig._time;
@@ -80,36 +58,35 @@ Reading &Reading::operator=(const Reading &orig)
 	return *this;
 }
 
-void Reading::time_from_double(double const &ts)
-{
+void Reading::time_from_double(double const &ts) {
 	double integral;
 	double fraction = modf(ts, &integral);
 
-	_time.tv_usec = (long int) (fraction * 1e6);
-	_time.tv_sec = (long int) integral;
+	_time.tv_usec = (long int)(fraction * 1e6);
+	_time.tv_sec = (long int)integral;
 }
 
 ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *string) {
 	ReadingIdentifier::Ptr rid;
 
 	switch (protocol) {
-			case meter_protocol_d0:
-			case meter_protocol_sml:
-			case meter_protocol_oms:
-				rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis(string)));
-				break;
+	case meter_protocol_d0:
+	case meter_protocol_sml:
+	case meter_protocol_oms:
+		rid = ReadingIdentifier::Ptr(new ObisIdentifier(Obis(string)));
+		break;
 
-			case meter_protocol_fluksov2: {
-				char type[13];
-				int channel;
+	case meter_protocol_fluksov2: {
+		char type[13];
+		int channel;
 
-				int ret = sscanf(string, "sensor%u/%12s", &channel, type);
-				if (ret != 2) {
-					throw vz::VZException("meter-fluksov4 failed");
-				}
-				rid = ReadingIdentifier::Ptr(new ChannelIdentifier(channel+1));
+		int ret = sscanf(string, "sensor%u/%12s", &channel, type);
+		if (ret != 2) {
+			throw vz::VZException("meter-fluksov4 failed");
+		}
+		rid = ReadingIdentifier::Ptr(new ChannelIdentifier(channel + 1));
 
-				//id->channel = channel + 1; /* increment by 1 to distinguish between +0 and -0 */
+		// id->channel = channel + 1; /* increment by 1 to distinguish between +0 and -0 */
 
 #if 0
 				if (strcmp(type, "consumption") == 0) {
@@ -120,20 +97,20 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 					//return ERR;
 				}
 #endif
-				break;
-			}
+		break;
+	}
 
-			case meter_protocol_file:
-			case meter_protocol_exec:
-			case meter_protocol_s0:
-			case meter_protocol_ocr:
-			case meter_protocol_w1therm:
-				rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
-				break;
+	case meter_protocol_file:
+	case meter_protocol_exec:
+	case meter_protocol_s0:
+	case meter_protocol_ocr:
+	case meter_protocol_w1therm:
+		rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
+		break;
 
-			default: /* ignore other protocols which do not provide id's */
-				rid = ReadingIdentifier::Ptr(new NilIdentifier());
-				break;
+	default: /* ignore other protocols which do not provide id's */
+		rid = ReadingIdentifier::Ptr(new NilIdentifier());
+		break;
 	}
 
 	return rid;
@@ -141,9 +118,8 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 
 // reading_id_unparse
 size_t Reading::unparse(
-//	meter_protocol_t protocol,
-	char *buffer, size_t n
-	) {
+	//	meter_protocol_t protocol,
+	char *buffer, size_t n) {
 
 	return _identifier->unparse(buffer, n);
 
@@ -173,56 +149,57 @@ size_t Reading::unparse(
 #endif
 }
 
-bool ReadingIdentifier::operator==( ReadingIdentifier const &cmp) const {
+bool ReadingIdentifier::operator==(ReadingIdentifier const &cmp) const {
 	return this->compare(this, &cmp);
 }
 
-bool ReadingIdentifier::compare( ReadingIdentifier const *lhs,  ReadingIdentifier const *rhs) const {
-	if (ObisIdentifier const* lhsx = dynamic_cast<ObisIdentifier const*>(lhs)) {
-		if (ObisIdentifier const* rhsx = dynamic_cast<ObisIdentifier const*>(rhs)) {
+bool ReadingIdentifier::compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const {
+	if (ObisIdentifier const *lhsx = dynamic_cast<ObisIdentifier const *>(lhs)) {
+		if (ObisIdentifier const *rhsx = dynamic_cast<ObisIdentifier const *>(rhs)) {
 			return *lhsx == *rhsx;
-		} else { return false; }
-	} else
-		if (StringIdentifier const* lhsx = dynamic_cast<StringIdentifier const*>(lhs)) {
-			if (StringIdentifier const* rhsx = dynamic_cast<StringIdentifier const*>(rhs)) {
-				return *lhsx == *rhsx;
-			} else { return false; }
-		} else
-			if (ChannelIdentifier const* lhsx = dynamic_cast<ChannelIdentifier const*>(lhs)) {
-				if (ChannelIdentifier const* rhsx = dynamic_cast<ChannelIdentifier const*>(rhs)) {
-					return *lhsx == *rhsx;
-				} else { return false; }
-			}  else
-				if (NilIdentifier const* lhsx = dynamic_cast<NilIdentifier const*>(lhs)) {
-					if (NilIdentifier const* rhsx = dynamic_cast<NilIdentifier const*>(rhs)) {
-						(void)lhsx; (void) rhsx; // avoid compiler warning about unused vars.
-						return true;
-					} else { return false; }
-				}
+		} else {
+			return false;
+		}
+	} else if (StringIdentifier const *lhsx = dynamic_cast<StringIdentifier const *>(lhs)) {
+		if (StringIdentifier const *rhsx = dynamic_cast<StringIdentifier const *>(rhs)) {
+			return *lhsx == *rhsx;
+		} else {
+			return false;
+		}
+	} else if (ChannelIdentifier const *lhsx = dynamic_cast<ChannelIdentifier const *>(lhs)) {
+		if (ChannelIdentifier const *rhsx = dynamic_cast<ChannelIdentifier const *>(rhs)) {
+			return *lhsx == *rhsx;
+		} else {
+			return false;
+		}
+	} else if (NilIdentifier const *lhsx = dynamic_cast<NilIdentifier const *>(lhs)) {
+		if (NilIdentifier const *rhsx = dynamic_cast<NilIdentifier const *>(rhs)) {
+			(void)lhsx;
+			(void)rhsx; // avoid compiler warning about unused vars.
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	return false;
 }
 
-size_t ObisIdentifier::unparse(char *buffer, size_t n) {
-	return _obis.unparse(buffer, n);
-}
-bool ObisIdentifier::operator==(ObisIdentifier const &cmp) const {
-	return (_obis == cmp.obis());
-}
+size_t ObisIdentifier::unparse(char *buffer, size_t n) { return _obis.unparse(buffer, n); }
+bool ObisIdentifier::operator==(ObisIdentifier const &cmp) const { return (_obis == cmp.obis()); }
 
 /* StringIdentifier */
-bool StringIdentifier::operator==(StringIdentifier const &cmp) const{
+bool StringIdentifier::operator==(StringIdentifier const &cmp) const {
 	return (_string == cmp._string);
 }
 
-void StringIdentifier::parse(const char *string) {
-	_string = string;
-}
+void StringIdentifier::parse(const char *string) { _string = string; }
 
 size_t StringIdentifier::unparse(char *buffer, size_t n) {
 	if (_string != "") {
 		strncpy(buffer, _string.c_str(), n);
-		if (n>0) buffer[n-1] = '\0';
+		if (n > 0)
+			buffer[n - 1] = '\0';
 	} else {
 		strncpy(buffer, "", n);
 	}
@@ -248,18 +225,18 @@ void ChannelIdentifier::parse(const char *string) {
 
 	if (strcmp(type, "consumption") == 0) {
 		_channel *= -1;
-	}
-	else if (strcmp(type, "power") != 0) {
+	} else if (strcmp(type, "power") != 0) {
 		throw vz::VZException("Invalid channel type");
 	}
 }
 
 size_t ChannelIdentifier::unparse(char *buffer, size_t n) {
-	return snprintf(buffer, n, "sensor%u/%s", abs(_channel) - 1, (_channel > 0) ? "power" : "consumption");
+	return snprintf(buffer, n, "sensor%u/%s", abs(_channel) - 1,
+					(_channel > 0) ? "power" : "consumption");
 }
 
 size_t NilIdentifier::unparse(char *buffer, size_t n) {
 	return snprintf(buffer, n, "NilIdentifier");
-//buffer[0] = '\0';
-	//return strlen(buffer);
+	// buffer[0] = '\0';
+	// return strlen(buffer);
 }

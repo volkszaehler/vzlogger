@@ -35,21 +35,21 @@
 #include <Options.hpp>
 
 namespace vz {
-	namespace api {
+namespace api {
 
-		class Null : public ApiIF {
-		public:
-			typedef vz::shared_ptr<ApiIF> Ptr;
+class Null : public ApiIF {
+  public:
+	typedef vz::shared_ptr<ApiIF> Ptr;
 
-			Null(Channel::Ptr ch, std::list<Option> options);
-			~Null();
+	Null(Channel::Ptr ch, std::list<Option> options);
+	~Null();
 
-			void send();
+	void send();
 
-			void register_device();
+	void register_device();
 
-		}; // class Null
+}; // class Null
 
-	} // namespace api
+} // namespace api
 } // namespace vz
 #endif // _Null_hpp_

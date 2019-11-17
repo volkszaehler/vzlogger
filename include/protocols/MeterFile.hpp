@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _FILE_H_
 #define _FILE_H_
 
@@ -30,7 +30,7 @@
 
 class MeterFile : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterFile(std::list<Option> options);
 	virtual ~MeterFile();
 
@@ -40,7 +40,7 @@ public:
 
 	const char *path() { return _path.c_str(); }
 	const char *format() { return _format.c_str(); }
-  
+
   private:
 	std::string _path;
 	std::string _format;

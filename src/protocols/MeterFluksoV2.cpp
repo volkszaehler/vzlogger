@@ -23,21 +23,19 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "protocols/MeterFluksoV2.hpp"
 #include "Options.hpp"
+#include "protocols/MeterFluksoV2.hpp"
 #include <VZException.hpp>
 
 #define FLUKSOV2_DEFAULT_FIFO "/var/run/spid/delta/out"
 
-MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
-		: Protocol("fluksov2")
-{
+MeterFluksoV2::MeterFluksoV2(std::list<Option> options) : Protocol("fluksov2") {
 	OptionList optlist;
 
 	try {
@@ -52,7 +50,7 @@ MeterFluksoV2::MeterFluksoV2(std::list<Option> options)
 
 MeterFluksoV2::~MeterFluksoV2() {
 
-	//free((void *)_fifo);
+	// free((void *)_fifo);
 }
 
 int MeterFluksoV2::open() {
@@ -68,18 +66,14 @@ int MeterFluksoV2::open() {
 	return SUCCESS;
 }
 
-int MeterFluksoV2::close() {
-
-	return ::close(_fd); /* close fifo */
-}
-
+int MeterFluksoV2::close() { return ::close(_fd); /* close fifo */ }
 
 ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 
-	size_t i = 0;		/* number of readings */
-	ssize_t bytes = 0;	/* read_line() return code */
-	char line[64];		/* stores each line read */
-	char *cursor = line;	/* moving cursor for strsep() */
+	size_t i = 0;        /* number of readings */
+	ssize_t bytes = 0;   /* read_line() return code */
+	char line[64];       /* stores each line read */
+	char *cursor = line; /* moving cursor for strsep() */
 
 	do {
 		bytes = _read_line(_fd, line, 64); /* blocking read of a complete line */
@@ -89,14 +83,14 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 		}
 	} while (bytes == 0);
 
-
 	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
 	struct timeval time;
 	time.tv_sec = strtol(time_str, NULL, 10);
 	time.tv_usec = 0; /* no millisecond resolution available */
 
 	while (cursor) {
-		int channel = atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
+		int channel =
+			atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 
 		/* consumption - gets negative channel id as identifier! */
 		ReadingIdentifier *rid1(new ChannelIdentifier(-channel));
@@ -116,24 +110,22 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 	return i;
 }
 
-
-ssize_t MeterFluksoV2::_read_line(int fd, char  *buffer, size_t n) {
-	size_t i = 0;	/* iterator for buffer */
-	char c;		/* character buffer */
+ssize_t MeterFluksoV2::_read_line(int fd, char *buffer, size_t n) {
+	size_t i = 0; /* iterator for buffer */
+	char c;       /* character buffer */
 
 	while (i < n) {
 		ssize_t r = ::read(fd, &c, 1); /* read byte-per-byte, to identify a line break */
 
 		if (r == 1) { /* successful read */
 			switch (c) {
-					case '\n': /* line delimiter */
-						return i;
+			case '\n': /* line delimiter */
+				return i;
 
-					default: /* normal character */
-						buffer[i++] = c;
+			default: /* normal character */
+				buffer[i++] = c;
 			}
-		}
-		else if (r < 0) { /* an error occured, pass through to caller */
+		} else if (r < 0) { /* an error occured, pass through to caller */
 			return r;
 		}
 	}

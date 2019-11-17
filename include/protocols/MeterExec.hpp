@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #ifndef _EXEC_H_
 #define _EXEC_H_
 
@@ -30,7 +30,7 @@
 
 class MeterExec : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterExec(std::list<Option> options);
 	virtual ~MeterExec();
 

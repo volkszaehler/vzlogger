@@ -14,31 +14,28 @@
 #include <protocols/Protocol.hpp>
 
 class MeterOMS : public vz::protocol::Protocol {
-public:
-
+  public:
 	// abstract hw interface access for testability:
-	class OMSHWif
-	{
-	public:
-		OMSHWif() {};
-		virtual ~OMSHWif() {};
+	class OMSHWif {
+	  public:
+		OMSHWif(){};
+		virtual ~OMSHWif(){};
 
-		virtual ssize_t read(void *buf, size_t count)=0; // similar to ::read
-		virtual ssize_t write(const void *buf, size_t count)=0; // similar to ::write
+		virtual ssize_t read(void *buf, size_t count) = 0;        // similar to ::read
+		virtual ssize_t write(const void *buf, size_t count) = 0; // similar to ::write
 
 		virtual bool open() { return true; }
-		virtual bool close(){ return true; }
+		virtual bool close() { return true; }
 
 		virtual int send_frame(mbus_frame *frame);
 		virtual int receive_frame(mbus_frame *frame);
 	};
 
-	class OMSSerialHWif : public OMSHWif
-	{
-	public:
-		OMSSerialHWif( const std::string &dev, int baudrate );
+	class OMSSerialHWif : public OMSHWif {
+	  public:
+		OMSSerialHWif(const std::string &dev, int baudrate);
 		virtual ~OMSSerialHWif();
-		virtual ssize_t read(void *buf, size_t count) { return -1;}; // similar to ::read
+		virtual ssize_t read(void *buf, size_t count) { return -1; };        // similar to ::read
 		virtual ssize_t write(const void *buf, size_t count) { return -1; }; // similar to ::write
 
 		virtual bool open();
@@ -46,19 +43,21 @@ public:
 
 		virtual int send_frame(mbus_frame *frame);
 		virtual int receive_frame(mbus_frame *frame);
-	protected:
+
+	  protected:
 		mbus_handle *_handle;
 		int _baudrate;
 	};
 
-	MeterOMS (const std::list<Option> &options, OMSHWif *hwif=0);
+	MeterOMS(const std::list<Option> &options, OMSHWif *hwif = 0);
 	virtual ~MeterOMS();
 
 	virtual int open();
 	virtual int close();
 	virtual ssize_t read(std::vector<Reading> &rds, size_t n);
 	bool aes_decrypt(unsigned char *data, int data_len, unsigned char *key, unsigned char *iv);
-protected:
+
+  protected:
 	double get_record_value(mbus_data_record *) const;
 
 	OMSHWif *_hwif;

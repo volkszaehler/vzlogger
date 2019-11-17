@@ -30,7 +30,7 @@
 
 class MeterFluksoV2 : public vz::protocol::Protocol {
 
-public:
+  public:
 	MeterFluksoV2(std::list<Option> options);
 	virtual ~MeterFluksoV2();
 
@@ -39,13 +39,13 @@ public:
 	ssize_t read(std::vector<Reading> &rds, size_t n);
 
   private:
-	ssize_t _read_line(int fd, char  *buffer, size_t n);
-  
+	ssize_t _read_line(int fd, char *buffer, size_t n);
+
   private:
 	const char *_fifo;
-	int _fd;	/* file descriptor of fifo */
+	int _fd; /* file descriptor of fifo */
 
-	//const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
+	// const char *DEFAULT_FIFO = "/var/run/spid/delta/out";
 	// const char *_DEFAULT_FIFO;
 };
 

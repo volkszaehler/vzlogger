@@ -6,7 +6,7 @@
 //#include "list.h"
 #include "Buffer.hpp"
 
-//void test_list() {
+// void test_list() {
 //	List<int> li;
 //
 //	for (int i = 0; i < 10; i++) {
@@ -28,7 +28,6 @@
 #define NOMAIN
 #include "vzlogger.cpp"
 
-
 void test_buffer() {
 	Buffer buf;
 
@@ -39,18 +38,19 @@ void test_buffer() {
 
 	for (int i = 0; i < 10; i++) {
 		Reading rd;
-		rd.value(11*i);
+		rd.value(11 * i);
 		rd.time(tv);
-		rd.identifier( new StringIdentifier());
+		rd.identifier(new StringIdentifier());
 
 		buf.push(rd);
 	}
 
-	int p=0;
+	int p = 0;
 	for (Buffer::iterator it = buf.begin(); it != buf.end(); ++it) {
-		if (p > 3) it->mark_delete();
+		if (p > 3)
+			it->mark_delete();
 		p++;
-		printf("%d %f %d\n",p, it->value(),it->deleted());
+		printf("%d %f %d\n", p, it->value(), it->deleted());
 	}
 
 	buf.clean();
@@ -58,7 +58,6 @@ void test_buffer() {
 	for (Buffer::iterator it = buf.begin(); it != buf.end(); ++it) {
 		printf("%f\n", it->value());
 	}
-
 }
 
 int main() {

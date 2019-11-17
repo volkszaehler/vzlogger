@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
 #include "Obis.hpp"
 #include "VZException.hpp"
+#include "gtest/gtest.h"
 
 // dirty hack until we find a better solution:
 // (already in MeterD0.cpp) #include "../src/Obis.cpp"
@@ -37,13 +37,12 @@ TEST(Obis, Obis_strparsing) {
 	ASSERT_THROW(Obis o7("1-1:x:y"), vz::VZException);
 	Obis o8("power-l1");
 	ASSERT_EQ(Obis("1-0:21.7"), o8);
-
 }
 
 TEST(Obis, Obis_extStrParsing) {
 	Obis o1(0xff, 0xff, 0x0, 0x0, 0x0, 0xff);
 	Obis o2("0.0.0");
-	ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+	ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 	ASSERT_EQ(o1.toString(), o2.toString());
 
 	Obis o3(0xff, 0xff, 0x1, 0x2, 0x3, 0xff);
@@ -64,20 +63,20 @@ TEST(Obis, Obis_extStrParsing) {
 	ASSERT_THROW(Obis o10("1.8.0*F1"), vz::VZException);
 }
 
-TEST( Obis, Obis_parse_LuG_E350 ) // all known codes from Landis+Gyr E350
+TEST(Obis, Obis_parse_LuG_E350) // all known codes from Landis+Gyr E350
 {
 	// commented ones are covered by other tests
 	// 	F.F       00
 	{
 		Obis o1(0xff, 0xff, 0, 0, 0xff, 0xff);
 		Obis o2("0.0");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 	{
 		Obis o1(0xff, 0xff, 96, 1, 0, 0xff);
 		Obis o2("C.1.0");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 	//	C.1.1
@@ -90,19 +89,19 @@ TEST( Obis, Obis_parse_LuG_E350 ) // all known codes from Landis+Gyr E350
 	{
 		Obis o1(0xff, 0xff, 15, 8, 0, 0xff);
 		Obis o2("15.8.0");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 	{
 		Obis o1(0xff, 0xff, 16, 7, 0xff, 0xff);
 		Obis o2("16.7");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 	{
 		Obis o1(0xff, 0xff, 72, 7, 0xff, 0xff);
 		Obis o2("72.7");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 
@@ -115,12 +114,11 @@ TEST( Obis, Obis_parse_LuG_E350 ) // all known codes from Landis+Gyr E350
 	{
 		Obis o1(0xff, 0xff, 82, 8, 2, 0xff);
 		Obis o2("82.8.2");
-		ASSERT_EQ(o1, o2) << o1.toString( )<< o2.toString();
+		ASSERT_EQ(o1, o2) << o1.toString() << o2.toString();
 		ASSERT_EQ(o1.toString(), o2.toString());
 	}
 
 	//	82.8.1    0001
 	//	0.2.0     M23
 	//	C.5.0     0433
-
 }

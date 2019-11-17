@@ -25,7 +25,7 @@
  * You should have received a copy of the GNU General Public License
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
-// RW: added ack 
+// RW: added ack
 #ifndef _D0_H_
 #define _D0_H_
 
@@ -36,19 +36,21 @@
 #include <protocols/Protocol.hpp>
 
 class MeterD0 : public vz::protocol::Protocol {
-public:
+  public:
 	MeterD0(std::list<Option> &options);
 	virtual ~MeterD0();
 
 	int open();
 	int close();
 	ssize_t read(std::vector<Reading> &rds, size_t n);
-	virtual bool allowInterval() const { return _pull.size() ? true : false; } // only allow conf setting interval if pull is set (otherwise meter sends autom.)
+	virtual bool allowInterval() const {
+		return _pull.size() ? true : false;
+	} // only allow conf setting interval if pull is set (otherwise meter sends autom.)
 
 	const char *host() const { return _host.c_str(); }
 	const char *device() const { return _device.c_str(); }
 
-private:
+  private:
 	std::string _host;
 	std::string _device;
 	std::string _dump_file;
@@ -77,13 +79,13 @@ private:
 	 */
 	int _openSocket(const char *node, const char *service);
 	int _openDevice(struct termios *old_tio, speed_t baudrate);
-	
-	enum DUMP_MODE {NONE, CTRL, DUMP_IN, DUMP_OUT};
+
+	enum DUMP_MODE { NONE, CTRL, DUMP_IN, DUMP_OUT };
 	DUMP_MODE _old_mode;
 	int _dump_pos;
-	void dump_file(DUMP_MODE mode, const char* str);
-	void dump_file(DUMP_MODE mode, const char* buf, size_t len);
-	void dump_file(const char &c){ dump_file(DUMP_IN, &c, 1);};
+	void dump_file(DUMP_MODE mode, const char *str);
+	void dump_file(DUMP_MODE mode, const char *buf, size_t len);
+	void dump_file(const char &c) { dump_file(DUMP_IN, &c, 1); };
 };
 
 #endif /* _D0_H_ */

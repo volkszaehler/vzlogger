@@ -27,13 +27,13 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
-#include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 /* serial port */
 #include <fcntl.h>
@@ -47,19 +47,15 @@
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
-#include "protocols/MeterSML.hpp"
 #include "Obis.hpp"
 #include "Options.hpp"
+#include "protocols/MeterSML.hpp"
 #include <VZException.hpp>
 
 #define SML_BUFFER_LEN 8096
 
 MeterSML::MeterSML(std::list<Option> options)
-		: Protocol("sml")
-		, _host("")
-		, _device("")
-		, BUFFER_LEN(SML_BUFFER_LEN)
-{
+	: Protocol("sml"), _host(""), _device(""), BUFFER_LEN(SML_BUFFER_LEN) {
 	OptionList optlist;
 
 	/* connection */
@@ -70,9 +66,9 @@ MeterSML::MeterSML(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		try {
 			_device = optlist.lookup_string(options, "device");
-		} catch (vz::VZException &e){
+		} catch (vz::VZException &e) {
 			print(log_alert, "Missing device or host", name().c_str());
-			throw ;
+			throw;
 		}
 	} catch (vz::VZException &e) {
 		print(log_alert, "Missing device or host", name().c_str());
@@ -81,24 +77,23 @@ MeterSML::MeterSML(std::list<Option> options)
 	try {
 		std::string hex;
 		hex = optlist.lookup_string(options, "pullseq");
-		int n=hex.size();
+		int n = hex.size();
 		int i;
-		for (i=0;i<n;i=i+2) {
+		for (i = 0; i < n; i = i + 2) {
 			char hs[3];
-			strncpy(hs,hex.c_str()+i,2);
+			strncpy(hs, hex.c_str() + i, 2);
 			char hx[2];
-			hx[0]=strtol(hs,NULL,16);
-			_pull.append(hx,1);
+			hx[0] = strtol(hs, NULL, 16);
+			_pull.append(hx, 1);
 		}
-		print(log_debug,"pullseq len:%d found",name().c_str(),_pull.size());
+		print(log_debug, "pullseq len:%d found", name().c_str(), _pull.size());
 	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_pull = "";
 	}
 	try {
 		_use_local_time = optlist.lookup_bool(options, "use_local_time");
-	}
-	catch (vz::OptionNotFoundException &e) {
+	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_use_local_time = false;
 	}
@@ -109,27 +104,63 @@ MeterSML::MeterSML(std::list<Option> options)
 		baudrate = optlist.lookup_int(options, "baudrate");
 		/* find constant for termios structure */
 		switch (baudrate) {
-				case 50: _baudrate = B50; break;
-				case 75: _baudrate = B75; break;
-				case 110: _baudrate = B110; break;
-				case 134: _baudrate = B134; break;
-				case 150: _baudrate = B150; break;
-				case 200: _baudrate = B200; break;
-				case 300: _baudrate = B300; break;
-				case 600: _baudrate = B600; break;
-				case 1200: _baudrate = B1200; break;
-				case 1800: _baudrate = B1800; break;
-				case 2400: _baudrate = B2400; break;
-				case 4800: _baudrate = B4800; break;
-				case 9600: _baudrate = B9600; break;
-				case 19200: _baudrate = B19200; break;
-				case 38400: _baudrate = B38400; break;
-				case 57600: _baudrate = B57600; break;
-				case 115200: _baudrate = B115200; break;
-				case 230400: _baudrate = B230400; break;
-				default:
-					print(log_alert, "Invalid baudrate: %i", name().c_str(), baudrate);
-					throw vz::VZException("Invalid baudrate");
+		case 50:
+			_baudrate = B50;
+			break;
+		case 75:
+			_baudrate = B75;
+			break;
+		case 110:
+			_baudrate = B110;
+			break;
+		case 134:
+			_baudrate = B134;
+			break;
+		case 150:
+			_baudrate = B150;
+			break;
+		case 200:
+			_baudrate = B200;
+			break;
+		case 300:
+			_baudrate = B300;
+			break;
+		case 600:
+			_baudrate = B600;
+			break;
+		case 1200:
+			_baudrate = B1200;
+			break;
+		case 1800:
+			_baudrate = B1800;
+			break;
+		case 2400:
+			_baudrate = B2400;
+			break;
+		case 4800:
+			_baudrate = B4800;
+			break;
+		case 9600:
+			_baudrate = B9600;
+			break;
+		case 19200:
+			_baudrate = B19200;
+			break;
+		case 38400:
+			_baudrate = B38400;
+			break;
+		case 57600:
+			_baudrate = B57600;
+			break;
+		case 115200:
+			_baudrate = B115200;
+			break;
+		case 230400:
+			_baudrate = B230400;
+			break;
+		default:
+			print(log_alert, "Invalid baudrate: %i", name().c_str(), baudrate);
+			throw vz::VZException("Invalid baudrate");
 		}
 	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
@@ -139,18 +170,18 @@ MeterSML::MeterSML(std::list<Option> options)
 		throw;
 	}
 
-	_parity=parity_8n1;
+	_parity = parity_8n1;
 	try {
 		const char *parity = optlist.lookup_string(options, "parity");
 		/* find constant for termios structure */
-		if (strcasecmp(parity,"8n1")==0) {
-			_parity=parity_8n1;
-		} else if (strcasecmp(parity,"7n1")==0) {
-			_parity=parity_7n1;
-		} else if (strcasecmp(parity,"7e1")==0) {
-			_parity=parity_7e1;
-		} else if (strcasecmp(parity,"7o1")==0) {
-			_parity=parity_7o1;
+		if (strcasecmp(parity, "8n1") == 0) {
+			_parity = parity_8n1;
+		} else if (strcasecmp(parity, "7n1") == 0) {
+			_parity = parity_7n1;
+		} else if (strcasecmp(parity, "7e1") == 0) {
+			_parity = parity_7e1;
+		} else if (strcasecmp(parity, "7o1") == 0) {
+			_parity = parity_7o1;
 		} else {
 			throw vz::VZException("Invalid parity");
 		}
@@ -161,25 +192,17 @@ MeterSML::MeterSML(std::list<Option> options)
 		print(log_alert, "Failed to parse the parity", name().c_str());
 		throw;
 	}
-
 }
 
-MeterSML::MeterSML(const MeterSML &proto)
-		: Protocol(proto)
-		,_fd(ERR)
-		, BUFFER_LEN(SML_BUFFER_LEN)
-{
-}
+MeterSML::MeterSML(const MeterSML &proto) : Protocol(proto), _fd(ERR), BUFFER_LEN(SML_BUFFER_LEN) {}
 
-MeterSML::~MeterSML() {
-}
+MeterSML::~MeterSML() {}
 
 int MeterSML::open() {
 
 	if (_device != "") {
 		_fd = _openDevice(&_old_tio, _baudrate);
-	}
-	else if (_host != "") {
+	} else if (_host != "") {
 		char *addr = strdup(host());
 		const char *node = strsep(&addr, ":");
 		const char *service = strsep(&addr, ":");
@@ -231,8 +254,9 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	}
 
 	if (_pull.size()) {
-		int wlen = write(_fd,_pull.c_str(),_pull.size());
-		print(log_debug,"sending pullsequenz send (len:%d is:%d).", name().c_str(), _pull.size(), wlen);
+		int wlen = write(_fd, _pull.c_str(), _pull.size());
+		print(log_debug, "sending pullsequenz send (len:%d is:%d).", name().c_str(), _pull.size(),
+			  wlen);
 	}
 
 	/* wait until we receive a new datagram from the meter (blocking read) */
@@ -242,13 +266,14 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 		// try to reopen. see issue #362
 		if (reopen()) {
 			bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
-			print(log_info, "sml_transport_read returned len=%d after reopen", name().c_str(), bytes);
+			print(log_info, "sml_transport_read returned len=%d after reopen", name().c_str(),
+				  bytes);
 		}
 	}
 
 	if (bytes < 16) {
 		print(log_error, "short message from sml_transport_read len=%d", name().c_str(), bytes);
-		return(0);
+		return (0);
 	}
 
 	/* parse SML file & stripping escape sequences */
@@ -259,12 +284,13 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 		sml_message *message = file->messages[i];
 
 		if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE) {
-			body = (sml_get_list_response *) message->message_body->data;
+			body = (sml_get_list_response *)message->message_body->data;
 			entry = body->val_list;
 
 			/* iterating through linked list */
 			for (; m < n && entry != NULL;) {
-				if (_parse(entry, &rds[m])) m++;
+				if (_parse(entry, &rds[m]))
+					m++;
 				entry = entry->next;
 			}
 		}
@@ -277,24 +303,21 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 }
 
 bool MeterSML::_parse(sml_list *entry, Reading *rd) {
-	//int unit = (entry->unit) ? *entry->unit : 0;
+	// int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
 
-	Obis obis((unsigned char)entry->obj_name->str[0],
-						(unsigned char)entry->obj_name->str[1],
-						(unsigned char)entry->obj_name->str[2],
-						(unsigned char)entry->obj_name->str[3],
-						(unsigned char)entry->obj_name->str[4],
-						(unsigned char)entry->obj_name->str[5]);
-	if (obis.isValid() && entry->value != NULL){
+	Obis obis((unsigned char)entry->obj_name->str[0], (unsigned char)entry->obj_name->str[1],
+			  (unsigned char)entry->obj_name->str[2], (unsigned char)entry->obj_name->str[3],
+			  (unsigned char)entry->obj_name->str[4], (unsigned char)entry->obj_name->str[5]);
+	if (obis.isValid() && entry->value != NULL) {
 		// some entries might contain a string so check type and use proper rd->value(...) call
 		// if the entry does contain a string we can either throw it away or try to convert it to
 		// a value. We throw it away for now as its octet encoded and would need some conversion
-		if (entry->value->type == SML_TYPE_OCTET_STRING){
-			// ignore value for now (entry->value->data.bytes points to something like "3032323830383136"
-			// we don't even create a reading for this:
+		if (entry->value->type == SML_TYPE_OCTET_STRING) {
+			// ignore value for now (entry->value->data.bytes points to something like
+			// "3032323830383136" we don't even create a reading for this:
 			return false;
-		}else{
+		} else {
 			rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
 		}
 
@@ -306,8 +329,7 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 		if (!_use_local_time && entry->val_time) { /* use time from meter */
 			tv.tv_sec = *entry->val_time->data.timestamp;
 			tv.tv_usec = 0;
-		}
-		else {
+		} else {
 			gettimeofday(&tv, NULL); /* use local time */
 		}
 		rd->time(tv);
@@ -329,14 +351,15 @@ int MeterSML::_openSocket(const char *node, const char *service) {
 
 	int rc = getaddrinfo(node, service, NULL, &ais);
 	if (rc != 0) {
-		print(log_alert, "getaddrinfo(%s, %s): %s", name().c_str(), node, service, gai_strerror(rc));
+		print(log_alert, "getaddrinfo(%s, %s): %s", name().c_str(), node, service,
+			  gai_strerror(rc));
 		return ERR;
 	}
 
 	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
 	freeaddrinfo(ais);
 
-	res = connect(fd, (struct sockaddr *) &sin, sizeof(sin));
+	res = connect(fd, (struct sockaddr *)&sin, sizeof(sin));
 	if (res < 0) {
 		print(log_alert, "connect(%s, %s): %s", name().c_str(), node, service, strerror(errno));
 		return ERR;
@@ -362,7 +385,7 @@ int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	ioctl(fd, TIOCMSET, &bits);
 
 	/* get old configuration */
-	tcgetattr(fd, &tio) ;
+	tcgetattr(fd, &tio);
 
 	/* backup old configuration to restore it when closing the meter connection */
 	memcpy(old_tio, &tio, sizeof(struct termios));
@@ -371,31 +394,31 @@ int MeterSML::_openDevice(struct termios *old_tio, speed_t baudrate) {
 	tio.c_oflag &= ~OPOST;
 	tio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 
-	switch(_parity) {
+	switch (_parity) {
 	case parity_8n1:
-		tio.c_cflag &= ~ PARENB;
-		tio.c_cflag &= ~ CSTOPB;
-		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag &= ~PARENB;
+		tio.c_cflag &= ~CSTOPB;
+		tio.c_cflag &= ~CSIZE;
 		tio.c_cflag |= CS8;
 		break;
 	case parity_7n1:
-		tio.c_cflag &= ~ PARENB;
-		tio.c_cflag &= ~ CSTOPB;
-		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag &= ~PARENB;
+		tio.c_cflag &= ~CSTOPB;
+		tio.c_cflag &= ~CSIZE;
 		tio.c_cflag |= CS7;
 		break;
 	case parity_7e1:
-		tio.c_cflag |= ~ PARENB;
-		tio.c_cflag &= ~ PARODD;
-		tio.c_cflag &= ~ CSTOPB;
-		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= ~PARENB;
+		tio.c_cflag &= ~PARODD;
+		tio.c_cflag &= ~CSTOPB;
+		tio.c_cflag &= ~CSIZE;
 		tio.c_cflag |= CS7;
 		break;
 	case parity_7o1:
-		tio.c_cflag |= ~ PARENB;
-		tio.c_cflag |= ~ PARODD;
-		tio.c_cflag &= ~ CSTOPB;
-		tio.c_cflag &= ~ CSIZE;
+		tio.c_cflag |= ~PARENB;
+		tio.c_cflag |= ~PARODD;
+		tio.c_cflag &= ~CSTOPB;
+		tio.c_cflag &= ~CSIZE;
 		tio.c_cflag |= CS7;
 		break;
 	}

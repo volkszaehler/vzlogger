@@ -23,51 +23,49 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
-#include "meter.h"
 #include "api.h"
+#include "meter.h"
 #include "vzlogger.h"
 #include <VZException.hpp>
 
 extern Config_Options options;
 
-int curl_custom_debug_callback(
-	CURL *curl
-	, curl_infotype type
-	, char *data
-	, size_t size
-	, void *arg
-	) {
-	Channel *ch = static_cast<Channel *> (arg);
+int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *arg) {
+	Channel *ch = static_cast<Channel *>(arg);
 	char *end = strchr(data, '\n');
 
-	if (data == end) return 0; /* skip empty line */
+	if (data == end)
+		return 0; /* skip empty line */
 
 	switch (type) {
-			case CURLINFO_TEXT:
-			case CURLINFO_END:
-				if (end) *end = '\0'; /* terminate without \n */
-				print((log_level_t)(log_debug+5), "CURL: %.*s", ch->name(), (int) size, data);
-				break;
+	case CURLINFO_TEXT:
+	case CURLINFO_END:
+		if (end)
+			*end = '\0'; /* terminate without \n */
+		print((log_level_t)(log_debug + 5), "CURL: %.*s", ch->name(), (int)size, data);
+		break;
 
-			case CURLINFO_SSL_DATA_IN:
-			case CURLINFO_DATA_IN:
-				print((log_level_t)(log_debug+5), "CURL: Received %lu bytes", ch->name(), (unsigned long) size);
-				break;
+	case CURLINFO_SSL_DATA_IN:
+	case CURLINFO_DATA_IN:
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes", ch->name(),
+			  (unsigned long)size);
+		break;
 
-			case CURLINFO_SSL_DATA_OUT:
-			case CURLINFO_DATA_OUT:
-				print((log_level_t)(log_debug+5), "CURL: Sent %lu bytes.. ", ch->name(), (unsigned long) size);
-				break;
+	case CURLINFO_SSL_DATA_OUT:
+	case CURLINFO_DATA_OUT:
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes.. ", ch->name(),
+			  (unsigned long)size);
+		break;
 
-			case CURLINFO_HEADER_IN:
-			case CURLINFO_HEADER_OUT:
-				break;
+	case CURLINFO_HEADER_IN:
+	case CURLINFO_HEADER_OUT:
+		break;
 	}
 
 	return 0;
@@ -90,7 +88,7 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
 	return realsize;
 }
 
-json_object * api_json_tuples(Buffer::Ptr buf) {
+json_object *api_json_tuples(Buffer::Ptr buf) {
 
 	json_object *json_tuples = json_object_new_array();
 	Buffer::iterator it;
@@ -104,7 +102,7 @@ json_object * api_json_tuples(Buffer::Ptr buf) {
 
 		// TODO use long int of new json-c version
 		// API requires milliseconds => * 1000
-		double timestamp = it->tvtod() * 1000; 
+		double timestamp = it->tvtod() * 1000;
 		double value = it->value();
 		buf->unlock();
 
@@ -118,14 +116,15 @@ json_object * api_json_tuples(Buffer::Ptr buf) {
 }
 
 vz::Api::Api(Channel::Ptr ch)
-		: _ch(ch)
-						//    , _api(api)
+	: _ch(ch)
+//    , _api(api)
 {
 	char url[255], agent[255];
 
-/* prepare header, uuid & url */
-	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version());     /* build user agent */
-	sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid());                        /* build url */
+	/* prepare header, uuid & url */
+	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION,
+			curl_version());                                         /* build user agent */
+	sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid()); /* build url */
 
 	_api.headers = NULL;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
@@ -145,11 +144,9 @@ vz::Api::Api(Channel::Ptr ch)
 	curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity());
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGFUNCTION, curl_custom_debug_callback);
 	curl_easy_setopt(_api.curl, CURLOPT_DEBUGDATA, _ch.get());
-
 }
 
-vz::Api::~Api()
-{
+vz::Api::~Api() {
 	curl_easy_cleanup(_api.curl);
 	curl_slist_free_all(_api.headers);
 }
@@ -162,23 +159,19 @@ void api_parse_exception(CURLresponse response, char *err, size_t n) {
 	json_obj = json_tokener_parse_ex(json_tok, response.data, response.size);
 
 	if (json_tok->err == json_tokener_success) {
-    json_obj = json_object_object_get(json_obj, "exception");
+		json_obj = json_object_object_get(json_obj, "exception");
 
-    if (json_obj) {
-      snprintf(err, n, "%s: %s",
-               json_object_get_string(json_object_object_get(json_obj,  "type")),
-               json_object_get_string(json_object_object_get(json_obj,  "message"))
-               );
-    }
-    else {
-      strncpy(err, "missing exception", n);
-    }
-  }
-  else {
-    strncpy(err, json_tokener_error_desc(json_tok->err), n);
-  }
+		if (json_obj) {
+			snprintf(err, n, "%s: %s",
+					 json_object_get_string(json_object_object_get(json_obj, "type")),
+					 json_object_get_string(json_object_object_get(json_obj, "message")));
+		} else {
+			strncpy(err, "missing exception", n);
+		}
+	} else {
+		strncpy(err, json_tokener_error_desc(json_tok->err), n);
+	}
 
 	json_object_put(json_obj);
 	json_tokener_free(json_tok);
 }
-

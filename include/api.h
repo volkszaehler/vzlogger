@@ -26,9 +26,9 @@
 #ifndef _API_H_
 #define _API_H_
 
-#include <stddef.h>
 #include <curl/curl.h>
 #include <json-c/json.h>
+#include <stddef.h>
 #include <sys/time.h>
 
 #include "buffer.h"
@@ -45,24 +45,24 @@ typedef struct {
 } api_handle_t;
 
 namespace vz {
-  
-  class Api {
-    public:
-    Api(Channel::Ptr ch);
-    ~Api();
-    CURL *curl() { return _api.curl; }
-    
-    
-    private:
-    Channel::Ptr _ch;
-    api_handle_t _api;
-  };
+
+class Api {
+  public:
+	Api(Channel::Ptr ch);
+	~Api();
+	CURL *curl() { return _api.curl; }
+
+  private:
+	Channel::Ptr _ch;
+	api_handle_t _api;
+};
 } // namespace vz
 
 /**
  * Reformat CURLs debugging output
  */
-int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size, void *custom);
+int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size,
+							   void *custom);
 
 size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
 
@@ -74,8 +74,8 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
  * @param last	the last tuple of our linked list which should be encoded
  * @return the json_object (has to be free'd)
  */
-json_object * api_json_tuples(Buffer::Ptr buf);
-//Reading *first, Reading *last);
+json_object *api_json_tuples(Buffer::Ptr buf);
+// Reading *first, Reading *last);
 
 /**
  * Parses JSON encoded exception and stores describtion in err

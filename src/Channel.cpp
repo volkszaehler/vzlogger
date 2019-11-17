@@ -25,10 +25,10 @@
 
 #include <sstream>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #include "common.h"
 
@@ -36,40 +36,29 @@
 
 int Channel::instances = 0;
 
-Channel::Channel(
-	const std::list<Option> &pOptions,
-	const std::string apiProtocol,
-	const std::string uuid,
-	ReadingIdentifier::Ptr pIdentifier
-	)
-		: _thread_running(false)
-		, _options(pOptions)
-		, _buffer(new Buffer())
-		, _identifier(pIdentifier)
-		, _last(0)
-		, _uuid(uuid)
-		, _apiProtocol(apiProtocol)
-		, _duplicates (0)
-{
+Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtocol,
+				 const std::string uuid, ReadingIdentifier::Ptr pIdentifier)
+	: _thread_running(false), _options(pOptions), _buffer(new Buffer()), _identifier(pIdentifier),
+	  _last(0), _uuid(uuid), _apiProtocol(apiProtocol), _duplicates(0) {
 	id = instances++;
 
 	// set channel name
 	std::stringstream oss;
-	oss<<"chn"<< id;
-	_name=oss.str();
+	oss << "chn" << id;
+	_name = oss.str();
 
 	OptionList optlist;
 
 	try {
 		// aggmode
 		const char *aggmode_str = optlist.lookup_string(pOptions, "aggmode");
-		if (strcasecmp(aggmode_str, "max") == 0 ) {
+		if (strcasecmp(aggmode_str, "max") == 0) {
 			_buffer->set_aggmode(Buffer::MAX);
-		} else if (strcasecmp(aggmode_str, "avg") == 0 ) {
+		} else if (strcasecmp(aggmode_str, "avg") == 0) {
 			_buffer->set_aggmode(Buffer::AVG);
-		} else if (strcasecmp(aggmode_str, "sum") == 0 ) {
+		} else if (strcasecmp(aggmode_str, "sum") == 0) {
 			_buffer->set_aggmode(Buffer::SUM);
-		} else if (strcasecmp(aggmode_str, "none") == 0 ) {
+		} else if (strcasecmp(aggmode_str, "none") == 0) {
 			_buffer->set_aggmode(Buffer::NONE);
 		} else {
 			throw vz::VZException("Aggmode unknown.");
@@ -86,7 +75,8 @@ Channel::Channel(
 
 	try {
 		_duplicates = optlist.lookup_int(pOptions, "duplicates");
-		if (_duplicates < 0) throw vz::VZException("duplicates < 0 not allowed");
+		if (_duplicates < 0)
+			throw vz::VZException("duplicates < 0 not allowed");
 	} catch (vz::OptionNotFoundException &e) {
 		// using default value if not specified (from above)
 	} catch (vz::VZException &e) {
@@ -106,7 +96,6 @@ Channel::~Channel() {
 	// this hangs is the readingthread was pthread_cancelled during wait!
 	// pthread_cond_destroy(&condition);
 }
-
 
 /*
  * Local variables:

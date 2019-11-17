@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "Options.hpp"
 #include "protocols/MeterExec.hpp"
@@ -17,8 +17,8 @@
 int writes(int fd, const char *str);
 
 TEST(MeterExec, basic) {
-	char tempfilename[L_tmpnam+1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	char tempfilename[L_tmpnam + 1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
 
@@ -30,11 +30,11 @@ TEST(MeterExec, basic) {
 }
 
 TEST(MeterExec, format1) {
-	char tempfilename[L_tmpnam+1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	char tempfilename[L_tmpnam + 1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
-	options.push_back(Option("format", (char*)"$v"));
+	options.push_back(Option("format", (char *)"$v"));
 
 	MeterExec m(options);
 	// todo check here whether format is correctly parsed
@@ -42,11 +42,11 @@ TEST(MeterExec, format1) {
 }
 
 TEST(MeterExec, format2) {
-	char tempfilename[L_tmpnam+1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	char tempfilename[L_tmpnam + 1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
-	options.push_back(Option("format", (char*)"$i : $v"));
+	options.push_back(Option("format", (char *)"$i : $v"));
 
 	MeterExec m(options);
 	// todo check here whether format is correctly parsed
@@ -54,11 +54,11 @@ TEST(MeterExec, format2) {
 }
 
 TEST(MeterExec, format3) {
-	char tempfilename[L_tmpnam+1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char*)0);
+	char tempfilename[L_tmpnam + 1];
+	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
-	options.push_back(Option("format", (char*)"$t;$i : $v"));
+	options.push_back(Option("format", (char *)"$t;$i : $v"));
 
 	MeterExec m(options);
 	// todo check here whether format is correctly parsed

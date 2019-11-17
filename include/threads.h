@@ -28,7 +28,7 @@
 
 void logging_thread_cleanup(void *arg);
 
-void * logging_thread(void *arg);
-void * reading_thread(void *arg);
+void *logging_thread(void *arg);
+void *reading_thread(void *arg);
 
 #endif /* _THREADS_H_ */
