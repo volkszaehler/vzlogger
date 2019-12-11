@@ -12,7 +12,7 @@ IF (NOT WIN32)
   include(FindPkgConfig)
   if ( PKG_CONFIG_FOUND )
 
-     pkg_check_modules (PC_SML sml>=0.9)
+     pkg_check_modules (PC_SML sml>=1.0)
 
      set(SML_DEFINITIONS ${PC_SML_CFLAGS_OTHER})
   endif(PKG_CONFIG_FOUND)
