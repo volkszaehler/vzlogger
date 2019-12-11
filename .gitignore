@@ -1,11 +1,11 @@
 *~
 
 # Binaries
-/src/vzlogger
+src/vzlogger
 
 # directorys from install.sh
-/libs/*
-/build/*
+libs/
+build/
 
 # Compiled Object files
 *.slo
@@ -26,14 +26,16 @@ Makefile
 .deps
 
 # autoconf
-/autom4te.cache
-
-/config.status
-/config.log
-/config.h
+autom4te.cache
+config.status
+config.log
+config.h
 stamp-h1
-
-/libtool
+libtool
 
 # Debian packaging
-/debian/config.log
+debian/config.log
+
+# CMake temp files
+CMakeFiles/
+CMakeCache.txt
