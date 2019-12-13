@@ -43,8 +43,8 @@ Mailing List
 -------------
 If you have questions, contact the volkszaehler mailing lists:
 
-  * Users mailing list: volkszaehler@lists.volkszaehler.org
-  * Developers mailing list: volkszaehler-dev@lists.volkszaehler.org
+  * Users mailing list: https://demo.volkszaehler.org/mailman/listinfo/volkszaehler-users
+  * Developers mailing list: https://demo.volkszaehler.org/mailman/listinfo/volkszaehler-dev
 
 More information is available in our wiki:
 http://wiki.volkszaehler.org/software/controller/vzlogger
