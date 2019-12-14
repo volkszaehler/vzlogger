@@ -162,7 +162,7 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
 	}
 	va_end(args);
-	m_log_unlock();
+	m_log.unlock();
 }
 
 /**
