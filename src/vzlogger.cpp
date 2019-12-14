@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include <list>
+#include <mutex>
 #include <sstream>
 
 #include "Channel.hpp"
@@ -65,6 +66,7 @@ Config_Options options;    // global application options
 size_t gSkippedFailed = 0; // disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
+std::mutex m_log;			//mutex for central log function, to prevent competed write access from the threads.
 
 /**
  * Command line options
@@ -129,6 +131,7 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 		snprintf(prefix + pos, 8, "[%s]", (char *)id);
 	}
 
+	m_log.lock(); // safe write access for competed access from other thread
 	va_list args;
 	va_start(args, id);
 	/* print to stdout/stderr */
@@ -140,7 +143,9 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 		fprintf(stream, "\n");
 	}
 	va_end(args);
+	m_log.unlock(); // release mutex
 
+	m_log.lock(); // safe write access for competed access from other thread
 	va_start(args, id);
 	/* append to logfile */
 	if (options.logfd()) {
@@ -157,6 +162,7 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
 	}
 	va_end(args);
+	m_log_unlock();
 }
 
 /**
