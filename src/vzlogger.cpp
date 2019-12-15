@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include <list>
+#include <mutex>
 #include <sstream>
 
 #include "Channel.hpp"
@@ -65,6 +66,7 @@ Config_Options options;    // global application options
 size_t gSkippedFailed = 0; // disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
+std::mutex m_log;			//mutex for central log function, to prevent competed write access from the threads.
 
 /**
  * Command line options
@@ -135,26 +137,32 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 	if (getppid() != 1) { /* running as fork in background? */
 		FILE *stream = (level > 0) ? stdout : stderr;
 
+		m_log.lock(); // safe write access for competed access from other thread
 		fprintf(stream, "%-24s", prefix);
 		vfprintf(stream, format, args);
 		fprintf(stream, "\n");
+		m_log.unlock(); // release mutex
 	}
 	va_end(args);
 
 	va_start(args, id);
 	/* append to logfile */
 	if (options.logfd()) {
+		m_log.lock(); // safe write access for competed access from other thread
 		fprintf(options.logfd(), "%-24s", prefix);
 		vfprintf(options.logfd(), format, args);
 		fprintf(options.logfd(), "\n");
 		fflush(options.logfd());
+		m_log.unlock();
 	} else if (gStartLogBuf) {
 		char buf[500];
 		int bufUsed;
 		bufUsed = snprintf(buf, 500, "%-24s", prefix);
 		bufUsed += vsnprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, format, args);
 		bufUsed += snprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, "\n");
+		m_log.lock(); // safe write access for competed access from other thread
 		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
+		m_log.unlock();
 	}
 	va_end(args);
 }
