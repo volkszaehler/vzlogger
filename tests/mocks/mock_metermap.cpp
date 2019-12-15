@@ -67,7 +67,7 @@ TEST(mock_metermap, basic_open_close_not_enabled) {
 	EXPECT_FALSE(m.running());
 }
 
-TEST(mock_metermap, one_channel) {
+TEST(mock_metermap, DISABLED_one_channel) { // todo issue #400
 	std::list<Option> o;
 	o.push_back(Option("protocol", "random"));
 	mock_meter *mtr = new mock_meter(o);
@@ -111,7 +111,7 @@ size_t return_read(std::vector<Reading> &rds, size_t n) {
 	return 1;
 }
 
-TEST(mock_metermap, reading_in_proper_channel) {
+TEST(mock_metermap, DISABLED_reading_in_proper_channel) { // todo issue #400
 	std::list<Option> o;
 	o.push_back((Option("protocol", "random")));
 	mock_meter *mtr = new mock_meter(o);
