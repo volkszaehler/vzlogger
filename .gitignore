@@ -5,7 +5,7 @@ src/vzlogger
 
 # directorys from install.sh
 libs/
-build/
+build*/
 
 # Compiled Object files
 *.slo
