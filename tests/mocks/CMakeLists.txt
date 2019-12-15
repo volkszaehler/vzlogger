@@ -55,7 +55,7 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	${mock_mqtt_sources}
 )
 
-add_dependencies(mock_metermap googletest googlemock)
+add_dependencies(mock_metermap googlemock)
 
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
 
@@ -92,7 +92,7 @@ add_executable(mock_MeterW1therm
     ../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterW1therm googletest googlemock)
+add_dependencies(mock_MeterW1therm googlemock)
 
 target_link_libraries(mock_MeterW1therm
 		${GTEST_LIBS_DIR}/libgtest.a
@@ -115,7 +115,7 @@ add_executable(mock_MeterOMS
 	../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterOMS googletest googlemock)
+add_dependencies(mock_MeterOMS googlemock)
 
 target_link_libraries(mock_MeterOMS
 		${GTEST_LIBS_DIR}/libgtest.a
@@ -139,7 +139,7 @@ add_executable(mock_MeterS0
 	../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterS0 googletest googlemock)
+add_dependencies(mock_MeterS0 googlemock)
 
 target_link_libraries(mock_MeterS0
 		${GTEST_LIBS_DIR}/libgtest.a
