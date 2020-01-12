@@ -79,7 +79,13 @@ install:
     fi
 
 script:
-  - if [ -n "$BUILD" ]; then cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test; fi
+  - ls
+  - |
+    if [ -n "$BUILD" ]; then
+      mkdir -p build
+      cd build
+      cmake ../vzlogger -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test;
+    fi
   - |
     if [ -n "$FORMAT" ]; then
       clang-format -i include/**/*.{h,hpp} src/**/*.cpp tests/**/*.{cpp,hpp}
