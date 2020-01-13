@@ -66,7 +66,8 @@ Config_Options options;    // global application options
 size_t gSkippedFailed = 0; // disabled or failed meters
 
 std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
-std::mutex m_log;			//mutex for central log function, to prevent competed write access from the threads.
+std::mutex
+	m_log; // mutex for central log function, to prevent competed write access from the threads.
 
 /**
  * Command line options
