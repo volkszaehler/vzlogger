@@ -1,22 +1,20 @@
 sudo: required
-dist: xenial
+dist: bionic
 
 language: cpp
 
 addons:
   apt:
-    sources:
-    - llvm-toolchain-trusty
     packages:
-    - clang-format-9
+    - clang-format
 
 matrix:
   include:
-  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC8=1
     compiler: clang
-  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=1
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC8=1
     compiler: gcc
-  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC7=0
+  - env: BUILD=1 CTEST_OUTPUT_ON_FAILURE=1 USE_GCC8=0
     compiler: gcc
   - env: FORMAT=1
 
@@ -25,10 +23,12 @@ before_install:
 
 install:
   - |
+    export installDir=$(pwd);
+    echo "Install dir =$installDir";
     if [ -n "$BUILD" ]; then
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
       sudo apt-get update -qq
-      if [ "$USE_GCC7" = "1" ]; then sudo apt-get install -y -qq g++-7; export CXX="g++-7" CC="gcc-7"; fi
+      if [ "$USE_GCC8" = "1" ]; then sudo apt-get install -y -qq g++-8; export CXX="g++-8" CC="gcc-8"; fi
       $CXX --version
       # install json-c
       sudo apt-get install -y build-essential
@@ -55,14 +55,16 @@ install:
 
       # -- install leptonica
       sudo apt-get install -y libpng-dev libtiff-dev
-      wget http://www.leptonica.org/source/leptonica-1.71.tar.gz
-      tar -zxvf leptonica-1.71.tar.gz
-      cd leptonica-1.71
-      ./configure --disable-programs
-      make
-      sudo make install
-      sudo ldconfig
-      cd ..
+      wget https://github.com/DanBloomberg/leptonica/releases/download/1.79.0/leptonica-1.79.0.tar.gz
+      tar -zxvf leptonica-1.79.0.tar.gz
+      if [ -d leptonica-1.79.0 ]; then
+        cd leptonica-1.79.0
+        ./configure --disable-programs
+        make
+        sudo make install
+        sudo ldconfig
+        cd ..
+      fi
 
       # -- install libmbus
       git clone https://github.com/rscada/libmbus
@@ -79,9 +81,27 @@ install:
     fi
 
 script:
-  - if [ -n "$BUILD" ]; then cmake . -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test; fi
-  - |
-    if [ -n "$FORMAT" ]; then
-      clang-format -i include/**/*.{h,hpp} src/**/*.cpp tests/**/*.{cpp,hpp}
+  - pwd
+  - ls
+  - echo BUILD=$BUILD
+  - echo FORMAT=$FORMAT
+  - if [ -n "$BUILD" ]; then
+      echo "Executing build... in $installDir";
+      cd $installDir;
+      mkdir -p build;
+      cd build;
+      cmake .. -DMETEREXEC_ROOTACCESS=OFF -DENABLE_OCR=ON -DSML_HOME=/usr/local/src/libsml/sml && make && make test;
+    fi
+  - if [ -n "$FORMAT" ]; then
+      echo "Executing clang-format check... in $installDir";
+      cd $installDir;
+      pwd;
+      clang-format --version;
+      git --version;
+      find include src tests -type f -name '*.h' -o -name '*.cpp' -o -name '*.hpp' | xargs -I{} -P1 clang-format -i -style=file {} ;
+      echo "Git status after clang-format:";
+      git status --porcelain;
+      echo "Git diff:";
+      git diff;
       test -z "$(git status --porcelain)" || (git status; git diff; false)
     fi
