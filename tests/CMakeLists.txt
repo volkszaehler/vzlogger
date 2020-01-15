@@ -1,7 +1,7 @@
-include_directories(
-    ${GMOCK_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS}
-)
+#include_directories(
+#    ${GMOCK_INCLUDE_DIRS}
+#    ${GTEST_INCLUDE_DIRS}
+#)
 
 # all *.cpp files here will be used.
 file(GLOB test_sources *.cpp)
@@ -36,12 +36,9 @@ elseif( OMS_SUPPORT )
 endif( OMS_SUPPORT )
 
 add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources} ${MQTT_SOURCES})
-
-add_dependencies(vzlogger_unit_tests googlemock)
-
 target_link_libraries(vzlogger_unit_tests
-    ${GTEST_LIBS_DIR}/libgtest.a
-    ${GMOCK_LIBS_DIR}/libgmock.a
+    gtest
+    gmock
     ${JSON_LIBRARY}
     ${LIBUUID}
     dl

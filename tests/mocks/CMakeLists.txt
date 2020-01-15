@@ -55,8 +55,6 @@ add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Opt
 	${mock_mqtt_sources}
 )
 
-add_dependencies(mock_metermap googlemock)
-
 target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
 
 if (MICROHTTPD_FOUND)
@@ -64,10 +62,9 @@ if (MICROHTTPD_FOUND)
 endif(MICROHTTPD_FOUND)
 
 target_link_libraries(mock_metermap unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
-
 target_link_libraries(mock_metermap
-		${GTEST_LIBS_DIR}/libgtest.a
-		${GMOCK_LIBS_DIR}/libgmock.a
+        gtest
+        gmock
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
@@ -92,11 +89,9 @@ add_executable(mock_MeterW1therm
     ../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterW1therm googlemock)
-
 target_link_libraries(mock_MeterW1therm
-		${GTEST_LIBS_DIR}/libgtest.a
-		${GMOCK_LIBS_DIR}/libgmock.a
+        gtest
+        gmock
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
@@ -115,11 +110,9 @@ add_executable(mock_MeterOMS
 	../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterOMS googlemock)
-
 target_link_libraries(mock_MeterOMS
-		${GTEST_LIBS_DIR}/libgtest.a
-		${GMOCK_LIBS_DIR}/libgmock.a
+        gtest
+        gmock
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
@@ -139,11 +132,9 @@ add_executable(mock_MeterS0
 	../../src/Options.cpp
 )
 
-add_dependencies(mock_MeterS0 googlemock)
-
 target_link_libraries(mock_MeterS0
-		${GTEST_LIBS_DIR}/libgtest.a
-		${GMOCK_LIBS_DIR}/libgmock.a
+        gtest
+        gmock
 		pthread
 		${JSON_LIBRARY}
 		${LIBUUID}
