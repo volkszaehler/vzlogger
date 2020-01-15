@@ -45,7 +45,7 @@ class ReadingIdentifier {
 	virtual ~ReadingIdentifier(){};
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-	virtual bool operator==(ReadingIdentifier const &cmp) const;
+	bool operator==(ReadingIdentifier const &cmp) const;
 	bool compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const;
 
 	virtual const std::string toString() = 0;
