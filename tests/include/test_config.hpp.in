@@ -3,8 +3,8 @@
 
 #include<string>
 
-inline std::string pathTo(const char* file) {
-  return std::string("@CMAKE_SOURCE_DIR@/tests/meterOCR") + file;
+inline std::string ocrTestImage(const char* file) {
+  return std::string("@CMAKE_SOURCE_DIR@/tests/meterOCR/") + file;
 }
 
 inline constexpr const char* config_file() {
