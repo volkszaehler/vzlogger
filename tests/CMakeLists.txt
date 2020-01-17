@@ -15,23 +15,23 @@ list(APPEND test_sources
   ../src/protocols/MeterW1therm.cpp
 )
 
-if(NOT SML_FOUND)
+if(SML_FOUND AND ENABLE_SML)
+  list(APPEND test_sources ../src/protocols/MeterSML.cpp)
+else()
   list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
-endif(NOT SML_FOUND)
+endif()
 
-# remove meterOCR.cpp if not defined
-if(NOT OCR_SUPPORT)
+if(OCR_SUPPORT)
+  list(APPEND test_sources ../src/protocols/MeterOCR.cpp)
+else(OCR_SUPPORT)
   list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
 endif(OCR_SUPPORT)
 
-if( NOT OCR_TESSERACT_SUPPORT )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
-endif( NOT OCR_TESSERACT_SUPPORT)
-
-
-if( NOT ENABLE_SML )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
-endif( NOT ENABLE_SML)
+if(OCR_TESSERACT_SUPPORT)
+  list(APPEND test_sources ../src/protocols/MeterOCR.cpp)
+else(OCR_TESSERACT_SUPPORT)
+  list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
+endif(OCR_TESSERACT_SUPPORT)
 
 if(ENABLE_MQTT)
   list(APPEND test_sources ../src/mqtt.cpp)

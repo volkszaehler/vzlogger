@@ -1,20 +1,16 @@
 #include <stdio.h>
+#include <fcntl.h>
+#include <cmath>
 
-#include "Options.hpp"
-#include "protocols/MeterSML.hpp"
+#include <Options.hpp>
+#include <protocols/MeterSML.hpp>
 #include "gtest/gtest.h"
-
-// this is a dirty hack. we should think about better ways/rules to link against the
-// test objects.
-// e.g. single files in the tests directory that just include the real file. This way one
-// will avoid multiple includes of the same file in a different test case
-// (or linking against the real file from the CMakeLists.txt)
-
-#include "../src/protocols/MeterSML.cpp"
 
 int writes_hex(int fd, const char *str); // impl. in MeterD0.cpp
 
 TEST(MeterSML, EMH_basic) {
+  using std::fabs;
+
 	char tempfilename[L_tmpnam + 1];
 	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
 	std::list<Option> options;
@@ -143,7 +139,7 @@ TEST(MeterSML, EMH_basic) {
 	// check obis data:
 	ReadingIdentifier *p = rds[0].identifier().get();
 	double value = rds[0].value();
-	EXPECT_LE(fabs(14796777.1 - value), 0.1);
+  EXPECT_LE(fabs(14796777.1 - value), 0.1);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
 	ASSERT_NE((ObisIdentifier *)0, o);
 	EXPECT_TRUE(Obis(1, 0, 1, 8, 1, 255) == (o->obis()));
