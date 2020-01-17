@@ -3,17 +3,10 @@
  * Author: Matthias Behr, 2015
  */
 
-#include "json-c/json.h"
-#include "protocols/MeterOCR.hpp"
+#include <json-c/json.h>
+#include <protocols/MeterOCR.hpp>
+
 #include "gtest/gtest.h"
-
-// this is a dirty hack. we should think about better ways/rules to link against the
-// test objects.
-// e.g. single files in the tests directory that just include the real file. This way one
-// will avoid multiple includes of the same file in a different test case
-// (or linking against the real file from the CMakeLists.txt)
-
-#include "../src/protocols/MeterOCR.cpp"
 
 class MeterOCR_Test {
   public:
@@ -21,9 +14,13 @@ class MeterOCR_Test {
 	static void test_roundBasedOnSmallerDigits();
 };
 
+static inline std::string pathTo(const char* file) {
+  return std::string("@CMAKE_SOURCE_DIR@") + file;
+}
+
 TEST(MeterOCR, basic2_needle_autofix) {
 	std::list<Option> options;
-	options.push_back(Option("file", (char *)"tests/meterOCR/img2.png"));
+    options.emplace_back("file", pathTo("img2.png"));
 	options.push_back(
 		Option("rotate", -2.0)); // rotate by -2deg (counterclockwise)// 661, 539, 585/680
 	struct json_object *jso = json_tokener_parse("[{\"type\": \"needle\", \"boundingboxes\":[\
@@ -58,7 +55,7 @@ TEST(MeterOCR, basic2_needle_autofix) {
 
 TEST(MeterOCR, basic2_needle_autofix_impulses) {
 	std::list<Option> options;
-	options.push_back(Option("file", (char *)"tests/meterOCR/img2_blue.png"));
+    options.emplace_back("file", pathTo("img2_blue.png"));
 	options.push_back(Option("generate_debug_image", false));
 	options.push_back(Option("impulses", 10000));
 	options.push_back(
@@ -105,7 +102,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses) {
 
 TEST(MeterOCR, basic2_needle_autofix_impulses_debug_image) {
 	std::list<Option> options;
-	options.push_back(Option("file", (char *)"tests/meterOCR/img2.png"));
+  options.emplace_back("file", pathTo("img2.png"));
 	options.push_back(Option("generate_debug_image", true));
 	options.push_back(Option("impulses", 10000));
 	options.push_back(
@@ -149,7 +146,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses_debug_image) {
 
 void MeterOCR_Test::test_calcImpulses() {
 	std::list<Option> options;
-	options.push_back(Option("file", (char *)"tests/meterOCR/img2.png"));
+  options.emplace_back("file", pathTo("img2.png"));
 	options.push_back(Option("impulses", 10));
 	struct json_object *jso = json_tokener_parse("[{\"type\": \"needle\", \"boundingboxes\":[\
 	{\"identifier\": \"water cons\", \"scaler\":-1,\"digit\":false, \"circle\": {\"cx\": 689, \"cy\": 449, \"cr\": 24}},\

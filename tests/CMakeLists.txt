@@ -5,16 +5,25 @@
 
 # all *.cpp files here will be used.
 file(GLOB test_sources *.cpp)
+
+configure_file(ut_api_volkszaehler.cpp.in ut_api_volkszaehler.cpp)
+list(APPEND test_sources
+  ${CMAKE_CURRENT_BINARY_DIR}/ut_api_volkszaehler.cpp
+  ${CMAKE_SOURCE_DIR}/src/Buffer.cpp
+  ${CMAKE_SOURCE_DIR}/src/Channel.cpp
+  ${CMAKE_SOURCE_DIR}/src/Config_Options.cpp
+  ${CMAKE_SOURCE_DIR}/src/api/Volkszaehler.cpp
+)
+
 if(NOT SML_FOUND)
   list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif(NOT SML_FOUND)
 
 # remove meterOCR.cpp if not defined
-if(NOT OCR_SUPPORT)
-  list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
-else(NOT_OCR_SUPPORT)
-  file(COPY meterOCR DESTINATION .)
-endif(NOT OCR_SUPPORT)
+if(OCR_SUPPORT)
+  configure_file(ut_MeterOCR.cpp.in ut_MeterOCR.cpp)
+  list(APPEND test_sources ${CMAKE_CURRENT_BINARY_DIR}/ut_MeterOCR.cpp)
+endif(OCR_SUPPORT)
 
 if( NOT OCR_TESSERACT_SUPPORT )
 list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
@@ -102,5 +111,3 @@ ADD_CUSTOM_TARGET(test_coverage
 	)
 
 ENDIF() # NOT GCOV_PATH
-configure_file(../etc/vzlogger.conf etc/vzlogger.conf COPYONLY)
-
