@@ -1,7 +1,7 @@
 include_directories(BEFORE .)
 
 if(LOCAL_SUPPORT)
-  set(mock_local_srcs ../../src/local.cpp)
+    set(mock_local_srcs ../../src/local.cpp)
 endif(LOCAL_SUPPORT)
 
 if(ENABLE_MQTT)
@@ -10,20 +10,22 @@ else(ENABLE_MQTT)
 	set(mock_mqtt_sources "")
 endif(ENABLE_MQTT)
 
-
-if( OMS_SUPPORT )
-  set(mock_oms_sources ../../src/protocols/MeterOMS.cpp)
+if(OMS_SUPPORT)
+    set(mock_oms_sources ../../src/protocols/MeterOMS.cpp)
 elseif( OMS_SUPPORT )
-  set(mock_oms_sources "")
+    set(mock_oms_sources "")
 endif( OMS_SUPPORT )
 
 if(SML_FOUND)
-  set(mock_sml_sources ../../src/protocols/MeterSML.cpp)
+    set(mock_sml_sources ../../src/protocols/MeterSML.cpp)
 elseif(SML_FOUND)
-  set(mock_sml_sources "")
+    set(mock_sml_sources "")
 endif(SML_FOUND)
 
-add_executable(mock_metermap mock_metermap.cpp ../../src/Meter.cpp ../../src/Options.cpp
+add_executable(mock_metermap
+    mock_metermap.cpp
+    ../../src/Meter.cpp
+    ../../src/Options.cpp
 	../../src/protocols/MeterD0.cpp
 	../../src/protocols/MeterFile.cpp
 	../../src/protocols/MeterExec.cpp
@@ -63,15 +65,15 @@ endif(MICROHTTPD_FOUND)
 
 target_link_libraries(mock_metermap unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES})
 target_link_libraries(mock_metermap
-        gtest
-        gmock
-		pthread
-		${JSON_LIBRARY}
-		${LIBUUID}
-		dl
-	  )
+    gtest
+    gmock
+    pthread
+    ${JSON_LIBRARY}
+    ${LIBUUID}
+    dl
+)
 if(SML_FOUND)
-  target_link_libraries(mock_metermap ${SML_LIBRARY})
+    target_link_libraries(mock_metermap ${SML_LIBRARY})
 endif(SML_FOUND)
 if(MBUS_FOUND)
     target_link_libraries(mock_metermap ${MBUS_LIBRARY})
@@ -90,18 +92,18 @@ add_executable(mock_MeterW1therm
 )
 
 target_link_libraries(mock_MeterW1therm
-        gtest
-        gmock
-		pthread
-		${JSON_LIBRARY}
-		${LIBUUID}
-		dl
+    gtest
+    gmock
+    pthread
+    ${JSON_LIBRARY}
+    ${LIBUUID}
+    dl
 )
 
 add_test(mock_metermap mock_metermap)
 add_test(mock_MeterW1therm mock_MeterW1therm)
 
-if( OMS_SUPPORT )
+if(OMS_SUPPORT)
 add_executable(mock_MeterOMS
 	mock_MeterOMS.cpp
 	../../src/protocols/MeterOMS.cpp
@@ -111,18 +113,18 @@ add_executable(mock_MeterOMS
 )
 
 target_link_libraries(mock_MeterOMS
-        gtest
-        gmock
-		pthread
-		${JSON_LIBRARY}
-		${LIBUUID}
-		${MBUS_LIBRARY}
-		${OPENSSL_LIBRARIES}
-		dl
+    gtest
+    gmock
+    pthread
+    ${JSON_LIBRARY}
+    ${LIBUUID}
+    ${MBUS_LIBRARY}
+    ${OPENSSL_LIBRARIES}
+    dl
 )
 add_test(mock_MeterOMS mock_MeterOMS)
 
-endif( OMS_SUPPORT )
+endif(OMS_SUPPORT)
 
 add_executable(mock_MeterS0
 	mock_MeterS0.cpp
@@ -133,12 +135,12 @@ add_executable(mock_MeterS0
 )
 
 target_link_libraries(mock_MeterS0
-        gtest
-        gmock
-		pthread
-		${JSON_LIBRARY}
-		${LIBUUID}
-		dl
+    gtest
+    gmock
+    pthread
+    ${JSON_LIBRARY}
+    ${LIBUUID}
+    dl
 )
 add_test(mock_MeterS0 mock_MeterS0)
 
