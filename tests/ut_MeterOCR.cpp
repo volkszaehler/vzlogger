@@ -18,7 +18,7 @@ class MeterOCR_Test {
 
 TEST(MeterOCR, basic2_needle_autofix) {
 	std::list<Option> options;
-    options.emplace_back("file", ocrTestImage("img2.png"));
+	options.emplace_back("file", ocrTestImage("img2.png"));
 	options.push_back(
 		Option("rotate", -2.0)); // rotate by -2deg (counterclockwise)// 661, 539, 585/680
 	struct json_object *jso = json_tokener_parse("[{\"type\": \"needle\", \"boundingboxes\":[\
@@ -53,7 +53,7 @@ TEST(MeterOCR, basic2_needle_autofix) {
 
 TEST(MeterOCR, basic2_needle_autofix_impulses) {
 	std::list<Option> options;
-    options.emplace_back("file", ocrTestImage("img2_blue.png"));
+	options.emplace_back("file", ocrTestImage("img2_blue.png"));
 	options.push_back(Option("generate_debug_image", false));
 	options.push_back(Option("impulses", 10000));
 	options.push_back(
@@ -100,7 +100,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses) {
 
 TEST(MeterOCR, basic2_needle_autofix_impulses_debug_image) {
 	std::list<Option> options;
-  options.emplace_back("file", ocrTestImage("img2.png"));
+	options.emplace_back("file", ocrTestImage("img2.png"));
 	options.push_back(Option("generate_debug_image", true));
 	options.push_back(Option("impulses", 10000));
 	options.push_back(
@@ -144,7 +144,7 @@ TEST(MeterOCR, basic2_needle_autofix_impulses_debug_image) {
 
 void MeterOCR_Test::test_calcImpulses() {
 	std::list<Option> options;
-  options.emplace_back("file", ocrTestImage("img2.png"));
+	options.emplace_back("file", ocrTestImage("img2.png"));
 	options.push_back(Option("impulses", 10));
 	struct json_object *jso = json_tokener_parse("[{\"type\": \"needle\", \"boundingboxes\":[\
 	{\"identifier\": \"water cons\", \"scaler\":-1,\"digit\":false, \"circle\": {\"cx\": 689, \"cy\": 449, \"cr\": 24}},\

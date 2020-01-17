@@ -80,8 +80,8 @@ Option::Option(const Option &o) : _key(o._key), _type(o._type), _value_string(o.
 Option::Option(const char *pKey, const char *pValue)
 	: _key(pKey), _type(type_string), _value_string(pValue) {}
 
-Option::Option(const char *pKey, const std::string& pValue)
-  : _key(pKey), _type(type_string), _value_string(pValue) {}
+Option::Option(const char *pKey, const std::string &pValue)
+	: _key(pKey), _type(type_string), _value_string(pValue) {}
 
 Option::Option(const char *pKey, int pValue) : _key(pKey) {
 	value.integer = pValue;

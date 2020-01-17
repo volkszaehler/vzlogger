@@ -1,14 +1,13 @@
 #include <regex>
 
-#include <api/Volkszaehler.hpp>
 #include <Buffer.hpp>
 #include <Channel.hpp>
 #include <Config_Options.hpp>
+#include <api/Volkszaehler.hpp>
 // #include <api/CurlResponse.hpp>
 
-#include <test_config.hpp>
 #include "gtest/gtest.h"
-
+#include <test_config.hpp>
 
 // another dirty hack to test private functions from Volkszaehler:
 namespace vz {
