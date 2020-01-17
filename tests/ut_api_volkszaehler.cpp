@@ -6,6 +6,7 @@
 #include <Config_Options.hpp>
 // #include <api/CurlResponse.hpp>
 
+#include <test_config.hpp>
 #include "gtest/gtest.h"
 
 
@@ -26,7 +27,7 @@ class Volkszaehler_Test {
 } // namespace api
 } // namespace vz
 
-Config_Options options("@CMAKE_SOURCE_DIR@/etc/vzlogger.conf");
+Config_Options options(config_file());
 
 #ifdef HAVE_CPP_REGEX
 

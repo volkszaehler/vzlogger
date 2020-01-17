@@ -6,13 +6,13 @@
 # all *.cpp files here will be used.
 file(GLOB test_sources *.cpp)
 
-configure_file(ut_api_volkszaehler.cpp.in ut_api_volkszaehler.cpp)
 list(APPEND test_sources
-  ${CMAKE_CURRENT_BINARY_DIR}/ut_api_volkszaehler.cpp
-  ${CMAKE_SOURCE_DIR}/src/Buffer.cpp
-  ${CMAKE_SOURCE_DIR}/src/Channel.cpp
-  ${CMAKE_SOURCE_DIR}/src/Config_Options.cpp
-  ${CMAKE_SOURCE_DIR}/src/api/Volkszaehler.cpp
+  ../src/Buffer.cpp
+  ../src/Channel.cpp
+  ../src/Config_Options.cpp
+  ../src/api/Volkszaehler.cpp
+  ../src/CurlSessionProvider.cpp
+  ../src/protocols/MeterW1therm.cpp
 )
 
 if(NOT SML_FOUND)
@@ -20,9 +20,8 @@ if(NOT SML_FOUND)
 endif(NOT SML_FOUND)
 
 # remove meterOCR.cpp if not defined
-if(OCR_SUPPORT)
-  configure_file(ut_MeterOCR.cpp.in ut_MeterOCR.cpp)
-  list(APPEND test_sources ${CMAKE_CURRENT_BINARY_DIR}/ut_MeterOCR.cpp)
+if(NOT OCR_SUPPORT)
+  list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
 endif(OCR_SUPPORT)
 
 if( NOT OCR_TESSERACT_SUPPORT )
@@ -35,18 +34,20 @@ list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
 endif( NOT ENABLE_SML)
 
 if(ENABLE_MQTT)
-	set(MQTT_SOURCES ../src/mqtt.cpp)
-else(ENABLE_MQTT)
-	set(MQTT_SOURCES "")
+  list(APPEND test_sources ../src/mqtt.cpp)
 endif(ENABLE_MQTT)
 
 if( OMS_SUPPORT )
-  set(oms_sources ../src/protocols/MeterOMS.cpp)
-elseif( OMS_SUPPORT )
-  set(oms_sources "")
+  list(APPEND test_sources ../src/protocols/MeterOMS.cpp)
 endif( OMS_SUPPORT )
 
-add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources} ${MQTT_SOURCES})
+add_executable(vzlogger_unit_tests ${test_sources})
+
+configure_file(include/test_config.hpp.in include/test_config.hpp)
+target_include_directories(vzlogger_unit_tests
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+
 target_link_libraries(vzlogger_unit_tests
     gtest
     gmock
