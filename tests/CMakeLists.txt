@@ -10,9 +10,11 @@ if(NOT SML_FOUND)
 endif(NOT SML_FOUND)
 
 # remove meterOCR.cpp if not defined
-if( NOT OCR_SUPPORT )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
-endif( NOT OCR_SUPPORT)
+if(NOT OCR_SUPPORT)
+  list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
+else(NOT_OCR_SUPPORT)
+  file(COPY meterOCR DESTINATION .)
+endif(NOT OCR_SUPPORT)
 
 if( NOT OCR_TESSERACT_SUPPORT )
 list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
