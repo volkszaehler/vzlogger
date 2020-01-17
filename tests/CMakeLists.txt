@@ -100,4 +100,5 @@ ADD_CUSTOM_TARGET(test_coverage
 	)
 
 ENDIF() # NOT GCOV_PATH
+configure_file(../etc/vzlogger.conf etc/vzlogger.conf COPYONLY)
 
