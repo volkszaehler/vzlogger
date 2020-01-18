@@ -1,0 +1,15 @@
+#ifndef TEST_CONFIG_HPP
+#define TEST_CONFIG_HPP
+
+#include<string>
+
+inline std::string ocrTestImage(const char* file) {
+  return std::string("@CMAKE_SOURCE_DIR@/tests/meterOCR/") + file;
+}
+
+inline constexpr const char* config_file() {
+  return "@CMAKE_SOURCE_DIR@/etc/vzlogger.conf";
+}
+
+
+#endif // TEST_CONFIG_HPP

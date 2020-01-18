@@ -21,6 +21,7 @@ class Option {
 
 	Option(const char *key, struct json_object *jso);
 	Option(const char *key, const char *value);
+	Option(const char *pKey, const std::string &pValue);
 	Option(const char *key, int value);
 	Option(const char *key, double value);
 	Option(const char *key, bool value);

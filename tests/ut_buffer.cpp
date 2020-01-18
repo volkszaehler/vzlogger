@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-#include "Buffer.hpp"
+#include <Buffer.hpp>
 
 TEST(buffer, buffer_agg_avg) {
 	Buffer buf;

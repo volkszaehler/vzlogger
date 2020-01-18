@@ -1,106 +1,108 @@
-include_directories(
-    ${GMOCK_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS}
-)
 
 # all *.cpp files here will be used.
 file(GLOB test_sources *.cpp)
-if(NOT SML_FOUND)
-  list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
-endif(NOT SML_FOUND)
 
-# remove meterOCR.cpp if not defined
-if( NOT OCR_SUPPORT )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
-endif( NOT OCR_SUPPORT)
+# add required source files
+list(APPEND test_sources
+    ../src/Buffer.cpp
+    ../src/Channel.cpp
+    ../src/Config_Options.cpp
+    ../src/api/Volkszaehler.cpp
+    ../src/CurlSessionProvider.cpp
+    ../src/protocols/MeterW1therm.cpp
+)
 
-if( NOT OCR_TESSERACT_SUPPORT )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
-endif( NOT OCR_TESSERACT_SUPPORT)
-
-
-if( NOT ENABLE_SML )
-list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
-endif( NOT ENABLE_SML)
-
-if(ENABLE_MQTT)
-	set(MQTT_SOURCES ../src/mqtt.cpp)
-else(ENABLE_MQTT)
-	set(MQTT_SOURCES "")
-endif(ENABLE_MQTT)
-
-if( OMS_SUPPORT )
-  set(oms_sources ../src/protocols/MeterOMS.cpp)
-elseif( OMS_SUPPORT )
-  set(oms_sources "")
-endif( OMS_SUPPORT )
-
-add_executable(vzlogger_unit_tests ${test_sources} ../src/CurlSessionProvider.cpp ../src/protocols/MeterW1therm.cpp ${oms_sources} ${MQTT_SOURCES})
-
-add_dependencies(vzlogger_unit_tests googlemock)
-
-target_link_libraries(vzlogger_unit_tests
-    ${GTEST_LIBS_DIR}/libgtest.a
-    ${GMOCK_LIBS_DIR}/libgmock.a
+set(test_libraries
+    gtest
+    gmock
     ${JSON_LIBRARY}
     ${LIBUUID}
     dl
-    pthread)
-target_link_libraries(vzlogger_unit_tests ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} unistring ${GNUTLS_LIBRARIES} ${OCR_LIBRARIES})
+    pthread
+    ${CURL_STATIC_LIBRARIES}
+    ${CURL_LIBRARIES}
+    unistring
+    ${GNUTLS_LIBRARIES}
+    ${OCR_LIBRARIES}
+)
 
-if( OMS_SUPPORT )
-target_link_libraries(vzlogger_unit_tests ${MBUS_LIBRARY} ${OPENSSL_LIBRARIES})
-endif( OMS_SUPPORT )
+if(SML_FOUND AND ENABLE_SML)
+    list(APPEND test_sources ../src/protocols/MeterSML.cpp)
+    list(APPEND test_libraries ${SML_LIBRARY})
+else(SML_FOUND AND ENABLE_SML)
+    list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeterSML.cpp)
+endif(SML_FOUND AND ENABLE_SML)
 
-if(SML_FOUND)
-  target_link_libraries(vzlogger_unit_tests ${SML_LIBRARY})
-endif(SML_FOUND)
+if(OCR_SUPPORT)
+    list(APPEND test_sources ../src/protocols/MeterOCR.cpp)
+else(OCR_SUPPORT)
+    list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCR.cpp)
+endif(OCR_SUPPORT)
+
+if(OCR_TESSERACT_SUPPORT)
+    list(APPEND test_sources ../src/protocols/MeterOCR.cpp)
+else(OCR_TESSERACT_SUPPORT)
+    list(REMOVE_ITEM test_sources
+        ${CMAKE_CURRENT_SOURCE_DIR}/ut_MeterOCRTesseract.cpp)
+endif(OCR_TESSERACT_SUPPORT)
 
 if(ENABLE_MQTT)
-	target_link_libraries(vzlogger_unit_tests ${MQTT_LIBRARY})
+    list(APPEND test_sources ../src/mqtt.cpp)
+    list(APPEND test_libraries ${MQTT_LIBRARY})
 endif(ENABLE_MQTT)
+
+if(OMS_SUPPORT)
+    list(APPEND test_sources ../src/protocols/MeterOMS.cpp)
+    list(APPEND test_libraries ${MBUS_LIBRARY} ${OPENSSL_LIBRARIES})
+endif(OMS_SUPPORT)
+
+add_executable(vzlogger_unit_tests ${test_sources})
+target_link_libraries(vzlogger_unit_tests ${test_libraries})
+
+configure_file(include/test_config.hpp.in include/test_config.hpp)
+target_include_directories(vzlogger_unit_tests
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
 add_subdirectory(mocks)
 
-FIND_PROGRAM( GCOV_PATH gcov )
-FIND_PROGRAM( LCOV_PATH lcov )
-FIND_PROGRAM( GENHTML_PATH genhtml )
+FIND_PROGRAM(GCOV_PATH gcov)
+FIND_PROGRAM(LCOV_PATH lcov)
+FIND_PROGRAM(GENHTML_PATH genhtml)
 
 IF(GCOV_PATH AND LCOV_PATH AND GENHTML_PATH)
-	MESSAGE("gcov found. Adding target test_coverage ...")
+    MESSAGE("gcov found. Adding target test_coverage ...")
 
-# Setup target for coverage
-# we need to add each single test binary into the command list
+    # Setup target for coverage
+    # we need to add each single test binary into the command list
 
-ADD_CUSTOM_TARGET(test_coverage
+    ADD_CUSTOM_TARGET(test_coverage
+        # Cleanup lcov
+        ${LCOV_PATH} --rc lcov_branch_coverage=1 --directory . --zerocounters
+        # Run tests
+        COMMAND vzlogger_unit_tests
+        COMMAND mock_metermap
+        COMMAND mock_MeterW1therm
+        COMMAND mock_MeterOMS
+        COMMAND mock_MeterS0
 
-		# Cleanup lcov
-		${LCOV_PATH} --rc lcov_branch_coverage=1 --directory . --zerocounters
+        # Capturing lcov counters and generating report
+        COMMAND ${LCOV_PATH} --rc lcov_branch_coverage=1 --directory . --capture --output-file coverage.info
+        COMMAND ${LCOV_PATH} --rc lcov_branch_coverage=1 --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info.cleaned
+        COMMAND ${GENHTML_PATH} --rc lcov_branch_coverage=1 -o coverage coverage.info.cleaned
+        COMMAND ${CMAKE_COMMAND} -E remove coverage.info coverage.info.cleaned
 
-		# Run tests
-		COMMAND vzlogger_unit_tests
-		COMMAND mock_metermap
-		COMMAND mock_MeterW1therm
-		COMMAND mock_MeterOMS
-		COMMAND mock_MeterS0
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
+    )
 
-		# Capturing lcov counters and generating report
-		COMMAND ${LCOV_PATH} --rc lcov_branch_coverage=1 --directory . --capture --output-file coverage.info
-		COMMAND ${LCOV_PATH} --rc lcov_branch_coverage=1 --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info.cleaned
-		COMMAND ${GENHTML_PATH} --rc lcov_branch_coverage=1 -o coverage coverage.info.cleaned
-		COMMAND ${CMAKE_COMMAND} -E remove coverage.info coverage.info.cleaned
+    # Show info where to find the report
+    ADD_CUSTOM_COMMAND(TARGET test_coverage POST_BUILD
+        COMMAND ;
+        COMMENT "Open ./coverage/index.html in your browser to view the coverage report."
+    )
 
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
-	)
-
-	# Show info where to find the report
-	ADD_CUSTOM_COMMAND(TARGET test_coverage POST_BUILD
-		COMMAND ;
-		COMMENT "Open ./coverage/index.html in your browser to view the coverage report."
-	)
-
-ENDIF() # NOT GCOV_PATH
-
+ENDIF(GCOV_PATH AND LCOV_PATH AND GENHTML_PATH)

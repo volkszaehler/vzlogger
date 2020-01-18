@@ -1,13 +1,13 @@
-#include "api/Volkszaehler.hpp"
-#include "gtest/gtest.h"
 #include <regex>
-// #include "api/CurlResponse.hpp"
 
-// dirty hack until we find a better solution:
-#include "../src/Buffer.cpp"
-#include "../src/Channel.cpp"
-#include "../src/Config_Options.cpp"
-#include "../src/api/Volkszaehler.cpp"
+#include <Buffer.hpp>
+#include <Channel.hpp>
+#include <Config_Options.hpp>
+#include <api/Volkszaehler.hpp>
+// #include <api/CurlResponse.hpp>
+
+#include "gtest/gtest.h"
+#include <test_config.hpp>
 
 // another dirty hack to test private functions from Volkszaehler:
 namespace vz {
@@ -26,7 +26,7 @@ class Volkszaehler_Test {
 } // namespace api
 } // namespace vz
 
-Config_Options options("etc/vzlogger.conf");
+Config_Options options(config_file());
 
 #ifdef HAVE_CPP_REGEX
 
