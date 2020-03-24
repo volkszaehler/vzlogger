@@ -15,7 +15,7 @@ MqttClient *mqttClient = 0;
 volatile bool endMqttClientThread = false;
 
 // class impl.
-MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
+MqttClient::MqttClient(struct json_object *option) : _enabled(false), _protocol(MQTT_PROTOCOL_V31) {
 	print(log_finest, "MqttClient::MqttClient called", "mqtt");
 	if (option) {
 		assert(json_object_get_type(option) == json_type_object);
@@ -60,6 +60,16 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				}
 			} else if (strcmp(key, "timestamp") == 0 && local_type == json_type_boolean) {
 				_timestamp = json_object_get_boolean(local_value);
+			} else if (strcmp(key, "protocol") == 0 && local_type == json_type_string) {
+				std::string tmp = json_object_get_string(local_value);
+				if (tmp == "3.1") {
+					_protocol = MQTT_PROTOCOL_V31;
+				} else if (tmp == "3.1.1") {
+					_protocol = MQTT_PROTOCOL_V311;
+				} else {
+					print(log_alert, "Ignoring invalid MQTT protocol '%s'. Using default", NULL,
+						  tmp.c_str());
+				}
 			} else {
 				print(log_alert, "Ignoring invalid field or type: %s=%s", NULL, key,
 					  json_object_get_string(local_value));
@@ -136,6 +146,11 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				if (res != MOSQ_ERR_SUCCESS) {
 					print(log_warning, "mosquitto_tls_set returned error %d!", "mqtt", res);
 				}
+			}
+
+			res = mosquitto_opts_set(_mcs, MOSQ_OPT_PROTOCOL_VERSION, &_protocol);
+			if (res != MOSQ_ERR_SUCCESS) {
+				print(log_warning, "unable to set MQTT protocol version (error %d)", "mqtt", res);
 			}
 
 			mosquitto_connect_callback_set(_mcs, [](struct mosquitto *mosq, void *obj, int res) {
