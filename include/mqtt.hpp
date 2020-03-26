@@ -47,7 +47,6 @@ class MqttClient {
 	std::string _topic;
 	int _qos = 0;
 	bool _timestamp = false;
-	int _protocol;
 
 	bool _isConnected = false;
 
