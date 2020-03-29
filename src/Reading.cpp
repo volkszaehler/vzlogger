@@ -149,10 +149,6 @@ size_t Reading::unparse(
 #endif
 }
 
-bool ReadingIdentifier::operator==(ReadingIdentifier const &cmp) const {
-	return this->compare(this, &cmp);
-}
-
 bool ReadingIdentifier::compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const {
 	if (ObisIdentifier const *lhsx = dynamic_cast<ObisIdentifier const *>(lhs)) {
 		if (ObisIdentifier const *rhsx = dynamic_cast<ObisIdentifier const *>(rhs)) {
@@ -186,13 +182,8 @@ bool ReadingIdentifier::compare(ReadingIdentifier const *lhs, ReadingIdentifier 
 }
 
 size_t ObisIdentifier::unparse(char *buffer, size_t n) { return _obis.unparse(buffer, n); }
-bool ObisIdentifier::operator==(ObisIdentifier const &cmp) const { return (_obis == cmp.obis()); }
 
 /* StringIdentifier */
-bool StringIdentifier::operator==(StringIdentifier const &cmp) const {
-	return (_string == cmp._string);
-}
-
 void StringIdentifier::parse(const char *string) { _string = string; }
 
 size_t StringIdentifier::unparse(char *buffer, size_t n) {
@@ -208,10 +199,6 @@ size_t StringIdentifier::unparse(char *buffer, size_t n) {
 }
 
 /* ChannelIdentifier */
-bool ChannelIdentifier::operator==(ChannelIdentifier const &cmp) const {
-	return (_channel == cmp._channel);
-}
-
 void ChannelIdentifier::parse(const char *string) {
 	char type[13];
 	int channel;
