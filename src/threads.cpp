@@ -143,12 +143,17 @@ void *reading_thread(void *arg) {
 				if (mqttClient) {
 					Buffer::Ptr buf = (*ch)->buffer();
 					Buffer::iterator it;
+					buf->lock();
 					for (it = buf->begin(); it != buf->end(); ++it) {
-						Reading &r = *it;
-						if (!r.deleted()) {
-							mqttClient->publish((*ch), r, true);
+						if (&*it) { // this seems dirty. see issue #427
+									// the lock()/unlock() should avoid it.
+							Reading &r = *it;
+							if (!r.deleted()) {
+								mqttClient->publish((*ch), r, true);
+							}
 						}
 					}
+					buf->unlock();
 				}
 #endif
 
