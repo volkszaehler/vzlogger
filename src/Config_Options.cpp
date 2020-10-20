@@ -295,7 +295,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping) {
 	mapping.push_back(ch);
 }
 
-int config_validate_uuid(const char *uuid) {
+bool config_validate_uuid(const char *uuid) {
 	for (const char *p = uuid; *p; p++) {
 		switch (p - uuid) {
 		case 8:
@@ -303,16 +303,16 @@ int config_validate_uuid(const char *uuid) {
 		case 18:
 		case 23:
 			if (*p != '-')
-				return FALSE;
+				return false;
 			else
 				break;
 
 		default:
 			if (!isxdigit(*p))
-				return FALSE;
+				return false;
 			else
 				break;
 		}
 	}
-	return TRUE;
+	return true;
 }

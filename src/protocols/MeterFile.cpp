@@ -113,7 +113,7 @@ MeterFile::MeterFile(std::list<Option> options) : Protocol("file"), _notify_fd(-
 	try {
 		_rewind = optlist.lookup_bool(options, "rewind");
 	} catch (vz::OptionNotFoundException &e) {
-		_rewind = FALSE; // do not rewind file by default
+		_rewind = false; // do not rewind file by default
 	} catch (vz::InvalidTypeException &e) {
 		print(log_alert, "Invalid type for 'rewind'", name().c_str());
 		throw;

@@ -44,7 +44,7 @@ class MeterFile : public vz::protocol::Protocol {
   private:
 	std::string _path;
 	std::string _format;
-	int _rewind;
+	bool _rewind;
 	int _interval;
 
 	FILE *_fd;
