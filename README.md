@@ -17,22 +17,28 @@ If you're impatient you can quickstart using (Debian Wheezy):
     sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev \
       libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf libunistring-dev
 
-For Debian Jessie be sure to add:
+For Debian Jessie, be sure to add:
 
     sudo apt-get install libgcrypt20-dev
 
-For Debian Stretch use:
+For Debian Stretch, use:
 
     sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev \
       libgnutls28-dev libgcrypt20-dev libmicrohttpd-dev libsasl2-dev libunistring-dev
+      
+For Debian Buster, use:
 
-Ubuntu 18.04LTS (bionic) needs an additional:
+    sudo apt-get install git cmake autoconf libtool uuid-dev libcurl4-openssl-dev libssl-dev \
+      libgnutls28-dev libgcrypt20-dev libmicrohttpd-dev libsasl2-dev libunistring-dev build-essential
 
-   sudo apt-get install libunistring-dev
+Ubuntu 18.04 LTS (bionic) needs an additional:
+
+    sudo apt-get install libunistring-dev
 (this might be needed on others now as well as we link unconditionally against libunistring)
 
 If you want to use MQTT support:
-  sudo apt-get install libmosquitto-dev
+
+    sudo apt-get install libmosquitto-dev
 
 Then run the installation:
 
