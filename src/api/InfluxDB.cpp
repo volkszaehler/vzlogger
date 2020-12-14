@@ -215,7 +215,7 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 
 	// build request url
 	_url = _host;
-	if (!_organization.empty()){
+	if (!_organization.empty()) {
 		char *organization_urlencoded = curl_easy_escape(curlhelper, _organization.c_str(), 0);
 	    	if (!organization_urlencoded) {
 			throw vz::VZException("Cannot url-encode organization name.");
