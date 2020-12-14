@@ -56,6 +56,8 @@ class InfluxDB : public ApiIF {
   private:
 	std::string _host;
 	std::string _username;
+	std::string _token;
+	std::string _organization;
 	std::string _password;
 	std::string _database;
 	std::string _measurement_name;
