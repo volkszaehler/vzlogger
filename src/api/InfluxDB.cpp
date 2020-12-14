@@ -217,9 +217,9 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 	_url = _host;
 	if (!_organization.empty()) {
 		char *organization_urlencoded = curl_easy_escape(curlhelper, _organization.c_str(), 0);
-	    	if (!organization_urlencoded) {
+		if (!organization_urlencoded) {
 			throw vz::VZException("Cannot url-encode organization name.");
-	   	}
+		}
 		_url.append("/api/v2/write?org=");
 		_url.append(organization_urlencoded);
 		_url.append("&bucket=");
