@@ -318,7 +318,7 @@ void vz::api::InfluxDB::send() {
 			curl_easy_setopt(_api.curl, CURLOPT_USERNAME, _username.c_str());
 			curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
 		} else if (!_token.empty()) {
-			std::string authtoken="Authorization: Token " + _token;
+			std::string authtoken = "Authorization: Token " + _token;
 			list = curl_slist_append(list, authtoken.c_str());
 			curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, list);
 		}
