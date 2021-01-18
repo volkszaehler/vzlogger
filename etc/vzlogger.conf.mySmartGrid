@@ -14,7 +14,7 @@
         // examples for MySmartGrid as middleware
         {
             "enabled": false,               // disabled meters will be ignored
-            "skip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
+            "allowskip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
             "protocol": "d0",               // see 'vzlogger -h' for list of available protocols
             "device": "/dev/ttyUSB2",
             "interval": 2,
@@ -32,7 +32,7 @@
         },
         {
             "enabled": false,               // disabled meters will be ignored
-            "skip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
+            "allowskip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
             "protocol": "sml",              // see 'vzlogger -h' for list of available protocols
             "device": "/dev/ttyUSB0",
             "interval": 2,
@@ -50,7 +50,7 @@
         },
         {
             "enabled": false,               // disabled meters will be ignored
-            "skip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
+            "allowskip": false,                  // if enabled, errors when opening meter will lead to meter being ignored
             "protocol": "s0",               // see 'vzlogger -h' for list of available protocols
             "device": "/dev/ttyUSB1",
             "interval": 2,

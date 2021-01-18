@@ -14,7 +14,7 @@
         // example for OMS (M-Bus based) meter
 		{
 			"enabled" : true,
-			"skip": false,
+			"allowskip": false,
 			"protocol": "oms",
 			"device": "/dev/ttyUSB0",
 			"baudrate": 9600, // optional default 9600

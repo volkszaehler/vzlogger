@@ -14,7 +14,7 @@
 		// example for OCR (image processing/recognizing) "meter"
 		{
 			"enabled" : false,
-			"skip": true,
+			"allowskip": true,
 			"protocol": "ocr",
 			"impulses": 10000, // (optional, default 0 = no impules but abs. values), >0 impulses per unit
 //			"file": "/tmp/image.png", // name of file to be processed
