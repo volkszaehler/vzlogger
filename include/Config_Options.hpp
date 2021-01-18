@@ -133,8 +133,8 @@ class Config_Options {
  * Match against something like: '550e8400-e29b-11d4-a716-446655440000'
  *
  * @param const char *uuid a string containing to uuid
- * @return int non-zero on success
+ * @return bool true on success, false otherwise
  */
-int config_validate_uuid(const char *uuid);
+bool config_validate_uuid(const char *uuid);
 
 #endif /* _CONFIG_H_ */

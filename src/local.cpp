@@ -149,11 +149,11 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
 			const char *uuid = url + 1; // strip leading slash
 			const char *json_str;
-			int show_all = 0;
+			bool show_all = false;
 
 			if (strcmp(url, "/") == 0) {
 				if (options.channel_index()) {
-					show_all = TRUE;
+					show_all = true;
 				} else {
 					json_exception = json_object_new_object();
 
