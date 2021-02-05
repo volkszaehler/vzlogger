@@ -316,7 +316,7 @@ int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *da
 
 	case CURLINFO_SSL_DATA_OUT:
 	case CURLINFO_DATA_OUT:
-		data[size] = 0;
+		//data[size] = 0;
 		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes.. ", ch->name(),
 			  (unsigned long)size);
 		print((log_level_t)(log_debug + 5), "CURL: Sent '%s' bytes", ch->name(), data);
