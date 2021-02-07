@@ -307,12 +307,18 @@ int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *da
 		break;
 
 	case CURLINFO_SSL_DATA_IN:
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes SSL data", ch->name(),
+			  (unsigned long)size);
+		break;
 	case CURLINFO_DATA_IN:
 		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes: '%.*s'", ch->name(),
 			  (unsigned long)size, (int)size, data);
 		break;
 
 	case CURLINFO_SSL_DATA_OUT:
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes SSL data", ch->name(),
+			  (unsigned long)size);
+		break;
 	case CURLINFO_DATA_OUT:
 		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes: '%.*s'", ch->name(),
 			  (unsigned long)size, (int)size, data);
