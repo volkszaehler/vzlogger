@@ -294,8 +294,7 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size,
 										void *arg) {
 	Channel *ch = static_cast<Channel *>(arg);
-	char *end = strchr(data, '\n');
-	std::string buffer(data, size);
+	char *end = (char *) memchr(data, '\n', size);
 
 	if (data == end)
 		return 0; // skip empty line
@@ -303,21 +302,19 @@ int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *da
 	switch (type) {
 	case CURLINFO_TEXT:
 	case CURLINFO_END:
-		if (end)
-			*end = '\0'; // terminate without \n
-		print((log_level_t)(log_debug + 5), "CURL: %.*s", ch->name(), (int)size, buffer.c_str());
+		print((log_level_t)(log_debug + 5), "CURL: %.*s", ch->name(), (int)((end != null) ? (end - data) : size), data);
 		break;
 
 	case CURLINFO_SSL_DATA_IN:
 	case CURLINFO_DATA_IN:
-		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes: '%s'", ch->name(),
-			  (unsigned long)size, buffer.c_str());
+		print((log_level_t)(log_debug + 5), "CURL: Received %lu bytes: '%.*s'", ch->name(),
+			  (unsigned long)size, (int) size, buffer.c_str());
 		break;
 
 	case CURLINFO_SSL_DATA_OUT:
 	case CURLINFO_DATA_OUT:
-		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes: '%s'", ch->name(),
-			  (unsigned long)size, buffer.c_str());
+		print((log_level_t)(log_debug + 5), "CURL: Sent %lu bytes: '%.*s'", ch->name(),
+			  (unsigned long)size, (int) size, data);
 		break;
 
 	case CURLINFO_HEADER_IN:
