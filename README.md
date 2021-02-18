@@ -48,11 +48,11 @@ Then run the installation:
 Docker
 ------
 
-You can also build a docker container:
+You can also build a docker image:
 
      docker build -t vzlogger .
      
-This will pull the newest vzlogger from volkszaehler github and build the container.
+Note, that this will use the newest vzlogger from volkszaehler github (not your local clone).
 You can start it:
 
      docker run --restart=always -v /home/pi/projects/vzlogger-docker:/cfg \
