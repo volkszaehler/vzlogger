@@ -44,6 +44,23 @@ Then run the installation:
 
     wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
+    
+Docker
+------
+
+You can also build a docker image:
+
+     docker build -t vzlogger .
+     
+Note, that this will use the newest vzlogger from volkszaehler github (not your local clone).
+You can start it:
+
+     docker run --restart=always -v /home/pi/projects/vzlogger-docker:/cfg \
+     --device=/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A9U5N-if00-port0 \
+     --name vzlogger -d vzlogger
+
+where /home/pi/projects/vzlogger-docker is the path to the directory containing the vzlogger.conf file and
+/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A8U6N-if00-port0 is your device. You can pass several devices if you have them.
 
 Mailing List
 -------------
