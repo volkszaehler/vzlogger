@@ -75,6 +75,7 @@ std::mutex
 const struct option long_options[] = {
 	{"config", required_argument, 0, 'c'},
 	{"log", required_argument, 0, 'o'},
+	{"foreground", no_argument, 0, 'f'},
 #ifdef LOCAL_SUPPORT
 	{"httpd", no_argument, 0, 'l'},
 	{"httpd-port", required_argument, 0, 'p'},
@@ -92,6 +93,7 @@ const struct option long_options[] = {
 const char *long_options_descs[] = {
 	"configuration file",
 	"log file",
+	"run in foreground, do not daemonize",
 #ifdef LOCAL_SUPPORT
 	"activate local interface (tiny HTTPd which serves live readings)",
 	"TCP port for HTTPd",
@@ -304,6 +306,10 @@ int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 			break;
 #endif /* LOCAL_SUPPORT */
 
+		case 'f':
+			options->foreground(1);
+			break;
+
 		case 'c': /* config file */
 			options->config(optarg);
 			break;
@@ -421,7 +427,7 @@ int main(int argc, char *argv[]) {
 
 	print(log_debug, "local=%d", "main", options.local());
 
-	if (true) {
+	if (!options.foreground()) {
 		print(log_info, "Daemonize process...", (char *)0);
 		daemonize();
 	} else {

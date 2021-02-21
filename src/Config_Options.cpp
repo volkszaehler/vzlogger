@@ -41,13 +41,13 @@ static const char *option_type_str[] = {"null",   "boolean", "double", "int",
 
 Config_Options::Config_Options()
 	: _config("/etc/vzlogger.conf"), _log(""), _pds(0), _port(8080), _verbosity(0),
-	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false) {
+	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false) {
 	_logfd = NULL;
 }
 
 Config_Options::Config_Options(const std::string filename)
 	: _config(filename), _log(""), _pds(0), _port(8080), _verbosity(0), _comet_timeout(30),
-	  _buffer_length(-1), _retry_pause(15), _local(false) {
+	  _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false) {
 	_logfd = NULL;
 }
 
@@ -118,7 +118,8 @@ void Config_Options::config_parse(MapContainer &mappings) {
 
 			if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
 				if (!json_object_get_boolean(value)) {
-					throw vz::VZException("\"daemon\" option is not supported anymore.");
+					throw vz::VZException("\"daemon\" option is not supported anymore, "
+										  "you probably want to use -f instead.");
 				}
 			} else if (strcmp(key, "log") == 0 && type == json_type_string) {
 				_log = json_object_get_string(value);

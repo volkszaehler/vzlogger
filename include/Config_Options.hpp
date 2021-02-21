@@ -75,6 +75,7 @@ class Config_Options {
 
 	bool channel_index() const { return _channel_index; }
 	bool local() const { return _local; }
+	bool foreground() const { return _foreground; }
 
 	bool doRegistration() const { return _doRegistration; }
 
@@ -89,6 +90,8 @@ class Config_Options {
 	}
 
 	void local(const bool v) { _local = v; }
+
+	void foreground(const bool v) { _foreground = v; }
 
 	void doRegistration(const bool v) { _doRegistration = v; }
 
@@ -109,6 +112,7 @@ class Config_Options {
 	// boolean bitfields, padding at the end of struct
 	int _channel_index : 1;  // give a index of all available channels via local interface
 	int _local : 1;          // enable local interface
+	int _foreground : 1;	 // don't daemonize
 	int _doRegistration : 1; // FIXME
 };
 
