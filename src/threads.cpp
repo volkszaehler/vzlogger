@@ -56,7 +56,6 @@ void *reading_thread(void *arg) {
 	;
 
 	print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
-	print(log_debug, "Config.daemon: %d", mtr->name(), options.daemon());
 	print(log_debug, "Config.local: %d", mtr->name(), options.local());
 
 	try {
@@ -171,7 +170,7 @@ void *reading_thread(void *arg) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
 				sleep(mtr->interval());
 			}
-		} while (options.daemon() || options.local());
+		} while (true);
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
@@ -191,8 +190,7 @@ void *logging_thread(void *arg) { // is started by Channel::start and stopped vi
 		static_cast<Channel *>(arg);           // retrieve the pointer to the corresponding Channel
 	Channel::Ptr ch = __this->_this_forthread; // And get a copy of the Channel owner's shared_ptr
 											   // for passing it on.
-	print(log_debug, "Start logging thread for %s-api. Running as daemon: %s", ch->name(),
-		  ch->apiProtocol().c_str(), options.daemon() ? "yes" : "no");
+	print(log_debug, "Start logging thread for %s-api.", ch->name(), ch->apiProtocol().c_str());
 
 	// create configured api interfaces
 	// NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
@@ -228,7 +226,7 @@ void *logging_thread(void *arg) { // is started by Channel::start and stopped vi
 
 	} while (true); // endless?!
 
-	print(log_debug, "Stopped logging. (daemon=%d)", ch->name(), options.daemon());
+	print(log_debug, "Stopped logging.", ch->name());
 	pthread_exit(0);
 
 	return NULL;

@@ -41,14 +41,13 @@ static const char *option_type_str[] = {"null",   "boolean", "double", "int",
 
 Config_Options::Config_Options()
 	: _config("/etc/vzlogger.conf"), _log(""), _pds(0), _port(8080), _verbosity(0),
-	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _daemon(false), _local(false),
-	  _logging(true) {
+	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false) {
 	_logfd = NULL;
 }
 
 Config_Options::Config_Options(const std::string filename)
 	: _config(filename), _log(""), _pds(0), _port(8080), _verbosity(0), _comet_timeout(30),
-	  _buffer_length(-1), _retry_pause(15), _daemon(false), _local(false), _logging(true) {
+	  _buffer_length(-1), _retry_pause(15), _local(false) {
 	_logfd = NULL;
 }
 
@@ -118,7 +117,9 @@ void Config_Options::config_parse(MapContainer &mappings) {
 			enum json_type type = json_object_get_type(value);
 
 			if (strcmp(key, "daemon") == 0 && type == json_type_boolean) {
-				_daemon = json_object_get_boolean(value);
+				if (!json_object_get_boolean(value)) {
+					throw vz::VZException("\"daemon\" option is not supported anymore.");
+				}
 			} else if (strcmp(key, "log") == 0 && type == json_type_string) {
 				_log = json_object_get_string(value);
 			} else if (strcmp(key, "retry") == 0 && type == json_type_int) {

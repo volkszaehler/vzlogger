@@ -1036,12 +1036,6 @@
             "type": "integer",
             "description": "How long to sleep between failed requests, in seconds"
         },
-        "daemon": {
-            "id": "/daemon",
-            "type": "boolean",
-            "default": "true",
-            "description": "Enable daemon mode"
-        },
         "verbosity": {
             "id": "/verbosity",
             "type": "integer",
@@ -1066,7 +1060,6 @@
         }
     },
     "required": [
-        "daemon",
         "log"
     ]
 }

@@ -74,9 +74,7 @@ class Config_Options {
 	int retry_pause() const { return _retry_pause; }
 
 	bool channel_index() const { return _channel_index; }
-	bool daemon() const { return _daemon; }
 	bool local() const { return _local; }
-	bool logging() const { return _logging; }
 
 	bool doRegistration() const { return _doRegistration; }
 
@@ -90,9 +88,7 @@ class Config_Options {
 			_verbosity = v;
 	}
 
-	void daemon(const bool v) { _daemon = v; }
 	void local(const bool v) { _local = v; }
-	void logging(const bool v) { _logging = v; }
 
 	void doRegistration(const bool v) { _doRegistration = v; }
 
@@ -112,9 +108,7 @@ class Config_Options {
 
 	// boolean bitfields, padding at the end of struct
 	int _channel_index : 1;  // give a index of all available channels via local interface
-	int _daemon : 1;         // run in background
 	int _local : 1;          // enable local interface
-	int _logging : 1;        // start logging threads, depends on local & daemon
 	int _doRegistration : 1; // FIXME
 };
 

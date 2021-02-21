@@ -75,7 +75,6 @@ std::mutex
 const struct option long_options[] = {
 	{"config", required_argument, 0, 'c'},
 	{"log", required_argument, 0, 'o'},
-	{"daemon", required_argument, 0, 'd'},
 #ifdef LOCAL_SUPPORT
 	{"httpd", no_argument, 0, 'l'},
 	{"httpd-port", required_argument, 0, 'p'},
@@ -93,7 +92,6 @@ const struct option long_options[] = {
 const char *long_options_descs[] = {
 	"configuration file",
 	"log file",
-	"run in background",
 #ifdef LOCAL_SUPPORT
 	"activate local interface (tiny HTTPd which serves live readings)",
 	"TCP port for HTTPd",
@@ -285,7 +283,7 @@ void signalHandlerQuit(int sig) {
  */
 int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 	while (1) {
-		int c = getopt_long(argc, argv, "c:o:p:lhrVdfv:", long_options, NULL);
+		int c = getopt_long(argc, argv, "c:o:p:lhrVfv:", long_options, NULL);
 
 		/* detect the end of the options. */
 		if (c == -1)
@@ -305,10 +303,6 @@ int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 			options->port(atoi(optarg));
 			break;
 #endif /* LOCAL_SUPPORT */
-
-		case 'd':
-			options->daemon(1);
-			break;
 
 		case 'c': /* config file */
 			options->config(optarg);
@@ -425,9 +419,9 @@ int main(int argc, char *argv[]) {
 		return (0);
 	}
 
-	print(log_debug, "daemon=%d, local=%d", "main", options.daemon(), options.local());
+	print(log_debug, "local=%d", "main", options.local());
 
-	if (options.daemon()) {
+	if (true) {
 		print(log_info, "Daemonize process...", (char *)0);
 		daemonize();
 	} else {
