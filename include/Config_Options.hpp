@@ -115,7 +115,7 @@ class Config_Options {
 	int _daemon : 1;         // run in background
 	int _local : 1;          // enable local interface
 	int _logging : 1;        // start logging threads, depends on local & daemon
-	int _doRegistration : 1; // start logging threads, depends on local & daemon
+	int _doRegistration : 1; // FIXME
 };
 
 /**
