@@ -76,6 +76,7 @@ const struct option long_options[] = {
 	{"config", required_argument, 0, 'c'},
 	{"log", required_argument, 0, 'o'},
 	{"foreground", no_argument, 0, 'f'},
+	{"singleshot", no_argument, 0, '1'},
 #ifdef LOCAL_SUPPORT
 	{"httpd", no_argument, 0, 'l'},
 	{"httpd-port", required_argument, 0, 'p'},
@@ -94,6 +95,7 @@ const char *long_options_descs[] = {
 	"configuration file",
 	"log file",
 	"run in foreground, do not daemonize",
+	"get only one reading for each meter, then exit",
 #ifdef LOCAL_SUPPORT
 	"activate local interface (tiny HTTPd which serves live readings)",
 	"TCP port for HTTPd",
@@ -285,7 +287,7 @@ void signalHandlerQuit(int sig) {
  */
 int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 	while (1) {
-		int c = getopt_long(argc, argv, "c:o:p:lhrVfv:", long_options, NULL);
+		int c = getopt_long(argc, argv, "c:o:p:lhrVf1v:", long_options, NULL);
 
 		/* detect the end of the options. */
 		if (c == -1)
@@ -308,6 +310,10 @@ int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 
 		case 'f':
 			options->foreground(1);
+			break;
+
+		case '1':
+			options->singleshot(1);
 			break;
 
 		case 'c': /* config file */

@@ -83,7 +83,7 @@ class MeterMap {
 	inline iterator end() { return _channels.end(); }
 	inline size_t size() { return _channels.size(); }
 
-	bool running() const { return _thread_running; }
+	bool running();
 
   private:
 	Meter::Ptr _meter;

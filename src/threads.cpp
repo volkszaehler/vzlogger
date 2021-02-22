@@ -166,6 +166,9 @@ void *reading_thread(void *arg) {
 				}
 			}
 
+			if (options.singleshot())
+				break;
+
 			if (mtr->interval() > 0) {
 				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
 				sleep(mtr->interval());
@@ -220,6 +223,9 @@ void *logging_thread(void *arg) { // is started by Channel::start and stopped vi
 		try {
 			ch->wait();
 			api->send();
+
+			if (options.singleshot())
+				break;
 		} catch (std::exception &e) {
 			print(log_alert, "Logging thread failed due to: %s", ch->name(), e.what());
 		}
