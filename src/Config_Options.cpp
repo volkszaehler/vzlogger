@@ -267,7 +267,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping) {
 	}
 	// check if identifier is set. If not, use default
 	if (id_str == NULL) {
-		print(log_error, "Identifier is not set. Set it to default value 'NilIdentifier'.", NULL);
+		print(log_error, "Identifier is not set. Using default value 'NilIdentifier'.", NULL);
 		id_str = "NilIdentifier";
 	}
 	// if (middleware == NULL) {

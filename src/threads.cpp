@@ -185,7 +185,7 @@ void *reading_thread(void *arg) {
 	return NULL;
 }
 
-void *logging_thread(void *arg) { // get's started from Channel::start and stopped via
+void *logging_thread(void *arg) { // is started by Channel::start and stopped via
 								  // Channel::cancel via pthread_cancel!
 	Channel *__this =
 		static_cast<Channel *>(arg);           // retrieve the pointer to the corresponding Channel

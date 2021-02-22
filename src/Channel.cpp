@@ -90,7 +90,7 @@ Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtoco
 }
 
 /**
- * Free all allocated memory recursivly
+ * Free all allocated memory recursively
  */
 Channel::~Channel() {
 	// this hangs is the readingthread was pthread_cancelled during wait!

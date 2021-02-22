@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
 		print(log_info, "Daemonize process...", (char *)0);
 		daemonize();
 	} else {
-		print(log_info, "Process not  daemonized...", (char *)0);
+		print(log_info, "Process not daemonized...", (char *)0);
 	}
 
 	/* open logfile */
