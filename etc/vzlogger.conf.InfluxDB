@@ -28,7 +28,7 @@
                 //"tags": "foo=bar,example=42",                 // Optional: Additional tags to append when inserting data
                 //"username": "example",                        // Optional: When InfluxDB Auth is enabled you need to set the correct user and password
                 //"password": "secure",
-                //"token": "login token",                       // Optional: Use login token instead of username. Remove sername from config to use token. 
+                //"token": "login token",                       // Optional: Use login token instead of username. Remove username from config to use token. 
                 //"organization": "example.com",                // Optional: Configure organization to use /api/v2/write?org=xxx&bucket=database entry point
                 //"max_batch_inserts": 4500,                    // Optional: Max number of measurements per request. No need to change this
                 //"max_buffer_size": 450000,                    // Optional: Max number of measurements to be cached when InfluxDB is not available
