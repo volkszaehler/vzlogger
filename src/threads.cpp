@@ -50,6 +50,7 @@ void *reading_thread(void *arg) {
 	time_t aggIntEnd;
 	const meter_details_t *details;
 	size_t n = 0;
+	bool first_reading = true;
 
 	details = meter_get_details(mtr->protocolId());
 	std::vector<Reading> rds(details->max_readings, Reading(mtr->identifier()));
@@ -65,6 +66,14 @@ void *reading_thread(void *arg) {
 				aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
 			} while ((aggIntEnd < time(NULL)) && (mtr->aggtime() > 0));
 			do { /* aggregate loop */
+
+				if (mtr->interval() > 0 && !first_reading) {
+					print(log_info, "waiting %i seconds before next reading", mtr->name(),
+						  mtr->interval());
+					sleep(mtr->interval());
+				}
+				first_reading = false;
+
 				/* fetch readings from meter and calculate delta */
 				n = mtr->read(rds, details->max_readings);
 
@@ -164,11 +173,6 @@ void *reading_thread(void *arg) {
 					// print(log_debug, "Buffer dump (size=%i): %s", (*ch)->name(),
 					//(*ch)->size(), (*ch)->dump().c_str());
 				}
-			}
-
-			if (mtr->interval() > 0) {
-				print(log_info, "Next reading in %i seconds", mtr->name(), mtr->interval());
-				sleep(mtr->interval());
 			}
 		} while (true);
 	} catch (std::exception &e) {
