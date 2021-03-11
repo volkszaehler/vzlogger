@@ -372,21 +372,21 @@ int main(int argc, char *argv[]) {
 	pthread_t _mqtt_client_thread = 0;
 #endif
 
-	/* bind signal handler */
-	struct sigaction action;
-	sigemptyset(&action.sa_mask);
-	action.sa_flags = 0;
-	action.sa_handler = signalHandlerQuit;
+	// bind signal handler for exiting vzlogger
+	struct sigaction quitaction;
+	sigemptyset(&quitaction.sa_mask);
+	quitaction.sa_flags = 0;
+	quitaction.sa_handler = signalHandlerQuit;
+	sigaction(SIGINT, &quitaction, NULL);  /* catch ctrl-c from terminal */
+	sigaction(SIGHUP, &quitaction, NULL);  /* catch hangup signal */
+	sigaction(SIGTERM, &quitaction, NULL); /* catch kill signal */
+
 	gStartLogBuf = new std::stringbuf;
 
 #ifdef LOCAL_SUPPORT
 	/* webserver for local interface */
 	struct MHD_Daemon *httpd_handle = NULL;
 #endif /* LOCAL_SUPPORT */
-
-	sigaction(SIGINT, &action, NULL);  /* catch ctrl-c from terminal */
-	sigaction(SIGHUP, &action, NULL);  /* catch hangup signal */
-	sigaction(SIGTERM, &action, NULL); /* catch kill signal */
 
 	/* initialize ADTs and APIs */
 	//	curl_global_init(CURL_GLOBAL_ALL);
