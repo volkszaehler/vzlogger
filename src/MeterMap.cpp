@@ -77,7 +77,7 @@ void MeterMap::start() {
 	}
 }
 
-void MeterMap::cancel() { // get's called from MapContainer::quit that get's called from sigint
+void MeterMap::cancel() { // is called from MapContainer::quit which is called from sigint handler
 						  // handler ::quit
 	print(log_finest, "MeterMap::cancel entered...", _meter->name());
 	if (_meter->isEnabled() && running()) {
@@ -115,7 +115,7 @@ void MeterMap::registration() {
 			print(log_debug, "Using InfluxDB api", (*ch)->name());
 		} else if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "null")) {
 			api = vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
-			print(log_debug, "Using null api- meter data available via local httpd if enabled.",
+			print(log_debug, "Using null api - meter data available via local httpd if enabled.",
 				  (*ch)->name());
 		} else {
 			if (strcasecmp((*ch)->apiProtocol().c_str(), "volkszaehler"))

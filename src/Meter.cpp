@@ -201,7 +201,7 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		// enable
 		_enable = optlist.lookup_bool(pOptions, "enabled");
 	} catch (vz::OptionNotFoundException &e) {
-		_enable = false; /* bye default meter is disabled */
+		_enable = false; /* by default meter is disabled */
 	} catch (vz::VZException &e) {
 		print(log_alert, "Invalid type for enable", name());
 		throw;

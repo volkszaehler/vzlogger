@@ -192,8 +192,8 @@ void timespec_add_ms(struct timespec &a, unsigned long ms) {
 }
 
 void MeterS0::check_ref_for_overflow() {
-	// check whether _ms_last_impulse get's too long
-	// and has risk for overflow (roughly once a month with 32bit unsigned long)
+	// protect against _ms_last_impulse overflwing,
+	// it would overflow roughly once a month with 32bit unsigned long
 
 	if (_ms_last_impulse > (1ul << 30)) {
 		// now we enter a race condition so there might be wrong impulse now!

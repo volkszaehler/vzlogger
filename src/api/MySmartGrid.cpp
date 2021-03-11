@@ -206,7 +206,7 @@ void vz::api::MySmartGrid::send() {
 	/* householding */
 	json_object_put(json_obj);
 
-	if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
+	if ((curl_code != CURLE_OK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
 			  channel()->name(), options.retry_pause());
 		sleep(options.retry_pause());
@@ -299,7 +299,7 @@ void vz::api::MySmartGrid::_send(const std::string &url, json_object *json_obj) 
 	/* householding */
 	json_object_put(json_obj);
 
-	if (options.daemon() && (curl_code != CURLE_OK || http_code != 200)) {
+	if ((curl_code != CURLE_OK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
 			  channel()->name(), options.retry_pause());
 		sleep(options.retry_pause());

@@ -254,7 +254,7 @@ void vz::api::InfluxDB::send() {
 
 	print(log_debug, "Buffer has %i items", channel()->name(), buf->size());
 
-	// delete items if the buffer gets too big
+	// delete items if the buffer grows too large
 	if (buf->size() > (unsigned)_max_buffer_size) {
 		print(log_warning,
 			  "Buffer too big (%i items). Deleting items. (This indicates a connection problem)",
