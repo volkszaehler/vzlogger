@@ -240,6 +240,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 	unsigned char buffer[SML_BUFFER_LEN];
 	size_t bytes, m = 0;
+	struct timeval tv;
 
 	sml_file *file;
 	sml_get_list_response *body;
@@ -261,6 +262,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 	/* wait until we receive a new datagram from the meter (blocking read) */
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+	gettimeofday(&tv, NULL);
 
 	if (0 == bytes) {
 		// try to reopen. see issue #362
@@ -289,8 +291,11 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 			/* iterating through linked list */
 			for (; m < n && entry != NULL;) {
-				if (_parse(entry, &rds[m]))
+				if (_parse(entry, &rds[m])) {
+					if (_use_local_time || !rds[m].time_s())
+						rds[m].time(tv);
 					m++;
+				}
 				entry = entry->next;
 			}
 		}
@@ -324,15 +329,12 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 		ReadingIdentifier *rid(new ObisIdentifier(obis));
 		rd->identifier(rid);
 
-		// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
-		struct timeval tv;
-		if (!_use_local_time && entry->val_time) { /* use time from meter */
+		// TODO handle SML_TIME_SEC_INDEX
+		if (entry->val_time) { /* use time from meter */
+			struct timeval tv = {0, 0};
 			tv.tv_sec = *entry->val_time->data.timestamp;
-			tv.tv_usec = 0;
-		} else {
-			gettimeofday(&tv, NULL); /* use local time */
+			rd->time(tv);
 		}
-		rd->time(tv);
 		return true;
 	}
 	return false;
