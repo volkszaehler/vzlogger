@@ -414,7 +414,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 	char endseq[2 + 1]; // Endsequence ! not ?!
 	size_t number_of_tuples;
 	int bytes_read;
-	time_t start_time, end_time;
+	time_t act_time, cur_time;
 	struct termios tio;
 	int baudrate_connect, baudrate_read; // Baudrates for switching
 
@@ -440,7 +440,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 			  wlen);
 	}
 
-	time(&start_time);
+	time(&act_time);
 
 	byte_iterator = number_of_tuples = baudrate = 0;
 	byte = lastbyte = 0;
@@ -471,8 +471,8 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 
 	while (1) {
 		// check for timeout
-		time(&end_time);
-		if (difftime(end_time, start_time) > _read_timeout_s) {
+		time(&cur_time);
+		if (difftime(cur_time, act_time) > _read_timeout_s) {
 			print(log_error, "nothing received for more than %d seconds", name().c_str(),
 				  _read_timeout_s);
 			dump_file(CTRL, "timeout!");
@@ -493,7 +493,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 
 		// reset timeout if we are making progress
 		if (context != START) {
-			time(&start_time);
+			time(&act_time);
 		}
 
 		lastbyte = byte;
