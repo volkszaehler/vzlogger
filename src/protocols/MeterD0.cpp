@@ -414,7 +414,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 	char endseq[2 + 1]; // Endsequence ! not ?!
 	size_t number_of_tuples;
 	int bytes_read;
-	time_t act_time, cur_time;
+	time_t start_time, act_time, cur_time;
 	struct termios tio;
 	int baudrate_connect, baudrate_read; // Baudrates for switching
 
@@ -510,6 +510,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 		case START:            // strip the initial "/"
 			if (byte == '/') { // if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line
 							   // at the start
+				time(&start_time);                    // remember time of start of transmission
 				byte_iterator = number_of_tuples = 0; // start
 				context = VENDOR;                     // set new context: START -> VENDOR
 			} // else ignore the other chars. -> Wait for / (!? is checked above already)
@@ -791,7 +792,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 						Obis obis(obis_code);
 						ReadingIdentifier *rid(new ObisIdentifier(obis));
 						rds[number_of_tuples].identifier(rid);
-						rds[number_of_tuples].time();
+						rds[number_of_tuples].time(start_time);
 						number_of_tuples++;
 					} catch (vz::VZException &e) {
 						print(log_alert, "Failed to parse obis code (%s)", name().c_str(),
