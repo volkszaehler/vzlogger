@@ -105,6 +105,33 @@ const char *long_options_descs[] = {
 	NULL /* stop condition for iterator */
 };
 
+void openLogfile() {
+	FILE *logfd = fopen(options.log().c_str(), "a");
+
+	if (logfd == NULL) {
+		print(log_alert, "Cannot open logfile %s: %s", (char *)0, options.log().c_str(),
+			  strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	if (gStartLogBuf) {
+		// log current console output to logfile as we missed the start
+		fprintf(logfd, "%s", gStartLogBuf->str().c_str());
+		auto temp = gStartLogBuf;
+		gStartLogBuf = 0;
+		delete temp;
+	}
+
+	options.logfd(logfd);
+	print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
+}
+
+void closeLogfile() {
+	if (options.logfd()) {
+		fclose(options.logfd());
+	}
+}
+
 /**
  * Print error/debug/info messages to stdout and/or logfile
  *
@@ -436,24 +463,7 @@ int main(int argc, char *argv[]) {
 
 	/* open logfile */
 	if (options.log() != "") {
-		FILE *logfd = fopen(options.log().c_str(), "a");
-
-		if (logfd == NULL) {
-			print(log_alert, "Cannot open logfile %s: %s", (char *)0, options.log().c_str(),
-				  strerror(errno));
-			return EXIT_FAILURE;
-		}
-
-		if (gStartLogBuf) {
-			// log current console output to logfile as we missed the start
-			fprintf(logfd, "%s", gStartLogBuf->str().c_str());
-			auto temp = gStartLogBuf;
-			gStartLogBuf = 0;
-			delete temp;
-		}
-
-		options.logfd(logfd);
-		print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
+		openLogfile();
 	} else {
 		// stop temp logging, continue logging to console only
 		auto temp = gStartLogBuf;
@@ -602,10 +612,7 @@ int main(int argc, char *argv[]) {
 		print(log_finest, "deleted curlSessionProvider", "");
 	}
 
-	/* close logfile */
-	if (options.logfd()) {
-		fclose(options.logfd());
-	}
+	closeLogfile();
 
 	return EXIT_SUCCESS;
 }
