@@ -114,6 +114,8 @@ void openLogfile() {
 		exit(EXIT_FAILURE);
 	}
 
+	m_log.lock();
+
 	if (gStartLogBuf) {
 		// log current console output to logfile as we missed the start
 		fprintf(logfd, "%s", gStartLogBuf->str().c_str());
@@ -123,13 +125,17 @@ void openLogfile() {
 	}
 
 	options.logfd(logfd);
+	m_log.unlock();
 	print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
 }
 
 void closeLogfile() {
+	m_log.lock();
 	if (options.logfd()) {
 		fclose(options.logfd());
+		options.logfd(NULL);
 	}
+	m_log.unlock();
 }
 
 /**
@@ -175,23 +181,21 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 
 	va_start(args, id);
 	/* append to logfile */
+	m_log.lock(); // safe write access for competed access from other thread
 	if (options.logfd()) {
-		m_log.lock(); // safe write access for competed access from other thread
 		fprintf(options.logfd(), "%-24s", prefix);
 		vfprintf(options.logfd(), format, args);
 		fprintf(options.logfd(), "\n");
 		fflush(options.logfd());
-		m_log.unlock();
 	} else if (gStartLogBuf) {
 		char buf[500];
 		int bufUsed;
 		bufUsed = snprintf(buf, 500, "%-24s", prefix);
 		bufUsed += vsnprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, format, args);
 		bufUsed += snprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, "\n");
-		m_log.lock(); // safe write access for competed access from other thread
 		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
-		m_log.unlock();
 	}
+	m_log.unlock();
 	va_end(args);
 }
 
