@@ -109,7 +109,7 @@ void openLogfile() {
 	FILE *logfd = fopen(options.log().c_str(), "a");
 
 	if (logfd == NULL) {
-		print(log_alert, "Cannot open logfile %s: %s", (char *)0, options.log().c_str(),
+		print(log_alert, "opening logfile \"%s\" failed: %s", (char *)0, options.log().c_str(),
 			  strerror(errno));
 		exit(EXIT_FAILURE);
 	}
