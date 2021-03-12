@@ -309,6 +309,16 @@ void signalHandlerQuit(int sig) {
 }
 
 /**
+ * signal handler for re-opening logfile.
+ * the actual operation is carried out in main(),
+ * because the required operations are not signal-safe.
+ */
+
+volatile bool mainLoopReopenLogfile = false;
+
+void signalHandlerReOpenLog(int) { mainLoopReopenLogfile = true; }
+
+/**
  * Parse options from command line
  *
  * @param options pointer to structure for options
@@ -412,6 +422,13 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGHUP, &quitaction, NULL);  /* catch hangup signal */
 	sigaction(SIGTERM, &quitaction, NULL); /* catch kill signal */
 
+	// signal for re-opening logfile
+	struct sigaction reopenaction;
+	sigemptyset(&reopenaction.sa_mask);
+	reopenaction.sa_flags = 0;
+	reopenaction.sa_handler = signalHandlerReOpenLog;
+	// sigaction() follows in conditional below.
+
 	gStartLogBuf = new std::stringbuf;
 
 #ifdef LOCAL_SUPPORT
@@ -468,6 +485,7 @@ int main(int argc, char *argv[]) {
 	/* open logfile */
 	if (options.log() != "") {
 		openLogfile();
+		sigaction(SIGUSR1, &reopenaction, NULL); // catch SIGUSR1
 	} else {
 		// stop temp logging, continue logging to console only
 		auto temp = gStartLogBuf;
@@ -562,6 +580,13 @@ int main(int argc, char *argv[]) {
 					}
 					::sleep(1); // 1s should be ok. will introduce a shutdown latency >1s
 				}
+			}
+			if (mainLoopReopenLogfile) {
+				mainLoopReopenLogfile = false;
+				print(log_info, "closing logfile for re-opening (requested with SIGUSR1)", "");
+				closeLogfile();
+				openLogfile();
+				print(log_info, "re-opened logfile (requested with SIGUSR1)", "");
 			}
 		} while (oneRunning);
 	} catch (std::exception &e) {
