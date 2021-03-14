@@ -13,6 +13,8 @@ using ::testing::Test;
 #include "Meter.hpp"
 #include "protocols/MeterS0.hpp"
 
+int options; // FIXME
+
 namespace mock_MeterS0 {
 
 class mock_S0hwif : public MeterS0::HWIF {
