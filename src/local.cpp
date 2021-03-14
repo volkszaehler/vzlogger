@@ -134,7 +134,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 	// mapping between meters and channels
 	MapContainer *mappings = static_cast<MapContainer *>(cls);
 
-	struct MHD_Response *response;
+	struct MHD_Response *response = NULL;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
 	try {

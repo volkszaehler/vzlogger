@@ -1,0 +1,15 @@
+name: build+test
+on: [push]
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install deps
+      run: sudo apt-get install libjson-c-dev libcurl4-openssl-dev libmicrohttpd-dev libgcrypt20-dev libsasl2-dev libunistring-dev libmosquitto-dev
+    - name: build libsml
+      run: git clone https://github.com/volkszaehler/libsml.git ../libsml && cd ../libsml && make
+    - uses: actions/checkout@v2
+    - run: cmake . -DSML_HOME=../libsml/sml
+    - run: make
+    - run: ctest
