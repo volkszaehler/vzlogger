@@ -49,7 +49,7 @@
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC)                                     \
-	{ meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC /*, Meter##CLASSNAME */ }
+	{ meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC}
 
 int Meter::instances = 0;
 
