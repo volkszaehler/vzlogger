@@ -112,7 +112,7 @@ class Config_Options {
 	// boolean bitfields, padding at the end of struct
 	int _channel_index : 1;  // give a index of all available channels via local interface
 	int _local : 1;          // enable local interface
-	int _foreground : 1;	 // don't daemonize
+	int _foreground : 1;     // don't daemonize
 	int _doRegistration : 1; // FIXME
 };
 
