@@ -105,7 +105,7 @@ const char *long_options_descs[] = {
 	NULL /* stop condition for iterator */
 };
 
-void openLogfile() {
+void openLogfile(bool skip_lock = false) {
 	FILE *logfd = fopen(options.log().c_str(), "a");
 
 	if (logfd == NULL) {
@@ -114,7 +114,8 @@ void openLogfile() {
 		exit(EXIT_FAILURE);
 	}
 
-	m_log.lock();
+	if (!skip_lock)
+		m_log.lock();
 
 	if (gStartLogBuf) {
 		// log current console output to logfile as we missed the start
@@ -125,17 +126,20 @@ void openLogfile() {
 	}
 
 	options.logfd(logfd);
-	m_log.unlock();
+	if (!skip_lock)
+		m_log.unlock();
 	print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
 }
 
-void closeLogfile() {
-	m_log.lock();
+void closeLogfile(bool skip_lock = false) {
+	if (!skip_lock)
+		m_log.lock();
 	if (options.logfd()) {
 		fclose(options.logfd());
 		options.logfd(NULL);
 	}
-	m_log.unlock();
+	if (!skip_lock)
+		m_log.unlock();
 }
 
 /**
@@ -584,8 +588,10 @@ int main(int argc, char *argv[]) {
 			if (mainLoopReopenLogfile) {
 				mainLoopReopenLogfile = false;
 				print(log_info, "closing logfile for re-opening (requested with SIGUSR1)", "");
-				closeLogfile();
-				openLogfile();
+				m_log.lock();
+				closeLogfile(true);
+				openLogfile(true);
+				m_log.unlock();
 				print(log_info, "re-opened logfile (requested with SIGUSR1)", "");
 			}
 		} while (oneRunning);
