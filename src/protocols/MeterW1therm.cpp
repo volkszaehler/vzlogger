@@ -31,13 +31,24 @@ bool MeterW1therm::W1sysHWif::scanW1devices() {
 	// let's try using glob()
 	glob_t glob_res;
 	size_t strl = strlen("/sys/bus/w1/devices/");
-	if (0 ==
-		glob("/sys/bus/w1/devices/{10,22,28,3b,42}-*", GLOB_BRACE | GLOB_NOSORT, NULL, &glob_res)) {
+	if (0 == glob("/sys/bus/w1/devices/"
+				  // strange formatting is required because of
+				  // https://en.wikipedia.org/wiki/Digraphs_and_trigraphs#C
+				  "?"
+				  "?"
+				  "-*",
+				  GLOB_NOSORT, NULL, &glob_res)) {
+
+		// 1wire ID prefixes of supported sensors
+		const char *ids[] = {"10", "22", "28", "3b", "42", NULL};
 
 		for (unsigned int i = 0; i < glob_res.gl_pathc; ++i) {
-			if (strlen(glob_res.gl_pathv[i]) > strl) {
-				char *str = glob_res.gl_pathv[i] + strl;
-				_devices.push_back(std::string(str));
+			for (unsigned int j = 0; ids[j] != NULL; j++) {
+				if (strlen(glob_res.gl_pathv[i]) > strl &&
+					!strncmp(glob_res.gl_pathv[i] + strl, ids[j], 2)) {
+					char *str = glob_res.gl_pathv[i] + strl;
+					_devices.push_back(std::string(str));
+				}
 			}
 		}
 
