@@ -1,23 +1,30 @@
 name: docker
 
+# To spare compute resource, a normal commit should only run a build on linux amd64,
+# a pull request build should build on every platform, but no push to regiestry and
+# the master builds, rans all plattform and pushes
+
 on: [push, pull_request]
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Set versions env var
         run: sed -n -e 's/.*\(VZLOGGER_.*_VERSION\) \+\([0-9]\+\).*/\1=\2/p' CMakeLists.txt >> $GITHUB_ENV
       - name: Set env sha short
-        run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+        run: echo "GITHUB_SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
+        if: ${{ github.ref == 'refs/heads/master' || github.head.ref }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
         uses: docker/login-action@v1 
+        if: ${{ github.ref == 'refs/heads/master' || github.head.ref }}
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -25,7 +32,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: ${{ github.ref == 'refs/heads/master' }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          # since there no tenery operations, this is a little ugly. see https://github.community/t/do-expressions-support-ternary-operators-to-change-their-returned-value/18114/4
+          platforms: ${{ fromJSON('["linux/amd64", "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"]')[github.ref == 'refs/heads/master' || github.head.ref] }}
           tags: ${{ env.image_name }}:commit-${{ env.GITHUB_SHA_SHORT }}, ${{ env.image_name }}:${{ env.VZLOGGER_MAJOR_VERSION }}.${{ env.VZLOGGER_MINOR_VERSION }}.${{ env.VZLOGGER_SUB_VERSION }}, ${{ env.image_name }}:${{ env.VZLOGGER_MAJOR_VERSION }}.${{ env.VZLOGGER_MINOR_VERSION }}, ${{ env.image_name }}:${{ env.VZLOGGER_MAJOR_VERSION }}, ${{ env.image_name }}:latest
         env:
           image_name: ${{ secrets.DOCKERHUB_USERNAME }}/vzlogger
