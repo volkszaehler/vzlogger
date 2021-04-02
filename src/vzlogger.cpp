@@ -25,7 +25,6 @@
 
 #include <curl/curl.h>
 #include <errno.h>
-#include <sysexits.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <signal.h>
@@ -36,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sysexits.h>
 #include <time.h>
 #include <unistd.h>
 
