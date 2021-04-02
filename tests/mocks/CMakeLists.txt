@@ -27,6 +27,7 @@ add_executable(mock_metermap
     ../../src/Meter.cpp
     ../../src/Options.cpp
 	../../src/protocols/MeterD0.cpp
+	../../src/protocols/MeterChinaDC.cpp
 	../../src/protocols/MeterFile.cpp
 	../../src/protocols/MeterExec.cpp
 	../../src/protocols/MeterS0.cpp

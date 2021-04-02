@@ -10,6 +10,7 @@ list(APPEND test_sources
     ../src/api/Volkszaehler.cpp
     ../src/CurlSessionProvider.cpp
     ../src/protocols/MeterW1therm.cpp
+    ../src/protocols/MeterChinaDC.cpp
 )
 
 set(test_libraries
