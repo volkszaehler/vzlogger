@@ -97,6 +97,12 @@ MeterSML::MeterSML(std::list<Option> options)
 		/* using default value if not specified */
 		_use_local_time = false;
 	}
+	try {
+		_direction_from_status = optlist.lookup_bool(options, "direction_from_status");
+	} catch (vz::OptionNotFoundException &e) {
+		/* using default value if not specified */
+		_direction_from_status = false;
+	}
 
 	/* baudrate */
 	int baudrate = 9600; /* default to avoid compiler warning */
@@ -244,6 +250,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_file *file;
 	sml_get_list_response *body;
 	sml_list *entry;
+	bool direction_from_status = false;
 
 	if (_fd < 0) {
 		if (!reopen()) {
@@ -289,7 +296,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 			/* iterating through linked list */
 			for (; m < n && entry != NULL;) {
-				if (_parse(entry, &rds[m]))
+				if (_parse(entry, &rds[m], &direction_from_status))
 					m++;
 				entry = entry->next;
 			}
@@ -302,7 +309,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	return m; // return number of successful readings
 }
 
-bool MeterSML::_parse(sml_list *entry, Reading *rd) {
+bool MeterSML::_parse(sml_list *entry, Reading *rd, bool *direction_from_status) {
 	// int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
 
@@ -321,8 +328,17 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
 		}
 
+		if (_direction_from_status && entry->status) {
+			*direction_from_status = (*(entry->status->data.status16) & (1 << 5)) == (1 << 5);
+		}
+
 		ReadingIdentifier *rid(new ObisIdentifier(obis));
 		rd->identifier(rid);
+
+		if (_direction_from_status && *direction_from_status &&
+			obis == Obis(1, 0, 15, 7, 0, 0xff)) {
+			rd->value(-1 * sml_value_to_double(entry->value) * pow(10, scaler));
+		}
 
 		// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
 		struct timeval tv;
