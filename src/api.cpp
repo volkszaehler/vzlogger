@@ -78,7 +78,7 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { /* out of memory! */
 		print(log_alert, "Cannot allocate memory", NULL);
-		exit(EXIT_MEMORY);
+		exit(EXIT_FAILURE);
 	}
 
 	memcpy(&(response->data[response->size]), ptr, realsize);

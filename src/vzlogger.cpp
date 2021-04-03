@@ -500,7 +500,7 @@ int main(int argc, char *argv[]) {
 
 	if (mappings.size() <= 0) {
 		print(log_alert, "No meters found - quitting!", (char *)0);
-		return EXIT_NOTCONFIGURED;
+		return EXIT_FAILURE;
 	}
 
 	if (options.pushDataServer()) {
