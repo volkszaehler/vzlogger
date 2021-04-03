@@ -339,7 +339,7 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
 	if (response->data == NULL) { // out of memory!
 		print(log_alert, "Cannot allocate memory", NULL);
-		exit(EXIT_FAILURE);
+		exit(EXIT_MEMORY);
 	}
 
 	memcpy(&(response->data[response->size]), ptr, realsize);
