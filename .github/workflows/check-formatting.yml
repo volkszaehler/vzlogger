@@ -5,6 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install clang-format
-      run: sudo apt-get install clang-format
+      run: sudo apt-get update && sudo apt-get install clang-format
     - uses: actions/checkout@v2
     - run: ./check-formatting.sh
