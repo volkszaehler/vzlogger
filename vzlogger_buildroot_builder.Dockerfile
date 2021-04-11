@@ -3,7 +3,7 @@
 # the OS version used here is largely irrelevant,
 # as buildroot compiles it's own toolchain
 ARG	DEBIAN_VERSION=buster
-FROM	debian:$DEBIAN_VERSION as builder
+FROM	buildpack-deps:$DEBIAN_VERSION as builder
 
 LABEL	maintainer="Thorben T. <r00t@constancy.org>"
 
@@ -14,26 +14,25 @@ LABEL	org.label-schema.name=null
 LABEL	org.label-schema.schema-version=null
 LABEL	org.label-schema.vendor=null
 
-# update host-OS and install required host packages
-# (we should optimize by using a base image that already contains this.)
+# install host-OS packages required by buildroot
+# (buildpack-deps already contains all but bc, cpio and rsync)
 RUN	set -xe ; \
 	apt-get update ; \
-	apt-get -y --force-yes upgrade ; \
 	apt-get -y --force-yes install \
 		# https://buildroot.org/downloads/manual/manual.html#requirement
-		make gcc g++ \
-		patch \
-		bzip2 \
+		#make gcc g++ \
+		#patch \
+		#bzip2 \
 		cpio \
-		unzip \
+		#unzip \
 		rsync \
-		file \
+		#file \
 		bc \
 		#libncurses-dev \
-		wget \
-		git \
+		#wget \
+		#git \
 		# buildroot will build it's own cmake because it's newer than debian's
-		#cmake \
+		##cmake \
 	; \
 	apt-get purge ; \
 	rm -fr /var/lib/apt/lists
@@ -186,7 +185,14 @@ RUN	rm -fr \
 #	ls -l output/build/vzlogger-*/src/vzlogger ; \
 #	rm -fr dl/vzlogger output/build/vzlogger-*
 
+# use the base debian version, not buildpack-deps
+# (we need to install rsync anyway, to make buildroot happy,
+#  and for the final image we don't need much of buildpack-deps.)
 FROM	debian:$DEBIAN_VERSION
+
+# or use buildpack-deps for the final image, because we already have it anyway?
+# (i know how i COULD hack buildroot to work without rsync.)
+#FROM buildpack-deps:$DEBIAN_VERSION
 
 COPY	--from=builder /buildroot /buildroot
 
@@ -198,17 +204,14 @@ WORKDIR	/buildroot
 RUN	ln -sf /bin/true support/dependencies/dependencies.sh
 
 # docker-COPY-ing the buildroot tree clobbers some timestamp,
-# making buildroot want to run `make syncconfig`, which would requite gcc.
+# making buildroot want to run `make syncconfig`, which would require gcc.
 # this prevents this
 RUN	touch output/build/buildroot-config/auto.conf
 
-# install updates separately,
-# so we can see their size in a separate layer
-RUN	set -xe ; \
-	apt-get update ; \
-	apt-get -y --force-yes upgrade ; \
-	apt-get purge ; \
-	rm -fr /var/lib/apt/lists
+# buildroot thinks it needs this, but it doesn't
+# (it was pre-installed on the builder, so it did not build it's own yet)
+# (the order / relative timing of these really does matter.)
+RUN    mkdir -p output/build/host-xz-5.2.5 && for s in downloaded extracted patched configured built installed host_installed ; do touch output/build/host-xz-5.2.5/.stamp_$s ; done
 
 RUN	set -xe ; \
 	apt-get update ; \
