@@ -67,13 +67,15 @@ ARG	DEFCONFIG=raspberrypi2
 # create a minimal buildroot system configuration
 RUN \
 	set -xe ; \
-	head --lines 6 "configs/${DEFCONFIG}_defconfig" >.config ; \
+	grep ^BR2_ "configs/${DEFCONFIG}_defconfig" | grep -vE '^BR2_(LINUX|TOOLCHAIN|SYSTEM|PACKAGE|TARGET|ROOTFS)' >.config ; \
 	# WCHAR support is needed at least for libunistring
 	echo BR2_TOOLCHAIN_BUILDROOT_WCHAR=y >>.config ; \
 	# we can disable these as we never build an OS image
 	echo BR2_INIT_NONE=y >>.config ; \
 	echo BR2_SYSTEM_BIN_SH_NONE=y >>.config ; \
+	echo BR2_TOOLCHAIN_BUILDROOT_CXX=y >>.config ; \
 	echo "# BR2_PACKAGE_BUSYBOX is not set" >>.config ; \
+	echo "# BR2_PACKAGE_IFUPDOWN_SCRIPTS is not set" >>.config ; \
 	echo "# BR2_PACKAGE_HOST_PATCHELF is not set" >>.config ; \
 	echo "# BR2_TARGET_ROOTFS_TAR is not set" >>.config ; \
 	\
