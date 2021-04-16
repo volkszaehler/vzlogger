@@ -209,7 +209,8 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 		print(log_finest, "api InfluxDB using value_name %s", ch->name(), _field_name.c_str());
 	} catch (vz::OptionNotFoundException &e) {
 		_field_name = "value";
-		print(log_alert, "api InfluxDB will use default field_name \"%s\"!", ch->name(), _field_name);
+		print(log_alert, "api InfluxDB will use default field_name \"%s\"!", ch->name(),
+			  _field_name);
 	} catch (vz::VZException &e) {
 		print(log_alert, "api InfluxDB requires parameter \"field_name\" as string!", ch->name());
 		throw;
