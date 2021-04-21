@@ -47,6 +47,7 @@ class Channel {
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid,
 			ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
+	bool running();
 
 	// Doesn't touch the object, could also be static, but static breaks google mock.
 	void start(Ptr this_shared) {
@@ -69,8 +70,6 @@ class Channel {
 		if (running())
 			pthread_cancel(_thread);
 	}
-
-	bool running() const { return _thread_running; }
 
 	const char *name() const { return _name.c_str(); }
 	std::list<Option> &options() { return _options; }
