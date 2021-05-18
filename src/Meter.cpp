@@ -46,6 +46,7 @@
 #ifdef OMS_SUPPORT
 #include "protocols/MeterOMS.hpp"
 #endif
+#include "protocols/MeterChinaDC.hpp"
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS)                                               \
@@ -71,6 +72,7 @@ static const meter_details_t protocols[] = {
 #ifdef OMS_SUPPORT
 	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100),
 #endif
+	METER_DETAIL(chinadc, ChinaDC, "crappy chinese DC meter with serial output", 1),
 	//{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL, NULL, 0),
 };
@@ -187,6 +189,10 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
 		break;
 #endif
+	case meter_protocol_chinadc:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterChinaDC(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
 	default:
 		break;
 	}
