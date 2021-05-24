@@ -147,7 +147,7 @@ class NilIdentifier : public ReadingIdentifier {
   public:
 	NilIdentifier() {}
 	size_t unparse(char *buffer, size_t n);
-	// bool operator==(NilIdentifier const &cmp) const;
+	bool operator==(NilIdentifier const &) const { return true; }
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "NilIdentifier";
