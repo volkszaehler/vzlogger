@@ -102,8 +102,7 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 		if (!_id.length()) {
 			// create an id. for now just use the pid.
 			id << "vzlogger_" << getpid(); // todo does this need to be in sync with topic?
-		}
-		else {
+		} else {
 			// use id provided in configuration
 			id.str(_id);
 		}
