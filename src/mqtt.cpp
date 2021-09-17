@@ -16,6 +16,7 @@ volatile bool endMqttClientThread = false;
 
 // class impl.
 MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
+
 	print(log_finest, "MqttClient::MqttClient called", "mqtt");
 	if (option) {
 		assert(json_object_get_type(option) == json_type_object);
@@ -60,6 +61,8 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				}
 			} else if (strcmp(key, "timestamp") == 0 && local_type == json_type_boolean) {
 				_timestamp = json_object_get_boolean(local_value);
+			} else if (strcmp(key, "id") == 0 && local_type == json_type_string) {
+				_id = json_object_get_string(local_value);
 			} else {
 				print(log_alert, "Ignoring invalid field or type: %s=%s", NULL, key,
 					  json_object_get_string(local_value));
@@ -94,9 +97,16 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 	}
 
 	if (isConfigured()) {
-		// create an id. for now just use the pid.
 		std::ostringstream id;
-		id << "vzlogger_" << getpid(); // todo does this need to be in sync with topic?
+
+		if (!_id.length()) {
+			// create an id. for now just use the pid.
+			id << "vzlogger_" << getpid(); // todo does this need to be in sync with topic?
+		} else {
+			// use id provided in configuration
+			id.str(_id);
+		}
+
 		_mcs = mosquitto_new(id.str().c_str(), true, this);
 		if (!_mcs) {
 			print(log_alert, "mosquitto_new failed! Stopped!", "mqtt");
