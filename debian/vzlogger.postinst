@@ -11,7 +11,6 @@ case "$1" in
 
 	touch /var/log/vzlogger.log
 	chown vzlogger:adm /var/log/vzlogger.log
-	chown vzlogger:adm /etc/vzlogger.conf
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

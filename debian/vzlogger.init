@@ -14,7 +14,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="smartmetering server"
 NAME=vzlogger
-DAEMON=/usr/local/bin/vzlogger
+DAEMON=/usr/bin/vzlogger
 DAEMON_ARGS="-d"          # Arguments to run the daemon with
 #PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
