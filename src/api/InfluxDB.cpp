@@ -57,9 +57,12 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 		throw;
 	}
 
+	_token_header = NULL;
 	try {
 		_token = optlist.lookup_string(pOptions, "token");
 		print(log_finest, "api InfluxDB using login Token: %s", ch->name(), _token.c_str());
+		_token = "Authorization: Token " + _token;
+		_token_header = curl_slist_append(_token_header, _token.c_str());
 	} catch (vz::OptionNotFoundException &e) {
 		print(log_finest, "api InfluxDB no Token set", ch->name());
 		_token = "";
@@ -233,12 +236,11 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 	curl_free(database_urlencoded);
 }
 
-vz::api::InfluxDB::~InfluxDB() // destructor
-{}
+// destructor
+vz::api::InfluxDB::~InfluxDB() { curl_slist_free_all(_token_header); }
 
 void vz::api::InfluxDB::send() {
 	long int http_code;
-	struct curl_slist *list = NULL;
 	CURLcode curl_code;
 	int request_body_lines = 0;
 	std::string request_body;
@@ -317,10 +319,8 @@ void vz::api::InfluxDB::send() {
 			curl_easy_setopt(_api.curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 			curl_easy_setopt(_api.curl, CURLOPT_USERNAME, _username.c_str());
 			curl_easy_setopt(_api.curl, CURLOPT_PASSWORD, _password.c_str());
-		} else if (!_token.empty()) {
-			std::string authtoken = "Authorization: Token " + _token;
-			list = curl_slist_append(list, authtoken.c_str());
-			curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, list);
+		} else if (_token_header) {
+			curl_easy_setopt(_api.curl, CURLOPT_HTTPHEADER, _token_header);
 		}
 		curl_easy_setopt(_api.curl, CURLOPT_URL, _url.c_str());
 		curl_easy_setopt(_api.curl, CURLOPT_VERBOSE, options.verbosity() > 0);
