@@ -1,4 +1,9 @@
-ARG DEBIAN_VERSION=buster
+ARG DEBIAN_VERSION=buster-slim
+
+############################
+# STEP 1 build executable binary
+############################
+
 FROM debian:$DEBIAN_VERSION as builder
 
 RUN apt-get update && apt-get install -y \
@@ -38,6 +43,11 @@ RUN cmake -DBUILD_TEST=off \
  && make \
  && make install
 
+
+#############################
+## STEP 2 build a small image
+#############################
+
 FROM debian:$DEBIAN_VERSION
 
 LABEL Description="vzlogger"
@@ -65,8 +75,5 @@ COPY --from=builder /usr/local/lib/libmbus.so* /usr/local/lib/
 # without running a user context, no exec is possible and without the dialout group no access to usb ir reader possible
 RUN useradd -M -G dialout vz
 USER vz
-
-# Setup volume
-VOLUME ["/cfg"]
 
 CMD ["vzlogger", "--foreground"]
