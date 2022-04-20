@@ -115,7 +115,8 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 			// tell mosquitto that it should be thread safe:
 			int res = mosquitto_threaded_set(_mcs, true);
 			if (res != MOSQ_ERR_SUCCESS) {
-				print(log_warning, "mosquitto_threaded_set returned %d!", "mqtt", res);
+				print(log_warning, "mosquitto_threaded_set failed: %s", "mqtt",
+					  mosquitto_strerror(res));
 			}
 			// set username&pwd
 			if ((_user.length() or _pwd.length()) and
@@ -144,7 +145,8 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 						return len;
 					});
 				if (res != MOSQ_ERR_SUCCESS) {
-					print(log_warning, "mosquitto_tls_set returned error %d!", "mqtt", res);
+					print(log_warning, "mosquitto_tls_set failed: %s", "mqtt",
+						  mosquitto_strerror(res));
 				}
 			}
 
@@ -171,23 +173,23 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 			if (res != MOSQ_ERR_SUCCESS) {
 				switch (res) {
 				case MOSQ_ERR_CONN_REFUSED: // mqtt might accept us later only.
-					print(log_warning, "mosquitto_connect failed. res=%d (%s)! Trying anyhow.",
-						  "mqtt", res, strerror(errno));
+					print(log_warning, "mosquitto_connect failed (but trying anyhow): %s", "mqtt",
+						  mosquitto_strerror(res));
 					break;
 				case MOSQ_ERR_ERRNO:
 					if (errno == 111) // con refused:
 					{
-						print(log_warning,
-							  "mosquitto_connect failed. res=%d (%d %s)! Trying anyhow.", "mqtt",
-							  res, errno, strerror(errno));
+						print(log_warning, "mosquitto_connect failed (but trying anyhow): %s",
+							  "mqtt", mosquitto_strerror(res));
 					} else {
-						print(log_alert, "mosquitto_connect failed. res=%d (%d %s)! Stopped!",
-							  "mqtt", res, errno, strerror(errno));
+						print(log_alert, "mosquitto_connect failed, giving up: %s", "mqtt",
+							  mosquitto_strerror(res));
 						_enabled = false;
 					}
 					break;
 				default:
-					print(log_alert, "mosquitto_connect failed. res=%d! Stopped!", "mqtt", res);
+					print(log_alert, "mosquitto_connect failed, stopped: %s", "mqtt",
+						  mosquitto_strerror(res));
 					_enabled = false;
 					break;
 				}
@@ -217,7 +219,7 @@ MqttClient::~MqttClient() {
 		// we call mosquitto_loop at least once here as the thread should be stopped already:
 		int res = mosquitto_loop(_mcs, 50, 1);
 		if (res != MOSQ_ERR_SUCCESS and res != MOSQ_ERR_NO_CONN) {
-			print(log_warning, "mosquitto_loop returned %d", "mqtt", res);
+			print(log_warning, "mosquitto_loop returned: %s", "mqtt", mosquitto_strerror(res));
 		}
 		mosquitto_destroy(_mcs);
 	}
@@ -281,8 +283,8 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 			int res = mosquitto_publish(_mcs, 0, name.c_str(), v.second.length(), v.second.c_str(),
 										_qos, _retain);
 			if (res != MOSQ_ERR_SUCCESS) {
-				print(log_finest, "mosquitto_publish announce %s returned %d", "mqtt", name.c_str(),
-					  res);
+				print(log_finest, "mosquitto_publish announce \"%s\" failed: %s", "mqtt",
+					  name.c_str(), mosquitto_strerror(res));
 			} else {
 				entry._announced = true; // if one can be announced we treat it successfull
 			}
@@ -309,7 +311,7 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 		int res = mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos,
 									_retain);
 		if (res != MOSQ_ERR_SUCCESS) {
-			print(log_finest, "mosquitto_publish returned %d", "mqtt", res);
+			print(log_finest, "mosquitto_publish failed: %s", "mqtt", mosquitto_strerror(res));
 		}
 		if (payload_obj != NULL) {
 			json_object_put(payload_obj);
@@ -345,11 +347,13 @@ void *mqtt_client_thread(void *arg) {
 		while (!endMqttClientThread) {
 			int res = mosquitto_loop(mqttClient->_mcs, 1000, 1);
 			if (res != MOSQ_ERR_SUCCESS) {
-				print(log_warning, "mosquitto_loop returned %d. trying reconnect", "mqtt", res);
+				print(log_warning, "mosquitto_loop failed (trying to reconnect): %s", "mqtt",
+					  mosquitto_strerror(res));
 				sleep(1);
 				res = mosquitto_reconnect(mqttClient->_mcs);
 				if (res != MOSQ_ERR_SUCCESS) {
-					print(log_warning, "mosquitto_reconnect returned %d", "mqtt", res);
+					print(log_warning, "mosquitto_reconnect failed: %s", "mqtt",
+						  mosquitto_strerror(res));
 					// todo investigate: will next loop return same != SUCCESS and trigger recon?
 				} else {
 					print(log_finest, "mosquitto_reconnect succeeded", "mqtt");
