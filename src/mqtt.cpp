@@ -148,6 +148,12 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				}
 			}
 
+			int protocol = MQTT_PROTOCOL_V311;
+			res = mosquitto_opts_set(_mcs, MOSQ_OPT_PROTOCOL_VERSION, &protocol);
+			if (res != MOSQ_ERR_SUCCESS) {
+				print(log_warning, "unable to set MQTT protocol version (error %d)", "mqtt", res);
+			}
+
 			mosquitto_connect_callback_set(_mcs, [](struct mosquitto *mosq, void *obj, int res) {
 				static_cast<MqttClient *>(obj)->connect_callback(mosq, res);
 			});
