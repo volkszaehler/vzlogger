@@ -227,6 +227,12 @@
                     "enum": ["avg", "max", "sum", "none"],
                     "description": "AVeraGe for power (W), MAXimum for meter (Wh), SUMmary for counter (S0)",
                     "default": "none"
+                },
+                "duplicates": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0,
+                    "description": "default 0 (send duplicate values), >0 = send duplicate values only each <duplicates> seconds. Activate only for abs. counter values (Zaehlerstaende) and not for impulses!"
                 }
             },
             "required": ["api", "uuid", "identifier", "host"]
