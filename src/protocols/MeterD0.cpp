@@ -378,9 +378,9 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 
 	bool error_flag = false;
 	const int VENDOR_LEN = 3;
-	char vendor[VENDOR_LEN + 1]; // 3 upper case vendor + '\0' termination
+	char vendor[VENDOR_LEN + 1] = {0}; // 3 upper case vendor + '\0' termination
 	const int IDENTIFICATION_LEN = 16;
-	char identification[IDENTIFICATION_LEN + 1]; // 16 meter specific + '\0' termination
+	char identification[IDENTIFICATION_LEN + 1] = {0}; // 16 meter specific + '\0' termination
 	const int OBIS_LEN = 16;
 	char obis_code[OBIS_LEN + 1]; /* A-B:C.D.E*F
 							 fields A, B, E, F are optional
