@@ -757,8 +757,9 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 			}
 
 			print(log_debug,
-				  "Read package with %i tuples (vendor=%s, baudrate=%c, identification=%s)",
-				  name().c_str(), number_of_tuples, vendor, baudrate, identification);
+				  "Read package with %llu tuples (vendor=%s, baudrate=%c, identification=%s)",
+				  name().c_str(), (unsigned long long)number_of_tuples, vendor, baudrate,
+				  identification);
 			return number_of_tuples;
 		} // end switch
 
