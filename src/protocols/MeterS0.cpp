@@ -804,7 +804,7 @@ bool MeterS0::HWIF_GPIOD::_open() {
 		print(log_info, "configuring GPIO via GPIOD (active low)", "S0");
 		if (gpiod_line_request_rising_edge_events_flags(_line, consumername, GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW)) {
 			_close();
-			throw vz::VZException("line request input flags failed, errno " + std::to_string(errno));
+			throw vz::VZException("line request rising edge events w/ flags failed, errno " + std::to_string(errno));
 		}
 	} else {
 		if (gpiod_line_request_rising_edge_events(_line, consumername)) {
