@@ -171,6 +171,8 @@ endif(WIN32)
 
 find_library(LIBUUID uuid)
 find_library(LIBGCRYPT gcrypt)
+find_library(GPIOD_LIBRARY NAMES libgpiod.so)
+
 
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)

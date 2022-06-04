@@ -29,6 +29,7 @@
 #include <atomic>
 #include <termios.h>
 #include <thread>
+#include <gpiod.h>
 
 #include <protocols/Protocol.hpp>
 
@@ -83,6 +84,26 @@ class MeterS0 : public vz::protocol::Protocol {
 		int _gpiopin;
 		bool _configureGPIO; // try export,...
 		std::string _device;
+	};
+
+	class HWIF_GPIOD : public HWIF {
+	  public:
+		HWIF_GPIOD(int gpiopin, const std::list<Option> &options);
+		virtual ~HWIF_GPIOD();
+
+		virtual bool _open();
+		virtual bool _close();
+		virtual bool waitForImpulse(bool &timeout);
+		virtual int status() { return -1; }; // not supported always return error
+		virtual bool is_blocking() const { return true; }
+
+	  protected:
+		int _gpiopin;
+		bool _configureGPIO; // try export,...
+		struct gpiod_chip *_chip;
+		struct gpiod_line *_line;
+		int _debounce_delay_ms;
+		struct timespec _ts_next_valid_event_after;
 	};
 
 	class HWIF_MMAP : public HWIF {
