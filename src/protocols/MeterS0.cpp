@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <gpiod.h>
 
 #include "Options.hpp"
 #include "protocols/MeterS0.hpp"
@@ -73,6 +74,9 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 			}
 			if (use_mmap) {
 				_hwif = new HWIF_MMAP(gpiopin, mmap);
+			} else if (gpiopin > 1000) {
+				print(log_info, "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio.",  name().c_str(), gpiopin);
+				_hwif = new HWIF_GPIOD(gpiopin - 1000, options);
 			} else
 				_hwif = new HWIF_GPIO(gpiopin, options);
 		} else {
@@ -93,6 +97,9 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 			}
 			if (use_mmap) {
 				_hwif_dir = new HWIF_MMAP(gpiodirpin, mmap);
+			} else if (gpiopin > 1000) {
+				print(log_info, "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio_dir.",  name().c_str(), gpiopin);
+				_hwif_dir = new HWIF_GPIOD(gpiodirpin - 1000, options);
 			} else
 				_hwif_dir = new HWIF_GPIO(gpiodirpin, options);
 		}
@@ -745,4 +752,118 @@ bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout) {
 	}
 	timeout = false;
 	return false;
+}
+
+
+MeterS0::HWIF_GPIOD::HWIF_GPIOD(int gpiopin, const std::list<Option> &options)
+	: _gpiopin(gpiopin), _configureGPIO(true), _chip(NULL), _line(NULL),
+	_debounce_delay_ms(30), _ts_next_valid_event_after({.tv_sec=0L,.tv_nsec=0L}) {
+	OptionList optlist;
+
+	if (_gpiopin < 0)
+		throw vz::VZException("invalid (<0) gpio(pin) set");
+
+	try {
+		_configureGPIO = optlist.lookup_bool(options, "configureGPIO");
+	} catch (vz::VZException &e) {
+		print(log_info, "Missing bool configureGPIO using default true", "S0");
+		_configureGPIO = true;
+	}
+
+	try {
+		_debounce_delay_ms = optlist.lookup_int(options, "debounce_delay");
+	} catch (vz::OptionNotFoundException &e) {
+		_debounce_delay_ms = 30;
+	} catch (vz::VZException &e) {
+		print(log_alert, "Failed to parse debounce_delay", "");
+		throw;
+	}
+}
+
+MeterS0::HWIF_GPIOD::~HWIF_GPIOD() {
+	_close();
+}
+
+bool MeterS0::HWIF_GPIOD::_open() {
+	const char* consumername="vzlogger-s0";
+	const char* chipname = "gpiochip0";
+
+	_chip = gpiod_chip_open_by_name(chipname);
+	if (!_chip) {
+		throw vz::VZException("open chip failed, errno " + std::to_string(errno));
+	}
+
+	print(log_debug, "get GPIO line %d", "S0", _gpiopin);
+	_line = gpiod_chip_get_line(_chip, _gpiopin);
+	if (!_line) {
+		_close();
+		throw vz::VZException("get line "+ std::to_string(_gpiopin) + " failed, errno " + std::to_string(errno));
+	}
+
+	if (_configureGPIO) {
+		print(log_info, "configuring GPIO via GPIOD (active low)", "S0");
+		if (gpiod_line_request_rising_edge_events_flags(_line, consumername, GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW)) {
+			_close();
+			throw vz::VZException("line request input flags failed, errno " + std::to_string(errno));
+		}
+	} else {
+		if (gpiod_line_request_rising_edge_events(_line, consumername)) {
+			_close();
+			throw vz::VZException("line request rising edge events failed, errno " + std::to_string(errno));
+		}
+	}
+
+	return true;
+}
+
+bool MeterS0::HWIF_GPIOD::_close() {
+	if (_line) {
+		gpiod_line_release(_line); //ignore errors?
+		_line = NULL;
+	}
+
+	if (_chip) {
+		gpiod_chip_close(_chip); //ignore errors?
+		_chip = NULL;
+	}
+
+	return true;
+}
+
+bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
+	struct timespec ts_timeout;
+	struct gpiod_line_event event;
+
+	//one second
+	ts_timeout.tv_sec = 1L;
+	ts_timeout.tv_nsec = 0L;
+
+	int rv = gpiod_line_event_wait(_line, &ts_timeout);
+	print(log_debug, "MeterS0:HWIF_GPIOD:first poll returned %d", "S0", rv);
+	if (rv > 0) { //event occurred
+		if (gpiod_line_event_read(_line, &event) ) {
+			throw vz::VZException("error reading event, errno " + std::to_string(errno));
+		}
+		timeout = false;
+		if (event.ts.tv_sec > _ts_next_valid_event_after.tv_sec ||
+				(event.ts.tv_sec == _ts_next_valid_event_after.tv_sec &&
+				event.ts.tv_nsec > _ts_next_valid_event_after.tv_nsec)) {
+			//event is valid and after the debounce delay
+			_ts_next_valid_event_after.tv_sec = event.ts.tv_sec + _debounce_delay_ms / 1000;
+			_ts_next_valid_event_after.tv_nsec = event.ts.tv_nsec + _debounce_delay_ms % 1000 * 1e6;
+			print(log_debug, "got a valid event at [%ld.%ld]", "S0", event.ts.tv_sec, event.ts.tv_nsec);
+			return true;
+		} else {
+			//event within debounce delay
+			print(log_debug, "got an invalid event at [%ld.%ld] within debounce delay until [%ld.%ld]", "S0",
+				event.ts.tv_sec, event.ts.tv_nsec,_ts_next_valid_event_after.tv_sec, _ts_next_valid_event_after.tv_nsec );
+			return false;
+		}
+	} else if (rv == 0) { //no event occurred
+		timeout = true;
+		return false;
+	} else { //error
+		timeout = false;
+		throw vz::VZException("error waiting for event, errno " + std::to_string(errno));
+	}
 }

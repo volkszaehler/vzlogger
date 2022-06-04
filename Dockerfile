@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     libleptonica-dev \
     libmosquitto-dev \
     libunistring-dev \
+    libgpiod-dev \
     dh-autoreconf \
     && rm -rf /var/lib/apt/lists/*
 
@@ -66,6 +67,7 @@ RUN apt-get update && apt-get install -y \
     liblept5 \
     libmosquitto1 \
     libunistring2 \
+    libgpiod2 \
     && rm -rf /var/lib/apt/lists/*
 
 # libsml is linked statically => no need to copy
