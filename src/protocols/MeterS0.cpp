@@ -25,6 +25,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <gpiod.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +33,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include <gpiod.h>
 
 #include "Options.hpp"
 #include "protocols/MeterS0.hpp"
@@ -75,7 +75,8 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 			if (use_mmap) {
 				_hwif = new HWIF_MMAP(gpiopin, mmap);
 			} else if (gpiopin > 1000) {
-				print(log_info, "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio.",  name().c_str(), gpiopin);
+				print(log_info, "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio.",
+					  name().c_str(), gpiopin);
 				_hwif = new HWIF_GPIOD(gpiopin - 1000, options);
 			} else
 				_hwif = new HWIF_GPIO(gpiopin, options);
@@ -98,7 +99,9 @@ MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 			if (use_mmap) {
 				_hwif_dir = new HWIF_MMAP(gpiodirpin, mmap);
 			} else if (gpiopin > 1000) {
-				print(log_info, "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio_dir.",  name().c_str(), gpiopin);
+				print(log_info,
+					  "GPIO Pin %d greater than 1000. Using GPIOD interface for gpio_dir.",
+					  name().c_str(), gpiopin);
 				_hwif_dir = new HWIF_GPIOD(gpiodirpin - 1000, options);
 			} else
 				_hwif_dir = new HWIF_GPIO(gpiodirpin, options);
@@ -754,10 +757,20 @@ bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout) {
 	return false;
 }
 
+/* GPIOD based interface, takes three additional config parameters:
+ *
+ * configureGPIO - whether or not to configure the GPIO pin active low (default: true)
+ * debounce_delay (milliseconds) - it implements its own debounce logic where after an
+ *                                 initial low->high or high->low transition, all additional
+ *                                 transitions are ignored for a period (default: 30)
+ * high_wait (milliseconds) - the minimum time the signal needs to stay high (after debounce)
+ *                            before an impulse is recognized (default: -1 / disabled)
+ */
 
 MeterS0::HWIF_GPIOD::HWIF_GPIOD(int gpiopin, const std::list<Option> &options)
-	: _gpiopin(gpiopin), _configureGPIO(true), _chip(NULL), _line(NULL),
-	_debounce_delay_ms(30), _ts_next_valid_event_after({.tv_sec=0L,.tv_nsec=0L}) {
+	: _gpiopin(gpiopin), _configureGPIO(true), _debounce_delay_ms(30), _high_wait_ms(-1),
+	  _chip(NULL), _line(NULL), _ts_next_state_transition({.tv_sec = 0L, .tv_nsec = 0L}),
+	  _gpio_line_status(-1), _state(LOW) {
 	OptionList optlist;
 
 	if (_gpiopin < 0)
@@ -778,15 +791,27 @@ MeterS0::HWIF_GPIOD::HWIF_GPIOD(int gpiopin, const std::list<Option> &options)
 		print(log_alert, "Failed to parse debounce_delay", "");
 		throw;
 	}
+
+	try {
+		_high_wait_ms = optlist.lookup_int(options, "high_wait");
+	} catch (vz::OptionNotFoundException &e) {
+		_high_wait_ms = -1;
+	} catch (vz::VZException &e) {
+		print(log_alert, "Failed to parse high_wait", "");
+		throw;
+	}
+
+	print(log_info,
+		  "Initialized with config gpiopin %d, configureGPIO %s, debounce_delay %d, high_wait %d",
+		  "S0", _gpiopin, _configureGPIO ? "true" : "false", _debounce_delay_ms, _high_wait_ms);
 }
 
-MeterS0::HWIF_GPIOD::~HWIF_GPIOD() {
-	_close();
-}
+MeterS0::HWIF_GPIOD::~HWIF_GPIOD() { _close(); }
 
 bool MeterS0::HWIF_GPIOD::_open() {
-	const char* consumername="vzlogger-s0";
-	const char* chipname = "gpiochip0";
+	const char *consumername = "vzlogger-s0";
+	const char *chipname = "gpiochip0"; // this is currently hardcoded since the interesting GPIO
+										// lines are on chip 0 of a raspberry pi
 
 	_chip = gpiod_chip_open_by_name(chipname);
 	if (!_chip) {
@@ -797,20 +822,34 @@ bool MeterS0::HWIF_GPIOD::_open() {
 	_line = gpiod_chip_get_line(_chip, _gpiopin);
 	if (!_line) {
 		_close();
-		throw vz::VZException("get line "+ std::to_string(_gpiopin) + " failed, errno " + std::to_string(errno));
+		throw vz::VZException("get line " + std::to_string(_gpiopin) + " failed, errno " +
+							  std::to_string(errno));
 	}
 
+	int flags = 0;
 	if (_configureGPIO) {
 		print(log_info, "configuring GPIO via GPIOD (active low)", "S0");
-		if (gpiod_line_request_rising_edge_events_flags(_line, consumername, GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW)) {
-			_close();
-			throw vz::VZException("line request rising edge events w/ flags failed, errno " + std::to_string(errno));
-		}
-	} else {
-		if (gpiod_line_request_rising_edge_events(_line, consumername)) {
-			_close();
-			throw vz::VZException("line request rising edge events failed, errno " + std::to_string(errno));
-		}
+		flags = GPIOD_LINE_REQUEST_FLAG_ACTIVE_LOW;
+	}
+
+	// initialize status based on line status
+	if (gpiod_line_request_input_flags(_line, consumername, flags)) {
+		_close();
+		throw vz::VZException("line request input failed, errno " + std::to_string(errno));
+	}
+	_gpio_line_status = gpiod_line_get_value(_line);
+	if (_gpio_line_status == -1) {
+		_close();
+		throw vz::VZException("Read line status failed, errno " + std::to_string(errno));
+	}
+	_state = (_gpio_line_status) ? HIGH : LOW;
+	gpiod_line_release(_line);
+
+	// subscribe to GPIO events
+	if (gpiod_line_request_both_edges_events_flags(_line, consumername, flags)) {
+		_close();
+		throw vz::VZException("line request both edge events failed, errno " +
+							  std::to_string(errno));
 	}
 
 	return true;
@@ -818,52 +857,122 @@ bool MeterS0::HWIF_GPIOD::_open() {
 
 bool MeterS0::HWIF_GPIOD::_close() {
 	if (_line) {
-		gpiod_line_release(_line); //ignore errors?
+		gpiod_line_release(_line);
 		_line = NULL;
 	}
 
 	if (_chip) {
-		gpiod_chip_close(_chip); //ignore errors?
+		gpiod_chip_close(_chip);
 		_chip = NULL;
 	}
+
+	_gpio_line_status = -1;
+	_state = NO_TRANSITION;
 
 	return true;
 }
 
+/*
+the GPIOD interface provides a subscription mechanism to events and guarantees that no events are
+lost This means even if counter_thread sleeps, rising & falling edge events occurring will be
+reported once waitForImpulse is called again. Therefore we implement our own debouncing mechanism in
+a state machine.
+*/
 bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
-	struct timespec ts_timeout;
-	struct gpiod_line_event event;
+	struct gpiod_line_event event = {{0L, 0L}, -1};
 
-	//one second
-	ts_timeout.tv_sec = 1L;
-	ts_timeout.tv_nsec = 0L;
+	// HIGH and LOW: wait 1 sec max before returning and giving the counter thread the option to
+	// exit
+	struct timespec ts_max_wait_for_events = {1L, 0L};
+	if (_state == DEBOUNCE || _state == HIGH_WAIT) {
+		// DEBOUNCE AND HIGH_WAIT: wait max until next state transition is scheduled
+		struct timespec ts_now = {0L, 0L};
+		clock_gettime(CLOCK_REALTIME, &ts_now);
+		timespec_sub(_ts_next_state_transition, ts_now, ts_max_wait_for_events);
+	}
 
-	int rv = gpiod_line_event_wait(_line, &ts_timeout);
-	print(log_debug, "MeterS0:HWIF_GPIOD:first poll returned %d", "S0", rv);
-	if (rv > 0) { //event occurred
-		if (gpiod_line_event_read(_line, &event) ) {
+	// wait for GPIO events unless we're already at the next state transition
+	int event_wait_result = 0;
+	if (ts_max_wait_for_events.tv_sec >= 0 && ts_max_wait_for_events.tv_nsec >= 0) {
+		event_wait_result = gpiod_line_event_wait(_line, &ts_max_wait_for_events);
+		print(log_debug, "MeterS0:HWIF_GPIOD: wait for gpio line event returned %d", "S0",
+			  event_wait_result);
+	} else {
+		print(log_debug, "MeterS0:HWIF_GPIOD: no wait - scheduled state transition due", "S0");
+	}
+
+	// read & handle event if one was detected: ensure that _gpio_line_status reflects the physical
+	// world
+	if (event_wait_result < 0) { // error
+		throw vz::VZException("error waiting for event, errno " + std::to_string(errno));
+	} else if (event_wait_result > 0) { // event received
+		if (gpiod_line_event_read(_line, &event)) {
 			throw vz::VZException("error reading event, errno " + std::to_string(errno));
 		}
-		timeout = false;
-		if (event.ts.tv_sec > _ts_next_valid_event_after.tv_sec ||
-				(event.ts.tv_sec == _ts_next_valid_event_after.tv_sec &&
-				event.ts.tv_nsec > _ts_next_valid_event_after.tv_nsec)) {
-			//event is valid and after the debounce delay
-			_ts_next_valid_event_after.tv_sec = event.ts.tv_sec + _debounce_delay_ms / 1000;
-			_ts_next_valid_event_after.tv_nsec = event.ts.tv_nsec + _debounce_delay_ms % 1000 * 1e6;
-			print(log_debug, "got a valid event at [%ld.%ld]", "S0", event.ts.tv_sec, event.ts.tv_nsec);
-			return true;
+		print(log_info,
+			  "[%ld.%ld] GPIO event %d (1=rising edge, 2=falling edge) in current state %d", "S0",
+			  event.ts.tv_sec, event.ts.tv_nsec, event.event_type, _state);
+		if (event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
+			_gpio_line_status = 1;
 		} else {
-			//event within debounce delay
-			print(log_debug, "got an invalid event at [%ld.%ld] within debounce delay until [%ld.%ld]", "S0",
-				event.ts.tv_sec, event.ts.tv_nsec,_ts_next_valid_event_after.tv_sec, _ts_next_valid_event_after.tv_nsec );
-			return false;
+			_gpio_line_status = 0;
 		}
-	} else if (rv == 0) { //no event occurred
-		timeout = true;
-		return false;
-	} else { //error
-		timeout = false;
-		throw vz::VZException("error waiting for event, errno " + std::to_string(errno));
 	}
+
+	// transition state machine depending on events, timeouts, gpio line state & configuration
+	States newstate = NO_TRANSITION;
+	switch (_state) {
+	case LOW:
+		if (event_wait_result > 0 && event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
+			// if rising edge detected, transition to DEBOUNCE (if configured),
+			// HIGH_WAIT (if configured) or directly to HIGH
+			newstate = (_debounce_delay_ms > 0) ? DEBOUNCE : (_high_wait_ms > 0) ? HIGH_WAIT : HIGH;
+		}
+		break; // no state change on timeout or falling edge event
+
+	case DEBOUNCE:
+		if (event_wait_result == 0) {
+			// if wait time exceeded, transition  to LOW if GPIO line is low
+			// and HIGH_WAIT (if configured) or HIGH if GPIO line is high
+			newstate = (_gpio_line_status == 0) ? LOW : (_high_wait_ms > 0) ? HIGH_WAIT : HIGH;
+		}
+		break; // no state change on either rising or falling edge event
+
+	case HIGH_WAIT:
+		if (event_wait_result == 0) {
+			// if wait time exceeded, transition to HIGH
+			newstate = HIGH;
+		}
+		[[fallthrough]]; // HIGH_WAIT reacts on events the same way as HIGH
+	case HIGH:
+		if (event_wait_result > 0 && event.event_type == GPIOD_LINE_EVENT_FALLING_EDGE) {
+			// if falling edge detected, transition to DEBOUNCE (if configured) or directly to LOW
+			newstate = (_debounce_delay_ms > 0) ? DEBOUNCE : LOW;
+		}
+		break; // no state change on rising edge event or (in case of HIGH) timeout
+
+	default:
+		throw vz::VZException("Illegal state in state machine");
+	}
+
+	// set timestamps for automated state transitions for DEBOUNCE and HIGH_WAIT
+	if (newstate == DEBOUNCE || newstate == HIGH_WAIT) {
+		clock_gettime(CLOCK_REALTIME, &_ts_next_state_transition);
+		timespec_add_ms(_ts_next_state_transition,
+						(newstate == DEBOUNCE) ? _debounce_delay_ms : _high_wait_ms);
+	} else {
+		_ts_next_state_transition = {-1L, -1L};
+	}
+
+	if (newstate != NO_TRANSITION) {
+		print(
+			log_info,
+			"MeterS0:HWIF_GPIOD: state machine transition from %d to %d with a timeout at %ld.%ld",
+			"S0", _state, newstate, _ts_next_state_transition.tv_sec,
+			_ts_next_state_transition.tv_nsec);
+		_state = newstate;
+	}
+
+	timeout = false;           // don't let counter_thread do additional sleeping for debouncing
+	return (newstate == HIGH); // return true when transitioned to HIGH state, false otherwise
 }
