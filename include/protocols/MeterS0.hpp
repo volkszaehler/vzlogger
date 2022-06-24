@@ -27,9 +27,9 @@
 #define _S0_H_
 
 #include <atomic>
+#include <gpiod.h>
 #include <termios.h>
 #include <thread>
-#include <gpiod.h>
 
 #include <protocols/Protocol.hpp>
 
@@ -99,11 +99,16 @@ class MeterS0 : public vz::protocol::Protocol {
 
 	  protected:
 		int _gpiopin;
-		bool _configureGPIO; // try export,...
+		bool _configureGPIO;
+		int _debounce_delay_ms;
+		int _high_wait_ms;
 		struct gpiod_chip *_chip;
 		struct gpiod_line *_line;
-		int _debounce_delay_ms;
-		struct timespec _ts_next_valid_event_after;
+		struct timespec _ts_next_state_transition;
+		int _gpio_line_status;
+
+		enum States { NO_TRANSITION = -1, LOW = 0, HIGH = 1, DEBOUNCE = 2, HIGH_WAIT = 3 };
+		States _state;
 	};
 
 	class HWIF_MMAP : public HWIF {
