@@ -10,6 +10,7 @@ list(APPEND test_sources
     ../src/api/Volkszaehler.cpp
     ../src/CurlSessionProvider.cpp
     ../src/protocols/MeterW1therm.cpp
+    ../src/api/hmac.cpp
 )
 
 set(test_libraries
@@ -24,6 +25,7 @@ set(test_libraries
     unistring
     ${GNUTLS_LIBRARIES}
     ${OCR_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
 )
 
 if(SML_FOUND AND ENABLE_SML)
@@ -53,7 +55,7 @@ endif(ENABLE_MQTT)
 
 if(OMS_SUPPORT)
     list(APPEND test_sources ../src/protocols/MeterOMS.cpp)
-    list(APPEND test_libraries ${MBUS_LIBRARY} ${OPENSSL_LIBRARIES})
+    list(APPEND test_libraries ${MBUS_LIBRARY})
 endif(OMS_SUPPORT)
 
 add_executable(vzlogger_unit_tests ${test_sources})

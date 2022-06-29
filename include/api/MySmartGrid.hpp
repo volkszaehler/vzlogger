@@ -83,8 +83,6 @@ class MySmartGrid : public ApiIF {
 
 	void _api_header();
 
-	void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen);
-
 	CurlResponse *response() { return _response.get(); }
 
 	void convertUuid(const std::string uuidIn, std::string &uuidOut);
