@@ -107,7 +107,13 @@ class MeterS0 : public vz::protocol::Protocol {
 		struct timespec _ts_next_state_transition;
 		int _gpio_line_status;
 
-		enum States { NO_TRANSITION = -1, LOW = 0, HIGH = 1, DEBOUNCE = 2, HIGH_WAIT = 3 };
+		enum States {
+			NO_TRANSITION = -1,
+			STATE_LOW = 0,
+			STATE_HIGH = 1,
+			STATE_DEBOUNCE = 2,
+			STATE_HIGH_WAIT = 3
+		};
 		States _state;
 	};
 

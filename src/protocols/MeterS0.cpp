@@ -770,7 +770,7 @@ bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout) {
 MeterS0::HWIF_GPIOD::HWIF_GPIOD(int gpiopin, const std::list<Option> &options)
 	: _gpiopin(gpiopin), _configureGPIO(true), _debounce_delay_ms(30), _high_wait_ms(-1),
 	  _chip(NULL), _line(NULL), _ts_next_state_transition({.tv_sec = 0L, .tv_nsec = 0L}),
-	  _gpio_line_status(-1), _state(LOW) {
+	  _gpio_line_status(-1), _state(STATE_LOW) {
 	OptionList optlist;
 
 	if (_gpiopin < 0)
@@ -842,7 +842,7 @@ bool MeterS0::HWIF_GPIOD::_open() {
 		_close();
 		throw vz::VZException("Read line status failed, errno " + std::to_string(errno));
 	}
-	_state = (_gpio_line_status) ? HIGH : LOW;
+	_state = (_gpio_line_status) ? STATE_HIGH : STATE_LOW;
 	gpiod_line_release(_line);
 
 	// subscribe to GPIO events
@@ -881,11 +881,11 @@ a state machine.
 bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 	struct gpiod_line_event event = {{0L, 0L}, -1};
 
-	// HIGH and LOW: wait 1 sec max before returning and giving the counter thread the option to
-	// exit
+	// STATE_HIGH and STATE_LOW: wait 1 sec max before returning and giving the counter thread the
+	// option to exit
 	struct timespec ts_max_wait_for_events = {1L, 0L};
-	if (_state == DEBOUNCE || _state == HIGH_WAIT) {
-		// DEBOUNCE AND HIGH_WAIT: wait max until next state transition is scheduled
+	if (_state == STATE_DEBOUNCE || _state == STATE_HIGH_WAIT) {
+		// STATE_DEBOUNCE AND STATE_HIGH_WAIT: wait max until next state transition is scheduled
 		struct timespec ts_now = {0L, 0L};
 		clock_gettime(CLOCK_REALTIME, &ts_now);
 		timespec_sub(_ts_next_state_transition, ts_now, ts_max_wait_for_events);
@@ -922,44 +922,49 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 	// transition state machine depending on events, timeouts, gpio line state & configuration
 	States newstate = NO_TRANSITION;
 	switch (_state) {
-	case LOW:
+	case STATE_LOW:
 		if (event_wait_result > 0 && event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
-			// if rising edge detected, transition to DEBOUNCE (if configured),
-			// HIGH_WAIT (if configured) or directly to HIGH
-			newstate = (_debounce_delay_ms > 0) ? DEBOUNCE : (_high_wait_ms > 0) ? HIGH_WAIT : HIGH;
+			// if rising edge detected, transition to STATE_DEBOUNCE (if configured),
+			// STATE_HIGH_WAIT (if configured) or directly to STATE_HIGH
+			newstate = (_debounce_delay_ms > 0) ? STATE_DEBOUNCE
+					   : (_high_wait_ms > 0)    ? STATE_HIGH_WAIT
+												: STATE_HIGH;
 		}
 		break; // no state change on timeout or falling edge event
 
-	case DEBOUNCE:
+	case STATE_DEBOUNCE:
 		if (event_wait_result == 0) {
-			// if wait time exceeded, transition  to LOW if GPIO line is low
-			// and HIGH_WAIT (if configured) or HIGH if GPIO line is high
-			newstate = (_gpio_line_status == 0) ? LOW : (_high_wait_ms > 0) ? HIGH_WAIT : HIGH;
+			// if wait time exceeded, transition  to STATE_LOW if GPIO line is low
+			// and STATE_HIGH_WAIT (if configured) or STATE_HIGH if GPIO line is high
+			newstate = (_gpio_line_status == 0) ? STATE_LOW
+					   : (_high_wait_ms > 0)    ? STATE_HIGH_WAIT
+												: STATE_HIGH;
 		}
 		break; // no state change on either rising or falling edge event
 
-	case HIGH_WAIT:
+	case STATE_HIGH_WAIT:
 		if (event_wait_result == 0) {
-			// if wait time exceeded, transition to HIGH
-			newstate = HIGH;
+			// if wait time exceeded, transition to STATE_HIGH
+			newstate = STATE_HIGH;
 		}
-		[[fallthrough]]; // HIGH_WAIT reacts on events the same way as HIGH
-	case HIGH:
+		[[fallthrough]]; // STATE_HIGH_WAIT reacts on events the same way as STATE_HIGH
+	case STATE_HIGH:
 		if (event_wait_result > 0 && event.event_type == GPIOD_LINE_EVENT_FALLING_EDGE) {
-			// if falling edge detected, transition to DEBOUNCE (if configured) or directly to LOW
-			newstate = (_debounce_delay_ms > 0) ? DEBOUNCE : LOW;
+			// if falling edge detected, transition to STATE_DEBOUNCE (if configured) or directly to
+			// STATE_LOW
+			newstate = (_debounce_delay_ms > 0) ? STATE_DEBOUNCE : STATE_LOW;
 		}
-		break; // no state change on rising edge event or (in case of HIGH) timeout
+		break; // no state change on rising edge event or (in case of STATE_HIGH) timeout
 
 	default:
 		throw vz::VZException("Illegal state in state machine");
 	}
 
-	// set timestamps for automated state transitions for DEBOUNCE and HIGH_WAIT
-	if (newstate == DEBOUNCE || newstate == HIGH_WAIT) {
+	// set timestamps for automated state transitions for STATE_DEBOUNCE and STATE_HIGH_WAIT
+	if (newstate == STATE_DEBOUNCE || newstate == STATE_HIGH_WAIT) {
 		clock_gettime(CLOCK_REALTIME, &_ts_next_state_transition);
 		timespec_add_ms(_ts_next_state_transition,
-						(newstate == DEBOUNCE) ? _debounce_delay_ms : _high_wait_ms);
+						(newstate == STATE_DEBOUNCE) ? _debounce_delay_ms : _high_wait_ms);
 	} else {
 		_ts_next_state_transition = {-1L, -1L};
 	}
@@ -973,6 +978,7 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 		_state = newstate;
 	}
 
-	timeout = false;           // don't let counter_thread do additional sleeping for debouncing
-	return (newstate == HIGH); // return true when transitioned to HIGH state, false otherwise
+	timeout = false; // don't let counter_thread do additional sleeping for debouncing
+	return (newstate ==
+			STATE_HIGH); // return true when transitioned to STATE_HIGH state, false otherwise
 }
