@@ -9,6 +9,7 @@ set(api_srcs
   CurlIF.cpp
   CurlCallback.cpp
   CurlResponse.cpp
+  hmac.cpp
 )
 
 add_library(vz-api ${api_srcs})
