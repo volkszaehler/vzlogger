@@ -926,9 +926,13 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 		if (event_wait_result > 0 && event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
 			// if rising edge detected, transition to STATE_DEBOUNCE (if configured),
 			// STATE_HIGH_WAIT (if configured) or directly to STATE_HIGH
-			newstate = (_debounce_delay_ms > 0) ? STATE_DEBOUNCE
-					   : (_high_wait_ms > 0)    ? STATE_HIGH_WAIT
-												: STATE_HIGH;
+			if (_debounce_delay_ms > 0) {
+				newstate = STATE_DEBOUNCE
+			} else if (_high_wait_ms > 0) {
+				newstate = STATE_HIGH_WAIT
+			} else {
+				newstate = STATE_HIGH;
+			}
 		}
 		break; // no state change on timeout or falling edge event
 
@@ -936,9 +940,13 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 		if (event_wait_result == 0) {
 			// if wait time exceeded, transition  to STATE_LOW if GPIO line is low
 			// and STATE_HIGH_WAIT (if configured) or STATE_HIGH if GPIO line is high
-			newstate = (_gpio_line_status == 0) ? STATE_LOW
-					   : (_high_wait_ms > 0)    ? STATE_HIGH_WAIT
-												: STATE_HIGH;
+			if (_gpio_line_status == 0) {
+				newstate = STATE_LOW
+			} else if (_high_wait_ms > 0) {
+				newstate = STATE_HIGH_WAIT
+			} else {
+				newstate = STATE_HIGH;
+			}
 		}
 		break; // no state change on either rising or falling edge event
 
