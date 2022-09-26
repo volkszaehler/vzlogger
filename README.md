@@ -23,7 +23,7 @@ If you want to use MQTT support:
 
 Then run the installation:
 
-    wget --no-check-certificate https://raw.github.com/volkszaehler/vzlogger/master/install.sh
+    wget https://raw.github.com/volkszaehler/vzlogger/master/install.sh
     sudo bash install.sh
     
 Docker
