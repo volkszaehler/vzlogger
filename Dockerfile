@@ -1,4 +1,4 @@
-ARG DEBIAN_VERSION=buster-slim
+ARG DEBIAN_VERSION=bullseye-slim
 
 ############################
 # STEP 1 build executable binary
@@ -62,7 +62,7 @@ RUN apt-get update && apt-get install -y \
     libmicrohttpd12 \
     libltdl7 \
     libatomic1 \
-    libjson-c3 \
+    libjson-c5 \
     liblept5 \
     libmosquitto1 \
     libunistring2 \
