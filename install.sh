@@ -24,6 +24,7 @@
 #     - vzlogger (libraries must be in place already)
 #     - libsmljson
 #     - libsml
+#     - mqtt
 #     - clean (will clean the respective make targets, requires explicitly naming the modules)
 #
 # 	To run a clean build:
