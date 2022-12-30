@@ -89,6 +89,27 @@ void *reading_thread(void *arg) {
 							  rds[i].time_ms());
 					}
 				}
+				if (n > 0 && !options.haveTimeMachine())
+					for (size_t i = 0; i < n; i++)
+						if (rds[i].time_s() < 631152000) { // 1990-01-01 00:00:00
+							print(log_error,
+								  "meter returned readings with a timestamp before 1990, IGNORING.",
+								  mtr->name());
+							print(log_error, "most likely your meter is misconfigured,",
+								  mtr->name());
+							print(log_error,
+								  "for sml meters, set `\"use_local_time\": true` in vzlogger.conf"
+								  " (meter section),",
+								  mtr->name());
+							print(log_error,
+								  "to override this check, set `\"i_have_a_time_machine\": true`"
+								  " in vzlogger.conf.",
+								  mtr->name());
+							// note: we do NOT throw an exception or such,
+							// because this might be a spurious error,
+							// the next reading might be valid again.
+							n = 0;
+						}
 
 				/* insert readings into channel queues */
 				if (n > 0)

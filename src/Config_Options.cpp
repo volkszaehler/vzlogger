@@ -41,13 +41,15 @@ static const char *option_type_str[] = {"null",   "boolean", "double", "int",
 
 Config_Options::Config_Options()
 	: _config("/etc/vzlogger.conf"), _log(""), _pds(0), _port(8080), _verbosity(0),
-	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false) {
+	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
+	  _time_machine(false) {
 	_logfd = NULL;
 }
 
 Config_Options::Config_Options(const std::string filename)
 	: _config(filename), _log(""), _pds(0), _port(8080), _verbosity(0), _comet_timeout(30),
-	  _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false) {
+	  _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
+	  _time_machine(false) {
 	_logfd = NULL;
 }
 
@@ -178,7 +180,9 @@ void Config_Options::config_parse(MapContainer &mappings) {
 						  "mqtt");
 			}
 #endif
-			else {
+			else if ((strcmp(key, "i_have_a_time_machine") == 0) && type == json_type_boolean) {
+				_time_machine = json_object_get_boolean(value);
+			} else {
 				print(log_alert, "Ignoring invalid field or type: %s=%s (%s)", NULL, key,
 					  json_object_get_string(value), option_type_str[type]);
 			}
