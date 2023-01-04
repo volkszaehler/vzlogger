@@ -73,6 +73,10 @@ OPTION(METEREXEC_ROOTACCESS
   "compile MeterExec protocol to use root privileges for script calls (def=no)])"
   Off)
 
+OPTION(USE_OPENSSL
+  "compile with openssl (def=yes)])"
+  On)
+
 OPTION(BUILD_TEST
   "build unit tests (def=on)])"
   On)
@@ -90,7 +94,11 @@ endif( ENABLE_SML )
 if( ENABLE_OMS )
   # find dependencies todo libmbus
   include(FindMBus)
-  include(FindOpenSSL)
+  if( USE_OPENSSL )
+    include(FindOpenSSL)
+  else()
+    include(FindGnutls)
+  endif( USE_OPENSSL )
   if(MBUS_FOUND)
     set(OMS_SUPPORT 1)
     include_directories(${MBUS_INCLUDE_DIR})
@@ -166,7 +174,9 @@ else(WIN32)
   #  add_definitions(-DCURL_STATICLIB)
   include(FindCURL)
   include(FindGnutls)
-  include(FindOpenSSL) # needed by MySmartGrid API...
+  if ( USE_OPENSSL ) 
+    include(FindOpenSSL) # for use by MySmartGrid API...
+  endif( USE_OPENSSL )    
 endif(WIN32)
 
 find_library(LIBUUID uuid)

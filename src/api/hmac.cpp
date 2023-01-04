@@ -1,17 +1,26 @@
+
+#include <cstdio>
 #include <cstring>
+#if defined(WITH_OPENSSL)
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
+#else
+#include <gnutls/crypto.h>
+#include <gnutls/gnutls.h>
+#endif
 
 namespace vz {
+
+#if defined(WITH_OPENSSL)
 
 void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen,
 			   const unsigned char *secretKey, size_t secretLen) {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 	HMAC_CTX hmacContext;
 
-	HMAC_Init(&hmacContext, secretKey(), secretLen), EVP_sha1());
+	HMAC_Init(&hmacContext, secretKey, secretLen), EVP_sha1());
 	HMAC_Update(&hmacContext, data, dataLen);
 #elif OPENSSL_VERSION_NUMBER < 0x30000000L
 	HMAC_CTX *hmacContext = HMAC_CTX_new();
@@ -39,7 +48,7 @@ void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen,
 	EVP_DigestSignFinal(evpContext, out, &len);
 #endif
 
-	char ret[2 * EVP_MAX_MD_SIZE];
+	char ret[2 * EVP_MAX_MD_SIZE + 1];
 	memset(ret, 0, sizeof(ret));
 
 	for (size_t i = 0; i < len; i++) {
@@ -59,5 +68,24 @@ void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen,
 	EVP_MD_CTX_free(evpContext);
 #endif
 }
+
+#else
+
+void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen,
+			   const unsigned char *secretKey, size_t secretLen) {
+	// compile time digest size for HMAC-SHA1
+	const unsigned int len = 20;
+	unsigned char out[len];
+	gnutls_hmac_fast(GNUTLS_MAC_SHA1, secretKey, secretLen, data, dataLen, out);
+
+	size_t ret_len = 2 * len + 1;
+	char ret[ret_len];
+	const gnutls_datum_t d_out = {out, len};
+	gnutls_hex_encode(&d_out, ret, &ret_len);
+
+	snprintf(digest, 255 /*sizeof(digest)*/, "X-Digest: %s", ret);
+}
+
+#endif // WITH_OPENSSL
 
 } // namespace vz
