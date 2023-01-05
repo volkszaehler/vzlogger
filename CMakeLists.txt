@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 2.6.2 FATAL_ERROR)
 if(POLICY CMP0011)
   cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
+# Supress a warning for if(GTest_FOUND)
+IF(POLICY CMP0012)
+    CMAKE_POLICY(SET CMP0012 NEW)
+ENDIF()
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 8)
@@ -208,48 +212,49 @@ endif()
 include(CTest)
 enable_testing()
 
-if(GIT_FOUND AND ENABLE_GOOGLEMOCK)
-  #add_subdirectory(gmock)
+if(ENABLE_GOOGLEMOCK)
 
-  # Download and unpack googletest at configure time
-  configure_file(gtest/CMakeLists.txt.in gtest-download/CMakeLists.txt)
-  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gtest-download )
-  if(result)
-      message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-  endif()
-  execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gtest-download )
-  if(result)
-      message(FATAL_ERROR "Build step for googletest failed: ${result}")
-  endif()
-
-  # Prevent overriding the parent project's compiler/linker
-  # settings on Windows
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-  # Add googletest directly to our build. This defines
-  # the gtest and gtest_main targets.
-  add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/gtest-src
-                   ${CMAKE_CURRENT_BINARY_DIR}/gtest-build
-                   EXCLUDE_FROM_ALL)
-
-  # The gtest/gtest_main targets carry header search path
-  # dependencies automatically when using CMake 2.8.11 or
-  # later. Otherwise we have to add them here ourselves.
-  if (CMAKE_VERSION VERSION_LESS 2.8.11)
-      include_directories("${gtest_SOURCE_DIR}/include")
-      include_directories("${gmock_SOURCE_DIR}/include")
+  include(FindGTest)
+  if (NOT GTest_FOUND AND GIT_FOUND) 
+    # Download and unpack googletest at configure time
+    configure_file(gtest/CMakeLists.txt.in gtest-download/CMakeLists.txt)
+    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gtest-download )
+    if(result)
+        message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gtest-download )
+    if(result)
+        message(FATAL_ERROR "Build step for googletest failed: ${result}")
+    endif()
+  
+    # Prevent overriding the parent project's compiler/linker
+    # settings on Windows
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  
+    # Add googletest directly to our build. This defines
+    # the gtest and gtest_main targets.
+    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/gtest-src
+                     ${CMAKE_CURRENT_BINARY_DIR}/gtest-build
+                     EXCLUDE_FROM_ALL)
+  
+    # The gtest/gtest_main targets carry header search path
+    # dependencies automatically when using CMake 2.8.11 or
+    # later. Otherwise we have to add them here ourselves.
+    if (CMAKE_VERSION VERSION_LESS 2.8.11)
+        include_directories("${gtest_SOURCE_DIR}/include")
+        include_directories("${gmock_SOURCE_DIR}/include")
+    endif()
   endif()
 
   add_subdirectory(tests)
-else()
- if (ENABLE_GOOGLEMOCK)
-    message(WARNING "googletest based unit tests disabled due to missing git. Please install git.")
- endif(ENABLE_GOOGLEMOCK)
 endif()
+if (ENABLE_GOOGLEMOCK AND NOT GTest_FOUND AND NOT GIT_FOUND)
+  message(WARNING "googletest based unit tests disabled due to missing googletest or git. Please install one of those.")
+endif(ENABLE_GOOGLEMOCK AND NOT GTest_FOUND AND NOT GIT_FOUND)
 add_test(NAME vzlogger_unit_tests COMMAND vzlogger_unit_tests)
 
 ### print some output for the user
