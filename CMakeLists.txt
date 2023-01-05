@@ -213,7 +213,6 @@ include(CTest)
 enable_testing()
 
 if(ENABLE_GOOGLEMOCK)
-  #add_subdirectory(gmock)
 
   include(FindGTest)
   if (NOT GTest_FOUND AND GIT_FOUND) 
@@ -252,11 +251,10 @@ if(ENABLE_GOOGLEMOCK)
   endif()
 
   add_subdirectory(tests)
-else()
- if (ENABLE_GOOGLEMOCK)
-    message(WARNING "googletest based unit tests disabled due to missing googletest or git. Please install one of those.")
- endif(ENABLE_GOOGLEMOCK)
 endif()
+if (ENABLE_GOOGLEMOCK AND NOT GTest_FOUND AND NOT GIT_FOUND)
+  message(WARNING "googletest based unit tests disabled due to missing googletest or git. Please install one of those.")
+endif(ENABLE_GOOGLEMOCK AND NOT GTest_FOUND AND NOT GIT_FOUND)
 add_test(NAME vzlogger_unit_tests COMMAND vzlogger_unit_tests)
 
 ### print some output for the user
