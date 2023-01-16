@@ -35,6 +35,7 @@ set(proto_srcs
   MeterRandom.cpp
   MeterW1therm.cpp ../../include/protocols/MeterW1therm.hpp
   ${oms_srcs}
+  MeterChinaDC.cpp ../../include/protocols/MeterChinaDC.hpp
 )
 
 add_library(proto ${proto_srcs})
