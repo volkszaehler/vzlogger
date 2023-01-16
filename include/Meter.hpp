@@ -93,7 +93,6 @@ typedef struct {
 	const char *name;          // short identifier for protocol
 	const char *desc;          // more detailed description
 	const size_t max_readings; // how many readings can be read with 1 call
-	const bool periodic;       // does this meter has be triggered periodically?
 } meter_details_t;
 
 /**
