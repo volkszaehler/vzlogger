@@ -58,7 +58,7 @@ add_executable(mock_metermap
 	${mock_mqtt_sources}
 )
 
-target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(mock_metermap ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} ${GPIOD_LIBRARY})
 
 if (MICROHTTPD_FOUND)
     target_link_libraries(mock_metermap ${MICROHTTPD_LIBRARY})
@@ -141,6 +141,7 @@ target_link_libraries(mock_MeterS0
     pthread
     ${JSON_LIBRARY}
     ${LIBUUID}
+    ${GPIOD_LIBRARY}
     dl
 )
 add_test(mock_MeterS0 mock_MeterS0)
