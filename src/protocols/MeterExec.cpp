@@ -133,12 +133,11 @@ int MeterExec::open() {
 		  name().c_str());
 #endif
 
-	print(log_debug, "MeterExec::open: Testing command line '%s': %s", name().c_str(), command(),
-		  strerror(errno));
+	print(log_debug, "MeterExec::open: Executing command line '%s'", name().c_str(), command());
 	_pipe = popen(command(), "r");
 
 	if (_pipe == NULL) {
-		print(log_alert, "MeterExec::open: popen(%s): %s", name().c_str(), command(),
+		print(log_alert, "MeterExec::open: popen(%s) failed with: %s", name().c_str(), command(),
 			  strerror(errno));
 		return ERR;
 	}
@@ -220,6 +219,9 @@ ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 
 		print(log_debug, "MeterExec::read: Closing process '%s'", name().c_str(), command());
 		pclose(_pipe);
+	} else { // _pipe == NULL
+		print(log_warning, "MeterExec::read: popen(%s) failed with: %s", name().c_str(), command(),
+			  strerror(errno));
 	}
 
 	return i;

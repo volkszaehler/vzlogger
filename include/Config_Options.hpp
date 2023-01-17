@@ -80,6 +80,8 @@ class Config_Options {
 
 	bool doRegistration() const { return _doRegistration; }
 
+	bool haveTimeMachine() const { return _time_machine; }
+
 	// setter
 	void config(const std::string &v) { _config = v; }
 	void log(const std::string &v) { _log = v; }
@@ -97,6 +99,8 @@ class Config_Options {
 	void singleshot(const bool v) { _singleshot = v; }
 
 	void doRegistration(const bool v) { _doRegistration = v; }
+
+	void haveTimeMachine(const bool v) { _time_machine = v; }
 
 	PushDataServer *pushDataServer() const { return _pds; }
 
@@ -118,6 +122,7 @@ class Config_Options {
 	int _foreground : 1;     // don't daemonize
 	int _singleshot : 1;     // only get a single reading from each meter, then exit
 	int _doRegistration : 1; // FIXME
+	int _time_machine : 1;   // accept readings from before smart-metering existed
 };
 
 /**

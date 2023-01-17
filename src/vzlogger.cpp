@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sysexits.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -107,6 +108,43 @@ const char *long_options_descs[] = {
 	NULL /* stop condition for iterator */
 };
 
+void openLogfile(bool skip_lock = false) {
+	FILE *logfd = fopen(options.log().c_str(), "a");
+
+	if (logfd == NULL) {
+		print(log_alert, "opening logfile \"%s\" failed: %s", (char *)0, options.log().c_str(),
+			  strerror(errno));
+		exit(EX_CANTCREAT);
+	}
+
+	if (!skip_lock)
+		m_log.lock();
+
+	if (gStartLogBuf) {
+		// log current console output to logfile as we missed the start
+		fprintf(logfd, "%s", gStartLogBuf->str().c_str());
+		auto temp = gStartLogBuf;
+		gStartLogBuf = 0;
+		delete temp;
+	}
+
+	options.logfd(logfd);
+	if (!skip_lock)
+		m_log.unlock();
+	print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
+}
+
+void closeLogfile(bool skip_lock = false) {
+	if (!skip_lock)
+		m_log.lock();
+	if (options.logfd()) {
+		fclose(options.logfd());
+		options.logfd(NULL);
+	}
+	if (!skip_lock)
+		m_log.unlock();
+}
+
 /**
  * Print error/debug/info messages to stdout and/or logfile
  *
@@ -150,23 +188,21 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 
 	va_start(args, id);
 	/* append to logfile */
+	m_log.lock(); // safe write access for competed access from other thread
 	if (options.logfd()) {
-		m_log.lock(); // safe write access for competed access from other thread
 		fprintf(options.logfd(), "%-24s", prefix);
 		vfprintf(options.logfd(), format, args);
 		fprintf(options.logfd(), "\n");
 		fflush(options.logfd());
-		m_log.unlock();
 	} else if (gStartLogBuf) {
 		char buf[500];
 		int bufUsed;
 		bufUsed = snprintf(buf, 500, "%-24s", prefix);
 		bufUsed += vsnprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, format, args);
 		bufUsed += snprintf(buf + bufUsed, bufUsed < 500 ? 500 - bufUsed : 0, "\n");
-		m_log.lock(); // safe write access for competed access from other thread
 		gStartLogBuf->sputn(buf, bufUsed < 500 ? bufUsed : 500);
-		m_log.unlock();
 	}
+	m_log.unlock();
 	va_end(args);
 }
 
@@ -223,7 +259,7 @@ void daemonize() {
 
 	int i = fork();
 	if (i < 0) {
-		exit(EXIT_FAILURE); /* fork error */
+		exit(EX_OSERR); /* fork error */
 	} else if (i > 0) {
 		exit(EXIT_SUCCESS); /* parent exits */
 	}
@@ -278,6 +314,16 @@ void signalHandlerQuit(int sig) {
 	end_mqtt_client_thread();
 #endif
 }
+
+/**
+ * signal handler for re-opening logfile.
+ * the actual operation is carried out in main(),
+ * because the required operations are not signal-safe.
+ */
+
+volatile bool mainLoopReopenLogfile = false;
+
+void signalHandlerReOpenLog(int) { mainLoopReopenLogfile = true; }
 
 /**
  * Parse options from command line
@@ -378,11 +424,22 @@ int main(int argc, char *argv[]) {
 	pthread_t _mqtt_client_thread = 0;
 #endif
 
-	/* bind signal handler */
-	struct sigaction action;
-	sigemptyset(&action.sa_mask);
-	action.sa_flags = 0;
-	action.sa_handler = signalHandlerQuit;
+	// bind signal handler for exiting vzlogger
+	struct sigaction quitaction;
+	sigemptyset(&quitaction.sa_mask);
+	quitaction.sa_flags = 0;
+	quitaction.sa_handler = signalHandlerQuit;
+	sigaction(SIGINT, &quitaction, NULL);  /* catch ctrl-c from terminal */
+	sigaction(SIGHUP, &quitaction, NULL);  /* catch hangup signal */
+	sigaction(SIGTERM, &quitaction, NULL); /* catch kill signal */
+
+	// signal for re-opening logfile
+	struct sigaction reopenaction;
+	sigemptyset(&reopenaction.sa_mask);
+	reopenaction.sa_flags = 0;
+	reopenaction.sa_handler = signalHandlerReOpenLog;
+	// sigaction() follows in conditional below.
+
 	gStartLogBuf = new std::stringbuf;
 
 #ifdef LOCAL_SUPPORT
@@ -390,17 +447,13 @@ int main(int argc, char *argv[]) {
 	struct MHD_Daemon *httpd_handle = NULL;
 #endif /* LOCAL_SUPPORT */
 
-	sigaction(SIGINT, &action, NULL);  /* catch ctrl-c from terminal */
-	sigaction(SIGHUP, &action, NULL);  /* catch hangup signal */
-	sigaction(SIGTERM, &action, NULL); /* catch kill signal */
-
 	/* initialize ADTs and APIs */
 	//	curl_global_init(CURL_GLOBAL_ALL);
 
 	/* parse command line and file options */
 	// TODO command line should have a higher priority as file
 	if (config_parse_cli(argc, argv, &options) != SUCCESS) {
-		return EXIT_FAILURE;
+		return EX_USAGE;
 	}
 
 	// always (that's why log_alert is used) print version info to log file:
@@ -414,7 +467,7 @@ int main(int argc, char *argv[]) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_alert, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
-		return EXIT_FAILURE;
+		return EX_CONFIG;
 	}
 
 	// make sure command line options override config settings, just re-parse
@@ -442,24 +495,8 @@ int main(int argc, char *argv[]) {
 
 	/* open logfile */
 	if (options.log() != "") {
-		FILE *logfd = fopen(options.log().c_str(), "a");
-
-		if (logfd == NULL) {
-			print(log_alert, "Cannot open logfile %s: %s", (char *)0, options.log().c_str(),
-				  strerror(errno));
-			return EXIT_FAILURE;
-		}
-
-		if (gStartLogBuf) {
-			// log current console output to logfile as we missed the start
-			fprintf(logfd, "%s", gStartLogBuf->str().c_str());
-			auto temp = gStartLogBuf;
-			gStartLogBuf = 0;
-			delete temp;
-		}
-
-		options.logfd(logfd);
-		print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
+		openLogfile();
+		sigaction(SIGUSR1, &reopenaction, NULL); // catch SIGUSR1
 	} else {
 		// stop temp logging, continue logging to console only
 		auto temp = gStartLogBuf;
@@ -555,6 +592,15 @@ int main(int argc, char *argv[]) {
 					::sleep(1); // 1s should be ok. will introduce a shutdown latency >1s
 				}
 			}
+			if (mainLoopReopenLogfile) {
+				mainLoopReopenLogfile = false;
+				print(log_info, "closing logfile for re-opening (requested with SIGUSR1)", "");
+				m_log.lock();
+				closeLogfile(true);
+				openLogfile(true);
+				m_log.unlock();
+				print(log_info, "re-opened logfile (requested with SIGUSR1)", "");
+			}
 		} while (oneRunning);
 	} catch (std::exception &e) {
 		print(log_error, "Main loop failed for %s", "", e.what());
@@ -608,10 +654,7 @@ int main(int argc, char *argv[]) {
 		print(log_finest, "deleted curlSessionProvider", "");
 	}
 
-	/* close logfile */
-	if (options.logfd()) {
-		fclose(options.logfd());
-	}
+	closeLogfile();
 
 	return EXIT_SUCCESS;
 }

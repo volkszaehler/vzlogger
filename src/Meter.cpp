@@ -48,34 +48,31 @@
 #endif
 //#include <protocols/.h>
 
-#define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS, PERIODIC)                                     \
-	{ meter_protocol_##NAME, #NAME, DESC, MAX_RDS, PERIODIC /*, Meter##CLASSNAME */ }
+#define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS)                                               \
+	{ meter_protocol_##NAME, #NAME, DESC, MAX_RDS }
 
 int Meter::instances = 0;
 
 static const meter_details_t protocols[] = {
-	/*  aliasdescriptionmax_rdsperiodic
-		===============================================================================================*/
-	METER_DETAIL(file, File, "Read from file or fifo", 32, false),
-	METER_DETAIL(exec, Exec, "Parse program output", 32, false),
-	METER_DETAIL(random, Random, "Generate random values with a random walk", 1, true),
-	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo", 16, false),
-	METER_DETAIL(s0, S0, "S0-meter directly connected to RS232", 4, false),
-	METER_DETAIL(d0, D0, "DLMS/IEC 62056-21 plaintext protocol", 400, false),
+	// name, alias, description, max_rds
+	METER_DETAIL(file, File, "Read from file or fifo", 32),
+	METER_DETAIL(exec, Exec, "Parse program output", 32),
+	METER_DETAIL(random, Random, "Generate random values with a random walk", 1),
+	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo", 16),
+	METER_DETAIL(s0, S0, "S0-meter directly connected to RS232", 4),
+	METER_DETAIL(d0, D0, "DLMS/IEC 62056-21 plaintext protocol", 400),
 #ifdef SML_SUPPORT
-	METER_DETAIL(sml, Sml, "Smart Message Language as used by EDL-21, eHz and SyM²", 32, false),
+	METER_DETAIL(sml, Sml, "Smart Message Language as used by EDL-21, eHz and SyM²", 32),
 #endif // SML_SUPPORT
 #ifdef OCR_SUPPORT
-	METER_DETAIL(ocr, OCR, "Image processing/recognizing meter", 32,
-				 false), // TODO periodic or not periodic?
+	METER_DETAIL(ocr, OCR, "Image processing/recognizing meter", 32),
 #endif
-	METER_DETAIL(w1therm, W1therm, "W1-therm / 1wire temperature devices", 400, false),
+	METER_DETAIL(w1therm, W1therm, "W1-therm / 1wire temperature devices", 400),
 #ifdef OMS_SUPPORT
-	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100,
-				 false), // todo what is the max. amount of reading according to spec?
+	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100),
 #endif
 	//{} /* stop condition for iterator */
-	METER_DETAIL(none, NULL, NULL, 0, false),
+	METER_DETAIL(none, NULL, NULL, 0),
 };
 
 Meter::Meter(std::list<Option> pOptions) : _name("meter") {
@@ -136,10 +133,7 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 	}
 
 	try {
-		const meter_details_t *details = meter_get_details(_protocol_id);
-		if (details->periodic == true && _interval < 0) {
-			print(log_alert, "Interval has to be set and positive!", name());
-		}
+		(void)meter_get_details(_protocol_id);
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();

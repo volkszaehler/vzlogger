@@ -39,6 +39,7 @@ add_executable(mock_metermap
 	../../src/ltqnorm.cpp
 	../../src/MeterMap.cpp
 	../../src/threads.cpp
+	../../src/api/hmac.cpp
 	../../src/Config_Options.cpp
 	../../src/Buffer.cpp
 	../../src/api/Volkszaehler.cpp

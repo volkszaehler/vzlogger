@@ -30,16 +30,13 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
-#include <openssl/sha.h>
-#include <openssl/ssl.h>
 #include <unistd.h>
 
 #include "Config_Options.hpp"
 #include <VZException.hpp>
 #include <api/CurlCallback.hpp>
 #include <api/MySmartGrid.hpp>
+#include <api/hmac.h>
 
 extern Config_Options options;
 
@@ -178,7 +175,9 @@ void vz::api::MySmartGrid::send() {
 	curl_easy_setopt(_curlIF.handle(), CURLOPT_POSTFIELDS, json_str);
 
 	_api_header();
-	hmac_sha1(digest, (const unsigned char *)json_str, strlen(json_str));
+	const char *secret = secretKey();
+	hmac_sha1(digest, (const unsigned char *)json_str, strlen(json_str),
+			  reinterpret_cast<const unsigned char *>(secret), strlen(secret));
 	_curlIF.addHeader(digest);
 	print(log_debug, "Header_Digest: %s", channel()->name(), digest);
 
@@ -271,7 +270,10 @@ void vz::api::MySmartGrid::_send(const std::string &url, json_object *json_obj) 
 	curl_easy_setopt(_curlIF.handle(), CURLOPT_POSTFIELDS, json_str);
 
 	_api_header();
-	hmac_sha1(digest, (const unsigned char *)json_str, strlen(json_str));
+	const char *secret = secretKey();
+	hmac_sha1(digest, (const unsigned char *)json_str, strlen(json_str),
+			  reinterpret_cast<const unsigned char *>(secret), strlen(secret));
+
 	_curlIF.addHeader(digest);
 	print(log_debug, "Header_Digest: %s", channel()->name(), digest);
 
@@ -547,42 +549,6 @@ void vz::api::MySmartGrid::_api_header() {
 	//_curlIF.addHeader("Accept: application/json");
 	_curlIF.addHeader(agent);
 	_curlIF.addHeader("X-Version: 1.0");
-}
-
-void vz::api::MySmartGrid::hmac_sha1(char *digest, const unsigned char *data, size_t dataLen) {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-	HMAC_CTX hmacContext;
-
-	HMAC_Init(&hmacContext, secretKey(), strlen(secretKey()), EVP_sha1());
-	HMAC_Update(&hmacContext, data, dataLen);
-#else
-	HMAC_CTX *hmacContext = HMAC_CTX_new();
-
-	HMAC_Init_ex(hmacContext, secretKey(), strlen(secretKey()), EVP_sha1(), NULL);
-	HMAC_Update(hmacContext, data, dataLen);
-#endif
-	unsigned char out[EVP_MAX_MD_SIZE];
-	unsigned int len = EVP_MAX_MD_SIZE;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-	HMAC_Final(&hmacContext, out, &len);
-#else
-	HMAC_Final(hmacContext, out, &len);
-#endif
-	char ret[2 * EVP_MAX_MD_SIZE];
-	memset(ret, 0, sizeof(ret));
-
-	for (size_t i = 0; i < len; i++) {
-		char s[4];
-		snprintf(s, 3, "%02x",
-				 out[i]); // format string was "%02x:" but size was only 3 so last : was not printed
-		strncat(ret, s, 2 * len);
-		// strncat(ret, s, sizeof(ret));
-	}
-	snprintf(digest, 255 /*sizeof(digest)*/, "X-Digest: %s", ret);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	HMAC_CTX_free(hmacContext);
-	hmacContext = NULL;
-#endif
 }
 
 void vz::api::MySmartGrid::convertUuid(const std::string uuidIn, std::string &uuidOut) {

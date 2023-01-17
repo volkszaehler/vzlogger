@@ -44,16 +44,33 @@
 
 extern Config_Options options;
 
+inline void _safe_to_cancel() {
+	// see https://blog.memzero.de/pthread-cancel-noexcept/
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_testcancel();
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+}
+
+inline void _cancellable_sleep(int seconds) {
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	sleep(seconds);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+}
+
 void *reading_thread(void *arg) {
 	MeterMap *mapping = static_cast<MeterMap *>(arg);
 	Meter::Ptr mtr = mapping->meter();
 	time_t aggIntEnd;
 	const meter_details_t *details;
 	size_t n = 0;
+	bool first_reading = true;
+
+	// Only allow cancellation at safe points
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
 	details = meter_get_details(mtr->protocolId());
 	std::vector<Reading> rds(details->max_readings, Reading(mtr->identifier()));
-	;
 
 	print(log_debug, "Number of readers: %d", mtr->name(), details->max_readings);
 	print(log_debug, "Config.local: %d", mtr->name(), options.local());
@@ -61,10 +78,20 @@ void *reading_thread(void *arg) {
 	try {
 		aggIntEnd = time(NULL);
 		do { /* start thread main loop */
+			_safe_to_cancel();
 			do {
 				aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
 			} while ((aggIntEnd < time(NULL)) && (mtr->aggtime() > 0));
 			do { /* aggregate loop */
+				_safe_to_cancel();
+				int interval = mtr->interval();
+				if (interval > 0 && !first_reading) {
+					print(log_info, "waiting %i seconds before next reading", mtr->name(),
+						  interval);
+					_cancellable_sleep(interval);
+				}
+				first_reading = false;
+
 				/* fetch readings from meter and calculate delta */
 				n = mtr->read(rds, details->max_readings);
 
@@ -80,12 +107,27 @@ void *reading_thread(void *arg) {
 							  rds[i].time_ms());
 					}
 				}
-
-				/* update buffer length with current interval */
-				// if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-				// 	print(log_debug, "Updating interval to %i", mtr->name(), delta);
-				// 	mtr->interval(delta);
-				// }
+				if (n > 0 && !options.haveTimeMachine())
+					for (size_t i = 0; i < n; i++)
+						if (rds[i].time_s() < 631152000) { // 1990-01-01 00:00:00
+							print(log_error,
+								  "meter returned readings with a timestamp before 1990, IGNORING.",
+								  mtr->name());
+							print(log_error, "most likely your meter is misconfigured,",
+								  mtr->name());
+							print(log_error,
+								  "for sml meters, set `\"use_local_time\": true` in vzlogger.conf"
+								  " (meter section),",
+								  mtr->name());
+							print(log_error,
+								  "to override this check, set `\"i_have_a_time_machine\": true`"
+								  " in vzlogger.conf.",
+								  mtr->name());
+							// note: we do NOT throw an exception or such,
+							// because this might be a spurious error,
+							// the next reading might be valid again.
+							n = 0;
+						}
 
 				/* insert readings into channel queues */
 				if (n > 0)

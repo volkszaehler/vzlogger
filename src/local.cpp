@@ -124,11 +124,11 @@ json_object *api_json_tuples(const char *uuid) {
 	return json_tuples;
 }
 
-int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
-				   const char *method, const char *version, const char *upload_data,
-				   size_t *upload_data_size, void **con_cls) {
+MHD_RESULT handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+						  const char *method, const char *version, const char *upload_data,
+						  size_t *upload_data_size, void **con_cls) {
 
-	int status;
+	MHD_RESULT status;
 	int response_code = MHD_HTTP_NOT_FOUND;
 
 	// mapping between meters and channels

@@ -32,9 +32,15 @@
 
 #include <microhttpd.h>
 
-int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
-				   const char *method, const char *version, const char *upload_data,
-				   size_t *upload_data_size, void **con_cls);
+#if MHD_VERSION >= 0x00097002
+using MHD_RESULT = MHD_Result;
+#else
+using MHD_RESULT = int;
+#endif
+
+MHD_RESULT handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+						  const char *method, const char *version, const char *upload_data,
+						  size_t *upload_data_size, void **con_cls);
 
 class Channel;
 void shrink_localbuffer(); // remove old data in the local buffer

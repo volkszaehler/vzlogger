@@ -24,7 +24,8 @@
 #     - vzlogger (libraries must be in place already)
 #     - libsmljson
 #     - libsml
-#     - clean (will clean the respektive make targets, requires explicitly naming the modules)
+#     - mqtt
+#     - clean (will clean the respective make targets, requires explicitly naming the modules)
 #
 # 	To run a clean build:
 #
@@ -57,6 +58,7 @@ build_dir=build
 vzlogger_conf=/etc/vzlogger.conf
 git_config=.git/config
 systemd_unit=/etc/systemd/system/vzlogger.service
+cmake_args=-DBUILD_TEST=off
 
 ###############################
 # functions
@@ -194,6 +196,19 @@ pushd "$lib_dir"
 		git_update libmbus https://github.com/rscada/libmbus.git
 	fi
 
+	# mqtt
+	if contains "$*" mqtt; then
+		echo
+		echo "checking for libmosquitto"
+
+		if ! ldconfig -p | grep -q libmosquitto.so; then
+			echo
+			echo "libmosquitto-dev is not installed"
+			exit 1
+		else
+			cmake_args="${cmake_args} -ENABLE_MQTT=on"
+		fi
+	fi
 
 	###############################
 	echo
@@ -249,12 +264,12 @@ popd
 if [ -z "$1" ] || contains "$*" vzlogger; then
 	echo
 	echo "building and installing vzlogger"
-    
+
     if [ ! -d "$build_dir" ]; then
         echo "creating folder $build_dir"
         mkdir "$build_dir"
     fi
-    
+
     pushd "$build_dir"
 
         if contains "$*" clean; then
@@ -264,13 +279,12 @@ if [ -z "$1" ] || contains "$*" vzlogger; then
 
         echo
         echo "building vzlogger"
-        cmake -DBUILD_TEST=off ..
+        cmake $cmake_args ..
         make
 
         echo
         echo "installing vzlogger"
         sudo make install
-        
     popd
 
 	if [ ! -e "$systemd_unit" ]; then

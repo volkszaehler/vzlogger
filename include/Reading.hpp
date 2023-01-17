@@ -45,18 +45,25 @@ class ReadingIdentifier {
 	virtual ~ReadingIdentifier(){};
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
-	bool operator==(ReadingIdentifier const &cmp) const;
-	bool compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const;
-
+	bool operator==(ReadingIdentifier const &other) const { return other.isEqual(this); }
 	virtual const std::string toString() = 0;
 
   protected:
 	explicit ReadingIdentifier(){};
+	virtual bool isEqual(ReadingIdentifier const *other) const = 0;
 
   private:
 	// ReadingIdentifier (const ReadingIdentifier& original);
 	// ReadingIdentifier& operator= (const ReadingIdentifier& rhs);
 };
+
+namespace detail {
+template <class T> bool isEqual(const T &obj, const ReadingIdentifier *other) {
+	typedef typename std::add_pointer<typename std::add_const<T>::type>::type Pointer;
+	Pointer ptr(dynamic_cast<Pointer>(other));
+	return (ptr != nullptr) && (obj == *ptr);
+}
+} // namespace detail
 
 class ObisIdentifier : public ReadingIdentifier {
 
@@ -68,7 +75,8 @@ class ObisIdentifier : public ReadingIdentifier {
 	virtual ~ObisIdentifier(){};
 
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(ObisIdentifier const &cmp) const;
+	bool operator==(ObisIdentifier const &other) const { return _obis == other.obis(); }
+
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "ObisIdentifier:" << _obis.toString();
@@ -82,6 +90,10 @@ class ObisIdentifier : public ReadingIdentifier {
 	// ObisIdentifier& operator= (const ObisIdentifier& rhs);
 
   protected:
+	virtual bool isEqual(const ReadingIdentifier *other) const {
+		return detail::isEqual(*this, other);
+	}
+
 	Obis _obis;
 };
 
@@ -92,7 +104,7 @@ class StringIdentifier : public ReadingIdentifier {
 
 	void parse(const char *buffer);
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(StringIdentifier const &cmp) const;
+	bool operator==(StringIdentifier const &other) const { return _string == other._string; }
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "StringIdentifier:";
@@ -100,6 +112,10 @@ class StringIdentifier : public ReadingIdentifier {
 	};
 
   protected:
+	virtual bool isEqual(const ReadingIdentifier *other) const {
+		return detail::isEqual(*this, other);
+	}
+
 	std::string _string;
 };
 
@@ -111,7 +127,8 @@ class ChannelIdentifier : public ReadingIdentifier {
 
 	void parse(const char *string);
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(ChannelIdentifier const &cmp) const;
+	bool operator==(ChannelIdentifier const &other) const { return _channel == other._channel; }
+
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "ChannelIdentifier:";
@@ -119,6 +136,10 @@ class ChannelIdentifier : public ReadingIdentifier {
 	};
 
   protected:
+	virtual bool isEqual(const ReadingIdentifier *other) const {
+		return detail::isEqual(*this, other);
+	}
+
 	int _channel;
 };
 
@@ -126,14 +147,17 @@ class NilIdentifier : public ReadingIdentifier {
   public:
 	NilIdentifier() {}
 	size_t unparse(char *buffer, size_t n);
-	bool operator==(NilIdentifier const &cmp) const;
+	bool operator==(NilIdentifier const &) const { return true; }
 	const std::string toString() {
 		std::ostringstream oss;
 		oss << "NilIdentifier";
 		return oss.str();
 	};
 
-  private:
+  protected:
+	virtual bool isEqual(const ReadingIdentifier *other) const {
+		return detail::isEqual(*this, other);
+	}
 };
 
 class Reading {
@@ -154,9 +178,7 @@ class Reading {
 	double value() const { return _value; }
 
 	int64_t time_ms() const { return ((int64_t)_time.tv_sec) * 1e3 + (_time.tv_usec / 1e3); };
-	const long &time_s() const {
-		return _time.tv_sec;
-	}; // return only the seconds (always rounding down)
+	long time_s() const { return _time.tv_sec; }; // return only the seconds (always rounding down)
 	void time() { gettimeofday(&_time, NULL); }
 	void time(struct timeval const &v) { _time = v; }
 	void time(struct timespec const &v) {

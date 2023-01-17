@@ -57,6 +57,7 @@ class InfluxDB : public ApiIF {
 	std::string _host;
 	std::string _username;
 	std::string _token;
+	struct curl_slist *_token_header;
 	std::string _organization;
 	std::string _password;
 	std::string _database;
