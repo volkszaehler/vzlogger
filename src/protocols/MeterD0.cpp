@@ -1020,8 +1020,10 @@ void MeterD0::dump_file(DUMP_MODE mode, const char *buf, size_t len) {
 				delta = 0;
 			ts_last = ts;
 			char tbuf[30];
-			int l = snprintf(tbuf, sizeof(tbuf), "%2ld.%.9lds (%6ld ms) ", ts.tv_sec % 100,
-							 ts.tv_nsec, delta);
+			// time_t may be long or long long depending on architecture, casting to long long for
+			// portability
+			int l = snprintf(tbuf, sizeof(tbuf), "%2lld.%.9llds (%6ld ms) ",
+							 (long long)ts.tv_sec % 100, (long long)ts.tv_nsec, delta);
 			fwrite(tbuf, 1, l, _dump_fd);
 		}
 		if (e)
