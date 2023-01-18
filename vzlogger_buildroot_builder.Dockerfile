@@ -239,7 +239,6 @@ RUN \
 	file output/build/vzlogger-*/src/vzlogger ; \
 	ls -l output/build/vzlogger-*/src/vzlogger ; \
 	file output/build/vzlogger-origin_master/tests/vzlogger_unit_tests ; \
-	ls -l output/build/vzlogger-origin_master/tests/vzlogger_unit_tests ; \
-	rm -fr dl/vzlogger output/build/vzlogger-*
+	ls -l output/build/vzlogger-origin_master/tests/vzlogger_unit_tests
 
 FROM output
