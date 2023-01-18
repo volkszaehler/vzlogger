@@ -34,7 +34,7 @@ TEST(MeterD0, basic_dump_fd) {
 
 	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	ASSERT_NE(strlen(tempfilename), 0ul);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
@@ -67,7 +67,7 @@ TEST(MeterD0, basic_dump_fd_autoack) {
 
 	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("dump_file", (char *)dumpName.c_str()));
@@ -101,7 +101,7 @@ TEST(MeterD0, basic_dump_fd_autoack) {
 
 TEST(MeterD0, HagerEHZ_basic) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterD0 m(options);
@@ -156,7 +156,7 @@ TEST(MeterD0, HagerEHZ_basic) {
 TEST(MeterD0, HagerEHZ_waitsync) {
 	char tempfilename[L_tmpnam + 1];
 	char strend[5] = "end\0";
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("wait_sync", strend));
@@ -198,7 +198,7 @@ TEST(MeterD0, HagerEHZ_waitsync) {
 TEST(MeterD0, LandisGyr_basic) {
 	char tempfilename[L_tmpnam + 1];
 	char str_pullseq[12] = "2f3f210d0a";
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("pullseq", str_pullseq));
@@ -295,7 +295,7 @@ int writes_hex(int fd, const char *str) {
 TEST(MeterD0, ACE3000_basic) {
 	char tempfilename[L_tmpnam + 1];
 	char str_pullseq[12] = "2f3f210d0a";
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("pullseq", str_pullseq));
@@ -406,7 +406,7 @@ baudrate=4, identification=\@DC341TMPBF2ZAK) [Dec 23 11:59:11][d0]   Sending ack
 
 TEST(MeterD0, LuG_E350) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterD0 m(options);

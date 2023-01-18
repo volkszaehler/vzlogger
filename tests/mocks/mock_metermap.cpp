@@ -37,6 +37,7 @@ TEST(mock_metermap, basic_open_close_enabled) {
 	o.push_back(Option("protocol", "random"));
 	mock_meter *mtr = new mock_meter(o);
 	mtr->interval(1);
+	testing::Mock::AllowLeak(mtr);
 	EXPECT_CALL(*mtr, isEnabled()).Times(AtLeast(1)).WillRepeatedly(Return(true));
 	{
 		InSequence d;

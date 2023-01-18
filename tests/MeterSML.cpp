@@ -12,7 +12,7 @@ TEST(MeterSML, EMH_basic) {
 	using std::fabs;
 
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterSML m(options);
