@@ -194,7 +194,7 @@ RUN	rm -fr \
 FROM	debian:$DEBIAN_VERSION
 
 # or use buildpack-deps for the final image, because we already have it anyway?
-# (i know how i COULD hack buildroot to work without rsync.)
+# (we COULD hack buildroot to work without rsync.)
 #FROM buildpack-deps:$DEBIAN_VERSION
 
 COPY	--from=builder /buildroot /buildroot
@@ -211,7 +211,7 @@ RUN	ln -sf /bin/true support/dependencies/dependencies.sh
 # this prevents this
 RUN	touch output/build/buildroot-config/auto.conf
 
-# buildroot thinks it needs this, but it doesn't
+# buildroot thinks it needs this, but we know we don't
 # (it was pre-installed on the builder, so it did not build it's own yet)
 # (the order / relative timing of these really does matter.)
 RUN    mkdir -p output/build/host-xz-5.2.5 && for s in downloaded extracted patched configured built installed host_installed ; do touch output/build/host-xz-5.2.5/.stamp_$s ; done
