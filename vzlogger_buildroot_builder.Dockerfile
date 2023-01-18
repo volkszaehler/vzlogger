@@ -64,7 +64,7 @@ RUN \
 	) >br_make_wrapper ; \
 	chmod +x br_make_wrapper
 
-ARG	DEFCONFIG=raspberrypi2
+ARG	DEFCONFIG=raspberrypi
 # create a minimal buildroot system configuration
 RUN \
 	set -xe ; \
