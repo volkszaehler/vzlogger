@@ -176,8 +176,9 @@ RUN	./br_make_wrapper vzlogger-depends && rm -fr dl/vzlogger output/build/vzlogg
 RUN	rm -fr \
 		dl \
 		output/build/*/* \
-		output/target \
-		output/host/share/{doc,man} && \
+		output/host/share/{doc,man} \
+		output/target/usr/{share,include} \
+		output/target/usr/bin/[!l]* && \
 	du -ch . | sort -h | tail -n 30 ; ( du -sh / 2>/dev/null || true )
 
 # ensure build works
