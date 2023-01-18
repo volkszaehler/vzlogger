@@ -17,6 +17,7 @@ LABEL	org.label-schema.vendor=null
 # install host-OS packages required by buildroot
 # (buildpack-deps already contains all but bc, cpio and rsync)
 RUN	set -xe ; \
+	sed -i '/^deb/s/ / [trusted=yes] /' /etc/apt/sources.list ; \
 	apt-get update ; \
 	apt-get -y --force-yes install \
 		# https://buildroot.org/downloads/manual/manual.html#requirement
