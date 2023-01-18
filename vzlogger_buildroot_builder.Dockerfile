@@ -192,11 +192,11 @@ RUN	rm -fr \
 # use the base debian version, not buildpack-deps
 # (we need to install rsync anyway, to make buildroot happy,
 #  and for the final image we don't need much of buildpack-deps.)
-FROM	debian:$DEBIAN_VERSION
+FROM	debian:$DEBIAN_VERSION as output
 
 # or use buildpack-deps for the final image, because we already have it anyway?
 # (we COULD hack buildroot to work without rsync.)
-#FROM buildpack-deps:$DEBIAN_VERSION
+#FROM buildpack-deps:$DEBIAN_VERSION as output
 
 COPY	--from=builder /buildroot /buildroot
 
@@ -231,6 +231,7 @@ RUN	set -xe ; \
 	apt-get purge ; \
 	rm -fr /var/lib/apt/lists
 
+FROM output as test
 # ensure build works (also usage example for final image)
 RUN \
 	set -xe ; \
@@ -241,3 +242,4 @@ RUN \
 	ls -l output/build/vzlogger-origin_master/tests/vzlogger_unit_tests ; \
 	rm -fr dl/vzlogger output/build/vzlogger-*
 
+FROM output
