@@ -289,11 +289,6 @@ if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
 endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
 
-# add some files to the installation target
-INSTALL(FILES README.md COPYING DESTINATION
-  share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
-)
-
 # add clean-all target that removes the cached files from cmake as well (see e.g. issue #186)
 add_custom_target(clean-all
     COMMAND ${CMAKE_BUILD_TOOL} clean

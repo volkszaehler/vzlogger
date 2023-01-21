@@ -9,5 +9,20 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+ifneq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+override_dh_auto_configure:
+	dh_auto_configure -- -DBUILD_TEST=off
+endif
+
+ifneq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+override_dh_auto_test: ;
+endif
+
+execute_after_dh_auto_build:
+	pandoc -o vzlogger.1 -s -t man debian/vzlogger.1.md
+
+execute_after_dh_clean:
+	rm vzlogger.1
+
 %:
 	dh $@ 
