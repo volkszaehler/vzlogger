@@ -2,7 +2,7 @@ vzlogger (0.8.1) unstable; urgency=low
  
   * Latest version
 
- -- Justin Otherguy (signing key for debian packages only) <justin@justinotherguy.org>  Sat, 21 Jan 2023 13:18:03 +0100
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sat, 21 Jan 2023 19:52:01 +0100
 
 vzlogger (0.3.5) stable; urgency=low
 
