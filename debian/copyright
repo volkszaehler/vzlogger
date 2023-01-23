@@ -6,9 +6,9 @@ Files: *
 Copyright: Copyright 2011 Steffen Vogel <info@steffenvogel.de>
  Copyright (C) 2009 by Tobias Mueller
  Copyright (c) 2011, DAI-Labor, TU-Berlin
- Copyright (c) 2015, 2018 Matthias Behr
- Copyright (c) 2011 - 2017, The volkszaehler.org project
  Copyright 2011 Fraunhofer ITWM
+ Copyright (c) 2015, 2018 Matthias Behr
+ Copyright (c) 2011 - 2023, The volkszaehler.org project
 License: GPL-3
 
 Files: debian/*
