@@ -4,7 +4,7 @@
  *
  * @author Stefan Kuntz
  * @email  Stefan.github@gmail.com
- * @copyright Copyright (c) 2017, The volkszaehler.org project
+ * @copyright Copyright (c) 2017 - 2023, The volkszaehler.org project
  * @package vzlogger
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  **/
