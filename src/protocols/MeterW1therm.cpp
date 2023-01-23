@@ -7,7 +7,7 @@
  * (or with parameter dtoverlay=w1-gpio,gpiopin=4,pullup=1)
  * in /boot/config.txt
  *
- * @copyright Copyright (c) 2015, the volkszaehler.org project
+ * @copyright Copyright (c) 2015 - 2023, the volkszaehler.org project
  * @license http://www.gnu.org/licenses/glp2.txt GNU Public License v2
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */

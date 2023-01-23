@@ -2,7 +2,7 @@
  * 1wire-support for therm sensors supported by linux modules w1-therm
  * functionality similar to 1wirevz
  *
- * @copyright Copyright (c) 2015, the volkszaehler.org project
+ * @copyright Copyright (c) 2015 - 2023, the volkszaehler.org project
  * @license http://www.gnu.org/licenses/glp2.txt GNU Public License v2
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */

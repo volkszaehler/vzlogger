@@ -2,7 +2,7 @@
  * OMS (M-Bus) based meter/device support
  * for spec see e.g. http://oms-group.org/fileadmin/pdf/OMS-Spec_Vol2_Primary_v301.pdf
  *
- * @copyright Copyright (c) 2015, the volkszaehler.org project
+ * @copyright Copyright (c) 2015 - 2023, the volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl2.txt GNU Public License v2
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */
