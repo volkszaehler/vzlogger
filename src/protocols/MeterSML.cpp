@@ -54,6 +54,19 @@
 
 #define SML_BUFFER_LEN 8096
 
+inline void _safe_to_cancel() {
+	// see https://blog.memzero.de/pthread-cancel-noexcept/
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_testcancel();
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+}
+
+inline void _cancellable_sleep(int seconds) {
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	sleep(seconds);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+}
+
 MeterSML::MeterSML(std::list<Option> options)
 	: Protocol("sml"), _host(""), _device(""), BUFFER_LEN(SML_BUFFER_LEN) {
 	OptionList optlist;
@@ -248,7 +261,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	if (_fd < 0) {
 		if (!reopen()) {
 			// sleep a little bit to prevent busy looping
-			sleep(1);
+			_cancellable_sleep(1);
 			return 0;
 		}
 	}
@@ -260,12 +273,16 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	}
 
 	/* wait until we receive a new datagram from the meter (blocking read) */
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
 	if (0 == bytes) {
 		// try to reopen. see issue #362
 		if (reopen()) {
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 			print(log_info, "sml_transport_read returned len=%d after reopen", name().c_str(),
 				  bytes);
 		}
