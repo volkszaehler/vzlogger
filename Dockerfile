@@ -24,7 +24,8 @@ RUN apk add --no-cache \
     mosquitto-dev \
     libunistring-dev \
     automake \
-    autoconf
+    autoconf \
+    gtest-dev
 
 WORKDIR /vzlogger
 
