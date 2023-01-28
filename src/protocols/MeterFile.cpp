@@ -32,6 +32,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "threads.h"
+
 #include "Options.hpp"
 #include "protocols/MeterFile.hpp"
 #include <VZException.hpp>
@@ -237,6 +239,7 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 	print(log_debug, "MeterFile::read: %d, %d", "", rds.size(), n);
 
 	while (i < n && fgets(line, 256, _fd)) {
+		_safe_to_cancel();
 		char *nl;
 		if ((nl = strrchr(line, '\n')))
 			*nl = '\0'; // remove trailing newlines

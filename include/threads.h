@@ -26,9 +26,27 @@
 #ifndef _THREADS_H_
 #define _THREADS_H_
 
-void logging_thread_cleanup(void *arg);
+#include <pthread.h>
+#include <unistd.h>
 
 void *logging_thread(void *arg);
 void *reading_thread(void *arg);
+
+// vzlogger uses pthread_cancel() to stop threads, which is not safe for C++ code that might invoke
+// destructors, this macro is to be placed around any code that your meter spends significant
+// amounts of time in, but which may not contain C++ code that might destroy objects.
+// See https://blog.memzero.de/pthread-cancel-noexcept/ for details.
+
+#define CANCELLABLE(...)                                                                           \
+	do {                                                                                           \
+		int oldstate;                                                                              \
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);                                  \
+		__VA_ARGS__;                                                                               \
+		pthread_setcancelstate(oldstate, NULL);                                                    \
+	} while (0)
+
+inline void _safe_to_cancel() { CANCELLABLE(pthread_testcancel()); }
+
+inline void _cancellable_sleep(int seconds) { CANCELLABLE(sleep(seconds)); }
 
 #endif /* _THREADS_H_ */

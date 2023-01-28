@@ -43,6 +43,8 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
+#include "threads.h"
+
 #include "protocols/MeterD0.hpp"
 #include <VZException.hpp>
 
@@ -470,6 +472,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 	}
 
 	while (1) {
+		_safe_to_cancel();
 		// check for timeout
 		time(&end_time);
 		if (difftime(end_time, start_time) > _read_timeout_s) {
