@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "threads.h"
+
 #include "Options.hpp"
 #include "protocols/MeterFluksoV2.hpp"
 #include <VZException.hpp>
@@ -89,6 +91,7 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 	time.tv_usec = 0; /* no millisecond resolution available */
 
 	while (cursor) {
+		_safe_to_cancel();
 		int channel =
 			atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 

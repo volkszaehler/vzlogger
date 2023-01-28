@@ -33,6 +33,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "threads.h"
+
 #include "Options.hpp"
 #include "protocols/MeterS0.hpp"
 #include <VZException.hpp>
@@ -357,8 +359,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	bool is_zero = true;
 	do {
 		req.tv_sec += 1;
-		while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL))
-			;
+		CANCELLABLE(while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL)));
 		// check from counter_thread the current impulses:
 		t_imp = _impulses;
 		t_imp_neg = _impulses_neg;

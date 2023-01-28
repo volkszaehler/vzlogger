@@ -12,6 +12,8 @@
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */
 
+#include "threads.h"
+
 #include "protocols/MeterW1therm.hpp"
 #include <glob.h>
 
@@ -138,6 +140,7 @@ ssize_t MeterW1therm::read(std::vector<Reading> &rds, size_t n) {
 
 	for (std::list<std::string>::const_iterator it = list.cbegin();
 		 it != list.cend() && static_cast<size_t>(ret) < n; ++it) {
+		_safe_to_cancel();
 		double value;
 		if (_hwif->readTemp(*it, value)) {
 			print(log_finest, "reading w1 device %s returned %f", name().c_str(), (*it).c_str(),
