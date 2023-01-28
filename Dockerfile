@@ -41,7 +41,7 @@ COPY . /vzlogger
 
 ARG build_test=off
 RUN cmake -DBUILD_TEST=${build_test} \
-    && make \
+    && make -j $(nproc --all) \
     && make install \
     && if [ "$build_test" != "off" ]; then make test; fi
 
