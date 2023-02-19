@@ -1,6 +1,6 @@
 [Unit]
 Description=vzlogger
-After=syslog.target network.target ntp.service
+After=syslog.target network.target
 
 [Service]
 ExecStart=/usr/local/bin/vzlogger -c /etc/vzlogger.conf
