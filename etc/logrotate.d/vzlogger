@@ -1,0 +1,8 @@
+/var/log/vzlogger.log {
+        rotate 1
+        size=100k
+        copytruncate
+        missingok
+        notifempty
+	create 0664 vzlogger root
+}
