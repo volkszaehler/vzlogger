@@ -1,6 +1,6 @@
 [Unit]
 Description=vzlogger
-After=syslog.target NetworkManager-wait-online.service
+After=syslog.target NetworkManager-wait-online.service ntp.service
 Wants=NetworkManager-wait-online.service
 
 [Service]
