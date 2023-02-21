@@ -264,6 +264,11 @@ void MeterS0::counter_thread() {
 					else // main hardware interface caused the event
 						++_impulses;
 				}
+			} else {
+				if (!timeout) {
+					print(log_warning, "Reading from hardwareinterface failed with %s.",
+						  name().c_str(), strerror(errno));
+				}
 			}
 		} else { // non-blocking case:
 			int state = _hwif->status();
@@ -519,7 +524,7 @@ bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout) {
 	// blocking until one character/pulse is read
 	ssize_t ret;
 	ret = ::read(_fd, buf, 8);
-	if (ret < 1) {
+	if (ret < 0) {
 		timeout = false;
 		return false;
 	} else if (ret == 0) {
