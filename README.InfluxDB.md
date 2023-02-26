@@ -21,4 +21,7 @@ Messages are sent in the following format:
 
 <measurement_name>,uuid=<uuid>,<tags> value=<value> <time[ms]>
 
+In the above, measurement_name, tags and uuid are from the configuration
+while value and time[ms] are value and time of the measurement.
 
+Details about this can be found in the [InfluxDB line protocol tutorial](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/)
