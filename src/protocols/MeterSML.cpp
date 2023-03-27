@@ -279,6 +279,14 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	/* parse SML file & stripping escape sequences */
 	file = sml_file_parse(buffer + 8, bytes - 16);
 
+	struct _tmp_t {
+		double value;
+		ReadingIdentifier *rid;
+		struct timeval tv;
+	};
+	_tmp_t *tmp = (_tmp_t *)malloc(n * sizeof(_tmp_t));
+	memset(tmp, 0, n * sizeof(_tmp_t));
+
 	/* obtain SML messagebody of type getResponseList */
 	for (short i = 0; i < file->messages_len; i++) {
 		sml_message *message = file->messages[i];
@@ -289,20 +297,31 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 
 			/* iterating through linked list */
 			for (; m < n && entry != NULL;) {
-				if (_parse(entry, &rds[m]))
+				if (_parse(entry, &tmp[m].value, &tmp[m].rid, &tmp[m].tv))
 					m++;
 				entry = entry->next;
 			}
 		}
 	}
 
+	// we now have all readings from the sml message in tmp[]
+	// and could conveniently manipulate them
+
+	auto i = m;
+	for (i = 0; i < n && i < m; i++) {
+		rds[i].value(tmp[i].value);
+		rds[i].identifier(tmp[i].rid);
+		rds[i].time(tmp[i].tv);
+	}
+
 	/* free the malloc'd memory */
 	sml_file_free(file);
+	free(tmp);
 
 	return m; // return number of successful readings
 }
 
-bool MeterSML::_parse(sml_list *entry, Reading *rd) {
+bool MeterSML::_parse(sml_list *entry, double *value, ReadingIdentifier **rid, timeval *tv) {
 	// int unit = (entry->unit) ? *entry->unit : 0;
 	int scaler = (entry->scaler) ? *entry->scaler : 1;
 
@@ -318,21 +337,18 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			// "3032323830383136" we don't even create a reading for this:
 			return false;
 		} else {
-			rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
+			*value = sml_value_to_double(entry->value) * pow(10, scaler);
 		}
 
-		ReadingIdentifier *rid(new ObisIdentifier(obis));
-		rd->identifier(rid);
+		*rid = new ObisIdentifier(obis);
 
 		// TODO handle SML_TIME_SEC_INDEX or time by SML File/Message
-		struct timeval tv;
 		if (!_use_local_time && entry->val_time) { /* use time from meter */
-			tv.tv_sec = *entry->val_time->data.timestamp;
-			tv.tv_usec = 0;
+			tv->tv_sec = *entry->val_time->data.timestamp;
+			tv->tv_usec = 0;
 		} else {
-			gettimeofday(&tv, NULL); /* use local time */
+			gettimeofday(tv, NULL); /* use local time */
 		}
-		rd->time(tv);
 		return true;
 	}
 	return false;
