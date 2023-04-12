@@ -1,0 +1,20 @@
+
+How to do a Github Release
+
+Running debuild sets the version in CMakeLists.txt from the one in 
+debian/changelog. This then has to be commited.
+
+To do a Github release that triggers the debuild action you have to create a
+version tag v<version>. This version must match the version in first line of 
+the debian/changelog. The tag must have a v prefix.
+
+So as a step by step guide this is:
+1. Make a debian/changelog entry for the new version. This can be done with
+   dch -v <version>.
+2. Run debuild followed by add -u; commit -m "v<version>" and bring that 
+   commit into the master branch.
+3. Create a tag v<version> in Github.
+4. Create a release from that tag. The release action that is triggered will 
+   create the packages and upload them to the cloudsmith repo. This will take
+   about an hour.
+

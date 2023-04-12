@@ -9,6 +9,16 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+VERSION=$(shell dpkg-parsechangelog --show-field Version 2>/dev/null | cut -f1 -d-)
+VERSION1=$(shell echo ${VERSION} | cut -f1 -d.)
+VERSION2=$(shell echo ${VERSION} | cut -f2 -d.)
+VERSION3=$(shell echo ${VERSION} | cut -f3 -d.)
+
+execute_before_dh_auto_configure:
+	sed -i "s#set(VZLOGGER_MAJOR_VERSION.*)#set(VZLOGGER_MAJOR_VERSION ${VERSION1})#" CMakeLists.txt
+	sed -i "s#set(VZLOGGER_MINOR_VERSION.*)#set(VZLOGGER_MINOR_VERSION ${VERSION2})#" CMakeLists.txt
+	sed -i "s#set(VZLOGGER_SUB_VERSION.*)#set(VZLOGGER_SUB_VERSION ${VERSION3})#" CMakeLists.txt
+
 ifneq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 override_dh_auto_configure:
 	dh_auto_configure -- -DBUILD_TEST=off
