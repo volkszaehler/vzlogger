@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
 Build-Depends: debhelper (>= 13), pkg-config (>= 0.25), 
  libjson-c-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19),
- libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 0.1.1), cmake, libsasl2-dev,
+ libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 1.0), cmake, libsasl2-dev,
  libssl-dev, libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
  libgmock-dev, libgtest-dev, pandoc
 Standards-Version: 4.6.1
