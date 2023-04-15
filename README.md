@@ -53,6 +53,8 @@ The ones attached to the release are meant for bookworm. These and packages for
 bullseye are also provided through a repository graciously provided by 
 [Cloudsmith](https://cloudsmith.com).
 
+Those debian packages are built with MQTT support.
+
 The setup of the repository is also 
 [explained by Cloudsmith](https://cloudsmith.io/~volkszaehler/repos/volkszaehler-org-project/setup/#formats-deb).
 This boils down to adding a file to /etc/apt/sources.list.d/ containing
