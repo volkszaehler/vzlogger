@@ -4,6 +4,8 @@ After=network.target ntp.service
 
 [Service]
 ExecStart=/usr/bin/vzlogger -c /etc/vzlogger.conf
+User=vzlogger
+Group=vzlogger
 ExecReload=
 StandardOutput=null
 
