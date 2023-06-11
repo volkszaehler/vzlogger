@@ -11,7 +11,7 @@ ENDIF()
 
 set(VZLOGGER_MAJOR_VERSION 0)
 set(VZLOGGER_MINOR_VERSION 8)
-set(VZLOGGER_SUB_VERSION   1)
+set(VZLOGGER_SUB_VERSION 2)
 set(VERSION_SEP "-")
 set(VZLOGGER_SHORT_VERSION "${VZLOGGER_MAJOR_VERSION}${VERSION_SEP}${VZLOGGER_MINOR_VERSION}")
 set(VZLOGGER_VERSION "${VZLOGGER_SHORT_VERSION}${VERSION_SEP}${VZLOGGER_SUB_VERSION}")
@@ -295,11 +295,6 @@ if( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
   message(WARNING "microhttpd was not found. Ignored ENABLE_LOCAL!
 Install microhttpd or call cmake -DMICROHTTPD_HOME=path_to_microhttpd_install")
 endif( ENABLE_LOCAL AND NOT MICROHTTPD_FOUND )
-
-# add some files to the installation target
-INSTALL(FILES README.md COPYING DESTINATION
-  share/doc/vzlogger-${VZLOGGER_MAJOR_VERSION}-${VZLOGGER_MINOR_VERSION}
-)
 
 # add clean-all target that removes the cached files from cmake as well (see e.g. issue #186)
 add_custom_target(clean-all

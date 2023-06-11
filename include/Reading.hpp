@@ -2,7 +2,7 @@
  * Reading related functions
  *
  * @package vzlogger
- * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
  */
@@ -178,9 +178,7 @@ class Reading {
 	double value() const { return _value; }
 
 	int64_t time_ms() const { return ((int64_t)_time.tv_sec) * 1e3 + (_time.tv_usec / 1e3); };
-	const long &time_s() const {
-		return _time.tv_sec;
-	}; // return only the seconds (always rounding down)
+	long time_s() const { return _time.tv_sec; }; // return only the seconds (always rounding down)
 	void time() { gettimeofday(&_time, NULL); }
 	void time(struct timeval const &v) { _time = v; }
 	void time(struct timespec const &v) {

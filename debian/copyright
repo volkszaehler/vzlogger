@@ -1,32 +1,36 @@
-This work was packaged for Debian by:
-    Steffen Vogel <info@steffenvogel.de> on Thu, 09 Jun 2011 16:04:25 +0200
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: vzlogger
+Source: https://github.com/narc-Ontakac2/vzlogger.git
 
-It was downloaded from:
-    http://volkszaehler.org
+Files: *
+Copyright: Copyright 2011 Steffen Vogel <info@steffenvogel.de>
+ Copyright (C) 2009 by Tobias Mueller
+ Copyright (c) 2011, DAI-Labor, TU-Berlin
+ Copyright 2011 Fraunhofer ITWM
+ Copyright (c) 2015, 2018 Matthias Behr
+ Copyright (c) 2011 - 2023, The volkszaehler.org project
+License: GPL-3
 
-Upstream Author(s):
-    Steffen Vogel <info@steffenvogel.de>
+Files: debian/*
+Copyright: Copyright 2011 Steffen Vogel <info@steffenvogel.de>
+ Copyright 2023 Joachim Zobel <jz-2017@heute-morgen.de>
+License: GPL-3
 
-Copyright:
-    Copyright (C) 2011 Steffen Vogel
+License: GPL-3
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the full text of the GNU General Public
+ License version 3 can be found in the file
+ `/usr/share/common-licenses/GPL-3'.
 
-License:
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This package is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-On Debian systems, the complete text of the GNU General
-Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
-
-The Debian packaging is:
-    Copyright (C) 2011 Steffen Vogel <info@steffenvogel.de>
-    and is licensed under the GPL version 3, see above.

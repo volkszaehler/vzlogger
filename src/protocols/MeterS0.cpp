@@ -2,7 +2,7 @@
  * S0 Hutschienenzähler directly connected to an rs232 port
  *
  * @package vzlogger
- * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
  */
@@ -33,6 +33,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "threads.h"
 
 #include "Options.hpp"
 #include "protocols/MeterS0.hpp"
@@ -272,6 +274,11 @@ void MeterS0::counter_thread() {
 					else // main hardware interface caused the event
 						++_impulses;
 				}
+			} else {
+				if (!timeout) {
+					print(log_warning, "Reading from hardwareinterface failed with %s.",
+						  name().c_str(), strerror(errno));
+				}
 			}
 		} else { // non-blocking case:
 			int state = _hwif->status();
@@ -367,8 +374,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	bool is_zero = true;
 	do {
 		req.tv_sec += 1;
-		while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL))
-			;
+		CANCELLABLE(while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL)));
 		// check from counter_thread the current impulses:
 		t_imp = _impulses;
 		t_imp_neg = _impulses_neg;
@@ -528,7 +534,7 @@ bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout) {
 	// blocking until one character/pulse is read
 	ssize_t ret;
 	ret = ::read(_fd, buf, 8);
-	if (ret < 1) {
+	if (ret < 0) {
 		timeout = false;
 		return false;
 	} else if (ret == 0) {

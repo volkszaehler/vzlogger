@@ -2,7 +2,7 @@
 #
 # Installer
 #
-# @copyright Copyright (c) 2015, The volkszaehler.org project
+# @copyright Copyright (c) 2015 - 2023, The volkszaehler.org project
 # @license http://www.opensource.org/licenses/gpl-license.php GNU Public License
 # @author Andreas Goetz
 #

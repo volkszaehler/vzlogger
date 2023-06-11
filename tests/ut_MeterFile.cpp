@@ -12,13 +12,13 @@
 // will avoid multiple includes of the same file in a different test case
 // (or linking against the real file from the CMakeLists.txt)
 
-//#include "../src/protocols/MeterFile.cpp"
+// #include "../src/protocols/MeterFile.cpp"
 
 int writes(int fd, const char *str);
 
 TEST(MeterFile, basic) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("interval", 1));
@@ -66,7 +66,7 @@ TEST(MeterFile, basic) {
 
 TEST(MeterFile, format1) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$v"));
@@ -112,7 +112,7 @@ TEST(MeterFile, format1) {
 
 TEST(MeterFile, format2) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$i : $v"));
@@ -173,7 +173,7 @@ TEST(MeterFile, reading_times) {
 
 TEST(MeterFile, format3) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam_r(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), (char *)0);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$t;$i : $v"));

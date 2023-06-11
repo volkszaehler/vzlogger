@@ -2,7 +2,7 @@
  * CurlSessionProvider - provides one curl session (easy handle) for a key
  *
  * @author Matthias Behr <mbehr@mcbehr.de>
- * @copyright Copyright (c) 2015, The volkszaehler.org project
+ * @copyright Copyright (c) 2015 - 2023, The volkszaehler.org project
  * @package vzlogger
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */

@@ -7,10 +7,12 @@
  * (or with parameter dtoverlay=w1-gpio,gpiopin=4,pullup=1)
  * in /boot/config.txt
  *
- * @copyright Copyright (c) 2015, the volkszaehler.org project
+ * @copyright Copyright (c) 2015 - 2023, the volkszaehler.org project
  * @license http://www.gnu.org/licenses/glp2.txt GNU Public License v2
  * @author Matthias Behr <mbehr (a) mcbehr.de>
  * */
+
+#include "threads.h"
 
 #include "protocols/MeterW1therm.hpp"
 #include <glob.h>
@@ -138,6 +140,7 @@ ssize_t MeterW1therm::read(std::vector<Reading> &rds, size_t n) {
 
 	for (std::list<std::string>::const_iterator it = list.cbegin();
 		 it != list.cend() && static_cast<size_t>(ret) < n; ++it) {
+		_safe_to_cancel();
 		double value;
 		if (_hwif->readTemp(*it, value)) {
 			print(log_finest, "reading w1 device %s returned %f", name().c_str(), (*it).c_str(),

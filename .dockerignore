@@ -1,3 +1,7 @@
+# docker related
+.dockerignore
+Dockerfile
+
 *~
 
 # Binaries

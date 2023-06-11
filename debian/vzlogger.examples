@@ -1,0 +1,4 @@
+etc/vzlogger.conf.InfluxDB
+etc/vzlogger.conf.meterOCR
+etc/vzlogger.conf.meterOMS
+etc/vzlogger.conf.mySmartGrid

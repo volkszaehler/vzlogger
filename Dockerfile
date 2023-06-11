@@ -1,81 +1,83 @@
-ARG DEBIAN_VERSION=buster-slim
-
 ############################
 # STEP 1 build executable binary
 ############################
 
-FROM debian:$DEBIAN_VERSION as builder
+FROM alpine:latest as builder
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    git-core \
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    libc-dev \
+    linux-headers \
+    git \
+    make \
     cmake \
-    pkg-config \
-    libcurl4-openssl-dev \
-    libgnutls28-dev \
-    libsasl2-dev \
-    uuid-dev \
+    curl-dev \
+    gnutls-dev \
+    cyrus-sasl-dev \
+    # for libuuid
+    util-linux-dev \
     libtool \
-    libssl-dev \
-    libgcrypt20-dev \
+    libgcrypt-dev \
     libmicrohttpd-dev \
-    libltdl-dev \
-    libjson-c-dev \
-    libleptonica-dev \
-    libmosquitto-dev \
+    json-c-dev \
+    mosquitto-dev \
     libunistring-dev \
-    libgpiod-dev \
-    dh-autoreconf \
-    && rm -rf /var/lib/apt/lists/*
+    automake \
+    autoconf \
+    gtest-dev \
+    libgpiod-dev 
 
 WORKDIR /vzlogger
 
 RUN git clone https://github.com/volkszaehler/libsml.git --depth 1 \
- && make install -C libsml/sml
+    && make install -C libsml/sml
 
 RUN git clone https://github.com/rscada/libmbus.git --depth 1 \
- && cd libmbus \
- && ./build.sh \
- && make install
+    && cd libmbus \
+    && ./build.sh \
+    && make install
 
 COPY . /vzlogger
 
-RUN cmake -DBUILD_TEST=off \
- && make \
- && make install
+ARG build_test=off
+RUN cmake -DBUILD_TEST=${build_test} \
+    && make -j $(nproc --all || echo 1) \
+    && make install \
+    && if [ "$build_test" != "off" ]; then make test; fi
 
 
 #############################
 ## STEP 2 build a small image
 #############################
 
-FROM debian:$DEBIAN_VERSION
+FROM alpine:latest
 
 LABEL Description="vzlogger"
 
-RUN apt-get update && apt-get install -y \
-    libcurl4 \
-    libgnutls30 \
-    libsasl2-2  \
-    libuuid1 \
-    libssl1.1 \
-    libgcrypt20  \
-    libmicrohttpd12 \
-    libltdl7 \
-    libatomic1 \
-    libjson-c3 \
-    liblept5 \
-    libmosquitto1 \
-    libunistring2 \
-    libgpiod2 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    libcurl \
+    gnutls \
+    libsasl \
+    libuuid \
+    libgcrypt \
+    libmicrohttpd \
+    json-c \
+    libatomic \
+    mosquitto-libs \
+    libunistring \
+    libstdc++ \
+    libgcc \
+    libgpiod
 
 # libsml is linked statically => no need to copy
 COPY --from=builder /usr/local/bin/vzlogger /usr/local/bin/vzlogger
 COPY --from=builder /usr/local/lib/libmbus.so* /usr/local/lib/
 
 # without running a user context, no exec is possible and without the dialout group no access to usb ir reader possible
-RUN useradd -M -G dialout vz
-USER vz
+RUN adduser -S vz -G dialout
 
+RUN vzlogger --version
+
+USER vz
 CMD ["vzlogger", "--foreground"]

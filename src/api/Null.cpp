@@ -5,7 +5,7 @@
  * @author Andreas Goetz
  * @date   2012-03-15
  * @email  cpuidle@gmx.de
- * @copyright Copyright (c) 2014, The volkszaehler.org project
+ * @copyright Copyright (c) 2014 - 2023, The volkszaehler.org project
  * @package vzlogger
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  **/
