@@ -49,8 +49,8 @@ Debian Packages
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
 
 We now build debian packages for amd64, armhf and arm64 as part of our releases.
-The ones attached to the release are meant for bookworm. These and packages for 
-bullseye are also provided through a repository graciously provided by 
+The ones attached to the release are meant for trixie. These and packages for 
+bookworm and bullseye are also provided through a repository graciously provided by 
 [Cloudsmith](https://cloudsmith.com).
 
 Those debian packages are built with MQTT support.
@@ -62,7 +62,7 @@ This boils down to adding a file to /etc/apt/sources.list.d/ containing
 deb [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian bookworm main
 deb-src [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian bookworm main
 ```
-and retrieving the key as a trusted one
+(replace bookworm with your current distro) and retrieving the key as a trusted one
 ```
 curl -1sLf "https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/gpg.21DBDAC56DF44DA1.key" | \
 	gpg --dearmor > /usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg
