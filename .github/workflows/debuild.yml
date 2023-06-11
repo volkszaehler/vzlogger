@@ -29,7 +29,7 @@ jobs:
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
       - name: add cloudsmith repo
         run: |
-          LISTENTRY="deb [signed-by=$KEYFILE] $CLOUDURL bookworm main"
+          LISTENTRY="deb [signed-by=$KEYFILE] $CLOUDURL trixie main"
           echo "$LISTENTRY" | sudo tee -a /etc/apt/sources.list
           gpg --keyserver $KEYSERVER --recv-key $CLOUD_KEY_ID
           sudo -E gpg -v --output "$KEYFILE" --export $CLOUD_KEY_ID
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         architecture: [armhf, arm64, amd64]
-        distribution: [bookworm, bullseye]
+        distribution: [trixie, bookworm, bullseye]
     runs-on: ubuntu-latest
     environment: main
     env:
@@ -145,7 +145,7 @@ jobs:
       - name: upload as Release
         run: |
           set -x
-          if [[ "${{ matrix.distribution }}" != bookworm ]]; then
+          if [[ "${{ matrix.distribution }}" != trixie ]]; then
             exit
           fi
           assets=()
