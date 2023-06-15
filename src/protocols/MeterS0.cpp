@@ -992,9 +992,11 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 		_state = newstate;
 	}
 
-	// according to https://github.com/volkszaehler/vzlogger/commit/790438d69453cc3dfd3cbcdc92fe5a9d18963a9e
-	// in case of STATE_HIGH, it should return true and set timeout to false to avoid additional debouncing
-	// in all other cases, it should return false and set timeout to true to indicate that no error has happened.
+	// according to
+	// https://github.com/volkszaehler/vzlogger/commit/790438d69453cc3dfd3cbcdc92fe5a9d18963a9e in
+	// case of STATE_HIGH, it should return true and set timeout to false to avoid additional
+	// debouncing. In all other cases, it should return false and set timeout to true to indicate
+	// that no error has happened.
 
 	timeout = newstate != STATE_HIGH;
 	return (newstate ==
