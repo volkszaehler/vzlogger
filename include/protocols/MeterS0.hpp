@@ -101,6 +101,7 @@ class MeterS0 : public vz::protocol::Protocol {
 		int _gpiopin;
 		bool _configureGPIO;
 		int _debounce_delay_ms;
+		int _high_count;
 		int _high_wait_ms;
 		struct gpiod_chip *_chip;
 		struct gpiod_line *_line;

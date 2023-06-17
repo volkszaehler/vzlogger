@@ -774,9 +774,10 @@ bool MeterS0::HWIF_GPIO::waitForImpulse(bool &timeout) {
  */
 
 MeterS0::HWIF_GPIOD::HWIF_GPIOD(int gpiopin, const std::list<Option> &options)
-	: _gpiopin(gpiopin), _configureGPIO(true), _debounce_delay_ms(30), _high_wait_ms(-1),
-	  _chip(NULL), _line(NULL), _ts_next_state_transition({.tv_sec = 0L, .tv_nsec = 0L}),
-	  _gpio_line_status(-1), _state(STATE_LOW) {
+	: _gpiopin(gpiopin), _configureGPIO(true), _debounce_delay_ms(30), _high_count(0),
+	  _high_wait_ms(-1), _chip(NULL), _line(NULL),
+	  _ts_next_state_transition({.tv_sec = 0L, .tv_nsec = 0L}), _gpio_line_status(-1),
+	  _state(STATE_LOW) {
 	OptionList optlist;
 
 	if (_gpiopin < 0)
@@ -989,16 +990,22 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 			"MeterS0:HWIF_GPIOD: state machine transition from %d to %d with a timeout at %ld.%ld",
 			"S0", _state, newstate, _ts_next_state_transition.tv_sec,
 			_ts_next_state_transition.tv_nsec);
+		if (newstate == STATE_HIGH) {
+			_high_count++;
+		} else if (newstate == STATE_LOW) {
+			_high_count = 0;
+		}
 		_state = newstate;
 	}
 
-	// according to
+	// A pulse is detected at the first transition to high after a low (i.e. once _high_count is
+	// exactly 1). A high->debounce->high will therefore not be counted as pulse. According to
 	// https://github.com/volkszaehler/vzlogger/commit/790438d69453cc3dfd3cbcdc92fe5a9d18963a9e in
-	// case of STATE_HIGH, it should return true and set timeout to false to avoid additional
+	// case of detected pulse, it should return true and set timeout to false to avoid additional
 	// debouncing. In all other cases, it should return false and set timeout to true to indicate
 	// that no error has happened.
 
-	timeout = newstate != STATE_HIGH;
-	return (newstate ==
-			STATE_HIGH); // return true when transitioned to STATE_HIGH state, false otherwise
+	int pulse_detected = (newstate == STATE_HIGH) && (_high_count == 1);
+	timeout = !pulse_detected;
+	return (pulse_detected);
 }
