@@ -1002,10 +1002,15 @@ bool MeterS0::HWIF_GPIOD::waitForImpulse(bool &timeout) {
 	// exactly 1). A high->debounce->high will therefore not be counted as pulse. According to
 	// https://github.com/volkszaehler/vzlogger/commit/790438d69453cc3dfd3cbcdc92fe5a9d18963a9e in
 	// case of detected pulse, it should return true and set timeout to false to avoid additional
-	// debouncing. In all other cases, it should return false and set timeout to true to indicate
-	// that no error has happened.
+	// debouncing in the calling code. In all other cases, it should return false and set timeout to
+	// true to indicate that no error has happened.
 
 	int pulse_detected = (newstate == STATE_HIGH) && (_high_count == 1);
+	if (newstate == STATE_HIGH && !pulse_detected) {
+		print(log_info,
+			  "MeterS0:HWIF_GPIOD: ignoring transition to HIGH state due to high state count %d",
+			  "S0", _high_count);
+	}
 	timeout = !pulse_detected;
 	return (pulse_detected);
 }
