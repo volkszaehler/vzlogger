@@ -72,6 +72,11 @@ class InfluxDB : public ApiIF {
 	std::list<Reading> _values;
 	CurlResponse::Ptr _response;
 
+	// Volatile
+	int64_t _last_timestamp; /**< remember last timestamp */
+	// duplicate support:
+	Reading *_lastReadingSent;
+
 	typedef struct {
 		CURL *curl;
 		struct curl_slist *headers;
