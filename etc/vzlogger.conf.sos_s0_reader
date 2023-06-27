@@ -1,0 +1,101 @@
+/**
+ * vzlogger configuration
+ *
+ * Use properly encoded JSON with javascript comments
+ *
+ * Take a look at the wiki for detailed information:
+ * http://wiki.volkszaehler.org/software/controller/vzlogger#configuration
+ *
+ * For an online configuration editor refer to:
+ * http://volkszaehler.github.io/vzlogger/
+ */
+
+{
+    // General settings
+    "verbosity": 10,         // log verbosity (0=log_alert, 1=log_error, 3=log_warning, 5=log_info, 10=log_debug, 15=log_finest)
+    "log": "/var/log/vzlogger.log", // log file, optional
+    "retry": 30,            // http retry delay in seconds
+
+    // Build-in HTTP server
+    "local": {
+        "enabled": false,   // enable local HTTPd for serving live readings
+        "port": 8080,       // TCP port for local HTTPd
+        "index": true,      // provide index listing of available channels if no UUID was requested
+        "timeout": 30,      // timeout for long polling comet requests in seconds (0 disables comet)
+        "buffer": -1        // HTTPd buffer configuration for serving readings, default -1
+                            //   >0: number of seconds of readings to serve
+                            //   <0: number of tuples to server per channel (e.g. -3 will serve 3 tuples)
+    },
+
+    // realtime notification settings
+    //"push": [
+    //    {
+    //        "url": "http://127.0.0.1:5582"  // notification destination, e.g. frontend push-server
+    //    }
+    //],
+
+    // mqtt client support (if ENABLE_MQTT set at cmake generation)
+    "mqtt": {
+        "enabled": false,  // enable mqtt client. needs host and port as well
+        "host": "test.mosquitto.org", // mqtt server addr
+        "port": 1883, // 1883 for unencrypted, 8883 enc, 8884 enc cert needed,
+        "cafile": "", // optional file with server CA
+        "capath": "", // optional path for server CAs. see mosquitto.conf. Specify only cafile or capath
+        "certfile": "", // optional file for your client certificate (e.g. client.crt)
+        "keyfile": "", // optional path for your client certficate private key (e.g. client.key)
+        "keypass": "", // optional password for your private key
+        "keepalive": 30, // optional keepalive in seconds.
+        "topic": "vzlogger/data", // optional topic dont use $ at start and no / at end
+        "id": "", // optional static id, if not set "vzlogger_<pid>" will be used
+        "user": "", // optional user name for the mqtt server
+        "pass": "", // optional password for the mqtt server
+        "retain": false, // optional use retain message flag
+        "rawAndAgg": false, // optional publish raw values even if agg mode is used
+        "qos": 0, // optional quality of service, default is 0
+        "timestamp": false // optional whether to include a timestamp in the payload
+    },
+
+    // Meter configuration
+    "meters": [
+        {
+            // Example SOS S0 meter
+
+            "enabled": true,                // disabled meters will be ignored (default)
+            "allowskip": false,             // errors when opening meter may be ignored if enabled
+            "protocol": "sos_s0",           // meter protocol, see 'vzlogger -h' for full list
+            "device": "/dev/ttyACM0",       // meter device
+
+//          "aggtime": 20,                  // aggregate meter readings and send middleware update after <aggtime> seconds
+            "interval": 0,                  // Wartezeit in Sekunden bis neue Werte in die middleware übertragen werden
+
+            "channels": [{
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
+                "identifier": "M1",         // S0 Port identifier
+                "api": "null",
+                "aggmode": "SUM"            // aggregation mode: aggregate meter readings during <aggtime> interval
+            }, {
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-ffffffff",
+                "identifier": "M2",         // S0 Port identifier
+                "api": "null",
+                "aggmode": "SUM"            // aggregation mode: aggregate meter readings during <aggtime> interval
+            }, {
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-11111111",
+                "identifier": "M3",         // S0 Port identifier
+                "api": "null",
+                "aggmode": "SUM"            // aggregation mode: aggregate meter readings during <aggtime> interval
+            }, {
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-22222222",
+                "identifier": "M4",         // S0 Port identifier
+                "api": "null",
+                "aggmode": "SUM"            // aggregation mode: aggregate meter readings during <aggtime> interval
+            }, {
+                "uuid": "aaaaaaaa-bbbb-cccc-dddd-33333333",
+                "identifier": "M5",         // S0 Port identifier
+                "api": "null",
+                "aggmode": "SUM"            // aggregation mode: aggregate meter readings during <aggtime> interval
+            }
+            ]
+        }
+    ]
+}
+

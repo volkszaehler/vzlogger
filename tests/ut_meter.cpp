@@ -20,6 +20,7 @@
 #include "../src/protocols/MeterFluksoV2.cpp"
 #include "../src/protocols/MeterRandom.cpp"
 #include "../src/protocols/MeterS0.cpp"
+#include "../src/protocols/MeterSOS_S0.cpp"
 
 TEST(meter, meter_lookup_protocol) {
 	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol(NULL, NULL));
