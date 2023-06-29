@@ -43,33 +43,34 @@
 #include "protocols/MeterSOS_S0.hpp"
 #include <VZException.hpp>
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
-
 
 namespace MeterSOS_S0_Helper {
 
-bool hasEnding (const std::string &fullString, const std::string &ending) {
-    if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
-    } 
+bool hasEnding(const std::string &fullString, const std::string &ending) {
+	if (fullString.length() >= ending.length()) {
+		return (0 ==
+				fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+	}
 
-    return false;
+	return false;
 }
 
-void tokenize(const std::string &text, const std::string &delimiter, std::vector<std::string> &data){
-    size_t start = text.find_first_not_of(delimiter);
-    size_t end = start;
+void tokenize(const std::string &text, const std::string &delimiter,
+			  std::vector<std::string> &data) {
+	size_t start = text.find_first_not_of(delimiter);
+	size_t end = start;
 
-    while (start != std::string::npos){
-        end = text.find(delimiter, start);
-        data.push_back(text.substr(start, end-start));
-        start = text.find_first_not_of(delimiter, end);
-    }
+	while (start != std::string::npos) {
+		end = text.find(delimiter, start);
+		data.push_back(text.substr(start, end - start));
+		start = text.find_first_not_of(delimiter, end);
+	}
 }
 
-};
+}; // namespace MeterSOS_S0_Helper
 
 MeterSOS_S0::MeterSOS_S0(std::list<Option> &options)
 	: Protocol("sos_s0"), _device(""), _read_timeout_s(10), _send_zero(false) {
@@ -87,7 +88,7 @@ MeterSOS_S0::MeterSOS_S0(std::list<Option> &options)
 	}
 
 	// baudrate and parity are hard coded for this devices
-    _baudrate = B9600;
+	_baudrate = B9600;
 	_parity = parity_7n1;
 
 	try {
@@ -106,45 +107,41 @@ MeterSOS_S0::MeterSOS_S0(std::list<Option> &options)
 		print(log_alert, "Failed to parse send_zero", "");
 		throw;
 	}
-
 }
 
-MeterSOS_S0::~MeterSOS_S0() {
-}
+MeterSOS_S0::~MeterSOS_S0() {}
 
 int MeterSOS_S0::open() {
 
 	if (_device.length() > 0) {
 		_fd = _openDevice(&_oldtio, _baudrate);
-	} 
+	}
 
 	return (_fd < 0) ? ERR : SUCCESS;
 }
 
-int MeterSOS_S0::close() {
-	return ::close(_fd);
-}
+int MeterSOS_S0::close() { return ::close(_fd); }
 
 ssize_t MeterSOS_S0::read(std::vector<Reading> &rds, size_t max_readings) {
 
-    time_t start_time(0);
-    time_t end_time(0);
-    size_t total_bytes_read(0);
-    unsigned char last_byte(0);
-    bool end_line_found(false);
+	time_t start_time(0);
+	time_t end_time(0);
+	size_t total_bytes_read(0);
+	unsigned char last_byte(0);
+	bool end_line_found(false);
 
-    // check file descriptor
-    if (!_is_valid_fd()) {
-        print(log_alert, " file descriptor [%i] to [%s] is invalid. try to reopen.", name().c_str(), _fd, device());
-        _fd = _openDevice(&_oldtio, _baudrate);
-        if (_fd < 0) {
-            return 0;
-        }
-    }
-
+	// check file descriptor
+	if (!_is_valid_fd()) {
+		print(log_alert, " file descriptor [%i] to [%s] is invalid. try to reopen.", name().c_str(),
+			  _fd, device());
+		_fd = _openDevice(&_oldtio, _baudrate);
+		if (_fd < 0) {
+			return 0;
+		}
+	}
 
 	time(&start_time);
-    std::string strReadText;
+	std::string strReadText;
 
 	while (1) {
 		_safe_to_cancel();
@@ -166,55 +163,57 @@ ssize_t MeterSOS_S0::read(std::vector<Reading> &rds, size_t max_readings) {
 			print(log_error, " error reading a byte (%d)", name().c_str(), errno);
 			break;
 		}
-        strReadText.push_back(last_byte);
-        total_bytes_read++;
+		strReadText.push_back(last_byte);
+		total_bytes_read++;
 
-        if (MeterSOS_S0_Helper::hasEnding(strReadText, "\n\n")) {
-            end_line_found = true;
-            break;
-        }
+		if (MeterSOS_S0_Helper::hasEnding(strReadText, "\n\n")) {
+			end_line_found = true;
+			break;
+		}
 
 	} // end while
-    
-    if (end_line_found) {
-        std::vector<std::string> data;
-        MeterSOS_S0_Helper::tokenize(strReadText, ":", data);
-        if (data.size() == 19) {
 
-            char *end = nullptr;
-            size_t deviceId(strtoul(data.at(1).c_str(), &end, 10));
+	if (end_line_found) {
+		std::vector<std::string> data;
+		MeterSOS_S0_Helper::tokenize(strReadText, ":", data);
+		if (data.size() == 19) {
 
-            int tuplesFound(0);
-            int dataStart(4);
-            for (int count=0; count < 5; count++) {
-                std::string strIdent(data.at(dataStart));
-                size_t value(strtoul(data.at(dataStart+1).c_str(), &end, 10));
+			char *end = nullptr;
+			size_t deviceId(strtoul(data.at(1).c_str(), &end, 10));
 
-                if ((value > 0) || _send_zero) {
-                    tuplesFound++;
-                    rds[count].identifier(new StringIdentifier(strIdent));
-                    rds[count].time();
-                    rds[count].value(value);
-                    dataStart += 3;
+			int tuplesFound(0);
+			int dataStart(4);
+			for (int count = 0; count < 5; count++) {
+				std::string strIdent(data.at(dataStart));
+				size_t value(strtoul(data.at(dataStart + 1).c_str(), &end, 10));
 
-                    std::stringstream ss;
-                    ss << "deviceId: [" << deviceId << "] - ID: " << strIdent << " value: " << value;
-                    print(log_debug, "read: %s", name().c_str(), ss.str().c_str());
-                }
-            }
-            return tuplesFound; // return number of good readings so far.  
-        } else {
-            print(log_alert, "tokenize of returned text failed: %lu instead of 19 ELements in text found", name().c_str(), data.size());
-        }
-    }
+				if ((value > 0) || _send_zero) {
+					tuplesFound++;
+					rds[count].identifier(new StringIdentifier(strIdent));
+					rds[count].time();
+					rds[count].value(value);
+					dataStart += 3;
 
-	return 0; 
+					std::stringstream ss;
+					ss << "deviceId: [" << deviceId << "] - ID: " << strIdent
+					   << " value: " << value;
+					print(log_debug, "read: %s", name().c_str(), ss.str().c_str());
+				}
+			}
+			return tuplesFound; // return number of good readings so far.
+		} else {
+			print(log_alert,
+				  "tokenize of returned text failed: %lu instead of 19 ELements in text found",
+				  name().c_str(), data.size());
+		}
+	}
+
+	return 0;
 }
 
-bool MeterSOS_S0::_is_valid_fd()
-{
-    auto ret_code = fcntl(_fd, F_GETFL);
-    return ((ret_code != -1) || (errno != EBADF)) ? true : false;
+bool MeterSOS_S0::_is_valid_fd() {
+	auto ret_code = fcntl(_fd, F_GETFL);
+	return ((ret_code != -1) || (errno != EBADF)) ? true : false;
 }
 
 int MeterSOS_S0::_openDevice(struct termios *old_tio, speed_t baudrate) {

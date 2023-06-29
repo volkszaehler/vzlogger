@@ -1,10 +1,10 @@
 /**
- * Plaintext protocol of S0 Pulse meter devices 
+ * Plaintext protocol of S0 Pulse meter devices
  *  --> https://www.sossolutions.nl/5-kanaals-s0-pulse-meter-op-usb
  *
  * The device is a USB s0 logger device.
- * 
- * The protocol is defined as follows: 
+ *
+ * The protocol is defined as follows:
  *       ‘ID:x:I:y:M1:a:b:M2:c:d:M3:e:f:M4:g:h:M5:i:j’’
  *        - x = ID des S0 pulse meter (unique)
  * 	      - y = number of seconds since last message (default: 10 second)
@@ -36,8 +36,8 @@
 #ifndef _SOS_S0_H_
 #define _SOS_S0_H_
 
-#include <termios.h>
 #include <protocols/Protocol.hpp>
+#include <termios.h>
 
 class MeterSOS_S0 : public vz::protocol::Protocol {
   public:
@@ -58,14 +58,14 @@ class MeterSOS_S0 : public vz::protocol::Protocol {
 	std::string _dump_file;
 	int _baudrate;
 	parity_type_t _parity;
-    size_t _read_timeout_s;
-    bool _send_zero;
+	size_t _read_timeout_s;
+	bool _send_zero;
 
-	int _fd; /* file descriptor of port */
+	int _fd;                /* file descriptor of port */
 	struct termios _oldtio; /* required to reset port */
 
 	int _openDevice(struct termios *old_tio, speed_t baudrate);
-    bool _is_valid_fd();
+	bool _is_valid_fd();
 };
 
 #endif /* _D0_H_ */

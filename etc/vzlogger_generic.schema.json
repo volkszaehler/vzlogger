@@ -963,7 +963,35 @@
                 "required": ["protocol"]
             }]
         },
-
+        "meterSOS_S0": {
+            "title": "SOS S0 Pulse meter devices",
+            "allOf": [{
+                "$ref": "#/definitions/meter"
+            }, {
+                "properties": {
+                    "protocol": {
+                        "type": "string",
+                        "enum": ["sos_s0"],
+                        "default": "sos_s0"
+                    },
+                    "device": {
+                        "type": "string",
+                        "description": "UART device the device is connected to. E.g. /dev/ttyACM0"
+                    },
+                    "read_timeout": {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Read timeout in secs. Data readout is considered finished if no state change after that timeout."
+                    },
+                    "send_zero": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If active/true send data once a second even if no impulses have been received. Use aggregation is this case to reduce frequency."
+                    }
+                },
+                "required": ["protocol", "device"]
+            }]
+        },
         "channels": {
             "type": "array",
             "items": {
@@ -1009,6 +1037,8 @@
                         "$ref": "#/definitions/meterOMS"
                     }, {
                         "$ref": "#/definitions/meterW1therm"
+                    }, {
+                        "$ref": "#/definitions/meterSOS_S0"
                     }
 
                 ]

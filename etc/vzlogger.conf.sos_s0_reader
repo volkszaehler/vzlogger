@@ -66,7 +66,8 @@
             "device": "/dev/ttyACM0",       // meter device
 
 //          "aggtime": 20,                  // aggregate meter readings and send middleware update after <aggtime> seconds
-            "interval": 0,                  // Wartezeit in Sekunden bis neue Werte in die middleware übertragen werden
+            "interval": -1,                  // wait time in seconds until new values will transmitted to middleware 
+//          "send_zero": false,             
 
             "channels": [{
                 "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeee",
