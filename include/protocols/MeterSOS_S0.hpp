@@ -59,6 +59,7 @@ class MeterSOS_S0 : public vz::protocol::Protocol {
 	int _baudrate;
 	parity_type_t _parity;
     size_t _read_timeout_s;
+    bool _send_zero;
 
 	int _fd; /* file descriptor of port */
 	struct termios _oldtio; /* required to reset port */

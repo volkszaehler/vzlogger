@@ -72,7 +72,7 @@ void tokenize(const std::string &text, const std::string &delimiter, std::vector
 };
 
 MeterSOS_S0::MeterSOS_S0(std::list<Option> &options)
-	: Protocol("sos_s0"), _device(""), _read_timeout_s(10) {
+	: Protocol("sos_s0"), _device(""), _read_timeout_s(10), _send_zero(false) {
 	OptionList option_list;
 
 	// connection
@@ -98,6 +98,15 @@ MeterSOS_S0::MeterSOS_S0(std::list<Option> &options)
 		print(log_alert, "Failed to parse read_timeout", name().c_str());
 		throw;
 	}
+	try {
+		_send_zero = option_list.lookup_bool(options, "send_zero");
+	} catch (vz::OptionNotFoundException &e) {
+		// keep default init value (false)
+	} catch (vz::VZException &e) {
+		print(log_alert, "Failed to parse send_zero", "");
+		throw;
+	}
+
 }
 
 MeterSOS_S0::~MeterSOS_S0() {
@@ -175,21 +184,25 @@ ssize_t MeterSOS_S0::read(std::vector<Reading> &rds, size_t max_readings) {
             char *end = nullptr;
             size_t deviceId(strtoul(data.at(1).c_str(), &end, 10));
 
+            int tuplesFound(0);
             int dataStart(4);
             for (int count=0; count < 5; count++) {
                 std::string strIdent(data.at(dataStart));
                 size_t value(strtoul(data.at(dataStart+1).c_str(), &end, 10));
 
-                rds[count].identifier(new StringIdentifier(strIdent));
-                rds[count].time();
-                rds[count].value(value);
-                dataStart += 3;
+                if ((value > 0) || _send_zero) {
+                    tuplesFound++;
+                    rds[count].identifier(new StringIdentifier(strIdent));
+                    rds[count].time();
+                    rds[count].value(value);
+                    dataStart += 3;
 
-                std::stringstream ss;
-                ss << "deviceId: [" << deviceId << "] - ID: " << strIdent << " value: " << value;
-                print(log_debug, "read: %s", name().c_str(), ss.str().c_str());
+                    std::stringstream ss;
+                    ss << "deviceId: [" << deviceId << "] - ID: " << strIdent << " value: " << value;
+                    print(log_debug, "read: %s", name().c_str(), ss.str().c_str());
+                }
             }
-            return 5; // return number of good readings so far.  
+            return tuplesFound; // return number of good readings so far.  
         } else {
             print(log_alert, "tokenize of returned text failed: %lu instead of 19 ELements in text found", name().c_str(), data.size());
         }
