@@ -8,6 +8,7 @@
  *       ‘ID:x:I:y:M1:a:b:M2:c:d:M3:e:f:M4:g:h:M5:i:j’’
  *        - x = ID des S0 pulse meter (unique)
  * 	      - y = number of seconds since last message (default: 10 second)
+ *        - M1,M2,M3,M4,M5 = identifier name for corresponding S0 port on device
  *        - a,c,e,g,i = number of pulses since last message
  *        - b,d,f,h,j = total number of pulses since start of device
  *

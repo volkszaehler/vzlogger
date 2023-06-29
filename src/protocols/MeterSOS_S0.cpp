@@ -1,10 +1,16 @@
 /**
- * Plaintext protocol according to DIN EN 62056-21
+ * Plaintext protocol of S0 Pulse meter devices
+ *  --> https://www.sossolutions.nl/5-kanaals-s0-pulse-meter-op-usb
  *
- * This protocol uses OBIS codes to identify the readout data
+ * The device is a USB s0 logger device.
  *
- * This is our example protocol. Use this skeleton to add your own
- * protocols and meters.
+ * The protocol is defined as follows:
+ *       ‘ID:x:I:y:M1:a:b:M2:c:d:M3:e:f:M4:g:h:M5:i:j’’
+ *        - x = ID des S0 pulse meter (unique)
+ * 	      - y = number of seconds since last message (default: 10 second)
+ *        - M1,M2,M3,M4,M5 = identifier name for corresponding S0 port on device
+ *        - a,c,e,g,i = number of pulses since last message
+ *        - b,d,f,h,j = total number of pulses since start of device
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
