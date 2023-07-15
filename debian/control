@@ -9,8 +9,8 @@ Build-Depends: debhelper-compat (= 13), pkg-config (>= 0.25),
  libgmock-dev, libgtest-dev, pandoc, libmosquitto-dev
 Standards-Version: 4.6.2
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
-Vcs-Git: https://github.com/volkszaehler/vzlogger.git
-Vcs-Browser: https://github.com/volkszaehler/vzlogger
+Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian
+Vcs-Browser: https://github.com/volkszaehler/vzlogger/tree/debian
 
 Package: vzlogger
 Architecture: any
