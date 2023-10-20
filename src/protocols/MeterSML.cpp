@@ -57,7 +57,7 @@
 #define SML_BUFFER_LEN 8096
 
 MeterSML::MeterSML(std::list<Option> options)
-	: Protocol("sml"), _host(""), _device(""), BUFFER_LEN(SML_BUFFER_LEN) {
+	: Protocol("sml"), _host(""), _device(""), _sml_workarounds(0), BUFFER_LEN(SML_BUFFER_LEN) {
 	OptionList optlist;
 
 	/* connection */
@@ -194,6 +194,14 @@ MeterSML::MeterSML(std::list<Option> options)
 		print(log_alert, "Failed to parse the parity", name().c_str());
 		throw;
 	}
+
+	try {
+		if (optlist.lookup_bool(options, "dzg_fix_negative_values")) {
+			_sml_workarounds |= SML_WORKAROUND_DZG_NEGATIVE;
+		}
+	} catch (vz::OptionNotFoundException &e) {
+		// Leave disabled if the option wasn't provided.
+	}
 }
 
 MeterSML::MeterSML(const MeterSML &proto) : Protocol(proto), _fd(ERR), BUFFER_LEN(SML_BUFFER_LEN) {}
@@ -279,7 +287,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	}
 
 	/* parse SML file & stripping escape sequences */
-	file = sml_file_parse(buffer + 8, bytes - 16);
+	file = sml_file_parse(buffer + 8, bytes - 16, _sml_workarounds);
 
 	/* obtain SML messagebody of type getResponseList */
 	for (short i = 0; i < file->messages_len; i++) {

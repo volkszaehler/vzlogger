@@ -65,6 +65,7 @@ class MeterSML : public vz::protocol::Protocol {
 	parity_type_t _parity;
 	std::string _pull;
 	bool _use_local_time;
+	sml_workarounds _sml_workarounds;
 
 	int _fd;                 /* file descriptor of port */
 	struct termios _old_tio; /* required to reset port */

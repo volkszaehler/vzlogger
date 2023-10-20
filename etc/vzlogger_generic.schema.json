@@ -517,6 +517,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "use the local time for reading timestamp?"
+                        },
+                        "dzg_fix_negative_values": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "work around wrongly encoded negative values on some DZG meters"
                         }
                     },
                 "required": ["protocol", "device", "baudrate", "parity"]
@@ -559,6 +564,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "use the local time for reading timestamp?"
+                        },
+                        "dzg_fix_negative_values": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "work around wrongly encoded negative values on some DZG meters"
                         }
                     },
                 "required": ["protocol", "host", "baudrate", "parity"]
