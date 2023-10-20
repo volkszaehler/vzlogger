@@ -345,6 +345,7 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n) {
 								const unsigned char &dif = record->drh.dib.dif;
 								const unsigned char &nvife = record->drh.vib.nvife;
 								const unsigned char &vife1 = record->drh.vib.vife[0];
+								const unsigned char &vife2 = record->drh.vib.vife[1];
 
 								switch (record->drh.vib.vif) {
 								case 0x6d: // time
@@ -384,6 +385,64 @@ ssize_t MeterOMS::read(std::vector<Reading> &rds, size_t n) {
 											  mbus_vib_unit_lookup(&(record->drh.vib)));
 										if (ret < n) {
 											rds[ret].identifier(new ObisIdentifier("2.8.0"));
+											rds[ret].value(get_record_value(record));
+											if (timeFromMeter > 1.0 && !_use_local_time)
+												rds[ret].time_from_double(timeFromMeter);
+											else
+												rds[ret].time();
+											++ret;
+										}
+									}
+									break;
+								case 0xfb:
+									if (dif == 0x84 && nvife == 2 && vife1 == 0x82 && vife2 == 0x73) {
+										print(log_debug, "Obis 3.8.1 %f %s", name().c_str(),
+											  get_record_value(record),
+											  mbus_vib_unit_lookup(&(record->drh.vib)));
+										if (ret < n) {
+											rds[ret].identifier(new ObisIdentifier("3.8.1"));
+											rds[ret].value(get_record_value(record));
+											if (timeFromMeter > 1.0 && !_use_local_time)
+												rds[ret].time_from_double(timeFromMeter);
+											else
+												rds[ret].time();
+											++ret;
+										}
+									}
+									if (dif == 0x84 && nvife == 3 && vife1 == 0x82 && vife2 == 0xf3) {
+										print(log_debug, "Obis 4.8.1 %f %s", name().c_str(),
+											  get_record_value(record),
+											  mbus_vib_unit_lookup(&(record->drh.vib)));
+										if (ret < n) {
+											rds[ret].identifier(new ObisIdentifier("4.8.1"));
+											rds[ret].value(get_record_value(record));
+											if (timeFromMeter > 1.0 && !_use_local_time)
+												rds[ret].time_from_double(timeFromMeter);
+											else
+												rds[ret].time();
+											++ret;
+										}
+									}
+									if (dif == 0x04 && nvife == 1 && vife1 == 0x14 && vife2 == 0x00) {
+										print(log_debug, "Obis 3.7.0 %f %s", name().c_str(),
+											  get_record_value(record),
+											  mbus_vib_unit_lookup(&(record->drh.vib)));
+										if (ret < n) {
+											rds[ret].identifier(new ObisIdentifier("3.7.0"));
+											rds[ret].value(get_record_value(record));
+											if (timeFromMeter > 1.0 && !_use_local_time)
+												rds[ret].time_from_double(timeFromMeter);
+											else
+												rds[ret].time();
+											++ret;
+										}
+									}
+									if (dif == 0x04 && nvife == 2 && vife1 == 0x94 && vife2 == 0x3c) {
+										print(log_debug, "Obis 4.7.0 %f %s", name().c_str(),
+											  get_record_value(record),
+											  mbus_vib_unit_lookup(&(record->drh.vib)));
+										if (ret < n) {
+											rds[ret].identifier(new ObisIdentifier("4.7.0"));
 											rds[ret].value(get_record_value(record));
 											if (timeFromMeter > 1.0 && !_use_local_time)
 												rds[ret].time_from_double(timeFromMeter);
