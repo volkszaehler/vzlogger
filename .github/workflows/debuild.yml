@@ -93,7 +93,7 @@ jobs:
       - name: install pbuilder
         run: |
           sudo apt-get install pbuilder qemu-user-static \
-            debian-archive-keyring
+            debian-archive-keyring hub
         # Needed for the release download
       - uses: actions/checkout@v4
       - name: Set env
