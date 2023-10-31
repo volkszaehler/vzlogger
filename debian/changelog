@@ -1,4 +1,10 @@
-vzlogger (0.8.2) UNRELEASED; urgency=medium
+vzlogger (0.8.3) unstable; urgency=medium
+
+  * Added armel as release architecture 
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Tue, 31 Oct 2023 15:38:49 +0100
+
+vzlogger (0.8.2) unstable; urgency=medium
 
   * Fixed service running as root 
 
