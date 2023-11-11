@@ -3,7 +3,7 @@ Description=vzlogger
 After=syslog.target network.target ntp.service
 
 [Service]
-ExecStart=/usr/local/bin/vzlogger -c /etc/vzlogger.conf
+ExecStart=/usr/bin/vzlogger -c /etc/vzlogger.conf
 ExecReload=
 StandardOutput=null
 
