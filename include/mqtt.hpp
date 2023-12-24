@@ -48,6 +48,7 @@ class MqttClient {
 	std::string _id;
 	int _qos = 0;
 	bool _timestamp = false;
+	unsigned int _cntRetries;
 
 	bool _isConnected = false;
 
