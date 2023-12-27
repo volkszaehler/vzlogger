@@ -181,7 +181,7 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 					break;
 				default:
 					// This should be MOSQ_ERR_INVAL, so there is nothing we can do.
-					print(log_alert, "mosquitto_connect failed, stopped: %s", "mqtt",
+					print(log_alert, "mosquitto_connect failed, giving up: %s", "mqtt",
 						  mosquitto_strerror(res));
 					_enabled = false;
 					break;
