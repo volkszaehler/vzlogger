@@ -207,6 +207,18 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 		throw;
 	}
 
+	try {
+		_field_name = optlist.lookup_string(pOptions, "field_name");
+		print(log_finest, "api InfluxDB using value_name %s", ch->name(), _field_name.c_str());
+	} catch (vz::OptionNotFoundException &e) {
+		_field_name = "value";
+		print(log_alert, "api InfluxDB will use default field_name \"%s\"!", ch->name(),
+			  _field_name);
+	} catch (vz::VZException &e) {
+		print(log_alert, "api InfluxDB requires parameter \"field_name\" as string!", ch->name());
+		throw;
+	}
+
 	CURL *curlhelper = curl_easy_init();
 	if (!curlhelper) {
 		throw vz::VZException("CURL: cannot create handle for urlencode.");
@@ -298,7 +310,7 @@ void vz::api::InfluxDB::send() {
 			request_body.append(_tags);
 		}
 		std::stringstream value_str;
-		value_str << " value=" << std::fixed << std::setprecision(6) << it->value();
+		value_str << " " + _field_name + "=" << std::fixed << std::setprecision(6) << it->value();
 		request_body.append(value_str.str());
 		request_body.append(" ");
 		request_body.append(std::to_string(it->time_ms()));
