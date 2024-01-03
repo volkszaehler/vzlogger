@@ -29,10 +29,10 @@ override_dh_auto_test: ;
 endif
 
 execute_after_dh_auto_build:
-	pandoc -o vzlogger.1 -s -t man debian/vzlogger.1.md
+	pandoc -o vzlogger.8 -s -t man debian/vzlogger.8.md
 
 execute_after_dh_clean:
-	rm -f vzlogger.1
+	rm -f vzlogger.8
 
 %:
 	dh $@ 
