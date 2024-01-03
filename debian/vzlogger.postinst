@@ -3,7 +3,7 @@
 case "$1" in
     configure)
 	if ! id vzlogger > /dev/null 2>&1 ; then
-	    adduser --system --no-create-home \
+	    adduser --system --no-create-home --home /nonexistent \
 		--group --disabled-password --shell /bin/false \
 		vzlogger
             usermod -a -G dialout vzlogger

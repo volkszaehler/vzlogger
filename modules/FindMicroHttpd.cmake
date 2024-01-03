@@ -3,8 +3,7 @@
 # Usage of this module as follows:
 # This file defines:
 # * MICROHTTPD_FOUND if protoc was found
-# * MICROHTTPD_LIBRARY The lib to link to (currently only a static unix lib, not
-# portable)
+# * MICROHTTPD_LIBRARY The lib to link to
 # * MICROHTTPD_INCLUDE The include directories for libmicrohttpd.
 
 message(STATUS "FindMicrohttpd check")
@@ -81,8 +80,8 @@ FIND_PATH(MICROHTTPD_INCLUDE_DIR microhttpd.h
 IF(WIN32)
   SET(MICROHTTPD_LIBRARY_NAMES ${MICROHTTPD_LIBRARY_NAMES} libmicrohttpd.lib)
 ELSE(WIN32)
-  SET(MICROHTTPD_LIBRARY_NAMES ${MICROHTTPD_LIBRARY_NAMES} libmicrohttpd.a)
   SET(MICROHTTPD_LIBRARY_NAMES ${MICROHTTPD_LIBRARY_NAMES} libmicrohttpd.so)
+  SET(MICROHTTPD_LIBRARY_NAMES ${MICROHTTPD_LIBRARY_NAMES} libmicrohttpd.a)
 ENDIF(WIN32)
 FIND_LIBRARY(MICROHTTPD_LIBRARY NAMES ${MICROHTTPD_LIBRARY_NAMES}
   HINTS

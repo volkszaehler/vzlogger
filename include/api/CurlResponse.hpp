@@ -2,7 +2,7 @@
  * Header file for volkszaehler.org API calls
  *
  * @author Kai Krueger <kai.krueger@itwm.fraunhofer.de>
- * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
  * @package vzlogger
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */

@@ -2,7 +2,7 @@
  * Wrapper around libsml
  *
  * @package vzlogger
- * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
  * @copyright Copyright (c) 2011, DAI-Labor, TU-Berlin
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
@@ -42,6 +42,8 @@
 /* socket */
 #include <netdb.h>
 #include <sys/socket.h>
+
+#include "threads.h"
 
 /* sml stuff */
 #include <sml/sml_file.h>
@@ -249,7 +251,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	if (_fd < 0) {
 		if (!reopen()) {
 			// sleep a little bit to prevent busy looping
-			sleep(1);
+			_cancellable_sleep(1);
 			return 0;
 		}
 	}
@@ -261,13 +263,13 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	}
 
 	/* wait until we receive a new datagram from the meter (blocking read) */
-	bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
-	gettimeofday(&tv, NULL);
+	CANCELLABLE(bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN));
+  gettimeofday(&tv, NULL);
 
 	if (0 == bytes) {
 		// try to reopen. see issue #362
 		if (reopen()) {
-			bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN);
+			CANCELLABLE(bytes = sml_transport_read(_fd, buffer, SML_BUFFER_LEN));
 			print(log_info, "sml_transport_read returned len=%d after reopen", name().c_str(),
 				  bytes);
 		}

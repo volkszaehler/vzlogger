@@ -5,6 +5,7 @@
 #ifndef __push_data_hpp_
 #define __push_data_hpp_
 
+#include <cstdint>
 #include <list>
 #include <pthread.h>
 #include <queue>

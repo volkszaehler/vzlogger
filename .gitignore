@@ -3,7 +3,7 @@
 # Binaries
 src/vzlogger
 
-# directorys from install.sh
+# directories from install.sh
 libs/
 build*/
 

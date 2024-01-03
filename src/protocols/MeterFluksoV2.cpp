@@ -2,7 +2,7 @@
  * Parsing SPI output of the new fluksometer
  *
  * @package vzlogger
- * @copyright Copyright (c) 2011, The volkszaehler.org project
+ * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
  */
@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "threads.h"
 
 #include "Options.hpp"
 #include "protocols/MeterFluksoV2.hpp"
@@ -89,6 +91,7 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 	time.tv_usec = 0; /* no millisecond resolution available */
 
 	while (cursor) {
+		_safe_to_cancel();
 		int channel =
 			atoi(strsep(&cursor, " \t")) + 1; /* increment by 1 to distinguish between +0 and -0 */
 
