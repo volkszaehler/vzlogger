@@ -34,6 +34,8 @@ jobs:
           gpg --keyserver $KEYSERVER --recv-key $CLOUD_KEY_ID
           sudo -E gpg -v --output "$KEYFILE" --export $CLOUD_KEY_ID
           sudo apt-get update
+      - name: update repo information
+        run: sudo apt-get update
       - name: install devscripts
         run: sudo apt-get install equivs devscripts pipx hub
       - name: install dependencies
@@ -90,6 +92,8 @@ jobs:
     env:
       PBRT: /var/cache/pbuilder
     steps:
+      - name: update repo information
+        run: sudo apt-get update
       - name: install pbuilder
         run: |
           sudo apt-get install pbuilder qemu-user-static \
