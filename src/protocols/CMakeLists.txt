@@ -27,6 +27,7 @@ endif( OMS_SUPPORT )
 set(proto_srcs
   MeterS0.cpp ../../include/protocols/MeterS0.hpp
   MeterD0.cpp ../../include/protocols/MeterD0.hpp
+  MeterSOS_S0.cpp ../../include/protocols/MeterSOS_S0.hpp
   ${sml_srcs}
   MeterFluksoV2.cpp
   ${ocr_srcs}

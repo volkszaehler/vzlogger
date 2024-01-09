@@ -36,6 +36,7 @@
 #include <protocols/MeterFluksoV2.hpp>
 #include <protocols/MeterRandom.hpp>
 #include <protocols/MeterS0.hpp>
+#include <protocols/MeterSOS_S0.hpp>
 #ifdef SML_SUPPORT
 #include <protocols/MeterSML.hpp>
 #endif
@@ -61,6 +62,7 @@ static const meter_details_t protocols[] = {
 	METER_DETAIL(fluksov2, Fluksov2, "Read from Flukso's onboard SPI fifo", 16),
 	METER_DETAIL(s0, S0, "S0-meter directly connected to RS232", 4),
 	METER_DETAIL(d0, D0, "DLMS/IEC 62056-21 plaintext protocol", 400),
+	METER_DETAIL(sos_s0, SOS_S0, "SOS S0 Pulse Meter via USB", 5),
 #ifdef SML_SUPPORT
 	METER_DETAIL(sml, Sml, "Smart Message Language as used by EDL-21, eHz and SyM²", 32),
 #endif // SML_SUPPORT
@@ -187,6 +189,10 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
 		break;
 #endif
+	case meter_protocol_sos_s0:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterSOS_S0(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
 	default:
 		break;
 	}
