@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 // global var:
-MqttClient *mqttClient = 0;
+MqttClient *mqttClient = nullptr;
 volatile bool endMqttClientThread = false;
 
 // class impl.
@@ -57,14 +57,15 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				if (qos >= 0 && qos <= 2) {
 					_qos = qos;
 				} else {
-					print(log_alert, "Ignoring invalid QoS value %d, assuming default", NULL, qos);
+					print(log_alert, "Ignoring invalid QoS value %d, assuming default", nullptr,
+						  qos);
 				}
 			} else if (strcmp(key, "timestamp") == 0 && local_type == json_type_boolean) {
 				_timestamp = json_object_get_boolean(local_value);
 			} else if (strcmp(key, "id") == 0 && local_type == json_type_string) {
 				_id = json_object_get_string(local_value);
 			} else {
-				print(log_alert, "Ignoring invalid field or type: %s=%s", NULL, key,
+				print(log_alert, "Ignoring invalid field or type: %s=%s", nullptr, key,
 					  json_object_get_string(local_value));
 			}
 		}
@@ -273,8 +274,8 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 	if (!entry._announced && entry._announceValues.size()) {
 		for (auto &v : entry._announceValues) {
 			std::string name = entry._announceName + v.first;
-			int res = mosquitto_publish(_mcs, 0, name.c_str(), v.second.length(), v.second.c_str(),
-										_qos, _retain);
+			int res = mosquitto_publish(_mcs, nullptr, name.c_str(), v.second.length(),
+										v.second.c_str(), _qos, _retain);
 			if (res != MOSQ_ERR_SUCCESS) {
 				print(log_finest, "mosquitto_publish announce \"%s\" failed: %s", "mqtt",
 					  name.c_str(), mosquitto_strerror(res));
@@ -288,7 +289,7 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 	if ((entry._sendAgg and aggregate) or (entry._sendRaw && !aggregate)) {
 		lock.unlock(); // we can unlock here already
 		std::string payload;
-		struct json_object *payload_obj = NULL;
+		struct json_object *payload_obj = nullptr;
 
 		if (_timestamp) {
 			payload_obj = json_object_new_object();
@@ -301,12 +302,12 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 
 		print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 
-		int res = mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos,
-									_retain);
+		int res = mosquitto_publish(_mcs, nullptr, topic.c_str(), payload.length(), payload.c_str(),
+									_qos, _retain);
 		if (res != MOSQ_ERR_SUCCESS) {
 			print(log_finest, "mosquitto_publish failed: %s", "mqtt", mosquitto_strerror(res));
 		}
-		if (payload_obj != NULL) {
+		if (payload_obj != nullptr) {
 			json_object_put(payload_obj);
 		}
 	}
@@ -356,7 +357,7 @@ void *mqtt_client_thread(void *arg) {
 	}
 
 	print(log_debug, "Stopped mqtt_client_thread", "mqtt");
-	return 0;
+	return nullptr;
 }
 
 void end_mqtt_client_thread() { endMqttClientThread = true; }

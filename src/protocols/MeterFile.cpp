@@ -161,7 +161,7 @@ int MeterFile::open() {
 
 	_fd = fopen(path(), "r");
 
-	if (_fd == NULL) {
+	if (_fd == nullptr) {
 		print(log_alert, "fopen(%s): %s", name().c_str(), path(), strerror(errno));
 		return ERR;
 	}
@@ -182,7 +182,7 @@ int MeterFile::close() {
 ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 
 	char line[256], *endptr;
-	char *string = 0;
+	char *string = nullptr;
 
 	// wait for file change via inotify
 	const int EVENTSIZE = sizeof(struct inotify_event) + NAME_MAX + 1;
@@ -269,7 +269,7 @@ ssize_t MeterFile::read(std::vector<Reading> &rds, size_t n) {
 			}
 			if (string) {
 				free(string);
-				string = 0;
+				string = nullptr;
 			}
 		} else { // just reading a value per line
 			rds[i].value(strtod(line, &endptr));

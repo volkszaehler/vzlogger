@@ -66,7 +66,7 @@ MapContainer mappings;     // mapping between meters and channels
 Config_Options options;    // global application options
 size_t gSkippedFailed = 0; // disabled or failed meters
 
-std::stringbuf *gStartLogBuf = 0; // temporay buffer for print until logfile is opened
+std::stringbuf *gStartLogBuf = nullptr; // temporay buffer for print until logfile is opened
 std::mutex
 	m_log; // mutex for central log function, to prevent competed write access from the threads.
 
@@ -74,18 +74,18 @@ std::mutex
  * Command line options
  */
 const struct option long_options[] = {
-	{"config", required_argument, 0, 'c'},
-	{"log", required_argument, 0, 'o'},
-	{"foreground", no_argument, 0, 'f'},
+	{"config", required_argument, nullptr, 'c'},
+	{"log", required_argument, nullptr, 'o'},
+	{"foreground", no_argument, nullptr, 'f'},
 #ifdef LOCAL_SUPPORT
-	{"httpd", no_argument, 0, 'l'},
-	{"httpd-port", required_argument, 0, 'p'},
+	{"httpd", no_argument, nullptr, 'l'},
+	{"httpd-port", required_argument, nullptr, 'p'},
 #endif /* LOCAL_SUPPORT */
-	{"register", no_argument, 0, 'r'},
-	{"verbose", required_argument, 0, 'v'},
-	{"help", no_argument, 0, 'h'},
-	{"version", no_argument, 0, 'V'},
-	{0, 0, 0, 0} /* stop condition for iterator */
+	{"register", no_argument, nullptr, 'r'},
+	{"verbose", required_argument, nullptr, 'v'},
+	{"help", no_argument, nullptr, 'h'},
+	{"version", no_argument, nullptr, 'V'},
+	{nullptr, 0, nullptr, 0} /* stop condition for iterator */
 };
 
 /**
@@ -103,14 +103,14 @@ const char *long_options_descs[] = {
 	"enable verbose output",
 	"show this help",
 	"show version of vzlogger",
-	NULL /* stop condition for iterator */
+	nullptr /* stop condition for iterator */
 };
 
 void openLogfile(bool skip_lock = false) {
 	FILE *logfd = fopen(options.log().c_str(), "a");
 
-	if (logfd == NULL) {
-		print(log_alert, "opening logfile \"%s\" failed: %s", (char *)0, options.log().c_str(),
+	if (logfd == nullptr) {
+		print(log_alert, "opening logfile \"%s\" failed: %s", nullptr, options.log().c_str(),
 			  strerror(errno));
 		exit(EX_CANTCREAT);
 	}
@@ -122,14 +122,14 @@ void openLogfile(bool skip_lock = false) {
 		// log current console output to logfile as we missed the start
 		fprintf(logfd, "%s", gStartLogBuf->str().c_str());
 		auto temp = gStartLogBuf;
-		gStartLogBuf = 0;
+		gStartLogBuf = nullptr;
 		delete temp;
 	}
 
 	options.logfd(logfd);
 	if (!skip_lock)
 		m_log.unlock();
-	print(log_debug, "Opened logfile %s", (char *)0, options.log().c_str());
+	print(log_debug, "Opened logfile %s", nullptr, options.log().c_str());
 }
 
 void closeLogfile(bool skip_lock = false) {
@@ -137,7 +137,7 @@ void closeLogfile(bool skip_lock = false) {
 		m_log.lock();
 	if (options.logfd()) {
 		fclose(options.logfd());
-		options.logfd(NULL);
+		options.logfd(nullptr);
 	}
 	if (!skip_lock)
 		m_log.unlock();
@@ -146,7 +146,7 @@ void closeLogfile(bool skip_lock = false) {
 /**
  * Print error/debug/info messages to stdout and/or logfile
  *
- * @param id could be NULL for general messages
+ * @param id could be nullptr for general messages
  * @todo integrate into syslog
  */
 void print(log_level_t level, const char *format, const char *id, ...) {
@@ -159,7 +159,7 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 	char prefix[24];
 	size_t pos = 0;
 
-	gettimeofday(&now, NULL);
+	gettimeofday(&now, nullptr);
 	timeinfo = localtime(&now.tv_sec);
 
 	/* format timestamp */
@@ -234,7 +234,7 @@ void show_usage(char *argv[]) {
 	/* obis aliases */
 	printf("\n  following OBIS aliases are available:\n");
 	char obis_str[OBIS_STR_LEN];
-	for (obis_alias_t *it = obis_get_aliases(); it->name != NULL; it++) {
+	for (obis_alias_t *it = obis_get_aliases(); it->name != nullptr; it++) {
 		it->id.unparse(obis_str, OBIS_STR_LEN);
 		printf("\t%-17s%-31s%-22s\n", it->name, it->desc, obis_str);
 	}
@@ -290,10 +290,10 @@ void daemonize() {
 	action.sa_flags = 0;
 	action.sa_handler = SIG_IGN;
 
-	sigaction(SIGCHLD, &action, NULL); /* ignore child */
-	sigaction(SIGTSTP, &action, NULL); /* ignore tty signals */
-	sigaction(SIGTTOU, &action, NULL);
-	sigaction(SIGTTIN, &action, NULL);
+	sigaction(SIGCHLD, &action, nullptr); /* ignore child */
+	sigaction(SIGTSTP, &action, nullptr); /* ignore tty signals */
+	sigaction(SIGTTOU, &action, nullptr);
+	sigaction(SIGTTIN, &action, nullptr);
 }
 
 /**
@@ -335,7 +335,7 @@ void signalHandlerReOpenLog(int) { mainLoopReopenLogfile = true; }
  */
 int config_parse_cli(int argc, char *argv[], Config_Options *options) {
 	while (1) {
-		int c = getopt_long(argc, argv, "c:o:p:lhrVfv:", long_options, NULL);
+		int c = getopt_long(argc, argv, "c:o:p:lhrVfv:", long_options, nullptr);
 
 		/* detect the end of the options. */
 		if (c == -1)
@@ -427,9 +427,9 @@ int main(int argc, char *argv[]) {
 	sigemptyset(&quitaction.sa_mask);
 	quitaction.sa_flags = 0;
 	quitaction.sa_handler = signalHandlerQuit;
-	sigaction(SIGINT, &quitaction, NULL);  /* catch ctrl-c from terminal */
-	sigaction(SIGHUP, &quitaction, NULL);  /* catch hangup signal */
-	sigaction(SIGTERM, &quitaction, NULL); /* catch kill signal */
+	sigaction(SIGINT, &quitaction, nullptr);  /* catch ctrl-c from terminal */
+	sigaction(SIGHUP, &quitaction, nullptr);  /* catch hangup signal */
+	sigaction(SIGTERM, &quitaction, nullptr); /* catch kill signal */
 
 	// signal for re-opening logfile
 	struct sigaction reopenaction;
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef LOCAL_SUPPORT
 	/* webserver for local interface */
-	struct MHD_Daemon *httpd_handle = NULL;
+	struct MHD_Daemon *httpd_handle = nullptr;
 #endif /* LOCAL_SUPPORT */
 
 	/* initialize ADTs and APIs */
@@ -464,7 +464,7 @@ int main(int argc, char *argv[]) {
 	} catch (std::exception &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_alert, "Failed to parse configuration due to: %s", NULL, oss.str().c_str());
+		print(log_alert, "Failed to parse configuration due to: %s", nullptr, oss.str().c_str());
 		return EX_CONFIG;
 	}
 
@@ -485,31 +485,31 @@ int main(int argc, char *argv[]) {
 	print(log_debug, "local=%d", "main", options.local());
 
 	if (!options.foreground()) {
-		print(log_info, "Daemonize process...", (char *)0);
+		print(log_info, "Daemonize process...", nullptr);
 		daemonize();
 	} else {
-		print(log_info, "Process not daemonized...", (char *)0);
+		print(log_info, "Process not daemonized...", nullptr);
 	}
 
 	/* open logfile */
 	if (options.log() != "") {
 		openLogfile();
-		sigaction(SIGUSR1, &reopenaction, NULL); // catch SIGUSR1
+		sigaction(SIGUSR1, &reopenaction, nullptr); // catch SIGUSR1
 	} else {
 		// stop temp logging, continue logging to console only
 		auto temp = gStartLogBuf;
-		gStartLogBuf = 0;
+		gStartLogBuf = nullptr;
 		delete temp;
 	}
 
 	if (mappings.size() <= 0) {
-		print(log_alert, "No meters found - quitting!", (char *)0);
+		print(log_alert, "No meters found - quitting!", nullptr);
 		return EXIT_FAILURE;
 	}
 
 	if (options.pushDataServer()) {
 		pushDataList = new PushDataList();
-		int ret = pthread_create(&_pushdata_thread, NULL, push_data_thread,
+		int ret = pthread_create(&_pushdata_thread, nullptr, push_data_thread,
 								 (void *)options.pushDataServer()); // todo error handling?
 		if (ret)
 			print(log_error, "Error %d creating pushdata_thread!", "push", ret);
@@ -521,7 +521,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_MQTT
 	if (mqttClient) {
-		int ret = pthread_create(&_mqtt_client_thread, NULL, mqtt_client_thread, (void *)0);
+		int ret = pthread_create(&_mqtt_client_thread, nullptr, mqtt_client_thread, nullptr);
 		if (ret)
 			print(log_error, "Error %d creating mqtt_client_thread!", "mqtt", ret);
 		else
@@ -541,7 +541,7 @@ int main(int argc, char *argv[]) {
 
 		// quit if not at least one meter is enabled and working
 		if (mappings.size() - gSkippedFailed <= 0) {
-			print(log_alert, "No functional meters found - quitting!", (char *)0);
+			print(log_alert, "No functional meters found - quitting!", nullptr);
 			return EXIT_FAILURE;
 		}
 
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
 		if (options.local()) {
 			print(log_info, "Starting local interface HTTPd on port %i", "http", options.port());
 			httpd_handle =
-				MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, options.port(), NULL, NULL,
+				MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, options.port(), nullptr, nullptr,
 								 &handle_request, (void *)&mappings, MHD_OPTION_END);
 		}
 #endif /* LOCAL_SUPPORT */
@@ -621,12 +621,12 @@ int main(int argc, char *argv[]) {
 
 		end_push_data_thread();
 		print(log_finest, "Waiting for pushdata_thread to stop...", "");
-		pthread_join(_pushdata_thread, NULL);
+		pthread_join(_pushdata_thread, nullptr);
 		print(log_finest, "pushdata_thread stopped", "");
 
 		if (pushDataList) {
 			delete pushDataList;
-			pushDataList = 0;
+			pushDataList = nullptr;
 			print(log_finest, "deleted pushdataList", "");
 		}
 	}
@@ -635,12 +635,12 @@ int main(int argc, char *argv[]) {
 	if (_mqtt_client_thread) {
 		end_mqtt_client_thread();
 		print(log_finest, "Waiting for mqtt_client_thread to stop...", "mqtt");
-		pthread_join(_mqtt_client_thread, NULL);
+		pthread_join(_mqtt_client_thread, nullptr);
 		print(log_finest, "mqtt_client_thread stopped", "mqtt");
 	}
 	if (mqttClient) {
 		delete mqttClient;
-		mqttClient = 0;
+		mqttClient = nullptr;
 		print(log_finest, "deleted mqttClient", "mqtt");
 	}
 #endif
@@ -648,7 +648,7 @@ int main(int argc, char *argv[]) {
 	if (curlSessionProvider) {
 		print(log_finest, "Trying to delete curlSessionProvider...", "");
 		delete curlSessionProvider;
-		curlSessionProvider = 0;
+		curlSessionProvider = nullptr;
 		print(log_finest, "deleted curlSessionProvider", "");
 	}
 

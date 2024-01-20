@@ -54,7 +54,7 @@ void MeterMap::start() {
 			_meter->open();
 		} catch (vz::ConnectionException &e) {
 			if (_meter->skip()) {
-				print(log_warning, "Skipping meter %s", NULL, _meter->name());
+				print(log_warning, "Skipping meter %s", nullptr, _meter->name());
 				return;
 			} else {
 				throw;
@@ -62,7 +62,7 @@ void MeterMap::start() {
 		}
 
 		print(log_info, "Meter connection established", _meter->name());
-		pthread_create(&_thread, NULL, &reading_thread, (void *)this);
+		pthread_create(&_thread, nullptr, &reading_thread, (void *)this);
 		print(log_debug, "Meter thread started", _meter->name());
 
 		print(log_debug, "Meter is opened. Starting channels.", _meter->name());
@@ -87,7 +87,7 @@ void MeterMap::cancel() { // is called from MapContainer::quit which is called f
 		}
 		print(log_finest, "MeterMap::cancel wait for readingthread", _meter->name());
 		pthread_cancel(_thread); // readingthread
-		pthread_join(_thread, NULL);
+		pthread_join(_thread, nullptr);
 		_thread_running = false;
 		print(log_finest, "MeterMap::cancel wait for meter::close", _meter->name());
 		_meter->close();

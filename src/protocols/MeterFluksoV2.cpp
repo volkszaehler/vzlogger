@@ -87,7 +87,7 @@ ssize_t MeterFluksoV2::read(std::vector<Reading> &rds, size_t n) {
 
 	char *time_str = strsep(&cursor, " \t"); /* first token is the timestamp */
 	struct timeval time;
-	time.tv_sec = strtol(time_str, NULL, 10);
+	time.tv_sec = strtol(time_str, nullptr, 10);
 	time.tv_usec = 0; /* no millisecond resolution available */
 
 	while (cursor) {

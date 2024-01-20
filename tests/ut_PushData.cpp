@@ -5,9 +5,9 @@
 #include "../src/PushData.cpp"
 
 TEST(PushData, PDL_basic_constructor) {
-	ASSERT_EQ(0, pushDataList);
+	ASSERT_EQ(nullptr, pushDataList);
 	PushDataList pdl;
-	ASSERT_EQ(0, pushDataList);
+	ASSERT_EQ(nullptr, pushDataList);
 }
 
 TEST(PushData, PDL_basic_add) {
@@ -20,7 +20,7 @@ TEST(PushData, PDL_basic_waitForData) {
 	PushDataList pdl;
 	pdl.add("0", 1, 1.0);
 	PushDataList::DataMap *dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	ASSERT_EQ(1ul, dm->size());
 	delete dm;
 }
@@ -30,7 +30,7 @@ TEST(PushData, PDL_basic_waitForData2) {
 	pdl.add("0", 1, 1.0);
 	pdl.add("0", 2, 2.0);
 	PushDataList::DataMap *dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	ASSERT_EQ(1ul, dm->size()); // still one uuid
 	ASSERT_EQ(2ul, dm->operator[]("0").size());
 	delete dm;
@@ -42,7 +42,7 @@ TEST(PushData, PDL_basic_waitForData3) {
 	pdl.add("0", 2, 2.0);
 	pdl.add("1", 3, 3.0);
 	PushDataList::DataMap *dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	ASSERT_EQ(2ul, dm->size()); // now two uuids
 	ASSERT_EQ(2ul, dm->operator[]("0").size());
 	ASSERT_EQ(1ul, dm->operator[]("1").size());
@@ -53,12 +53,12 @@ TEST(PushData, PDL_basic_waitForData4) {
 	PushDataList pdl;
 	pdl.add("0", 1, 1.0);
 	PushDataList::DataMap *dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	ASSERT_EQ(1ul, dm->size());
 	delete dm;
 	pdl.add("1", 4, 4.4);
 	dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	ASSERT_EQ(1ul, dm->size());
 	ASSERT_EQ(4.4, dm->operator[]("1").back().second);
 	delete dm;
@@ -74,23 +74,23 @@ class PushDataServerTest {
 	PushDataServer &_pds;
 };
 
-TEST(PushData, PDS_only_constructor) { PushDataServer pds(0); }
+TEST(PushData, PDS_only_constructor) { PushDataServer pds(nullptr); }
 
 TEST(PushData, PDS_constructor) {
-	PushDataServer pds(0);
+	PushDataServer pds(nullptr);
 	PushDataServerTest pt(pds);
 
 	PushDataList pdl;
 	pdl.add("0", 1, 1.1);
 	PushDataList::DataMap *dm = pdl.waitForData();
-	ASSERT_TRUE(0 != dm);
+	ASSERT_TRUE(nullptr != dm);
 	std::string str = pt.generateJson(*dm);
 	// todo fix the comparision! 1.10000 vs. 1.10000001, ... ASSERT_EQ("{ \"data\": [ { \"uuid\":
 	// \"0\", \"tuples\": [ [ 1, 1.100000 ] ] } ] }", str);
 }
 
 TEST(PushData, PDS_fail_middleware) {
-	ASSERT_EQ(0, curlSessionProvider);
+	ASSERT_EQ(nullptr, curlSessionProvider);
 	curlSessionProvider = new CurlSessionProvider();
 
 	struct json_object *jso =
@@ -104,8 +104,8 @@ TEST(PushData, PDS_fail_middleware) {
 	pushDataList = &pdl;
 	ASSERT_FALSE(pds.waitAndSendOnceToAll()); // we assume that localhost:45431/unit_test/push.json
 											  // can't be connected to
-	pushDataList = 0;
+	pushDataList = nullptr;
 
 	delete curlSessionProvider;
-	curlSessionProvider = 0;
+	curlSessionProvider = nullptr;
 }

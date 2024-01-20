@@ -85,7 +85,7 @@ MeterSML::MeterSML(std::list<Option> options)
 			char hs[3];
 			strncpy(hs, hex.c_str() + i, 2);
 			char hx[2];
-			hx[0] = strtol(hs, NULL, 16);
+			hx[0] = strtol(hs, nullptr, 16);
 			_pull.append(hx, 1);
 		}
 		print(log_debug, "pullseq len:%d found", name().c_str(), _pull.size());
@@ -208,7 +208,7 @@ int MeterSML::open() {
 		char *addr = strdup(host());
 		const char *node = strsep(&addr, ":");
 		const char *service = strsep(&addr, ":");
-		if (node == NULL && service == NULL) {
+		if (node == nullptr && service == nullptr) {
 			free(addr);
 			return -1;
 		}
@@ -290,7 +290,7 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 			entry = body->val_list;
 
 			/* iterating through linked list */
-			for (; m < n && entry != NULL;) {
+			for (; m < n && entry != nullptr;) {
 				if (_parse(entry, &rds[m]))
 					m++;
 				entry = entry->next;
@@ -311,7 +311,7 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 	Obis obis((unsigned char)entry->obj_name->str[0], (unsigned char)entry->obj_name->str[1],
 			  (unsigned char)entry->obj_name->str[2], (unsigned char)entry->obj_name->str[3],
 			  (unsigned char)entry->obj_name->str[4], (unsigned char)entry->obj_name->str[5]);
-	if (obis.isValid() && entry->value != NULL) {
+	if (obis.isValid() && entry->value != nullptr) {
 		// some entries might contain a string so check type and use proper rd->value(...) call
 		// if the entry does contain a string we can either throw it away or try to convert it to
 		// a value. We throw it away for now as its octet encoded and would need some conversion
@@ -332,7 +332,7 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			tv.tv_sec = *entry->val_time->data.timestamp;
 			tv.tv_usec = 0;
 		} else {
-			gettimeofday(&tv, NULL); /* use local time */
+			gettimeofday(&tv, nullptr); /* use local time */
 		}
 		rd->time(tv);
 		return true;
@@ -351,7 +351,7 @@ int MeterSML::_openSocket(const char *node, const char *service) {
 		return ERR;
 	}
 
-	int rc = getaddrinfo(node, service, NULL, &ais);
+	int rc = getaddrinfo(node, service, nullptr, &ais);
 	if (rc != 0) {
 		print(log_alert, "getaddrinfo(%s, %s): %s", name().c_str(), node, service,
 			  gai_strerror(rc));

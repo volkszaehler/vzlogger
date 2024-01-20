@@ -100,7 +100,7 @@ static obis_alias_t aliases[] = {
 	{Obis(255, 255, 16, 8, 2, 255), "lg-counter-lt", "Sum active energy (T2)"},
 
 	//	Stop condition for iterator
-	{Obis(DC, DC, DC, DC, DC, DC), NULL, NULL},
+	{Obis(DC, DC, DC, DC, DC, DC), nullptr, nullptr},
 };
 
 obis_alias_t *obis_get_aliases() { return aliases; }
@@ -211,7 +211,7 @@ int Obis::parse(const char *str) {
 }
 
 int Obis::lookup_alias(const char *alias) {
-	for (const obis_alias_t *it = aliases; it != NULL && !it->id.isAllNotGiven(); it++) {
+	for (const obis_alias_t *it = aliases; it != nullptr && !it->id.isAllNotGiven(); it++) {
 		if (strcmp(it->name, alias) == 0) {
 			*this = it->id;
 			return SUCCESS;

@@ -41,7 +41,8 @@
 extern Config_Options options;
 
 vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOptions)
-	: ApiIF(ch), _response(new vz::api::CurlResponse()), _last_timestamp(0), _lastReadingSent(0) {
+	: ApiIF(ch), _response(new vz::api::CurlResponse()), _last_timestamp(0),
+	  _lastReadingSent(nullptr) {
 	OptionList optlist;
 	print(log_debug, "InfluxDB API initialize", ch->name());
 
@@ -57,7 +58,7 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 		throw;
 	}
 
-	_token_header = NULL;
+	_token_header = nullptr;
 	try {
 		_token = optlist.lookup_string(pOptions, "token");
 		print(log_finest, "api InfluxDB using login Token: %s", ch->name(), _token.c_str());
@@ -247,8 +248,9 @@ void vz::api::InfluxDB::send() {
 	Buffer::Ptr buf = channel()->buffer();
 	Buffer::iterator it;
 
-	_api.curl =
-		curlSessionProvider ? curlSessionProvider->get_easy_session(_host + channel()->uuid()) : 0;
+	_api.curl = curlSessionProvider
+					? curlSessionProvider->get_easy_session(_host + channel()->uuid())
+					: nullptr;
 
 	if (!_api.curl) {
 		throw vz::VZException("CURL: cannot create handle.");

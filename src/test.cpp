@@ -34,7 +34,7 @@ void test_buffer() {
 	struct timeval tv;
 	StringIdentifier id;
 
-	gettimeofday(&tv, NULL);
+	gettimeofday(&tv, nullptr);
 
 	for (int i = 0; i < 10; i++) {
 		Reading rd;

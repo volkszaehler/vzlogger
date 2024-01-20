@@ -99,7 +99,7 @@ void add_ch_to_localbuffer(Channel &ch) {
 json_object *api_json_tuples(const char *uuid) {
 
 	if (!uuid)
-		return NULL;
+		return nullptr;
 	pthread_mutex_lock(&localbuffer_mutex);
 	LIST_ChannelData &l = localbuffer[uuid];
 
@@ -107,7 +107,7 @@ json_object *api_json_tuples(const char *uuid) {
 
 	if (l.size() < 1) {
 		pthread_mutex_unlock(&localbuffer_mutex);
-		return NULL;
+		return nullptr;
 	}
 
 	json_object *json_tuples = json_object_new_array();
@@ -134,7 +134,7 @@ MHD_RESULT handle_request(void *cls, struct MHD_Connection *connection, const ch
 	// mapping between meters and channels
 	MapContainer *mappings = static_cast<MapContainer *>(cls);
 
-	struct MHD_Response *response = NULL;
+	struct MHD_Response *response = nullptr;
 	const char *mode = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "mode");
 
 	try {
@@ -145,7 +145,7 @@ MHD_RESULT handle_request(void *cls, struct MHD_Connection *connection, const ch
 
 			struct json_object *json_obj = json_object_new_object();
 			struct json_object *json_data = json_object_new_array();
-			struct json_object *json_exception = NULL;
+			struct json_object *json_exception = nullptr;
 
 			const char *uuid = url + 1; // strip leading slash
 			const char *json_str;

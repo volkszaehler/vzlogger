@@ -72,7 +72,7 @@ static const meter_details_t protocols[] = {
 	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100),
 #endif
 	//{} /* stop condition for iterator */
-	METER_DETAIL(none, NULL, NULL, 0),
+	METER_DETAIL(none, nullptr, nullptr, 0),
 };
 
 Meter::Meter(std::list<Option> pOptions) : _name("meter") {
@@ -262,5 +262,5 @@ const meter_details_t *meter_get_details(meter_protocol_t protocol) {
 			return it;
 		}
 	}
-	return NULL;
+	return nullptr;
 }

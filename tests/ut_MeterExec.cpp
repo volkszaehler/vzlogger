@@ -18,7 +18,7 @@ int writes(int fd, const char *str);
 
 TEST(MeterExec, basic) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
 
@@ -31,7 +31,7 @@ TEST(MeterExec, basic) {
 
 TEST(MeterExec, format1) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char *)"$v"));
@@ -43,7 +43,7 @@ TEST(MeterExec, format1) {
 
 TEST(MeterExec, format2) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char *)"$i : $v"));
@@ -55,7 +55,7 @@ TEST(MeterExec, format2) {
 
 TEST(MeterExec, format3) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("command", tempfilename));
 	options.push_back(Option("format", (char *)"$t;$i : $v"));

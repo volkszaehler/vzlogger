@@ -134,7 +134,7 @@ vz::api::MySmartGrid::MySmartGrid(Channel::Ptr ch, std::list<Option> pOptions)
 vz::api::MySmartGrid::~MySmartGrid() {}
 
 void vz::api::MySmartGrid::send() {
-	json_object *json_obj = NULL;
+	json_object *json_obj = nullptr;
 	char digest[255];
 
 	const char *json_str;
@@ -142,7 +142,7 @@ void vz::api::MySmartGrid::send() {
 	CURLcode curl_code;
 
 	// check if we want to send
-	time_t now = time(NULL);
+	time_t now = time(nullptr);
 
 	if (_first_ts > 0) {
 		if ((now - first_ts()) < interval()) {
@@ -161,7 +161,7 @@ void vz::api::MySmartGrid::send() {
 		break;
 	}
 	json_str = json_object_to_json_string(json_obj);
-	if (json_str == NULL || strcmp(json_str, "null") == 0) {
+	if (json_str == nullptr || strcmp(json_str, "null") == 0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		json_object_put(json_obj); // TODO untested!
 		return;
@@ -257,7 +257,7 @@ void vz::api::MySmartGrid::_send(const std::string &url, json_object *json_obj) 
 	curl_easy_setopt(_curlIF.handle(), CURLOPT_URL, url.c_str());
 
 	json_str = json_object_to_json_string(json_obj);
-	if (json_str == NULL || strcmp(json_str, "null") == 0) {
+	if (json_str == nullptr || strcmp(json_str, "null") == 0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		return;
 	}
@@ -320,7 +320,7 @@ void vz::api::MySmartGrid::api_parse_exception(char *err, size_t n) {
 		struct json_object *json_obj;
 		bool found = json_object_object_get_ex(json_obj_in, "exception", &json_obj);
 		if (found && json_obj) {
-			struct json_object *j2 = 0, *j3 = 0;
+			struct json_object *j2 = nullptr, *j3 = nullptr;
 			(void)json_object_object_get_ex(json_obj, "type",
 											&j2); // we rely on ..._get_string to handle null
 			(void)json_object_object_get_ex(json_obj, "message",
@@ -355,10 +355,10 @@ json_object *vz::api::MySmartGrid::_apiDevice(Buffer::Ptr buf) {
 	buf->clean();
 
 	if (_first_ts > 0) { // send lifesign
-		_first_ts = time(NULL);
+		_first_ts = time(nullptr);
 		return _json_object_heartbeat();
 	} else { // send  device registration
-		_first_ts = time(NULL);
+		_first_ts = time(nullptr);
 		return _json_object_registration();
 	}
 }
@@ -506,7 +506,7 @@ json_object *vz::api::MySmartGrid::_json_object_measurements(Buffer::Ptr buf) {
 		print(log_debug, "==> %ld, %lf - %ld", channel()->name(), timestamp, it->value(), value);
 	}
 	if (_values.size() < 1 || (_values.size() < 2 && _first_counter == 0)) {
-		return NULL;
+		return nullptr;
 	}
 
 	for (it = _values.begin(); it != _values.end(); it++) {

@@ -678,11 +678,11 @@ int debounce(int iprev, double fnew) {
 MeterOCR::RecognizerNeedle::~RecognizerNeedle() {}
 
 MeterOCR::MeterOCR(const std::list<Option> &options)
-	: Protocol("ocr"), _last_image(0), _use_v4l2(false), _v4l2_fps(5), _v4l2_skip_frames(0),
-	  _v4l2_fd(-1), _v4l2_buffers(0), _v4l2_nbuffers(0), _v4l2_cap_size_x(320),
+	: Protocol("ocr"), _last_image(nullptr), _use_v4l2(false), _v4l2_fps(5), _v4l2_skip_frames(0),
+	  _v4l2_fd(-1), _v4l2_buffers(nullptr), _v4l2_nbuffers(0), _v4l2_cap_size_x(320),
 	  _v4l2_cap_size_y(240), _min_x(INT_MAX), _min_y(INT_MAX), _max_x(INT_MIN), _max_y(INT_MIN),
 	  _notify_fd(-1), _forced_file_changed(true), _impulses(0), _rotate(0.0), _autofix_range(0),
-	  _autofix_x(-1), _autofix_y(-1), _last_reads(0), _generate_debug_image(false) {
+	  _autofix_x(-1), _autofix_y(-1), _last_reads(nullptr), _generate_debug_image(false) {
 	OptionList optlist;
 
 	try {
@@ -766,7 +766,7 @@ MeterOCR::MeterOCR(const std::list<Option> &options)
 			// for each object:
 			for (int i = 0; i < nrboxes; i++) {
 				struct json_object *jb = json_object_array_get_idx(jso, i);
-				Recognizer *r = 0;
+				Recognizer *r = nullptr;
 
 				// check type, default to tesseract
 				std::string rtype("tesseract");
@@ -839,13 +839,13 @@ int MeterOCR::open() {
 		// check  (open/close) file on each reading, so we check here just once
 		FILE *_fd = fopen(_file.c_str(), "r");
 
-		if (_fd == NULL) {
+		if (_fd == nullptr) {
 			print(log_error, "fopen(%s): %s", name().c_str(), _file.c_str(), strerror(errno));
 			return ERR;
 		}
 
 		(void)fclose(_fd);
-		_fd = NULL;
+		_fd = nullptr;
 	} else { // v4l2 device:
 		struct stat st;
 		if (-1 == stat(_file.c_str(), &st)) {
@@ -1112,7 +1112,7 @@ bool MeterOCR::initV4L2Dev(unsigned int w, unsigned int h) {
 
 		_v4l2_buffers[_v4l2_nbuffers].length = buf.length;
 		_v4l2_buffers[_v4l2_nbuffers].start =
-			mmap(NULL /* start anywhere */, buf.length, PROT_READ | PROT_WRITE /* required */,
+			mmap(nullptr /* start anywhere */, buf.length, PROT_READ | PROT_WRITE /* required */,
 				 MAP_SHARED /* recommended */, _v4l2_fd, buf.m.offset);
 
 		if (MAP_FAILED == _v4l2_buffers[_v4l2_nbuffers].start) {
@@ -1345,7 +1345,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 	if (max_reads < 1)
 		return 0;
 
-	Pix *image = 0;
+	Pix *image = nullptr;
 
 	if (!_use_v4l2) {
 		if (!isNotifiedFileChanged() && !_forced_file_changed)
@@ -1394,7 +1394,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 		int skip = _v4l2_skip_frames + 1;
 		do {
 			do {
-				r = select(_v4l2_fd + 1, &fds, NULL, NULL, &tv);
+				r = select(_v4l2_fd + 1, &fds, nullptr, nullptr, &tv);
 			} while (-1 == r && EINTR == errno);
 			if (0 == r) {
 				// timeout
@@ -1413,7 +1413,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 					return 0;
 				}
 			} else {
-				Pix *im = 0;
+				Pix *im = nullptr;
 				(void)readV4l2Frame(im, false);
 			}
 		} while (--skip);
@@ -1422,7 +1422,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 		print(log_finest, "frame ready!", name().c_str());
 	}
 
-	PIXA *debugPixa = _generate_debug_image ? pixaCreate(0) : 0;
+	PIXA *debugPixa = _generate_debug_image ? pixaCreate(0) : nullptr;
 
 	// rotate image if parameter set:
 	if (fabs(_rotate) >= 0.1) {
@@ -1432,7 +1432,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 		if (image_rot) {
 			pixDestroy(&image);
 			image = image_rot;
-			image_rot = 0;
+			image_rot = nullptr;
 		}
 		// for debugging to see the rotated picture:
 		if (debugPixa)
@@ -1556,7 +1556,7 @@ ssize_t MeterOCR::read(std::vector<Reading> &rds, size_t max_reads) {
 	// we provide those values to the recognizers even if not impulses wanted
 	if (_last_reads) {
 		delete _last_reads;
-		_last_reads = 0;
+		_last_reads = nullptr;
 	}
 	if (!wasNAN)
 		_last_reads =

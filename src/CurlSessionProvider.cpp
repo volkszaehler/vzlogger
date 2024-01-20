@@ -57,7 +57,7 @@ CURL *CurlSessionProvider::get_easy_session(
 	std::string key, int timeout) // this is intended to block if the handle for the current key is
 								  // in use and single_session_per_key
 {
-	CURL *toRet = 0;
+	CURL *toRet = nullptr;
 	// thread safe lock here to access the map:
 	assert(0 == pthread_mutex_lock(&_map_mutex));
 	map_it it = _easy_handle_map.find(key);
@@ -99,7 +99,7 @@ void CurlSessionProvider::return_session(
 	assert(0 == pthread_mutex_lock(&_map_mutex));
 	CurlUsage &cu = _easy_handle_map[key];
 	assert(eh == cu.eh);
-	eh = 0;
+	eh = nullptr;
 	cu.inUse = false;
 	pthread_mutex_unlock(&cu.mutex);
 	pthread_mutex_unlock(&_map_mutex);
@@ -117,4 +117,4 @@ bool CurlSessionProvider::inUse(std::string key) {
 }
 
 // global var:
-CurlSessionProvider *curlSessionProvider = 0;
+CurlSessionProvider *curlSessionProvider = nullptr;
