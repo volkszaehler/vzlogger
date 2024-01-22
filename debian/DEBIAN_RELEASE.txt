@@ -6,10 +6,11 @@ Steps for creating an official Debian release
    patch -p1 < debian/Debian_release.patch
    and
    git add .gitattributes
-3. Retrieve the current changelog with 
+3. Append <debian_version> to the Vcs-Git entry
+4. Retrieve the current changelog with 
    curl -o debian/changelog https://metadata.ftp-master.debian.org/changelogs//main/libs/vzlogger/vzlogger_<previous debian version>_changelog
-4. Prepend a new changelog entry.
-5. Commit.
-6. Create orig tarball
+5. Prepend a new changelog entry.
+6. Commit.
+7. Create orig tarball
    git archive --output=../vzlogger_$(dpkg-parsechangelog --show-field Version 2>/dev/null | cut -f1 -d-).orig.tar.gz --format=tar.gz HEAD
 
