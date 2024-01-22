@@ -1,0 +1,88 @@
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..9bedf0b
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1 @@
++debian/ export-ignore
+diff --git a/debian/compat b/debian/compat
+deleted file mode 100644
+index 48082f7..0000000
+--- a/debian/compat
++++ /dev/null
+@@ -1 +0,0 @@
+-12
+diff --git a/debian/control b/debian/control
+index 0b190ae..9e8a7fe 100644
+--- a/debian/control
++++ b/debian/control
+@@ -2,14 +2,14 @@ Source: vzlogger
+ Section: net
+ Priority: optional
+ Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
+-Build-Depends: debhelper (>= 12), pkg-config (>= 0.25), 
++Build-Depends: debhelper-compat (= 13), pkg-config (>= 0.25), 
+  libjson-c-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19),
+  libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 1.0), cmake, libsasl2-dev,
+- libssl-dev, libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
++ libssl-dev (>= 3.0), libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
+  libgmock-dev, libgtest-dev, pandoc, libmosquitto-dev
+-Standards-Version: 4.6.1
++Standards-Version: 4.6.2
+ Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
+-Vcs-Git: https://github.com/volkszaehler/vzlogger.git
++Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian-
+ Vcs-Browser: https://github.com/volkszaehler/vzlogger
+ 
+ Package: vzlogger
+diff --git a/debian/source/format b/debian/source/format
+index 89ae9db..163aaf8 100644
+--- a/debian/source/format
++++ b/debian/source/format
+@@ -1 +1 @@
+-3.0 (native)
++3.0 (quilt)
+diff --git a/etc/vzlogger.conf b/etc/vzlogger.conf
+index f30363e..48aa76b 100644
+--- a/etc/vzlogger.conf
++++ b/etc/vzlogger.conf
+@@ -29,9 +29,11 @@
+ 
+     // realtime notification settings
+     "push": [
++        /*
+         {
+             "url": "http://127.0.0.1:5582"  // notification destination, e.g. frontend push-server
+         }
++        */
+     ],
+ 
+     // mqtt client support (if ENABLE_MQTT set at cmake generation)
+@@ -153,6 +155,27 @@
+                 "middleware": "http://localhost/middleware.php"
+             }
+         },
++        {
++            /* A minimal example that "just works" on Debian. 
++               The steps needed are:
++               1. Install influxdb: sudo apt install influxdb influxdb-client
++               2. Start the client by calling influx on the command line and
++               create db: CREATE DATABASE vzlogger
++             */
++            "enabled": false,               // disabled meters will be ignored
++            "allowskip": false,                  // errors when opening meter may be ignored if enabled
++
++            "protocol": "random",
++            "interval": 2,
++            "max": 40.0,                    // has to be double!
++            "min": -5.0,                    // has to be double!
++            "channel": {
++                "uuid": "25a53b28-75ec-4764-a8a6-68587722ddab",
++                // For details on the influxdb configuration see vzlogger.conf.InfluxDB
++                "api": "influxdb",          
++                "host": "localhost:8086" 
++            }
++        },
+         {
+             "enabled": false,               // disabled meters will be ignored
+             "allowskip": false,                  // errors when opening meter may be ignored if enabled
