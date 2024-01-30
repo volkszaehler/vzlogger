@@ -206,7 +206,7 @@ pushd "$lib_dir"
 			echo "libmosquitto-dev is not installed"
 			exit 1
 		else
-			cmake_args="${cmake_args} -ENABLE_MQTT=on"
+			cmake_args="${cmake_args} -DENABLE_MQTT=on"
 		fi
 	fi
 
