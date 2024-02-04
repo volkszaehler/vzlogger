@@ -72,10 +72,19 @@ RUN apk add --no-cache \
 COPY --from=builder /usr/local/bin/vzlogger /usr/local/bin/vzlogger
 COPY --from=builder /usr/local/lib/libmbus.so* /usr/local/lib/
 
+# copy configuration
+COPY cfg /cfg
+# make log directory
+RUN mkdir -p /var/log/vzlogger
+RUN chmod a+rwx -R /var/log/vzlogger
+
 # without running a user context, no exec is possible and without the dialout group no access to usb ir reader possible
 RUN adduser -S vz -G dialout
 
 RUN vzlogger --version
 
-USER vz
-CMD ["vzlogger", "--foreground"]
+USER root
+#CMD ["vzlogger", "--foreground"]
+#CMD ["/bin/bash"]
+#CMD ["vzlogger", "--foreground", "--config", "/cfg/vzlogger.conf", "--log", "/var/log/vzlogger/vzlogger.log", "-v", "10"]
+CMD ["vzlogger", "--foreground", "--config", "/cfg/vzlogger.conf", "--log", "/var/log/vzlogger/vzlogger.log"]
