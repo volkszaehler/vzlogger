@@ -15,7 +15,8 @@ To install, follow the detailed installation instructions at http://wiki.volksza
 If you're impatient you can quickstart using (Debian Bullseye or Ubuntu 18.04 LTS):
 
     sudo apt-get install build-essential git-core cmake pkg-config subversion libcurl3-dev \
-      libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf libunistring-dev
+      libgnutls-dev libsasl2-dev uuid-dev uuid-runtime libtool dh-autoreconf libunistring-dev \
+      libcurl4-gnutls-dev libjansson-dev libmosquitto-dev micro-httpd gnutls-dev libmicrohttpd-dev
 
 If you want to use MQTT support:
 
