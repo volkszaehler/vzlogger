@@ -4,15 +4,20 @@ set -e
 
 case "$1" in
     configure)
-    if ! id vzlogger > /dev/null 2>&1 ; then
+    if id vzlogger > /dev/null 2>&1 ; then
+		# maintain compatibility with existing native installations
+		usermod -l _vzlogger vzlogger	
+		groupmod --new-name _vzlogger vzlogger
+	fi
+    if ! id _vzlogger > /dev/null 2>&1 ; then
         adduser --quiet --system --no-create-home --home /nonexistent \
             --group --disabled-password --shell /bin/false \
-            vzlogger
-        usermod -a -G dialout vzlogger
+            _vzlogger
+        usermod -a -G dialout _vzlogger
     fi
 
     touch /var/log/vzlogger.log
-    chown vzlogger:adm /var/log/vzlogger.log
+    chown _vzlogger:adm /var/log/vzlogger.log
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

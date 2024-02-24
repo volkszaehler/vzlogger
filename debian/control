@@ -2,19 +2,20 @@ Source: vzlogger
 Section: net
 Priority: optional
 Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
-Build-Depends: debhelper (>= 12), pkg-config (>= 0.25), 
- libjson-c-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19),
+Build-Depends: debhelper (>= 12), pkgconf, 
+ libjson-c-dev, libcurl4-openssl-dev,
  libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 1.0), cmake, libsasl2-dev,
  libssl-dev, libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
  libgmock-dev, libgtest-dev, pandoc, libmosquitto-dev
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
 Vcs-Git: https://github.com/volkszaehler/vzlogger.git
 Vcs-Browser: https://github.com/volkszaehler/vzlogger
 
 Package: vzlogger
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, libsml1
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
 Pre-Depends: ${misc:Pre-Depends}
 Description: program for logging measurements to a volkszaehler.org middleware
  vzlogger...
