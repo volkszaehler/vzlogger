@@ -1,27 +1,17 @@
-From 496c843f57a7561737eb8c49ae14bae8fc4c5367 Mon Sep 17 00:00:00 2001
+From faa2a55d0565c4cb6c987ff524779a984d52b258 Mon Sep 17 00:00:00 2001
 From: Joachim Zobel <jz-2017@heute-morgen.de>
-Date: Sat, 24 Feb 2024 06:49:49 +0100
-Subject: Patch to make a release suitable for Debian 
+Date: Sat, 24 Feb 2024 15:16:30 +0100
+Subject: Patch to make a release suitable for Debian
 
 ---
- .gitattributes                  |  1 +
  debian/compat                   |  1 -
- debian/control                  |  8 ++++----
  debian/source/format            |  2 +-
- debian/source/lintian-overrides |  2 --
+ debian/source/lintian-overrides |  4 ----
  etc/vzlogger.conf               | 23 +++++++++++++++++++++++
- 6 files changed, 29 insertions(+), 8 deletions(-)
- create mode 100644 .gitattributes
+ 4 files changed, 24 insertions(+), 6 deletions(-)
  delete mode 100644 debian/compat
  delete mode 100644 debian/source/lintian-overrides
 
-diff --git a/.gitattributes b/.gitattributes
-new file mode 100644
-index 0000000..9bedf0b
---- /dev/null
-+++ b/.gitattributes
-@@ -0,0 +1 @@
-+debian/ export-ignore
 diff --git a/debian/compat b/debian/compat
 deleted file mode 100644
 index 48082f7..0000000
@@ -29,29 +19,6 @@ index 48082f7..0000000
 +++ /dev/null
 @@ -1 +0,0 @@
 -12
-diff --git a/debian/control b/debian/control
-index 0b190ae..9e8a7fe 100644
---- a/debian/control
-+++ b/debian/control
-@@ -2,14 +2,14 @@ Source: vzlogger
- Section: net
- Priority: optional
- Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
--Build-Depends: debhelper (>= 12), pkg-config (>= 0.25), 
-+Build-Depends: debhelper-compat (= 13), pkg-config (>= 0.25), 
-  libjson-c-dev (>= 0.9), libcurl4-openssl-dev (>= 7.19),
-  libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 1.0), cmake, libsasl2-dev,
-- libssl-dev, libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
-+ libssl-dev (>= 3.0), libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
-  libgmock-dev, libgtest-dev, pandoc, libmosquitto-dev
--Standards-Version: 4.6.1
-+Standards-Version: 4.6.2
- Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
--Vcs-Git: https://github.com/volkszaehler/vzlogger.git
-+Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian-
- Vcs-Browser: https://github.com/volkszaehler/vzlogger
- 
- Package: vzlogger
 diff --git a/debian/source/format b/debian/source/format
 index 89ae9db..163aaf8 100644
 --- a/debian/source/format
@@ -61,12 +28,14 @@ index 89ae9db..163aaf8 100644
 +3.0 (quilt)
 diff --git a/debian/source/lintian-overrides b/debian/source/lintian-overrides
 deleted file mode 100644
-index 09c5b1d..0000000
+index 8261c3d..0000000
 --- a/debian/source/lintian-overrides
 +++ /dev/null
-@@ -1,2 +0,0 @@
+@@ -1,4 +0,0 @@
 -# May be odd, but I don't want to change the (non debian) past
 -odd-historical-debian-changelog-version *0.3.4-rc1*
+-# Having a debian watch file in the native package is easier to maintain
+-debian-watch-file-in-native-package *
 diff --git a/etc/vzlogger.conf b/etc/vzlogger.conf
 index f30363e..48aa76b 100644
 --- a/etc/vzlogger.conf
