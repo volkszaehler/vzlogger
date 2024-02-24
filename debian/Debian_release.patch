@@ -1,3 +1,20 @@
+From 496c843f57a7561737eb8c49ae14bae8fc4c5367 Mon Sep 17 00:00:00 2001
+From: Joachim Zobel <jz-2017@heute-morgen.de>
+Date: Sat, 24 Feb 2024 06:49:49 +0100
+Subject: Patch to make a release suitable for Debian 
+
+---
+ .gitattributes                  |  1 +
+ debian/compat                   |  1 -
+ debian/control                  |  8 ++++----
+ debian/source/format            |  2 +-
+ debian/source/lintian-overrides |  2 --
+ etc/vzlogger.conf               | 23 +++++++++++++++++++++++
+ 6 files changed, 29 insertions(+), 8 deletions(-)
+ create mode 100644 .gitattributes
+ delete mode 100644 debian/compat
+ delete mode 100644 debian/source/lintian-overrides
+
 diff --git a/.gitattributes b/.gitattributes
 new file mode 100644
 index 0000000..9bedf0b
@@ -42,6 +59,14 @@ index 89ae9db..163aaf8 100644
 @@ -1 +1 @@
 -3.0 (native)
 +3.0 (quilt)
+diff --git a/debian/source/lintian-overrides b/debian/source/lintian-overrides
+deleted file mode 100644
+index 09c5b1d..0000000
+--- a/debian/source/lintian-overrides
++++ /dev/null
+@@ -1,2 +0,0 @@
+-# May be odd, but I don't want to change the (non debian) past
+-odd-historical-debian-changelog-version *0.3.4-rc1*
 diff --git a/etc/vzlogger.conf b/etc/vzlogger.conf
 index f30363e..48aa76b 100644
 --- a/etc/vzlogger.conf
@@ -86,3 +111,6 @@ index f30363e..48aa76b 100644
          {
              "enabled": false,               // disabled meters will be ignored
              "allowskip": false,                  // errors when opening meter may be ignored if enabled
+-- 
+2.39.2
+
