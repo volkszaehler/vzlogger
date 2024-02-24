@@ -5,8 +5,6 @@ set -e
 case "$1" in
     purge)
     rm -f /var/log/vzlogger.log*
-    deluser --quiet --system vzlogger
-    delgroup --quiet --system vzlogger
     ;;
 
     remove|abort-install|abort-upgrade|disappear)

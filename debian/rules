@@ -24,6 +24,10 @@ override_dh_auto_configure:
 	dh_auto_configure -- -DBUILD_TEST=off
 endif
 
+override_dh_installsystemd:
+	# stop the service during install, see man dh_installsystemd
+	dh_installsystemd --no-restart-after-upgrade
+
 ifneq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 override_dh_auto_test: ;
 endif
