@@ -10,7 +10,9 @@ Steps for creating an official Debian release
 4. Retrieve the current changelog with 
    curl -o debian/changelog https://metadata.ftp-master.debian.org/changelogs//main/libs/vzlogger/vzlogger_<previous debian version>_changelog
 5. Prepend a new changelog entry.
-6. Commit.
-7. Create orig tarball
+6. Remove the debian relase files
+   git rm debian/Debian_release.patch debian/DEBIAN_RELEASE.txt
+7. Commit.
+8. Create orig tarball
    git archive --output=../vzlogger_$(dpkg-parsechangelog --show-field Version 2>/dev/null | cut -f1 -d-).orig.tar.gz --format=tar.gz HEAD
 
