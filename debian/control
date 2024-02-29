@@ -10,7 +10,7 @@ Build-Depends: debhelper-compat (= 13), pkgconf,
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
-Vcs-Git: https://github.com/volkszaehler/vzlogger.git
+Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian-0.8.3-2
 Vcs-Browser: https://github.com/volkszaehler/vzlogger
 
 Package: vzlogger
