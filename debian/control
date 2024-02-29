@@ -2,10 +2,10 @@ Source: vzlogger
 Section: net
 Priority: optional
 Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
-Build-Depends: debhelper (>= 12), pkgconf, 
+Build-Depends: debhelper-compat (= 13), pkgconf, 
  libjson-c-dev, libcurl4-openssl-dev,
  libmicrohttpd-dev (>= 0.4.6), libsml-dev (>= 1.0), cmake, libsasl2-dev,
- libssl-dev, libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
+ libssl-dev (>= 3.0), libgcrypt-dev, libgnutls28-dev, uuid-dev, libunistring-dev,
  libgmock-dev, libgtest-dev, pandoc, libmosquitto-dev
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
