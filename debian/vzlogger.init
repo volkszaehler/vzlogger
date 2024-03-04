@@ -18,8 +18,8 @@ DAEMON=/usr/bin/vzlogger
 DAEMON_ARGS="-d"          # Arguments to run the daemon with
 #PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-USER=vzlogger
-GROUP=vzlogger
+USER=_vzlogger
+GROUP=_vzlogger
 
 # Exit if the package is not installed
 [ -x $DAEMON ] || exit 0

@@ -180,6 +180,10 @@ void print(log_level_t level, const char *format, const char *id, ...) {
 		fprintf(stream, "%-24s", prefix);
 		vfprintf(stream, format, args);
 		fprintf(stream, "\n");
+		if (level <= log_info) {
+			// required for some targets where stdout is redirected (e.g. docker)
+			fflush(stream);
+		}
 		m_log.unlock(); // release mutex
 	}
 	va_end(args);

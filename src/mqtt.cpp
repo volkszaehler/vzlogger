@@ -172,23 +172,16 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 			res = mosquitto_connect(_mcs, _host.c_str(), _port, _keepalive);
 			if (res != MOSQ_ERR_SUCCESS) {
 				switch (res) {
-				case MOSQ_ERR_CONN_REFUSED: // mqtt might accept us later only.
+				case MOSQ_ERR_CONN_REFUSED:
+				case MOSQ_ERR_ERRNO:
+					// We assume all system errors to be externally recoverable,
+					// so we retry.
 					print(log_warning, "mosquitto_connect failed (but trying anyhow): %s", "mqtt",
 						  mosquitto_strerror(res));
 					break;
-				case MOSQ_ERR_ERRNO:
-					if (errno == 111) // con refused:
-					{
-						print(log_warning, "mosquitto_connect failed (but trying anyhow): %s",
-							  "mqtt", mosquitto_strerror(res));
-					} else {
-						print(log_alert, "mosquitto_connect failed, giving up: %s", "mqtt",
-							  mosquitto_strerror(res));
-						_enabled = false;
-					}
-					break;
 				default:
-					print(log_alert, "mosquitto_connect failed, stopped: %s", "mqtt",
+					// This should be MOSQ_ERR_INVAL, so there is nothing we can do.
+					print(log_alert, "mosquitto_connect failed, giving up: %s", "mqtt",
 						  mosquitto_strerror(res));
 					_enabled = false;
 					break;

@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: main
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set env
         # Here we are setting a variable from an expression.
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
@@ -34,8 +34,10 @@ jobs:
           gpg --keyserver $KEYSERVER --recv-key $CLOUD_KEY_ID
           sudo -E gpg -v --output "$KEYFILE" --export $CLOUD_KEY_ID
           sudo apt-get update
+      - name: update repo information
+        run: sudo apt-get update
       - name: install devscripts
-        run: sudo apt-get install equivs devscripts pipx
+        run: sudo apt-get install equivs devscripts pipx hub
       - name: install dependencies
         run: sudo mk-build-deps -ri
       - name: debuild
@@ -83,19 +85,21 @@ jobs:
     needs: debuild
     strategy:
       matrix:
-        architecture: [armhf, arm64, amd64]
+        architecture: [armel, armhf, arm64, amd64]
         distribution: [trixie, bookworm, bullseye]
     runs-on: ubuntu-latest
     environment: main
     env:
       PBRT: /var/cache/pbuilder
     steps:
+      - name: update repo information
+        run: sudo apt-get update
       - name: install pbuilder
         run: |
           sudo apt-get install pbuilder qemu-user-static \
-            debian-archive-keyring
+            debian-archive-keyring hub
         # Needed for the release download
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set env
         # Here we are setting a variable from an expression.
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV

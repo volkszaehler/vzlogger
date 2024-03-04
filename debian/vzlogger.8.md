@@ -1,3 +1,6 @@
+% VZLOGGER(8) Volkszaehler project | System management commands
+% Joachim Zobel <jz-2017@heute-mogen.de>
+
 # NAME
 
 vzlogger -- A tool to read and log measurements of a wide variety of smart meters and sensors 
