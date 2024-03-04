@@ -1,1 +1,4 @@
 debian/ export-ignore
+# This preserves the changlog during a merge (not during a rebase). It requires
+# git config merge.theirs.driver 'cp -f %B %A'
+debian/changelog merge=theirs
