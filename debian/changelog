@@ -1,6 +1,5 @@
-vzlogger (0.8.2-1) unstable; urgency=medium
+vzlogger (0.8.3-1) unstable; urgency=medium
 
   * Initial upload (Closes: #864255) 
 
- -- Joachim Zobel <jz-2017@heute-morgen.de>  Mon, 10 Jul 2023 16:53:23 +0200
-
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Mon, 04 Mar 2024 19:03:44 +0100
