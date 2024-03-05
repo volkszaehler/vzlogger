@@ -1,25 +1,35 @@
 #!/bin/sh -e
 
+set -e
+
 case "$1" in
     configure)
-	if ! id vzlogger > /dev/null 2>&1 ; then
-	    adduser --system --no-create-home --home /nonexistent \
-		--group --disabled-password --shell /bin/false \
-		vzlogger
-            usermod -a -G dialout vzlogger
+    if id vzlogger > /dev/null 2>&1 ; then
+		# maintain compatibility with existing native installations
+		usermod -l _vzlogger vzlogger	
+		groupmod --new-name _vzlogger vzlogger
 	fi
+    if ! id _vzlogger > /dev/null 2>&1 ; then
+        adduser --quiet --system --no-create-home --home /nonexistent \
+            --group --disabled-password --shell /bin/false \
+            _vzlogger
+        usermod -a -G dialout _vzlogger
+    fi
 
-	touch /var/log/vzlogger.log
-	chown vzlogger:adm /var/log/vzlogger.log
+    touch /var/log/vzlogger.log
+    chown _vzlogger:adm /var/log/vzlogger.log
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;
 
     *)
-	echo "$0 called with unknown argument \`$1'" >&2
-	exit 1
+    echo "$0 called with unknown argument \`$1'" >&2
+    exit 1
     ;;
 esac
 
 #DEBHELPER#
+
+exit 0
+
