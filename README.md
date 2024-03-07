@@ -36,7 +36,7 @@ You can also build a docker image:
 Note, that this will use the newest vzlogger from volkszaehler github (not your local clone).
 You can start it:
 
-     docker run --restart=always -v /home/pi/projects/vzlogger-docker:/cfg \
+     docker run --restart=always -v /home/pi/projects/vzlogger-docker:/etc \
      --device=/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A9U5N-if00-port0 \
      --name vzlogger -d vzlogger
 
