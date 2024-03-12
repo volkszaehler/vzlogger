@@ -4,7 +4,9 @@ set -e
 
 case "$1" in
     configure)
-    if id vzlogger > /dev/null 2>&1 ; then
+    if id vzlogger > /dev/null 2>&1 \
+		&& dpkg --compare-versions $2 le-nl 0.8.3 \
+		&& dpkg --compare-versions $2 ge 0.8.2; then
 		# maintain compatibility with existing native installations
 		usermod -l _vzlogger vzlogger	
 		groupmod --new-name _vzlogger vzlogger
