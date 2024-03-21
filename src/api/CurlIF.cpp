@@ -26,7 +26,7 @@
 #include <VZException.hpp>
 #include <api/CurlIF.hpp>
 
-vz::api::CurlIF::CurlIF() : _headers(0) {
+vz::api::CurlIF::CurlIF() : _headers(nullptr) {
 	_curl = curl_easy_init();
 	if (!_curl) {
 		throw vz::VZException("CURL: cannot create handle.");
@@ -35,7 +35,7 @@ vz::api::CurlIF::CurlIF() : _headers(0) {
 
 vz::api::CurlIF::~CurlIF() {
 	curl_easy_cleanup(_curl);
-	if (_headers != NULL)
+	if (_headers != nullptr)
 		curl_slist_free_all(_headers);
 }
 
@@ -43,11 +43,11 @@ void vz::api::CurlIF::addHeader(const std::string value) {
 	_headers = curl_slist_append(_headers, value.c_str());
 }
 void vz::api::CurlIF::clearHeader() {
-	if (_headers != NULL)
+	if (_headers != nullptr)
 		curl_slist_free_all(_headers);
-	_headers = NULL;
+	_headers = nullptr;
 }
 void vz::api::CurlIF::commitHeader() {
-	if (_headers != NULL)
+	if (_headers != nullptr)
 		curl_easy_setopt(handle(), CURLOPT_HTTPHEADER, _headers);
 }

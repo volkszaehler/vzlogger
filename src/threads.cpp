@@ -53,8 +53,8 @@ void *reading_thread(void *arg) {
 	bool first_reading = true;
 
 	// Only allow cancellation at safe points
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr);
 
 	details = meter_get_details(mtr->protocolId());
 	std::vector<Reading> rds(details->max_readings, Reading(mtr->identifier()));
@@ -63,12 +63,12 @@ void *reading_thread(void *arg) {
 	print(log_debug, "Config.local: %d", mtr->name(), options.local());
 
 	try {
-		aggIntEnd = time(NULL);
+		aggIntEnd = time(nullptr);
 		do { /* start thread main loop */
 			_safe_to_cancel();
 			do {
 				aggIntEnd += mtr->aggtime(); /* end of this aggregation period */
-			} while ((aggIntEnd < time(NULL)) && (mtr->aggtime() > 0));
+			} while ((aggIntEnd < time(nullptr)) && (mtr->aggtime() > 0));
 			do { /* aggregate loop */
 				_safe_to_cancel();
 				int interval = mtr->interval();
@@ -148,8 +148,9 @@ void *reading_thread(void *arg) {
 							}
 						}
 
-					}                                                   // channel loop
-			} while ((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
+					} // channel loop
+			} while ((mtr->aggtime() > 0) &&
+					 (time(nullptr) < aggIntEnd)); /* default aggtime is -1 */
 
 			for (MeterMap::iterator ch = mapping->begin(); ch != mapping->end(); ch++) {
 
@@ -199,13 +200,13 @@ void *reading_thread(void *arg) {
 		std::stringstream oss;
 		oss << e.what();
 		print(log_alert, "Reading-THREAD - reading got an exception : %s", mtr->name(), e.what());
-		pthread_exit(0);
+		pthread_exit(nullptr);
 	}
 
 	print(log_debug, "Stopped reading. ", mtr->name());
 
-	pthread_exit(0);
-	return NULL;
+	pthread_exit(nullptr);
+	return nullptr;
 }
 
 void *logging_thread(void *arg) { // is started by Channel::start and stopped via
@@ -251,7 +252,7 @@ void *logging_thread(void *arg) { // is started by Channel::start and stopped vi
 	} while (true); // endless?!
 
 	print(log_debug, "Stopped logging.", ch->name());
-	pthread_exit(0);
+	pthread_exit(nullptr);
 
-	return NULL;
+	return nullptr;
 }

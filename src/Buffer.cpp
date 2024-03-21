@@ -36,9 +36,9 @@
 
 #include "Buffer.hpp"
 
-Buffer::Buffer() : _keep(32), _last_avg(0) {
+Buffer::Buffer() : _keep(32), _last_avg(nullptr) {
 	_newValues = false;
-	pthread_mutex_init(&_mutex, NULL);
+	pthread_mutex_init(&_mutex, nullptr);
 	_aggmode = NONE;
 }
 
@@ -54,7 +54,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 
 	lock();
 	if (_aggmode == MAX) {
-		Reading *latest = NULL;
+		Reading *latest = nullptr;
 		double aggvalue = -DBL_MAX;
 		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
 			if (!it->deleted()) {
@@ -86,7 +86,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 		// we assume buffer values are already sorted by time here! TODO: is this always true?
 		// otherwise a sort by time would be needed but this might conflict with _last_avg
 
-		Reading *latest = NULL;
+		Reading *latest = nullptr;
 		double aggvalue = 0;
 		double aggtimespan = 0.0;
 		unsigned int aggcount = 0;
@@ -130,7 +130,7 @@ void Buffer::aggregate(int aggtime, bool aggFixedInterval) {
 			}
 		}
 	} else if (_aggmode == SUM) {
-		Reading *latest = NULL;
+		Reading *latest = nullptr;
 		double aggvalue = 0;
 		for (iterator it = _sent.begin(); it != _sent.end(); it++) {
 			if (!it->deleted()) {

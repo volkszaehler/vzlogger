@@ -53,13 +53,13 @@ class Channel {
 		// Copy the owner's shared pointer for the logging_thread into this member.
 		this_shared->_this_forthread = this_shared;
 		// .. and pass the raw Channel*
-		pthread_create(&this_shared->_thread, NULL, &logging_thread, (void *)this_shared.get());
+		pthread_create(&this_shared->_thread, nullptr, &logging_thread, (void *)this_shared.get());
 		this_shared->_thread_running = true;
 	}
 
 	void join() {
 		if (_thread_running) {
-			pthread_join(_thread, NULL);
+			pthread_join(_thread, nullptr);
 			_thread_running = false;
 			_this_forthread.reset();
 		}
@@ -80,7 +80,7 @@ class Channel {
 			throw vz::VZException("No identifier defined.");
 		return _identifier;
 	}
-	int64_t time_ms() const { return _last == NULL ? 0 : _last->time_ms(); }
+	int64_t time_ms() const { return _last == nullptr ? 0 : _last->time_ms(); }
 
 	const char *uuid() const { return _uuid.c_str(); }
 	const std::string apiProtocol() { return _apiProtocol; }

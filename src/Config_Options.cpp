@@ -40,21 +40,21 @@ static const char *option_type_str[] = {"null",   "boolean", "double", "int",
 										"object", "array",   "string"};
 
 Config_Options::Config_Options()
-	: _config("/etc/vzlogger.conf"), _log(""), _pds(0), _port(8080), _verbosity(0),
+	: _config("/etc/vzlogger.conf"), _log(""), _pds(nullptr), _port(8080), _verbosity(0),
 	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
 	  _time_machine(false) {
-	_logfd = NULL;
+	_logfd = nullptr;
 }
 
 Config_Options::Config_Options(const std::string filename)
-	: _config(filename), _log(""), _pds(0), _port(8080), _verbosity(0), _comet_timeout(30),
+	: _config(filename), _log(""), _pds(nullptr), _port(8080), _verbosity(0), _comet_timeout(30),
 	  _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
 	  _time_machine(false) {
-	_logfd = NULL;
+	_logfd = nullptr;
 }
 
 void Config_Options::config_parse(MapContainer &mappings) {
-	struct json_object *json_cfg = NULL;
+	struct json_object *json_cfg = nullptr;
 	struct json_tokener *json_tok = json_tokener_new();
 
 	char buf[JSON_FILE_BUF_SIZE];
@@ -62,12 +62,12 @@ void Config_Options::config_parse(MapContainer &mappings) {
 
 	/* open configuration file */
 	FILE *file = fopen(_config.c_str(), "r");
-	if (file == NULL) {
-		print(log_alert, "Cannot open configfile %s: %s", NULL, _config.c_str(),
+	if (file == nullptr) {
+		print(log_alert, "Cannot open configfile %s: %s", nullptr, _config.c_str(),
 			  strerror(errno)); /* why didn't the file open? */
 		throw vz::VZException("Cannot open configfile.");
 	} else {
-		print(log_info, "Start parsing configuration from %s", NULL, _config.c_str());
+		print(log_info, "Start parsing configuration from %s", nullptr, _config.c_str());
 	}
 
 #ifdef HAVE_CPP_REGEX
@@ -79,7 +79,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 	while (fgets(buf, JSON_FILE_BUF_SIZE, file)) {
 		line++;
 
-		if (json_cfg != NULL) {
+		if (json_cfg != nullptr) {
 #ifdef HAVE_CPP_REGEX
 			// let's ignore whitespace and single line comments here:
 			if (!std::regex_match((const char *)buf, regex)) {
@@ -88,7 +88,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 			std::string strline(buf);
 			if (!std::all_of(strline.begin(), strline.end(), isspace)) {
 #endif
-				print(log_alert, "extra data after end of configuration in %s:%d", NULL,
+				print(log_alert, "extra data after end of configuration in %s:%d", nullptr,
 					  _config.c_str(), line);
 				throw vz::VZException("extra data after end of configuration");
 			}
@@ -97,10 +97,10 @@ void Config_Options::config_parse(MapContainer &mappings) {
 			json_cfg = json_tokener_parse_ex(json_tok, buf, strlen(buf));
 
 			if (json_tok->err > 1) {
-				print(log_alert, "Error in %s:%d %s at offset %d", NULL, _config.c_str(), line,
+				print(log_alert, "Error in %s:%d %s at offset %d", nullptr, _config.c_str(), line,
 					  json_tokener_error_desc(json_tok->err), json_tok->char_offset);
 				json_object_put(json_cfg);
-				json_cfg = 0;
+				json_cfg = nullptr;
 				throw vz::VZException("Parse configuaration failed.");
 			}
 		}
@@ -110,7 +110,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 	fclose(file);
 	json_tokener_free(json_tok);
 
-	if (json_cfg == NULL)
+	if (json_cfg == nullptr)
 		throw vz::VZException("configuration file incomplete, missing closing braces/parens?");
 
 	try {
@@ -147,7 +147,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 					} else if (strcmp(key, "index") == 0 && local_type == json_type_boolean) {
 						_channel_index = json_object_get_boolean(local_value);
 					} else {
-						print(log_alert, "Ignoring invalid field or type: %s=%s (%s)", NULL, key,
+						print(log_alert, "Ignoring invalid field or type: %s=%s (%s)", nullptr, key,
 							  json_object_get_string(local_value), option_type_str[local_type]);
 					}
 				}
@@ -172,7 +172,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 					mqttClient = new MqttClient(value);
 					if (!mqttClient->isConfigured()) {
 						delete mqttClient;
-						mqttClient = 0;
+						mqttClient = nullptr;
 						print(log_debug, "mqtt client not configured. stopped.", "mqtt");
 					}
 				} else
@@ -183,7 +183,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 			else if ((strcmp(key, "i_have_a_time_machine") == 0) && type == json_type_boolean) {
 				_time_machine = json_object_get_boolean(value);
 			} else {
-				print(log_alert, "Ignoring invalid field or type: %s=%s (%s)", NULL, key,
+				print(log_alert, "Ignoring invalid field or type: %s=%s (%s)", nullptr, key,
 					  json_object_get_string(value), option_type_str[type]);
 			}
 		}
@@ -195,7 +195,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 		throw;
 	}
 
-	print(log_debug, "Have %d meters.", NULL, mappings.size());
+	print(log_debug, "Have %d meters.", nullptr, mappings.size());
 	json_object_put(json_cfg); /* free allocated memory */
 }
 
@@ -222,7 +222,7 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 	/* init meter */
 	MeterMap metermap(options);
 
-	print(log_info, "New meter initialized (protocol=%s)", NULL /*(mapping*/,
+	print(log_info, "New meter initialized (protocol=%s)", nullptr /*(mapping*/,
 		  meter_get_details(metermap.meter()->protocolId())->name);
 
 	/* init channels */
@@ -236,11 +236,11 @@ void Config_Options::config_parse_meter(MapContainer &mappings, Json::Ptr jso) {
 
 void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping) {
 	std::list<Option> options;
-	const char *uuid = NULL;
-	const char *id_str = NULL;
+	const char *uuid = nullptr;
+	const char *id_str = nullptr;
 	std::string apiProtocol_str;
 
-	print(log_debug, "Configure channel.", NULL);
+	print(log_debug, "Configure channel.", nullptr);
 	json_object_object_foreach(jso.Object(), key, value) {
 		enum json_type type = json_object_get_type(value);
 
@@ -263,17 +263,17 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping) {
 	}
 
 	/* check uuid and middleware */
-	if (uuid == NULL) {
-		print(log_alert, "Missing UUID", NULL);
+	if (uuid == nullptr) {
+		print(log_alert, "Missing UUID", nullptr);
 		throw vz::VZException("Missing UUID");
 	}
 	if (!config_validate_uuid(uuid)) {
-		print(log_alert, "Invalid UUID: %s", NULL, uuid);
+		print(log_alert, "Invalid UUID: %s", nullptr, uuid);
 		throw vz::VZException("Invalid UUID.");
 	}
 	// check if identifier is set. If not, use default
-	if (id_str == NULL) {
-		print(log_error, "Identifier is not set. Using default value 'NilIdentifier'.", NULL);
+	if (id_str == nullptr) {
+		print(log_error, "Identifier is not set. Using default value 'NilIdentifier'.", nullptr);
 		id_str = "NilIdentifier";
 	}
 	// if (middleware == NULL) {
@@ -291,7 +291,7 @@ void Config_Options::config_parse_channel(Json &jso, MeterMap &mapping) {
 	} catch (vz::VZException &e) {
 		std::stringstream oss;
 		oss << e.what();
-		print(log_alert, "Invalid id: %s due to: '%s'", NULL, id_str, oss.str().c_str());
+		print(log_alert, "Invalid id: %s due to: '%s'", nullptr, id_str, oss.str().c_str());
 		throw vz::VZException("Invalid reader.");
 	}
 

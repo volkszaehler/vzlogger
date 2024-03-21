@@ -12,7 +12,7 @@ TEST(MeterSML, EMH_basic) {
 	using std::fabs;
 
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterSML m(options);
@@ -141,17 +141,17 @@ TEST(MeterSML, EMH_basic) {
 	double value = rds[0].value();
 	EXPECT_LE(fabs(14796777.1 - value), 0.1);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis(1, 0, 1, 8, 1, 255) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[1].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[1].value();
 	EXPECT_EQ(2012.4, value);
 	EXPECT_TRUE(Obis(1, 0, 1, 8, 2, 255) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[2].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[2].value();
 	EXPECT_LE(fabs(11.2 - value), 0.1);
 	EXPECT_TRUE(Obis(1, 0, 1, 7, 0, 255) == (o->obis()));

@@ -18,7 +18,7 @@ int writes(int fd, const char *str);
 
 TEST(MeterFile, basic) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("interval", 1));
@@ -48,14 +48,14 @@ TEST(MeterFile, basic) {
 	double value = rds[0].value();
 	EXPECT_EQ(32552, value);
 	StringIdentifier *o = dynamic_cast<StringIdentifier *>(p);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier(""), *o);
 
 	value = rds[1].value();
 	p = rds[1].identifier().get();
 	o = dynamic_cast<StringIdentifier *>(p);
 	EXPECT_EQ(32552.5, value);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier(""), *o);
 
 	EXPECT_EQ(0, m.close());
@@ -66,7 +66,7 @@ TEST(MeterFile, basic) {
 
 TEST(MeterFile, format1) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$v"));
@@ -94,14 +94,14 @@ TEST(MeterFile, format1) {
 	double value = rds[0].value();
 	EXPECT_EQ(32552, value);
 	StringIdentifier *o = dynamic_cast<StringIdentifier *>(p);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("<null>"), *o);
 
 	value = rds[1].value();
 	p = rds[1].identifier().get();
 	o = dynamic_cast<StringIdentifier *>(p);
 	EXPECT_EQ(32552.5, value);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("<null>"), *o);
 
 	EXPECT_EQ(0, m.close());
@@ -112,7 +112,7 @@ TEST(MeterFile, format1) {
 
 TEST(MeterFile, format2) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$i : $v"));
@@ -140,14 +140,14 @@ TEST(MeterFile, format2) {
 	double value = rds[0].value();
 	EXPECT_EQ(32552, value);
 	StringIdentifier *o = dynamic_cast<StringIdentifier *>(p);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("id1"), *o);
 
 	value = rds[1].value();
 	p = rds[1].identifier().get();
 	o = dynamic_cast<StringIdentifier *>(p);
 	EXPECT_EQ(32552.5, value);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("id2"), *o);
 
 	EXPECT_EQ(0, m.close());
@@ -173,7 +173,7 @@ TEST(MeterFile, reading_times) {
 
 TEST(MeterFile, format3) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("path", tempfilename));
 	options.push_back(Option("format", (char *)"$t;$i : $v"));
@@ -203,7 +203,7 @@ TEST(MeterFile, format3) {
 	EXPECT_EQ(1001200ll, rds[0].time_ms()) << rds[0].time_ms();
 
 	StringIdentifier *o = dynamic_cast<StringIdentifier *>(p);
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("id1"), *o);
 
 	value = rds[1].value();
@@ -211,7 +211,7 @@ TEST(MeterFile, format3) {
 	o = dynamic_cast<StringIdentifier *>(p);
 	EXPECT_EQ(32552.5, value);
 	EXPECT_EQ(1002500ll, rds[1].time_ms());
-	ASSERT_NE((StringIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_EQ(StringIdentifier("id2"), *o);
 
 	EXPECT_EQ(0, m.close());

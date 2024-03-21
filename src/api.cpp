@@ -76,8 +76,8 @@ size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *da
 	CURLresponse *response = static_cast<CURLresponse *>(data);
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
-	if (response->data == NULL) { /* out of memory! */
-		print(log_alert, "Cannot allocate memory", NULL);
+	if (response->data == nullptr) { /* out of memory! */
+		print(log_alert, "Cannot allocate memory", nullptr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -126,7 +126,7 @@ vz::Api::Api(Channel::Ptr ch)
 			curl_version());                                         /* build user agent */
 	sprintf(url, "%s/data/%s.json", _ch->middleware(), _ch->uuid()); /* build url */
 
-	_api.headers = NULL;
+	_api.headers = nullptr;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);

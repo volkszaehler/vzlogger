@@ -135,13 +135,13 @@ MeterOMS::MeterOMS(const std::list<Option> &options, OMSHWif *hwif)
 
 	// init openssl:
 #if OPENSSL_VERSION_NUMBER >= 0x10100003L
-	OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, NULL);
+	OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, nullptr);
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms(); // should be called after init
 #else
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms();
-	OPENSSL_config(NULL);
+	OPENSSL_config(nullptr);
 #endif
 
 	// parse options:
@@ -500,7 +500,7 @@ bool MeterOMS::aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsign
 		return false;
 	}
 
-	if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)) {
+	if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv)) {
 		print(log_alert, "EVP_DecryptInit_ex failed", name().c_str());
 		EVP_CIPHER_CTX_free(ctx);
 		return false;

@@ -16,12 +16,12 @@ void hmac_sha1(char *digest, const unsigned char *data, size_t dataLen,
 #elif OPENSSL_VERSION_NUMBER < 0x30000000L
 	HMAC_CTX *hmacContext = HMAC_CTX_new();
 
-	HMAC_Init_ex(hmacContext, secretKey, secretLen, EVP_sha1(), NULL);
+	HMAC_Init_ex(hmacContext, secretKey, secretLen, EVP_sha1(), nullptr);
 	HMAC_Update(hmacContext, data, dataLen);
 #else
 	EVP_MD_CTX *evpContext = EVP_MD_CTX_new();
-	EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_HMAC, NULL, secretKey, secretLen);
-	EVP_DigestSignInit(evpContext, NULL, EVP_sha1(), NULL, pkey);
+	EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_HMAC, nullptr, secretKey, secretLen);
+	EVP_DigestSignInit(evpContext, nullptr, EVP_sha1(), nullptr, pkey);
 	EVP_PKEY_free(pkey);
 	EVP_DigestSignUpdate(evpContext, data, dataLen);
 #endif

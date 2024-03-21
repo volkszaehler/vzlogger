@@ -39,7 +39,7 @@ int Channel::instances = 0;
 Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtocol,
 				 const std::string uuid, ReadingIdentifier::Ptr pIdentifier)
 	: _thread_running(false), _options(pOptions), _buffer(new Buffer()), _identifier(pIdentifier),
-	  _last(0), _uuid(uuid), _apiProtocol(apiProtocol), _duplicates(0) {
+	  _last(nullptr), _uuid(uuid), _apiProtocol(apiProtocol), _duplicates(0) {
 	id = instances++;
 
 	// set channel name
@@ -86,7 +86,7 @@ Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtoco
 		throw;
 	}
 
-	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
+	pthread_cond_init(&condition, nullptr); // initialize thread syncronization helpers
 }
 
 /**

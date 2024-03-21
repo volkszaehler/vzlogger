@@ -45,7 +45,7 @@ extern Config_Options options;
 const int MAX_CHUNK_SIZE = 64;
 
 vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
-	: ApiIF(ch), _last_timestamp(0), _lastReadingSent(0) {
+	: ApiIF(ch), _last_timestamp(0), _lastReadingSent(nullptr) {
 	OptionList optlist;
 	char agent[255];
 
@@ -83,7 +83,7 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	_url.append(channel()->uuid());
 	_url.append(".json");
 
-	_api.headers = NULL;
+	_api.headers = nullptr;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
@@ -103,19 +103,20 @@ void vz::api::Volkszaehler::send() {
 	CURLcode curl_code;
 
 	// initialize response
-	response.data = NULL;
+	response.data = nullptr;
 	response.size = 0;
 
 	json_obj = api_json_tuples(channel()->buffer());
 	json_str = json_object_to_json_string(json_obj);
-	if (json_str == NULL || strcmp(json_str, "null") == 0) {
+	if (json_str == nullptr || strcmp(json_str, "null") == 0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		return;
 	}
 
-	_api.curl = curlSessionProvider
-					? curlSessionProvider->get_easy_session(_middleware)
-					: 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
+	_api.curl =
+		curlSessionProvider
+			? curlSessionProvider->get_easy_session(_middleware)
+			: nullptr; // TODO add option to use parallel sessions. Simply add uuid() to the key.
 	if (!_api.curl) {
 		throw vz::VZException("CURL: cannot create handle.");
 	}
@@ -230,7 +231,7 @@ json_object *vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 	buf->clean();
 
 	if (_values.size() < 1) {
-		return NULL;
+		return nullptr;
 	}
 
 	json_object *json_tuples = json_object_new_array();
@@ -337,8 +338,8 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 	CURLresponse *response = static_cast<CURLresponse *>(data);
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
-	if (response->data == NULL) { // out of memory!
-		print(log_alert, "Cannot allocate memory", NULL);
+	if (response->data == nullptr) { // out of memory!
+		print(log_alert, "Cannot allocate memory", nullptr);
 		exit(EXIT_FAILURE);
 	}
 

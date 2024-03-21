@@ -297,7 +297,7 @@ void MeterS0::counter_thread() {
 				ts.tv_sec = 0;
 				ts.tv_nsec = nonblocking_delay_ns; // 5*(1e3) needed for up to 30kHz! 1e3 -> <1mhz,
 												   // 1e4 -> <100kHz, 1e5 -> <10kHz
-				nanosleep(&ts, NULL);              // we can ignore any errors here
+				nanosleep(&ts, nullptr);           // we can ignore any errors here
 			}
 		} // non blocking case
 	}     // while
@@ -364,7 +364,7 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 	bool is_zero = true;
 	do {
 		req.tv_sec += 1;
-		CANCELLABLE(while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, NULL)));
+		CANCELLABLE(while (EINTR == clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &req, nullptr)));
 		// check from counter_thread the current impulses:
 		t_imp = _impulses;
 		t_imp_neg = _impulses_neg;
@@ -541,7 +541,7 @@ bool MeterS0::HWIF_UART::waitForImpulse(bool &timeout) {
 #define BCM2708_PERI_BASE_RPI2 0x3F000000
 
 MeterS0::HWIF_MMAP::HWIF_MMAP(int gpiopin, const std::string &hw)
-	: _gpiopin(gpiopin), _gpio(0), _gpio_base(0) {
+	: _gpiopin(gpiopin), _gpio(nullptr), _gpio_base(nullptr) {
 	// check gpiopin for max value! (todo)
 	// we do mmap in _open only
 	if (hw == "rpi" || hw == "rpi1")
@@ -564,7 +564,7 @@ bool MeterS0::HWIF_MMAP::_open() {
 		return false;
 	}
 
-	void *gpio_map = mmap((void *)NULL,           // Any adddress in our space will do
+	void *gpio_map = mmap(nullptr,                // Any adddress in our space will do
 						  BLOCK_SIZE,             // Map length
 						  PROT_READ | PROT_WRITE, // Enable reading & writting to mapped memory
 						  MAP_SHARED,             // Shared with other processes
@@ -587,7 +587,7 @@ bool MeterS0::HWIF_MMAP::_open() {
 
 bool MeterS0::HWIF_MMAP::_close() {
 	// need unmap? todo
-	_gpio = 0;
+	_gpio = nullptr;
 	return true;
 }
 

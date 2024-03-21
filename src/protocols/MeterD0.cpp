@@ -56,7 +56,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 	: Protocol("d0"), _host(""), _device(""), _auto_ack(false), _wait_sync_end(false),
 	  _read_timeout_s(10), _baudrate_change_delay_ms(0), _reaction_time_ms(200) // default to 200ms
 	  ,
-	  _dump_fd(0), _old_mode(NONE), _dump_pos(0) {
+	  _dump_fd(nullptr), _old_mode(NONE), _dump_pos(0) {
 	OptionList optlist;
 
 	// connection
@@ -92,7 +92,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 			hs[2] = 0;
 			strncpy(hs, hex.c_str() + i, 2);
 			char hx[2];
-			hx[0] = strtol(hs, NULL, 16);
+			hx[0] = strtol(hs, nullptr, 16);
 			_pull.append(hx, 1);
 		}
 		print(log_debug, "pullseq len:%d found", name().c_str(), _pull.size());
@@ -113,7 +113,7 @@ MeterD0::MeterD0(std::list<Option> &options)
 				char hs[3];
 				strncpy(hs, hex.c_str() + i, 2);
 				char hx[2];
-				hx[0] = strtol(hs, NULL, 16);
+				hx[0] = strtol(hs, nullptr, 16);
 				_ack.append(hx, 1);
 			}
 			print(log_debug, "ackseq len:%d found %s, %x", name().c_str(), _ack.size(),
@@ -357,7 +357,7 @@ int MeterD0::close() {
 	dump_file(CTRL, "closed\n"); // here we add a \n as this will be the last data
 	if (_dump_fd) {
 		(void)fclose(_dump_fd);
-		_dump_fd = 0;
+		_dump_fd = nullptr;
 	}
 	return ::close(_fd);
 }
@@ -788,7 +788,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 				case 'F':
 					print(log_debug, "Parsed reading (OBIS code=%s, value=%s, unit=%s)",
 						  name().c_str(), obis_code, value, unit);
-					rds[number_of_tuples].value(strtod(value, NULL));
+					rds[number_of_tuples].value(strtod(value, nullptr));
 
 					try {
 						Obis obis(obis_code);
@@ -839,7 +839,7 @@ int MeterD0::_openSocket(const char *node, const char *service) {
 		return ERR;
 	}
 
-	getaddrinfo(node, service, NULL, &ais);
+	getaddrinfo(node, service, nullptr, &ais);
 	memcpy(&sin, ais->ai_addr, ais->ai_addrlen);
 	freeaddrinfo(ais);
 
@@ -992,11 +992,11 @@ void MeterD0::dump_file(DUMP_MODE mode, const char *buf, size_t len) {
 
 		fwrite(ctrl_end, 1, strlen(ctrl_end), _dump_fd);
 		fflush(_dump_fd); // flush on each mode change
-		const char *s = 0, *e = 0;
+		const char *s = nullptr, *e = nullptr;
 		switch (mode) {
 		case CTRL:
 			s = ctrl_start;
-			e = 0;
+			e = nullptr;
 			break;
 		case DUMP_IN:
 			s = dump_in_start;

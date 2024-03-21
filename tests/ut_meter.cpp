@@ -22,29 +22,29 @@
 #include "../src/protocols/MeterS0.cpp"
 
 TEST(meter, meter_lookup_protocol) {
-	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol(NULL, NULL));
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("d0", NULL));
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("D0", NULL)); // case insensitive
+	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol(nullptr, nullptr));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("d0", nullptr));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("D0", nullptr)); // case insensitive
 
-	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("D1", NULL));
+	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("D1", nullptr));
 
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("file", NULL));
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("exec", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("file", nullptr));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("exec", nullptr));
 
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("random", NULL));
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("s0", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("random", nullptr));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("s0", nullptr));
 #ifdef SML_SUPPORT
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("sml", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("sml", nullptr));
 #endif
-	ASSERT_EQ(SUCCESS, meter_lookup_protocol("fluksov2", NULL));
+	ASSERT_EQ(SUCCESS, meter_lookup_protocol("fluksov2", nullptr));
 
-	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("d01", NULL));
-	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("", NULL));
+	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("d01", nullptr));
+	ASSERT_EQ(ERR_NOT_FOUND, meter_lookup_protocol("", nullptr));
 	meter_protocol_t m = meter_protocol_none;
 	ASSERT_EQ(SUCCESS, meter_lookup_protocol("d0", &m));
 	ASSERT_EQ(meter_protocol_d0, m);
 	const meter_details_t *d = meter_get_details(m);
-	ASSERT_TRUE(NULL != d);
-	ASSERT_TRUE(NULL != d->name);
+	ASSERT_TRUE(nullptr != d);
+	ASSERT_TRUE(nullptr != d->name);
 	ASSERT_STREQ(d->name, "d0");
 }

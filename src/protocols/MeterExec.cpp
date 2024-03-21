@@ -136,15 +136,15 @@ int MeterExec::open() {
 	print(log_debug, "MeterExec::open: Executing command line '%s'", name().c_str(), command());
 	_pipe = popen(command(), "r");
 
-	if (_pipe == NULL) {
+	if (_pipe == nullptr) {
 		print(log_alert, "MeterExec::open: popen(%s) failed with: %s", name().c_str(), command(),
 			  strerror(errno));
 		return ERR;
 	}
 
-	if (_pipe != NULL) {
+	if (_pipe != nullptr) {
 		pclose(_pipe);
-		_pipe = NULL;
+		_pipe = nullptr;
 	}
 
 	return SUCCESS;
@@ -154,7 +154,7 @@ int MeterExec::close() { return SUCCESS; }
 
 ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 	char buffer[256];
-	char *string = 0;
+	char *string = nullptr;
 
 	unsigned int i = 0;
 
@@ -202,10 +202,10 @@ ssize_t MeterExec::read(std::vector<Reading> &rds, size_t n) {
 					}
 					if (string) {
 						free(string);
-						string = 0;
+						string = nullptr;
 					}
 				} else { // just reading a value per line
-					rds[i].value(strtod(buffer, NULL));
+					rds[i].value(strtod(buffer, nullptr));
 					rds[i].time();
 					ReadingIdentifier *rid(new StringIdentifier(""));
 					rds[i].identifier(rid);

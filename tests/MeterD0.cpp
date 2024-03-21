@@ -25,7 +25,7 @@ void print(log_level_t l, char const *s1, char const *s2, ...) {
 }
 
 int writes(int fd, const char *str) {
-	EXPECT_NE((char *)0, str);
+	EXPECT_NE(nullptr, str);
 	int len = strlen(str);
 	return write(fd, str, len);
 }
@@ -34,7 +34,7 @@ TEST(MeterD0, basic_dump_fd) {
 
 	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	ASSERT_NE(strlen(tempfilename), 0ul);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
@@ -67,7 +67,7 @@ TEST(MeterD0, basic_dump_fd_autoack) {
 
 	std::string dumpName("/tmp/dumpD0UnitTestxyz1234");
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("dump_file", (char *)dumpName.c_str()));
@@ -101,7 +101,7 @@ TEST(MeterD0, basic_dump_fd_autoack) {
 
 TEST(MeterD0, HagerEHZ_basic) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterD0 m(options);
@@ -131,18 +131,18 @@ TEST(MeterD0, HagerEHZ_basic) {
 	double value = rds[0].value();
 	EXPECT_EQ(1.2963, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis(1, 0, 1, 8, 0, 255) == (o->obis()));
 
 	EXPECT_EQ(2, m.read(rds, 2));
 	o = dynamic_cast<ObisIdentifier *>(rds[0].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[0].value();
 	EXPECT_EQ(1.2964, value);
 	EXPECT_TRUE(Obis(1, 0, 1, 7, 0, 255) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[1].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[1].value();
 	EXPECT_EQ(1.2965, value);
 	EXPECT_TRUE(Obis(1, 0, 1, 9, 0, 255) == (o->obis()));
@@ -156,7 +156,7 @@ TEST(MeterD0, HagerEHZ_basic) {
 TEST(MeterD0, HagerEHZ_waitsync) {
 	char tempfilename[L_tmpnam + 1];
 	char strend[5] = "end\0";
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("wait_sync", strend));
@@ -186,7 +186,7 @@ TEST(MeterD0, HagerEHZ_waitsync) {
 	double value = rds[0].value();
 	EXPECT_EQ(999999.9999, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis(2, 1, 2, 3, 4, 255) == (o->obis()));
 
 	EXPECT_EQ(0, m.close());
@@ -198,7 +198,7 @@ TEST(MeterD0, HagerEHZ_waitsync) {
 TEST(MeterD0, LandisGyr_basic) {
 	char tempfilename[L_tmpnam + 1];
 	char str_pullseq[12] = "2f3f210d0a";
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("pullseq", str_pullseq));
@@ -255,17 +255,17 @@ TEST(MeterD0, LandisGyr_basic) {
 	double value = rds[2].value();
 	EXPECT_EQ(1846.0, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 1, 255) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[3].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[3].value();
 	EXPECT_EQ(0.0, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 2, 0xff) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[4].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[4].value();
 	EXPECT_EQ(4329.6, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 2, 8, 1, 0xff) == (o->obis()));
@@ -295,7 +295,7 @@ int writes_hex(int fd, const char *str) {
 TEST(MeterD0, ACE3000_basic) {
 	char tempfilename[L_tmpnam + 1];
 	char str_pullseq[12] = "2f3f210d0a";
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	options.push_back(Option("pullseq", str_pullseq));
@@ -347,17 +347,17 @@ TEST(MeterD0, ACE3000_basic) {
 	double value = rds[3].value();
 	EXPECT_EQ(13925.5, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis(0xff, 0xff, 1, 8, 0, 255) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[1].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[1].value();
 	EXPECT_EQ(1126120053322353.0, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 96, 1, 0xff, 0xff) == (o->obis()));
 
 	o = dynamic_cast<ObisIdentifier *>(rds[0].identifier().get());
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	value = rds[0].value();
 	EXPECT_EQ(0.0, value);
 	EXPECT_TRUE(Obis(0xff, 0xff, 97, 97, 0xff, 0xff) == (o->obis()));
@@ -406,7 +406,7 @@ baudrate=4, identification=\@DC341TMPBF2ZAK) [Dec 23 11:59:11][d0]   Sending ack
 
 TEST(MeterD0, LuG_E350) {
 	char tempfilename[L_tmpnam + 1];
-	ASSERT_NE(tmpnam(tempfilename), (char *)0);
+	ASSERT_NE(tmpnam(tempfilename), nullptr);
 	std::list<Option> options;
 	options.push_back(Option("device", tempfilename));
 	MeterD0 m(options);
@@ -460,7 +460,7 @@ TEST(MeterD0, LuG_E350) {
 	double value = rds[22].value();
 	EXPECT_EQ(1420.0, value);
 	ObisIdentifier *o = dynamic_cast<ObisIdentifier *>(p);
-	ASSERT_NE((ObisIdentifier *)0, o);
+	ASSERT_NE(nullptr, o);
 	EXPECT_TRUE(Obis("C.5.0") == (o->obis()));
 
 	EXPECT_EQ(0, m.close());

@@ -89,7 +89,7 @@ sudo cp tesseract-ocr/tessdata/deu-frak.traineddata /usr/local/share/tessdata/
 #include <tesseract/baseapi.h>
 
 MeterOCR::RecognizerTesseract::RecognizerTesseract(struct json_object *jr)
-	: Recognizer("tesseract", jr), api(0), _gamma(1.0), _gamma_min(50), _gamma_max(120),
+	: Recognizer("tesseract", jr), api(nullptr), _gamma(1.0), _gamma_min(50), _gamma_max(120),
 	  _min_x1(INT_MAX), _max_x2(INT_MIN), _min_y1(INT_MAX), _max_y2(INT_MIN),
 
 	  _all_digits(true) {
@@ -169,7 +169,7 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 	if (image_gs) {
 		pixDestroy(&image);
 		image = image_gs;
-		image_gs = 0;
+		image_gs = nullptr;
 		saveDebugImage(debugPixa, image, "grayscale");
 	}
 
@@ -186,20 +186,20 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 	if (image_gs) {
 		pixDestroy(&image);
 		image = image_gs;
-		image_gs = 0;
+		image_gs = nullptr;
 		saveDebugImage(debugPixa, image, "unsharp");
 	}
 
 	// Normalize for uneven illumination on gray image
-	Pix *pixg = 0;
-	pixBackgroundNormGrayArrayMorph(image, NULL, 4, 5, 200, &pixg);
+	Pix *pixg = nullptr;
+	pixBackgroundNormGrayArrayMorph(image, nullptr, 4, 5, 200, &pixg);
 	image_gs = pixApplyInvBackgroundGrayMap(image, pixg, 4, 4);
 	pixDestroy(&pixg);
 
 	if (image_gs) {
 		pixDestroy(&image);
 		image = image_gs;
-		image_gs = 0;
+		image_gs = nullptr;
 		saveDebugImage(debugPixa, image, "normalize");
 	}
 
@@ -207,7 +207,7 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 	if (image_gs) {
 		pixDestroy(&image);
 		image = image_gs;
-		image_gs = 0;
+		image_gs = nullptr;
 		saveDebugImage(debugPixa, image, "blockconv");
 	}
 
@@ -216,7 +216,7 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 	if (image_gs) {
 		pixDestroy(&image);
 		image = image_gs;
-		image_gs = 0;
+		image_gs = nullptr;
 		saveDebugImage(debugPixa, image, "binary");
 	}
 
@@ -263,12 +263,12 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 		BOX *box = boxCreate(left, top, w, h);
 		boxaAddBox(boxb, box, L_INSERT);
 
-		if (api->Recognize(0) == 0) {
+		if (api->Recognize(nullptr) == 0) {
 			std::string outtext;
 			tesseract::ResultIterator *ri = api->GetIterator();
 			tesseract::PageIteratorLevel level = tesseract::RIL_WORD;
 			double min_conf = DBL_MAX;
-			if (ri != 0) {
+			if (ri != nullptr) {
 				do {
 					const char *word = ri->GetUTF8Text(level);
 					float conf = ri->Confidence(level);
@@ -301,7 +301,8 @@ bool MeterOCR::RecognizerTesseract::recognize(PIX *imageO, int dX, int dY, Reads
 				readings[b.identifier].value = NAN;
 				readings[b.identifier].min_conf = 0;
 			} else {
-				readings[b.identifier].value += strtod(outtext.c_str(), NULL) * pow(10, b.scaler);
+				readings[b.identifier].value +=
+					strtod(outtext.c_str(), nullptr) * pow(10, b.scaler);
 				if (min_conf < readings[b.identifier].min_conf)
 					readings[b.identifier].min_conf = min_conf;
 				outtext.clear();
@@ -336,9 +337,9 @@ bool MeterOCR::RecognizerTesseract::initTesseract() {
 	// only for debugging:
 	api->SetVariable("tessedit_write_images", "T");
 
-	if (api->Init(NULL, "deu")) {
+	if (api->Init(nullptr, "deu")) {
 		delete api;
-		api = NULL;
+		api = nullptr;
 		print(log_error, "Could not init tesseract!", "RecognizerTesseract");
 		throw vz::VZException("could not init tesseract");
 	}
@@ -357,7 +358,7 @@ bool MeterOCR::RecognizerTesseract::deinitTesseract() {
 		return false;
 	api->End();
 	delete api;
-	api = 0;
+	api = nullptr;
 	return true;
 }
 

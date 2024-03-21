@@ -68,7 +68,7 @@ MeterRandom::~MeterRandom() {}
 int MeterRandom::open() {
 
 	// TODO rewrite to use /dev/u?random
-	srand(time(NULL)); /* initialize PNRG */
+	srand(time(nullptr)); /* initialize PNRG */
 
 	return SUCCESS; /* can't fail */
 }

@@ -39,13 +39,13 @@ bool MeterW1therm::W1sysHWif::scanW1devices() {
 				  "?"
 				  "?"
 				  "-*",
-				  GLOB_NOSORT, NULL, &glob_res)) {
+				  GLOB_NOSORT, nullptr, &glob_res)) {
 
 		// 1wire ID prefixes of supported sensors
-		const char *ids[] = {"10", "22", "28", "3b", "42", NULL};
+		const char *ids[] = {"10", "22", "28", "3b", "42", nullptr};
 
 		for (unsigned int i = 0; i < glob_res.gl_pathc; ++i) {
-			for (unsigned int j = 0; ids[j] != NULL; j++) {
+			for (unsigned int j = 0; ids[j] != nullptr; j++) {
 				if (strlen(glob_res.gl_pathv[i]) > strl &&
 					!strncmp(glob_res.gl_pathv[i] + strl, ids[j], 2)) {
 					char *str = glob_res.gl_pathv[i] + strl;
@@ -71,7 +71,7 @@ bool MeterW1therm::W1sysHWif::readTemp(const std::string &device, double &value)
 	dev.append("/w1_slave");
 
 	FILE *fp;
-	if ((fp = fopen(dev.c_str(), "r")) == NULL) {
+	if ((fp = fopen(dev.c_str(), "r")) == nullptr) {
 		print(log_debug, "couldn't open %s for reading", "w1t", dev.c_str());
 		return false;
 	}

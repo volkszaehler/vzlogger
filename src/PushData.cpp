@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <time.h>
 
-PushDataServer::PushDataServer(struct json_object *option) : _headers(0) {
+PushDataServer::PushDataServer(struct json_object *option) : _headers(nullptr) {
 	if (option) {
 		// todo parse param option (is a json_type_array with len>0
 		// expected is each array item to be an object with key "url"
@@ -112,7 +112,7 @@ std::string PushDataServer::generateJson(PushDataList::DataMap &dataMap) {
 
 bool PushDataServer::send(const std::string &middleware, const std::string &datastr) {
 	bool toRet = true;
-	CURL *curl = curlSessionProvider ? curlSessionProvider->get_easy_session(middleware) : 0;
+	CURL *curl = curlSessionProvider ? curlSessionProvider->get_easy_session(middleware) : nullptr;
 	if (!curl) {
 		print(log_alert, "send no curl session!", "push");
 		return false;
@@ -120,7 +120,7 @@ bool PushDataServer::send(const std::string &middleware, const std::string &data
 
 	CURLresponse response;
 	response.size = 0;
-	response.data = 0;
+	response.data = nullptr;
 	CURLcode curl_code;
 	long int http_code;
 
@@ -177,7 +177,7 @@ size_t PushDataServer::curl_custom_write_callback(void *ptr, size_t size, size_t
 	CURLresponse *response = static_cast<CURLresponse *>(data);
 
 	response->data = (char *)realloc(response->data, response->size + realsize + 1);
-	if (response->data == NULL) { // out of memory!
+	if (response->data == nullptr) { // out of memory!
 		print(log_alert, "Cannot allocate memory data=%p response->size=%zu realsize=%zu", "push",
 			  data, response->size, realsize);
 		exit(EXIT_FAILURE);
@@ -190,8 +190,8 @@ size_t PushDataServer::curl_custom_write_callback(void *ptr, size_t size, size_t
 	return realsize;
 }
 
-PushDataList::PushDataList() : _next(0), _map_mutex(PTHREAD_MUTEX_INITIALIZER) {
-	pthread_cond_init(&_cond, NULL);
+PushDataList::PushDataList() : _next(nullptr), _map_mutex(PTHREAD_MUTEX_INITIALIZER) {
+	pthread_cond_init(&_cond, nullptr);
 }
 
 PushDataList::~PushDataList() {
@@ -219,7 +219,7 @@ void PushDataList::add(const std::string &uuid, const int64_t &time_ms, const do
 }
 
 PushDataList::DataMap *PushDataList::waitForData() {
-	DataMap *toRet = 0;
+	DataMap *toRet = nullptr;
 	assert(0 == pthread_mutex_lock(&_map_mutex));
 	int rc = 0;
 
@@ -234,7 +234,7 @@ PushDataList::DataMap *PushDataList::waitForData() {
 
 	if (rc == 0) {
 		toRet = _next;
-		_next = 0; // change ownership to caller. We will create new one on next add()
+		_next = nullptr; // change ownership to caller. We will create new one on next add()
 	}
 	pthread_mutex_unlock(&_map_mutex);
 
@@ -242,7 +242,7 @@ PushDataList::DataMap *PushDataList::waitForData() {
 }
 
 // global var:
-PushDataList *pushDataList = 0;
+PushDataList *pushDataList = nullptr;
 volatile bool endThread = false;
 
 void *push_data_thread(void *arg) {
@@ -257,7 +257,7 @@ void *push_data_thread(void *arg) {
 	}
 
 	print(log_debug, "Stopped push_data_thread", "push");
-	return 0;
+	return nullptr;
 }
 
 void end_push_data_thread() { endThread = true; }
