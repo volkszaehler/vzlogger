@@ -81,7 +81,7 @@ if( TARGET )
     target_link_libraries(vzlogger dl)
   endif( ${TARGET} STREQUAL "ar71xx")
 endif( TARGET )
-target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES} )
+target_link_libraries(vzlogger ${CURL_STATIC_LIBRARIES} ${CURL_LIBRARIES} unistring ${GNUTLS_LIBRARIES} ${OPENSSL_LIBRARIES} ${GPIOD_LIBRARY})
 
 # add programs to the install target
 INSTALL(PROGRAMS
