@@ -102,7 +102,7 @@ jobs:
           - keyring: debian-archive-keyring
           - keyring: raspbian-archive-keyring
             os: raspbian
-      runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     environment: main
     env:
       PBRT: /var/cache/pbuilder
