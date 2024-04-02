@@ -137,6 +137,7 @@ jobs:
             sudo tee /root/.pbuilderrc
           sudo mkdir -p $PBRT/hooks
           echo "#!/bin/sh
+          apt-get update
           apt-get -y install gnupg ${{ matrix.keyring }} ca-certificates
           apt-key adv --keyserver $KEYSERVER --recv-keys $SIGNING_KEY_ID" | \
             sudo tee $PBRT/hooks/G70Keys
