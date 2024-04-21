@@ -1,3 +1,9 @@
+vzlogger (0.8.5) unstable; urgency=medium
+
+  * Fixed missing user name rename in logrotate configuration. 
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sun, 21 Apr 2024 07:03:21 +0200
+
 vzlogger (0.8.4) unstable; urgency=medium
 
   * Added build for Raspbian.
