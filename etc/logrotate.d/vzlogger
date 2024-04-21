@@ -4,5 +4,5 @@
         copytruncate
         missingok
         notifempty
-	create 0664 vzlogger root
+	create 0664 _vzlogger root
 }
