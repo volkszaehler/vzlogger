@@ -9,6 +9,9 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
 VERSION=$(shell dpkg-parsechangelog --show-field Version 2>/dev/null | cut -f1 -d-)
 VERSION1=$(shell echo ${VERSION} | cut -f1 -d.)
 VERSION2=$(shell echo ${VERSION} | cut -f2 -d.)
