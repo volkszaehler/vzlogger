@@ -1,3 +1,10 @@
+vzlogger (0.8.5-1) unstable; urgency=medium
+
+  * Fixed logrotate conf user name
+  * Fixed passing of hardening flags to cmake 
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Fri, 26 Apr 2024 05:47:01 +0200
+
 vzlogger (0.8.3-1) unstable; urgency=medium
 
   * Initial upload (Closes: #864255) 
