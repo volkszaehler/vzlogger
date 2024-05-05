@@ -9,13 +9,14 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
+include /usr/share/dpkg/pkg-info.mk
 
-VERSION=$(shell dpkg-parsechangelog --show-field Version 2>/dev/null | cut -f1 -d-)
-VERSION1=$(shell echo ${VERSION} | cut -f1 -d.)
-VERSION2=$(shell echo ${VERSION} | cut -f2 -d.)
-VERSION3=$(shell echo ${VERSION} | cut -f3 -d.)
+VERSION1=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f1 -d.)
+VERSION2=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f2 -d.)
+VERSION3=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f3 -d.)
 
 execute_before_dh_auto_configure:
 	sed -i "s#set(VZLOGGER_MAJOR_VERSION.*)#set(VZLOGGER_MAJOR_VERSION ${VERSION1})#" CMakeLists.txt
@@ -39,4 +40,4 @@ execute_after_dh_auto_build:
 	pandoc -o vzlogger.8 -s -t man debian/vzlogger.8.md
 
 %:
-	dh $@ 
+	dh $@
