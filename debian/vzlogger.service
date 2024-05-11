@@ -1,5 +1,6 @@
 [Unit]
 Description=vzlogger
+Documentation=man:vzlogger(8)
 After=network.target ntp.service
 
 [Service]
@@ -8,6 +9,7 @@ User=_vzlogger
 Group=_vzlogger
 ExecReload=
 StandardOutput=null
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
