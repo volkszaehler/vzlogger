@@ -1,12 +1,14 @@
 vzlogger (0.8.5-1) unstable; urgency=medium
 
-  * Fixed logrotate conf user name
-  * Fixed passing of hardening flags to cmake
+  * New upstream release (Closes: #1070430)
+  * Fixed passing of hardening flags to cmake 
+  * Bumped Standards-Version to 4.7.0
+  * Fixed several Lintian ifo level issues 
 
- -- Joachim Zobel <jz-2017@heute-morgen.de>  Fri, 26 Apr 2024 05:47:01 +0200
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sat, 11 May 2024 13:40:14 +0200
 
 vzlogger (0.8.3-1) unstable; urgency=medium
 
-  * Initial upload (Closes: #864255)
+  * Initial upload (Closes: #864255) 
 
  -- Joachim Zobel <jz-2017@heute-morgen.de>  Mon, 04 Mar 2024 19:03:44 +0100
