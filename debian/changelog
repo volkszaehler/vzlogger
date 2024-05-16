@@ -1,3 +1,9 @@
+vzlogger (0.8.6) unstable; urgency=medium
+
+  * Release as base for an official Debian release
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Thu, 16 May 2024 21:35:26 +0200
+
 vzlogger (0.8.5) unstable; urgency=medium
 
   * Fixed missing user name rename in logrotate configuration.
