@@ -13,6 +13,9 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 include /usr/share/dpkg/pkg-info.mk
+# Debian flags invented usage of LTO, which in combination with google test on
+# Ubuntu 22.04.4 causes the errors supressed below
+export CXXFLAGS += -Wno-lto-type-mismatch -Wno-odr
 
 VERSION1=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f1 -d.)
 VERSION2=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f2 -d.)
