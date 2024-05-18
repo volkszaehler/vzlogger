@@ -1,3 +1,11 @@
+Description: Modify the configuration so tht it can "just work"
+ The configuration provided by upstream uses the volkszaehler middleware that
+ is not packaged. Since it is easier to start from a working configuration the
+ modified configurtion logs to influxdb instead.
+Author: Joachim Zobel <jz-2017@heute-morgen.de> 
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/etc/vzlogger.conf
 +++ b/etc/vzlogger.conf
 @@ -29,9 +29,11 @@
