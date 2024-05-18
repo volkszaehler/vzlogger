@@ -1,5 +1,3 @@
-diff --git a/etc/vzlogger.conf b/etc/vzlogger.conf
-index f30363e..48aa76b 100644
 --- a/etc/vzlogger.conf
 +++ b/etc/vzlogger.conf
 @@ -29,9 +29,11 @@
@@ -14,16 +12,16 @@ index f30363e..48aa76b 100644
      ],
  
      // mqtt client support (if ENABLE_MQTT set at cmake generation)
-@@ -153,6 +155,27 @@
-                 "middleware": "http://localhost/middleware.php"
+@@ -154,6 +156,28 @@
              }
          },
-+        {
-+            /* A minimal example that "just works" on Debian. 
+         {
++            /* A minimal example that "just works" on Debian.
 +               The steps needed are:
 +               1. Install influxdb: sudo apt install influxdb influxdb-client
 +               2. Start the client by calling influx on the command line and
 +               create db: CREATE DATABASE vzlogger
++               3. Set enabled to true in the configuration below
 +             */
 +            "enabled": false,               // disabled meters will be ignored
 +            "allowskip": false,                  // errors when opening meter may be ignored if enabled
@@ -35,10 +33,11 @@ index f30363e..48aa76b 100644
 +            "channel": {
 +                "uuid": "25a53b28-75ec-4764-a8a6-68587722ddab",
 +                // For details on the influxdb configuration see vzlogger.conf.InfluxDB
-+                "api": "influxdb",          
-+                "host": "localhost:8086" 
++                "api": "influxdb",
++                "host": "localhost:8086"
 +            }
 +        },
-         {
++        {
              "enabled": false,               // disabled meters will be ignored
              "allowskip": false,                  // errors when opening meter may be ignored if enabled
+ 
