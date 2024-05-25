@@ -1,3 +1,9 @@
+vzlogger (0.8.6-2) unstable; urgency=medium
+
+  * Added patch that removes an assert for a time duration (Closes: #1071728) 
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sat, 25 May 2024 07:41:06 +0200
+
 vzlogger (0.8.6-1) unstable; urgency=medium
 
   * New upstream release (Closes: #1070430)
