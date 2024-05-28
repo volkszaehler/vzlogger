@@ -40,20 +40,29 @@ static const char *option_type_str[] = {"null",   "boolean", "double", "int",
 										"object", "array",   "string"};
 
 Config_Options::Config_Options()
-	: _config("/etc/vzlogger.conf"), _log(""), _pds(0), _port(8080), _verbosity(0),
+	: _config("/etc/vzlogger.conf"), _log(""),
+#ifndef VZ_PICO
+          _pds(0),
+#endif // VZ_PICO
+          _port(8080), _verbosity(0),
 	  _comet_timeout(30), _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
 	  _time_machine(false) {
 	_logfd = NULL;
 }
 
 Config_Options::Config_Options(const std::string filename)
-	: _config(filename), _log(""), _pds(0), _port(8080), _verbosity(0), _comet_timeout(30),
+	: _config(filename), _log(""),
+#ifndef VZ_PICO
+          _pds(0),
+#endif // VZ_PICO
+          _port(8080), _verbosity(0), _comet_timeout(30),
 	  _buffer_length(-1), _retry_pause(15), _local(false), _foreground(false),
 	  _time_machine(false) {
 	_logfd = NULL;
 }
 
-void Config_Options::config_parse(MapContainer &mappings) {
+struct json_object * Config_Options::parseConfigFile() const
+{
 	struct json_object *json_cfg = NULL;
 	struct json_tokener *json_tok = json_tokener_new();
 
@@ -82,12 +91,13 @@ void Config_Options::config_parse(MapContainer &mappings) {
 		if (json_cfg != NULL) {
 #ifdef HAVE_CPP_REGEX
 			// let's ignore whitespace and single line comments here:
-			if (!std::regex_match((const char *)buf, regex)) {
+			if (!std::regex_match((const char *)buf, regex))
 #else
 			// let's accept at least whitespace here:
 			std::string strline(buf);
-			if (!std::all_of(strline.begin(), strline.end(), isspace)) {
+			if (!std::all_of(strline.begin(), strline.end(), isspace))
 #endif
+                        {
 				print(log_alert, "extra data after end of configuration in %s:%d", NULL,
 					  _config.c_str(), line);
 				throw vz::VZException("extra data after end of configuration");
@@ -109,6 +119,31 @@ void Config_Options::config_parse(MapContainer &mappings) {
 	/* householding */
 	fclose(file);
 	json_tokener_free(json_tok);
+
+  return json_cfg;
+}
+
+void Config_Options::config_parse(MapContainer &mappings, const char * configStr)
+{
+  struct json_object * json_cfg = NULL;
+
+  if(configStr != NULL)
+  {
+    struct json_tokener * json_tok = json_tokener_new();
+    json_cfg = json_tokener_parse_ex(json_tok, configStr, strlen(configStr));
+    if(json_tok->err > 1)
+    {
+      print(log_alert, "Error in config: %s at offset %d", NULL, json_tokener_error_desc(json_tok->err), json_tok->char_offset);
+      json_object_put(json_cfg);
+      json_cfg = NULL;
+      throw vz::VZException("Parse configuaration failed.");
+    }
+    json_tokener_free(json_tok);
+  }
+  else
+  {
+    json_cfg = this->parseConfigFile();
+  }
 
 	if (json_cfg == NULL)
 		throw vz::VZException("configuration file incomplete, missing closing braces/parens?");
@@ -158,7 +193,9 @@ void Config_Options::config_parse(MapContainer &mappings) {
 					Json::Ptr jso(new Json(json_object_array_get_idx(value, i)));
 					config_parse_meter(mappings, jso);
 				}
-			} else if ((strcmp(key, "push") == 0) && type == json_type_array) {
+			}
+#ifndef VZ_PICO
+                        else if ((strcmp(key, "push") == 0) && type == json_type_array) {
 				int len = json_object_array_length(value);
 				if (!_pds && len > 0) {
 					_pds = new PushDataServer(value);
@@ -166,6 +203,7 @@ void Config_Options::config_parse(MapContainer &mappings) {
 					print(log_error, "Ignoring push entry due to empty array or duplicate section",
 						  "push");
 			}
+#endif // VZ_PICO
 #ifdef ENABLE_MQTT
 			else if ((strcmp(key, "mqtt") == 0) && type == json_type_object) {
 				if (!mqttClient) {

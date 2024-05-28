@@ -36,7 +36,9 @@
 
 #ifndef _MeterMap_hpp_
 #define _MeterMap_hpp_
-#include <pthread.h>
+#ifdef VZ_USE_THREADS
+# include <pthread.h>
+#endif // VZ_USE_THREADS
 #include <vector>
 
 #include <Channel.hpp>
@@ -54,9 +56,15 @@ class MeterMap {
 	typedef std::vector<Channel::Ptr>::const_iterator const_iterator;
 
 	MeterMap(const std::list<Option> &options) : _meter(new Meter(options)) {
+#ifdef VZ_USE_THREADS
 		_thread_running = false;
+#endif // VZ_USE_THREADS
 	}
-	MeterMap(Meter *m) : _meter(m), _thread_running(false){};
+	MeterMap(Meter *m) : _meter(m)
+#ifdef VZ_USE_THREADS
+                             , _thread_running(false)
+#endif // VZ_USE_THREADS
+       {};
 	~MeterMap(){};
 	Meter::Ptr meter() { return _meter; }
 
@@ -75,6 +83,8 @@ class MeterMap {
 	 */
 	void registration();
 
+	void read();
+
 	/**
 	 *  Accessor to the channel list
 	 */
@@ -83,14 +93,24 @@ class MeterMap {
 	inline iterator end() { return _channels.end(); }
 	inline size_t size() { return _channels.size(); }
 
+#ifdef VZ_USE_THREADS
 	bool running() const { return _thread_running; }
+#else // VZ_USE_THREADS
+        int  isDueIn();
+        bool readyToSend();
+        void sendData();
+#endif // VZ_USE_THREADS
 
   private:
 	Meter::Ptr _meter;
 	std::vector<Channel::Ptr> _channels;
 
+#ifdef VZ_USE_THREADS
 	bool _thread_running; // flag if thread is started
 	pthread_t _thread;    // Thread data for meter (reading)
+#else // VZ_USE_THREADS
+        time_t lastRead;
+#endif // VZ_USE_THREADS
 };
 
 /**

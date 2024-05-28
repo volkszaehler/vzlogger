@@ -28,7 +28,12 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <curl/curl.h>
+#ifndef VZ_PICO
+# include <curl/curl.h>
+#else // VZ_PICO
+# include <lwip/init.h>
+#endif // VZ_PICO
+
 #include <json-c/json.h>
 #include <math.h>
 #include <stddef.h>
@@ -36,7 +41,11 @@
 #include <unistd.h>
 
 #include "Config_Options.hpp"
-#include "CurlSessionProvider.hpp"
+#ifdef VZ_PICO
+# include <pico/stdlib.h>
+#else // VZ_PICO
+# include "CurlSessionProvider.hpp"
+#endif // VZ_PICO
 #include <VZException.hpp>
 #include <api/Volkszaehler.hpp>
 
@@ -45,9 +54,15 @@ extern Config_Options options;
 const int MAX_CHUNK_SIZE = 64;
 
 vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
-	: ApiIF(ch), _last_timestamp(0), _lastReadingSent(0) {
+	: ApiIF(ch), _last_timestamp(0), _lastReadingSent(0)
+#ifdef VZ_PICO
+        ,_api(NULL)
+#endif // VZ_PICO
+{
 	OptionList optlist;
 	char agent[255];
+
+        print(log_debug, "Creating Volkszaehler API instance", "");
 
 	// parse options
 	try {
@@ -77,21 +92,58 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	}
 
 	// prepare header, uuid & url
-	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version()); // build user agent
 	_url = _middleware;
 	_url.append("/data/");
 	_url.append(channel()->uuid());
 	_url.append(".json");
 
+        print(log_debug, "Volkszaehler API: %s (timeout %d)", "", _url.c_str(), _curlTimeout);
+
+#ifdef VZ_PICO
+        _api = new vz::api::LwipIF(_curlTimeout);
+
+	sprintf(agent, "User-Agent: %s/%s (LwIP %s)", PACKAGE, VERSION, LWIP_VERSION_STRING); // build user agent
+        // is a std::set
+	_api->addHeader("Content-type: application/json");
+	_api->addHeader("Accept: application/json");
+	_api->addHeader(agent);
+
+        // Something like https://chives:8000/middleware.php"
+        char prot[10], h[128], url[512];
+        uint p;
+        if(sscanf(_middleware.c_str(), "%[^:]://%[^:]:%d/%s", prot, h, &p, url) == 4)
+        {
+          print(log_debug, "Volkszaehler API connecting %s:%d ...", "", h, p);
+          _api->connect(h, p);
+        }
+        else if(sscanf(_middleware.c_str(), "%[^:]://%[^:]/%s", prot, h, url) == 3)
+        {
+          print(log_debug, "Volkszaehler API connecting %s ...", "", h);
+          _api->connect(h);
+        }
+        else
+        {
+          throw vz::VZException("VZ-API: Cannot parse URL %s.", _middleware.c_str());
+        }
+
+        print(log_debug, "Volkszaehler API connection initiated.", "");
+
+#else // VZ_PICO
+	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version()); // build user agent
 	_api.headers = NULL;
 	_api.headers = curl_slist_append(_api.headers, "Content-type: application/json");
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
+#endif // VZ_PICO
 }
 
 vz::api::Volkszaehler::~Volkszaehler() {
 	if (_lastReadingSent)
 		delete _lastReadingSent;
+
+#ifdef VZ_PICO
+  delete _api;
+#endif // VZ_PICO
 }
 
 void vz::api::Volkszaehler::send() {
@@ -99,12 +151,57 @@ void vz::api::Volkszaehler::send() {
 	json_object *json_obj;
 
 	const char *json_str;
-	long int http_code;
-	CURLcode curl_code;
+	long int http_code = 0;
 
 	// initialize response
 	response.data = NULL;
 	response.size = 0;
+
+        print(log_debug, "Volkszaehler API sending data ...", channel()->name());
+
+#ifndef VZ_PICO
+	CURLcode curl_code;
+#endif // VZ_PICO
+
+        uint errOK = 0;
+        uint errCode = 0;
+        std::string errMsg = "OK";
+
+#ifdef VZ_PICO
+    // Throws exception
+    std::string url = "/middleware.php/data/";
+    url += channel()->uuid();
+    url += ".json";
+
+    uint state = _api->getState();
+    if((state == VZ_SRV_CONNECTING) && ((time(NULL) - _api->getConnectInit()) > (_curlTimeout * 2)))
+    {
+      print(log_debug, "Volkszaehler API connecting timed out (%d).", channel()->name(), (_curlTimeout * 2));
+      state = VZ_SRV_INIT;
+    }
+    
+    if(state == VZ_SRV_INIT)
+    {
+      // May happen, if the server closed the connection. Reconnect ...
+      print(log_debug, "Volkszaehler API reconnecting ...", channel()->name());
+      _api->connect();
+
+      // That will happen asynchronously, so cannot send anything right now
+      return;
+    }
+
+    if(state != VZ_SRV_READY)
+    {
+      print(log_debug, "NOT sending request - API in state %s", channel()->name(), _api->stateStr());
+      return;
+    }
+#endif // VZ_PICO
+
+    if(channel()->buffer()->size() == 0)
+    {
+      print(log_debug, "No data to send.", channel()->name());
+      return;
+    }
 
 	json_obj = api_json_tuples(channel()->buffer());
 	json_str = json_object_to_json_string(json_obj);
@@ -113,8 +210,61 @@ void vz::api::Volkszaehler::send() {
 		return;
 	}
 
-	_api.curl = curlSessionProvider
-					? curlSessionProvider->get_easy_session(_middleware)
+#ifdef VZ_PICO
+    // If we are here, the API is ready and there is something to send - do it
+
+    state =_api->postRequest(json_str, url.c_str());
+    print(log_debug, "POST request in state %d", "", state);
+
+    while(_api->getState() == VZ_SRV_SENDING)
+    {
+      print(log_debug, "Waiting for response ...", "");
+      sleep_ms(1000);
+    }
+
+    const char * resp = _api->getResponse();
+    if(resp == NULL || strlen(resp) == 0)
+    {
+      print(log_error, "NULL response", "");
+      return;
+    }
+
+// TODO Move that to LwipIF
+    // Scan and remove headers
+    uint num;
+    char buf[128], buf2[128];
+    while(strlen(resp) > 0)
+    {
+      if(resp[0] == '\r' && resp[1] == '\n')
+      {
+        print(log_debug, "HTTP empty line", "");
+      }
+      else if(sscanf(resp, "HTTP/%*d.%*d %d %[^\n]\n", &http_code, buf) == 2)
+      {
+        print(log_debug, "HTTP result: %d %s", "", http_code, buf);
+      }
+      else if((sscanf(resp, "%[^:]: %[^\n]\n", buf, buf2) == 2) && (buf[0] != '{')) // curly brace confuses vi }
+      {
+        print(log_debug, "HTTP header: %s %s", "", buf, buf2);
+      }
+      else
+      {
+        print(log_debug, "HTTP response payload: %s", "", resp);
+        response.size = strlen(resp);
+
+        // ORIG response.data = strdup(resp);
+        response.data = (char *) malloc(response.size + 1);
+        strcpy(response.data, resp);
+        printf("MALLOC %x\n", response.data);
+
+        break;
+      }
+
+      resp = strchr(resp, '\n') + 1;
+    }
+
+#else // VZ_PICO
+	_api.curl = curlSessionProvider ? curlSessionProvider->get_easy_session(_middleware)
 					: 0; // TODO add option to use parallel sessions. Simply add uuid() to the key.
 	if (!_api.curl) {
 		throw vz::VZException("CURL: cannot create handle.");
@@ -143,8 +293,14 @@ void vz::api::Volkszaehler::send() {
 	if (curlSessionProvider)
 		curlSessionProvider->return_session(_middleware, _api.curl);
 
+        errOK   = CURLE_OK;
+        errCode = curl_code;
+        errMsg  = curl_easy_strerror(curl_code);
+
+#endif // VZ_PICO
+
 	// check response
-	if (curl_code == CURLE_OK && http_code == 200) { // everything is ok
+	if (errCode == errOK && http_code == 200) { // everything is ok
 		print(log_debug, "CURL Request succeeded with code: %i", channel()->name(), http_code);
 		if (_values.size() <= (size_t)MAX_CHUNK_SIZE) {
 			print(log_finest, "emptied all (%d) values", channel()->name(), _values.size());
@@ -158,8 +314,8 @@ void vz::api::Volkszaehler::send() {
 		// clear buffer-readings
 		// channel()->buffer.sent = last->next;
 	} else { // error
-		if (curl_code != CURLE_OK) {
-			print(log_alert, "CURL: %s", channel()->name(), curl_easy_strerror(curl_code));
+		if (errCode != errOK) {
+			print(log_alert, "CURL: %s", channel()->name(), errMsg.c_str());
 		} else if (http_code != 200) {
 			char err[255];
 			api_parse_exception(response, err, 255);
@@ -171,11 +327,17 @@ void vz::api::Volkszaehler::send() {
 	free(response.data);
 	json_object_put(json_obj);
 
-	if ((curl_code != CURLE_OK || http_code != 200)) {
+	if ((errCode != errOK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
 			  channel()->name(), options.retry_pause());
+#ifdef VZ_PICO
+  sleep_ms(options.retry_pause() * 1000);
+#else // VZ_PICO
 		sleep(options.retry_pause());
+#endif // VZ_PICO
 	}
+
+  print(log_finest, "Volkszaehler API sending data complete.", "");
 }
 
 void vz::api::Volkszaehler::register_device() {}
@@ -291,6 +453,7 @@ void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err
 	json_tokener_free(json_tok);
 }
 
+#ifndef VZ_PICO
 int vz::api::curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_t size,
 										void *arg) {
 	Channel *ch = static_cast<Channel *>(arg);
@@ -348,3 +511,4 @@ size_t vz::api::curl_custom_write_callback(void *ptr, size_t size, size_t nmemb,
 
 	return realsize;
 }
+#endif // VZ_PICO

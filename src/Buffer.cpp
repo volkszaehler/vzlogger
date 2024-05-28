@@ -38,7 +38,9 @@
 
 Buffer::Buffer() : _keep(32), _last_avg(0) {
 	_newValues = false;
+#ifdef VZ_USE_THREADS
 	pthread_mutex_init(&_mutex, NULL);
+#endif // VZ_USE_THREADS
 	_aggmode = NONE;
 }
 
@@ -218,7 +220,9 @@ std::string Buffer::dump() {
 }
 
 Buffer::~Buffer() {
+#ifdef VZ_USE_THREADS
 	pthread_mutex_destroy(&_mutex);
+#endif // VZ_USE_THREADS
 	if (_last_avg)
 		delete _last_avg;
 }

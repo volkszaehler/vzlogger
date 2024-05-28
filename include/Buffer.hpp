@@ -29,7 +29,9 @@
 #define _BUFFER_H_
 
 #include <list>
-#include <pthread.h>
+#ifdef VZ_USE_THREADS
+# include <pthread.h>
+#endif // VZ_USE_THREADS
 #include <sys/time.h>
 
 #include <Reading.hpp>
@@ -65,9 +67,14 @@ class Buffer {
 	inline bool newValues() const { return _newValues; }
 	inline void clear_newValues() { _newValues = false; }
 
+#ifdef VZ_USE_THREADS
 	inline void lock() { pthread_mutex_lock(&_mutex); }
 	inline void unlock() { pthread_mutex_unlock(&_mutex); }
 	inline void wait(pthread_cond_t *condition) { pthread_cond_wait(condition, &_mutex); }
+#else // VZ_USE_THREADS
+	inline void lock() { _locked = true; }
+	inline void unlock() { _locked = false; }
+#endif // VZ_USE_THREADS
 
 	inline void have_newValues() { _newValues = true; }
 
@@ -85,7 +92,11 @@ class Buffer {
 
 	size_t _keep; /**< number of readings to cache for local interface */
 
+#ifdef VZ_USE_THREADS
 	pthread_mutex_t _mutex;
+#else // VZ_USE_THREADS
+        bool _locked;
+#endif // VZ_USE_THREADS
 
 	Reading
 		*_last_avg; // keeps value and time from last reading from aggregate call for aggmode AVG

@@ -33,7 +33,12 @@
 #ifndef _Volkszaehler_hpp_
 #define _Volkszaehler_hpp_
 
-#include <curl/curl.h>
+#ifdef VZ_PICO
+# include "LwipIF.hpp"
+#else // VZ_PICO
+# include <curl/curl.h>
+#endif // VZ_PICO
+
 #include <json-c/json.h>
 #include <stdint.h>
 
@@ -49,10 +54,12 @@ typedef struct {
 	size_t size;
 } CURLresponse;
 
+#ifndef VZ_PICO
 typedef struct {
 	CURL *curl;
 	struct curl_slist *headers;
 } api_handle_t;
+#endif // VZ_PICO
 
 class Volkszaehler : public ApiIF {
   public:
@@ -87,7 +94,11 @@ class Volkszaehler : public ApiIF {
 	void api_parse_exception(CURLresponse response, char *err, size_t n);
 
   private:
+#ifdef VZ_PICO
+	vz::api::LwipIF * _api;
+#else // VZ_PICO
 	api_handle_t _api;
+#endif // VZ_PICO
 
 	// Volatil
 	std::list<Reading> _values;
@@ -97,6 +108,8 @@ class Volkszaehler : public ApiIF {
 
 }; // class Volkszaehler
 
+#ifdef VZ_PICO
+#else // VZ_PICO
 /**
  * Reformat CURLs debugging output
  */
@@ -104,6 +117,7 @@ int curl_custom_debug_callback(CURL *curl, curl_infotype type, char *data, size_
 							   void *custom);
 
 size_t curl_custom_write_callback(void *ptr, size_t size, size_t nmemb, void *data);
+#endif // VZ_PICO
 
 } // namespace api
 } // namespace vz

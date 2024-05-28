@@ -34,11 +34,20 @@
 #define _VZException_hpp_
 #include <exception>
 #include <string>
+#include <stdarg.h>
 
 namespace vz {
 class VZException : public std::exception {
   public:
-	explicit VZException(const std::string &reason) : _reason(reason) {}
+	explicit VZException(const std::string &reason, ...) 
+        {
+          char buf[512];
+          va_list args;
+          va_start(args, reason);
+          vsnprintf(buf, sizeof(buf) - 1, reason.c_str(), args);
+          va_end(args);
+          _reason = buf;
+        }
 	virtual ~VZException() throw() {}
 	virtual const char *what() const throw() { return reason().c_str(); }
 	virtual const std::string &reason() const { return _reason; }

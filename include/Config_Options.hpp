@@ -35,7 +35,9 @@
 
 #include <MeterMap.hpp>
 #include <Options.hpp>
-#include <PushData.hpp>
+#ifndef VZ_PICO
+# include <PushData.hpp>
+#endif // VZ_PICO
 #include <meter_protocol.hpp>
 
 /**
@@ -46,8 +48,10 @@ class Config_Options {
 	Config_Options();
 	Config_Options(const std::string filename);
 	~Config_Options() {
+#ifndef VZ_PICO
 		if (_pds)
 			delete _pds;
+#endif // VZ_PICO
 	};
 
 	/**
@@ -59,7 +63,7 @@ class Config_Options {
 	 * @param config_options_t *options a pointer to a structure of global configuration options
 	 * @return int non-zero on success
 	 */
-	void config_parse(MapContainer &mappings);
+        void config_parse(MapContainer &mappings, const char * configStr = NULL);
 	void config_parse_meter(MapContainer &mappings, Json::Ptr jso);
 	void config_parse_channel(Json &jso, MeterMap &metermap);
 
@@ -98,14 +102,19 @@ class Config_Options {
 	void doRegistration(const bool v) { _doRegistration = v; }
 
 	void haveTimeMachine(const bool v) { _time_machine = v; }
-
+#ifndef VZ_PICO
 	PushDataServer *pushDataServer() const { return _pds; }
+#endif // VZ_PICO
 
   private:
+        struct json_object * parseConfigFile() const;
+
 	std::string _config; // filename of configuration
 	std::string _log;    // filename for logging
 	FILE *_logfd;
+#ifndef VZ_PICO
 	PushDataServer *_pds;
+#endif // VZ_PICO
 
 	int _port;          // TCP port for local interface
 	int _verbosity;     // verbosity level

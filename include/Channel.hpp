@@ -27,27 +27,41 @@
 #define _CHANNEL_H_
 
 #include <iostream>
-#include <pthread.h>
+
+#ifdef VZ_USE_THREADS
+# include <pthread.h>
+#endif // VZ_USE_THREADS
 
 #include "Buffer.hpp"
 #include "Reading.hpp"
 #include <Options.hpp>
 #include <VZException.hpp>
-#include <threads.h>
+
+#ifdef VZ_USE_THREADS
+# include <threads.h>
+#endif // VZ_USE_THREADS
+
+namespace vz{
+ class ApiIF;
+}
 
 class Channel {
 
   public:
 	typedef vz::shared_ptr<Channel> Ptr;
+
+#ifdef VZ_USE_THREADS
 	// This shared_ptr is set when a logging_thread for an object of this class is started.
 	// Inside the logging_thread, a Channel::Ptr is used. Data is passed via the void*
 	// argument of pthread_create, and thus directly passing a shared pointer will break it.
 	Ptr _this_forthread;
+#endif // VZ_USE_THREADS
 
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid,
 			ReadingIdentifier::Ptr pIdentifier);
 	virtual ~Channel();
 
+#ifdef VZ_USE_THREADS
 	// Doesn't touch the object, could also be static, but static breaks google mock.
 	void start(Ptr this_shared) {
 		// Copy the owner's shared pointer for the logging_thread into this member.
@@ -71,6 +85,9 @@ class Channel {
 	}
 
 	bool running() const { return _thread_running; }
+#endif // VZ_USE_THREADS
+
+        void sendData();
 
 	const char *name() const { return _name.c_str(); }
 	std::list<Option> &options() { return _options; }
@@ -92,6 +109,7 @@ class Channel {
 
 	size_t size() const { return _buffer->size(); }
 
+#ifdef VZ_USE_THREADS
 	inline void notify() {
 		_buffer->lock();
 		pthread_cond_broadcast(&condition);
@@ -105,12 +123,15 @@ class Channel {
 		_buffer->clear_newValues();
 		_buffer->unlock();
 	}
+#endif // VZ_USE_THREADS
 
 	int duplicates() const { return _duplicates; }
 
   private:
 	static int instances;
+#ifdef VZ_USE_THREADS
 	bool _thread_running; // flag if thread is started
+#endif // VZ_USE_THREADS
 
 	int id;            // only for internal usage & debugging
 	std::string _name; // name of the channel
@@ -121,8 +142,12 @@ class Channel {
 	ReadingIdentifier::Ptr _identifier; // channel identifier (OBIS, string)
 	Reading *_last;                     // most recent reading
 
+#ifdef VZ_USE_THREADS
 	pthread_cond_t condition; // pthread syncronization to notify logging thread and local webserver
 	pthread_t _thread;        // pthread for asynchronus logging
+#else // VZ_USE_THREADS
+	vz::shared_ptr<vz::ApiIF> api;
+#endif // VZ_USE_THREADS
 
 	std::string _uuid;        // unique identifier for middleware
 	std::string _apiProtocol; // protocol of api to use for logging

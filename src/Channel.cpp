@@ -34,11 +34,29 @@
 
 #include "Channel.hpp"
 
+#include <ApiIF.hpp>
+
+#ifdef VZ_USE_API_INFLUXDB
+# include <api/InfluxDB.hpp>
+#endif // VZ_USE_API_INFLUXDB
+
+#ifdef VZ_USE_API_MYSMARTGRID
+# include <api/MySmartGrid.hpp>
+#endif // VZ_USE_API_MYSMARTGRID
+
+#include <api/Null.hpp>
+#include <api/Volkszaehler.hpp>
+
+#include <Config_Options.hpp>
+
 int Channel::instances = 0;
 
 Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtocol,
-				 const std::string uuid, ReadingIdentifier::Ptr pIdentifier)
-	: _thread_running(false), _options(pOptions), _buffer(new Buffer()), _identifier(pIdentifier),
+				 const std::string uuid, ReadingIdentifier::Ptr pIdentifier) :
+#ifdef VZ_USE_THREADS
+          _thread_running(false),
+#endif // VZ_USE_THREADS
+          _options(pOptions), _buffer(new Buffer()), _identifier(pIdentifier),
 	  _last(0), _uuid(uuid), _apiProtocol(apiProtocol), _duplicates(0) {
 	id = instances++;
 
@@ -86,7 +104,10 @@ Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtoco
 		throw;
 	}
 
+#ifdef VZ_USE_THREADS
 	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
+#endif // VZ_USE_THREADS
+  print(log_debug, "Created channel (%x).", name(), this);
 }
 
 /**
@@ -96,3 +117,49 @@ Channel::~Channel() {
 	// this hangs is the readingthread was pthread_cancelled during wait!
 	// pthread_cond_destroy(&condition);
 }
+
+// Send data - taken from threads.cpp
+void Channel::sendData()
+{
+  extern Config_Options options;
+
+  print(log_debug, "Sending data for %s-api.", name(), apiProtocol().c_str());
+
+  // create configured api interfaces
+  // NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
+  if(api == NULL)
+  {
+#ifdef VZ_USE_API_MYSMARTGRID
+    if (0 == strcasecmp(apiProtocol().c_str(), "mysmartgrid")) {
+      api = vz::ApiIF::Ptr(new vz::api::MySmartGrid(this, this->options());
+      print(log_debug, "Using MySmartGrid api.", name());
+    } else
+#endif // VZ_USE_API_MYSMARTGRID
+#ifdef VZ_USE_API_INFLUXDB
+    if (0 == strcasecmp(apiProtocol().c_str(), "influxdb")) {
+      api = vz::ApiIF::Ptr(new vz::api::InfluxDB(this, this->options()));
+      print(log_debug, "Using InfluxDB api", name());
+    } else
+#endif // VZ_USE_API_INFLUXDB
+    if (0 == strcasecmp(apiProtocol().c_str(), "null")) {
+      api = vz::ApiIF::Ptr(new vz::api::Null(Channel::Ptr(this), this->options()));
+      print(log_debug, "Using null api- meter data available via local httpd if enabled.",
+          name());
+    } else {
+      if (strcasecmp(apiProtocol().c_str(), "volkszaehler"))
+        print(log_alert, "Wrong config! api: <%s> is unknown!", name(),
+          apiProtocol().c_str());
+      // try to use volkszaehler api anyhow:
+
+      // default == volkszaehler
+      print(log_debug, "Using default volkszaehler api.", name());
+      api = vz::ApiIF::Ptr(new vz::api::Volkszaehler(Channel::Ptr(this), this->options()));
+      print(log_debug, "Created volkszaehler api.", name());
+    }
+  }
+
+  print(log_debug, "Sending data ...", name());
+  api->send();
+  print(log_finest, "Sending completed.", name());
+}
+

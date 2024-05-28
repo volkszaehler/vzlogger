@@ -30,22 +30,29 @@
 #include "Options.hpp"
 #include <VZException.hpp>
 #include <common.h>
-#include <protocols/MeterD0.hpp>
-#include <protocols/MeterExec.hpp>
-#include <protocols/MeterFile.hpp>
-#include <protocols/MeterFluksoV2.hpp>
-#include <protocols/MeterRandom.hpp>
-#include <protocols/MeterS0.hpp>
-#ifdef SML_SUPPORT
-#include <protocols/MeterSML.hpp>
-#endif
-#ifdef OCR_SUPPORT
-#include "protocols/MeterOCR.hpp"
-#endif
-#include "protocols/MeterW1therm.hpp"
-#ifdef OMS_SUPPORT
-#include "protocols/MeterOMS.hpp"
-#endif
+
+#ifdef VZ_PICO
+# include <protocols/MeterOnboardTemp.hpp>
+# include <protocols/MeterSCT013.hpp>
+#else // VZ_PICO
+# include <protocols/MeterD0.hpp>
+# include <protocols/MeterExec.hpp>
+# include <protocols/MeterFile.hpp>
+# include <protocols/MeterFluksoV2.hpp>
+# include <protocols/MeterRandom.hpp>
+# include <protocols/MeterS0.hpp>
+# ifdef SML_SUPPORT
+#  include <protocols/MeterSML.hpp>
+# endif
+# ifdef OCR_SUPPORT
+#  include "protocols/MeterOCR.hpp"
+# endif
+# include "protocols/MeterW1therm.hpp"
+# ifdef OMS_SUPPORT
+#  include "protocols/MeterOMS.hpp"
+# endif
+#endif // VZ_PICO
+
 //#include <protocols/.h>
 
 #define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS)                                               \
@@ -55,6 +62,10 @@ int Meter::instances = 0;
 
 static const meter_details_t protocols[] = {
 	// name, alias, description, max_rds
+#ifdef VZ_PICO
+	METER_DETAIL(onboardTemp, OnboardTemp, "Raspberry Pico Onboard Temperature", 1),
+	METER_DETAIL(sct013, SCT013, "SCT013 current sensor", 2),
+#else // VZ_PICO
 	METER_DETAIL(file, File, "Read from file or fifo", 32),
 	METER_DETAIL(exec, Exec, "Parse program output", 32),
 	METER_DETAIL(random, Random, "Generate random values with a random walk", 1),
@@ -71,6 +82,7 @@ static const meter_details_t protocols[] = {
 #ifdef OMS_SUPPORT
 	METER_DETAIL(oms, OMS, "OMS (M-BUS) protocol based devices", 100),
 #endif
+#endif // VZ_PICO
 	//{} /* stop condition for iterator */
 	METER_DETAIL(none, NULL, NULL, 0),
 };
@@ -141,6 +153,7 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		throw;
 	}
 	switch (_protocol_id) {
+#ifndef VZ_PICO
 	case meter_protocol_file:
 		_protocol = vz::protocol::Protocol::Ptr(new MeterFile(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
@@ -187,6 +200,16 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		_identifier = ReadingIdentifier::Ptr(new ObisIdentifier());
 		break;
 #endif
+#else // VZ_PICO
+	case meter_protocol_onboardTemp:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterOnboardTemp(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
+	case meter_protocol_sct013:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterSCT013(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
+#endif // VZ_PICO
 	default:
 		break;
 	}

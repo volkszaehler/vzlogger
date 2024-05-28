@@ -38,5 +38,7 @@ typedef enum meter_procotol {
 	meter_protocol_ocr,
 	meter_protocol_w1therm,
 	meter_protocol_oms,
+	meter_protocol_onboardTemp,
+	meter_protocol_sct013
 } meter_protocol_t;
 #endif /* _meter_protocol_hpp_ */

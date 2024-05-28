@@ -105,6 +105,7 @@ ReadingIdentifier::Ptr reading_id_parse(meter_protocol_t protocol, const char *s
 	case meter_protocol_s0:
 	case meter_protocol_ocr:
 	case meter_protocol_w1therm:
+	case meter_protocol_sct013:
 		rid = ReadingIdentifier::Ptr(new StringIdentifier(string));
 		break;
 
@@ -149,9 +150,50 @@ size_t Reading::unparse(
 #endif
 }
 
+bool ReadingIdentifier::operator==(ReadingIdentifier const &cmp) const {
+	return this->compare(this, &cmp);
+}
+
+bool ReadingIdentifier::compare(ReadingIdentifier const *lhs, ReadingIdentifier const *rhs) const {
+	if (ObisIdentifier const *lhsx = dynamic_cast<ObisIdentifier const *>(lhs)) {
+		if (ObisIdentifier const *rhsx = dynamic_cast<ObisIdentifier const *>(rhs)) {
+			return *lhsx == *rhsx;
+		} else {
+			return false;
+		}
+	} else if (StringIdentifier const *lhsx = dynamic_cast<StringIdentifier const *>(lhs)) {
+		if (StringIdentifier const *rhsx = dynamic_cast<StringIdentifier const *>(rhs)) {
+			return *lhsx == *rhsx;
+		} else {
+			return false;
+		}
+	} else if (ChannelIdentifier const *lhsx = dynamic_cast<ChannelIdentifier const *>(lhs)) {
+		if (ChannelIdentifier const *rhsx = dynamic_cast<ChannelIdentifier const *>(rhs)) {
+			return *lhsx == *rhsx;
+		} else {
+			return false;
+		}
+	} else if (NilIdentifier const *lhsx = dynamic_cast<NilIdentifier const *>(lhs)) {
+		if (NilIdentifier const *rhsx = dynamic_cast<NilIdentifier const *>(rhs)) {
+			(void)lhsx;
+			(void)rhsx; // avoid compiler warning about unused vars.
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	return false;
+}
+
 size_t ObisIdentifier::unparse(char *buffer, size_t n) { return _obis.unparse(buffer, n); }
+bool ObisIdentifier::operator==(ObisIdentifier const &cmp) const { return (_obis == cmp.obis()); }
 
 /* StringIdentifier */
+bool StringIdentifier::operator==(StringIdentifier const &cmp) const {
+	return (_string == cmp._string);
+}
+
 void StringIdentifier::parse(const char *string) { _string = string; }
 
 size_t StringIdentifier::unparse(char *buffer, size_t n) {
@@ -167,6 +209,10 @@ size_t StringIdentifier::unparse(char *buffer, size_t n) {
 }
 
 /* ChannelIdentifier */
+bool ChannelIdentifier::operator==(ChannelIdentifier const &cmp) const {
+	return (_channel == cmp._channel);
+}
+
 void ChannelIdentifier::parse(const char *string) {
 	char type[13];
 	int channel;
