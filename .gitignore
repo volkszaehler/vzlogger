@@ -4,7 +4,6 @@
 src/vzlogger
 
 # directories from install.sh
-libs/
 build*/
 
 # Compiled Object files
