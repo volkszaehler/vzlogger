@@ -28,7 +28,6 @@ Makefile
 autom4te.cache
 config.status
 config.log
-config.h
 stamp-h1
 libtool
 
