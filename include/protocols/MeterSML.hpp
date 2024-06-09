@@ -84,7 +84,7 @@ class MeterSML : public vz::protocol::Protocol {
 	 * @param rd the reading to store to
 	 * @return true if it is a valid entry
 	 */
-	bool _parse(sml_list *list, Reading *rd);
+	bool _parse(sml_list *entry, double *value, ReadingIdentifier **rid, timeval *tv);
 
 	/**
 	 * Open serial port by device
