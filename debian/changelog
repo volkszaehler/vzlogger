@@ -1,3 +1,9 @@
+vzlogger (0.8.7) unstable; urgency=medium
+
+  * Added OMS support to the native Debian build
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sat, 15 Jun 2024 13:33:54 +0200
+
 vzlogger (0.8.6) unstable; urgency=medium
 
   * Release as base for an official Debian release
