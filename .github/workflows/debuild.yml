@@ -36,6 +36,8 @@ jobs:
           sudo apt-get update
       - name: update repo information
         run: sudo apt-get update
+      - name: install tzdata
+        run: DEBIAN_FRONTEND=noninteractive TZ="Europe/Berlin" apt-get -y install tzdata
       - name: install devscripts
         run: sudo apt-get install equivs devscripts pipx hub
       - name: install dependencies
