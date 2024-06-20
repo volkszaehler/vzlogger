@@ -16,8 +16,6 @@ include /usr/share/dpkg/pkg-info.mk
 # Debian flags invented usage of LTO, which in combination with google test on
 # Ubuntu 22.04.4 causes the errors supressed below
 export CXXFLAGS += -Wno-lto-type-mismatch -Wno-odr
-# Needed for TEST(mock_MeterOMS, first_packets)
-export TZ="Europe/Berlin"
 
 VERSION1=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f1 -d.)
 VERSION2=$(shell echo ${DEB_VERSION_UPSTREAM} | cut -f2 -d.)
