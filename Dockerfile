@@ -25,7 +25,8 @@ RUN apk add --no-cache \
     libunistring-dev \
     automake \
     autoconf \
-    gtest-dev
+    gtest-dev \
+    libgpiod-dev 
 
 WORKDIR /vzlogger
 
@@ -66,7 +67,8 @@ RUN apk add --no-cache \
     mosquitto-libs \
     libunistring \
     libstdc++ \
-    libgcc
+    libgcc \
+    libgpiod
 
 # libsml is linked statically => no need to copy
 COPY --from=builder /usr/local/bin/vzlogger /usr/local/bin/vzlogger
