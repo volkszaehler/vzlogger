@@ -20,8 +20,6 @@ set(VERSION_DATE "2018-08-04")
 set(PACKAGE_STRING "${PROJECT_NAME} ${VZLOGGER_RPM_VERSION}")
 set(VERSION "${VZLOGGER_RPM_VERSION}")
 set(CMAKE_VERBOSE_MAKEFILE 1)
-# Needed for TEST(mock_MeterOMS, first_packets)
-set(ENV{TZ} "Europe/Berlin")
 
 # debug build, on by default
 ADD_DEFINITIONS(-g3)
