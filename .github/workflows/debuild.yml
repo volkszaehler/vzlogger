@@ -27,6 +27,11 @@ jobs:
       - name: Set env
         # Here we are setting a variable from an expression.
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      - name: Set timezone
+        # Needed for TEST(mock_MeterOMS, first_packets)
+        run: |
+          sudo timedatectl set-timezone "Europe/Berlin"
+          sudo dpkg-reconfigure --frontend noninteractive tzdata
       - name: add cloudsmith repo
         run: |
           LISTENTRY="deb [signed-by=$KEYFILE] $CLOUDURL/debian trixie main"
@@ -107,6 +112,11 @@ jobs:
     env:
       PBRT: /var/cache/pbuilder
     steps:
+      - name: Set timezone
+        # Needed for TEST(mock_MeterOMS, first_packets)
+        run: |
+          sudo timedatectl set-timezone "Europe/Berlin"
+          sudo dpkg-reconfigure --frontend noninteractive tzdata
       - name: update repo information
         run: sudo apt-get update
       - name: install archive keyring
