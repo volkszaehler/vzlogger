@@ -88,7 +88,7 @@ IF(GCOV_PATH AND LCOV_PATH AND GENHTML_PATH)
         COMMAND vzlogger_unit_tests
         COMMAND mock_metermap
         COMMAND mock_MeterW1therm
-        COMMAND mock_MeterOMS
+        COMMAND TZ="Europe/Berlin" mock_MeterOMS
         COMMAND mock_MeterS0
 
         # Capturing lcov counters and generating report
