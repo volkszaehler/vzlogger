@@ -58,7 +58,8 @@ Debian armhf packages do not run on Raspberry Pi 1 although the architecture
 has been named armhf in Raspbian. Using "Raspbian armhf" packages fixes that.
 For RPi 2 and above Debian packages run on Raspberry Pi OS. 
 
-Our packages are built with MQTT support, but without OMS support.
+Our packages are built with MQTT support. The package that is in Debian is 
+built without OMS support while starting with 0.8.7 ours is. 
 
 The packages attached to the release are meant for Debian trixie. The full set
 of packages is provided through a repository graciously provided by 
@@ -95,7 +96,16 @@ apt install vzlogger
 ```
 
 An official Debian vzlogger package is currently in unstable.
- 
+
+OMS Support
+-------------
+
+We have packaged libmbus and are building our package with OMS support since 
+0.8.7. Since we have no idea about usage and usability of our OMS support we
+wold appreciate a short note from anyone using it or trying to use it in our 
+[Future of OMS support](https://github.com/volkszaehler/vzlogger/issues/650) 
+issue.
+
 
 Mailing List
 -------------
