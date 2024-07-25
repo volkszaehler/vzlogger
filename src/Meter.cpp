@@ -33,7 +33,7 @@
 
 #ifdef VZ_PICO
 # include <protocols/MeterOnboardTemp.hpp>
-# include <protocols/MeterSCT013.hpp>
+# include <protocols/MeterEmonLib.hpp>
 #else // VZ_PICO
 # include <protocols/MeterD0.hpp>
 # include <protocols/MeterExec.hpp>
@@ -64,7 +64,7 @@ static const meter_details_t protocols[] = {
 	// name, alias, description, max_rds
 #ifdef VZ_PICO
 	METER_DETAIL(onboardTemp, OnboardTemp, "Raspberry Pico Onboard Temperature", 1),
-	METER_DETAIL(sct013, SCT013, "SCT013 current sensor", 2),
+	METER_DETAIL(emonlib, EmonLib, "EmonLib current and voltage", 5),
 #else // VZ_PICO
 	METER_DETAIL(file, File, "Read from file or fifo", 32),
 	METER_DETAIL(exec, Exec, "Parse program output", 32),
@@ -205,8 +205,8 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		_protocol = vz::protocol::Protocol::Ptr(new MeterOnboardTemp(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 		break;
-	case meter_protocol_sct013:
-		_protocol = vz::protocol::Protocol::Ptr(new MeterSCT013(pOptions));
+	case meter_protocol_emonlib:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterEmonLib(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 		break;
 #endif // VZ_PICO

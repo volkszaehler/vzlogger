@@ -58,6 +58,7 @@ class MeterMap {
 	MeterMap(const std::list<Option> &options) : _meter(new Meter(options)) {
 #ifdef VZ_USE_THREADS
 		_thread_running = false;
+                first_reading = true;
 #endif // VZ_USE_THREADS
 	}
 	MeterMap(Meter *m) : _meter(m)
@@ -98,8 +99,8 @@ class MeterMap {
 #else // VZ_USE_THREADS
         int  isDueIn();
         bool readyToSend();
-        void sendData();
 #endif // VZ_USE_THREADS
+        void sendData();
 
   private:
 	Meter::Ptr _meter;
@@ -108,6 +109,7 @@ class MeterMap {
 #ifdef VZ_USE_THREADS
 	bool _thread_running; // flag if thread is started
 	pthread_t _thread;    // Thread data for meter (reading)
+        bool first_reading;
 #else // VZ_USE_THREADS
         time_t lastRead;
 #endif // VZ_USE_THREADS

@@ -87,7 +87,8 @@ class Channel {
 	bool running() const { return _thread_running; }
 #endif // VZ_USE_THREADS
 
-        void sendData();
+        void sendData(Ptr this_shared);
+	vz::shared_ptr<vz::ApiIF> connect(Ptr this_shared);
 
 	const char *name() const { return _name.c_str(); }
 	std::list<Option> &options() { return _options; }
@@ -145,9 +146,8 @@ class Channel {
 #ifdef VZ_USE_THREADS
 	pthread_cond_t condition; // pthread syncronization to notify logging thread and local webserver
 	pthread_t _thread;        // pthread for asynchronus logging
-#else // VZ_USE_THREADS
-	vz::shared_ptr<vz::ApiIF> api;
 #endif // VZ_USE_THREADS
+	vz::shared_ptr<vz::ApiIF> api;
 
 	std::string _uuid;        // unique identifier for middleware
 	std::string _apiProtocol; // protocol of api to use for logging

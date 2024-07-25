@@ -15,14 +15,14 @@ option(VZ_USE_METER_D0 "" ON)
 option(VZ_USE_METER_EXEC "" ON)
 option(VZ_USE_METER_FILE "" ON)
 option(VZ_USE_METER_FLUKSOV2 "" ON)
-option(VZ_USE_METER_OCR "" ON)
-option(VZ_USE_METER_OCRTESSERACT "" ON)
-option(VZ_USE_METER_OMS "" ON)
+option(VZ_USE_METER_OCR "" OFF)
+option(VZ_USE_METER_OCRTESSERACT "" OFF)
+option(VZ_USE_METER_OMS "" OFF)
 option(VZ_USE_METER_RANDOM "" ON)
 option(VZ_USE_METER_S0 "" ON)
-option(VZ_USE_METER_SML "" ON)
+option(VZ_USE_METER_SML "" OFF)
 option(VZ_USE_METER_W1THERM "" ON)
-option(VZ_USE_METER_PICO_SCT013 "" OFF)
+option(VZ_USE_METER_PICO_EMONLIB "" OFF)
 option(VZ_USE_METER_PICO_ONBOARD_TEMP "" OFF)
 
 option(VZ_USE_HTTPS "" OFF)
@@ -32,8 +32,8 @@ if(VZ_BUILD_ON_PICO)
 
   include_directories(${CMAKE_SOURCE_DIR}/include)
   include_directories(${CMAKE_SOURCE_DIR}/libs)
+  include_directories(${CMAKE_SOURCE_DIR}/libs/EmonLib)
   include_directories(${CMAKE_SOURCE_DIR})
-  include_directories(${CURL_SOURCE_DIR}/include)
 
   include_directories(${PICO_SDK_PATH}/lib/lwip/src/include/compat/posix
                     ${PICO_LWIP_PATH}/src/include
@@ -70,15 +70,18 @@ if(VZ_BUILD_ON_PICO)
   set(VZ_USE_METER_SML OFF)
   set(VZ_USE_METER_W1THERM OFF)
 
-  set(VZ_USE_METER_PICO_SCT013 ON)
+  set(VZ_USE_METER_PICO_EMONLIB ON)
   set(VZ_USE_METER_PICO_ONBOARD_TEMP ON)
 
   set(VZ_USE_CURL OFF)
   set(VZ_USE_ALTCP ON)
   set(VZ_USE_HTTPS OFF)
 
-  add_compile_options(-DPICO_DEBUG_MALLOC=1 -DPICO_PANIC_FUNCTION=vzlogger_panic)
+  # add_compile_options(-DPICO_DEBUG_MALLOC=1 -DPICO_PANIC_FUNCTION=vzlogger_panic)
+  add_compile_options(-DPICO_PANIC_FUNCTION=vzlogger_panic)
 
+else(VZ_BUILD_ON_PICO)
+  add_compile_options(-DVZ_USE_THREADS=1)
 endif(VZ_BUILD_ON_PICO)
 
 add_subdirectory(api)
@@ -162,6 +165,7 @@ if(VZ_BUILD_ON_PICO)
           hardware_adc
           proto vz vz-api
           json-c
+          emonlib
           )
 #  target_link_libraries(vzlogger -fno-omit-frame-pointer -mapcs-frame -funwind-tables -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,realloc -Wl,-wrap,free)
 

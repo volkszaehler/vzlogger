@@ -35,19 +35,13 @@
  */
 #include <math.h>
 
+#ifdef LOCAL_SUPPORT
+# include "local.h"
+#endif // LOCAL_SUPPORT
+
 #include <Config_Options.hpp>
+#include <ApiIF.hpp>
 #include <MeterMap.hpp>
-
-#ifdef VZ_USE_API_INFLUXDB
-# include <api/InfluxDB.hpp>
-#endif // VZ_USE_API_INFLUXDB
-
-#ifdef VZ_USE_API_MYSMARTGRID
-# include <api/MySmartGrid.hpp>
-#endif // VZ_USE_API_MYSMARTGRID
-
-#include <api/Null.hpp>
-#include <api/Volkszaehler.hpp>
 
 extern Config_Options options; /* global application options */
 
@@ -121,36 +115,8 @@ void MeterMap::registration() {
 	}
 	for (iterator ch = _channels.begin(); ch != _channels.end(); ch++) {
 		// create configured api interfaces
-		// NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be
 		// updated
-		vz::ApiIF::Ptr api;
-
-#ifdef VZ_USE_API_MYSMARTGRID
-                if (0 == strcasecmp(ch->apiProtocol().c_str(), "mysmartgrid")) {
-                  api = vz::ApiIF::Ptr(new vz::api::MySmartGrid(ch, ch->options());
-                  print(log_debug, "Using MySmartGrid api.", ch->name());
-                } else
-#endif // VZ_USE_API_MYSMARTGRID
-#ifdef VZ_USE_API_INFLUXDB
-                if (0 == strcasecmp(ch->apiProtocol().c_str(), "influxdb")) {
-                  api = vz::ApiIF::Ptr(new vz::api::InfluxDB(ch, ch->options()));
-                  print(log_debug, "Using InfluxDB api", ch->name());
-                } else
-#endif // VZ_USE_API_INFLUXDB
-
-		if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "null")) {
-			api = vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
-			print(log_debug, "Using null api - meter data available via local httpd if enabled.",
-				  (*ch)->name());
-		} else {
-			if (strcasecmp((*ch)->apiProtocol().c_str(), "volkszaehler"))
-				print(log_alert, "Wrong config! api: <%s> is unknown!", (*ch)->name(),
-					  (*ch)->apiProtocol().c_str());
-			// try to use volkszaehler api anyhow:
-			api = vz::ApiIF::Ptr(new vz::api::Volkszaehler(*ch, (*ch)->options()));
-			print(log_debug, "Using default volkszaehler api.", (*ch)->name());
-		}
-
+		vz::ApiIF::Ptr api = (*ch)->connect(*ch);
 		api->register_device();
 	}
 	printf("..done\n");
@@ -177,6 +143,17 @@ void MeterMap::read()
 
   do
   {
+#ifdef VZ_USE_THREADS
+    _safe_to_cancel();
+    int interval = mtr->interval();
+    if (interval > 0 && !first_reading)
+    {
+      print(log_info, "waiting %i seconds before next reading", mtr->name(), interval);
+      _cancellable_sleep(interval);
+    }
+    first_reading = false;
+#endif // VZ_USE_THREADS
+
     print(log_debug, "Querying meter ...", mtr->name());
 
     /* aggregate loop */
@@ -198,11 +175,26 @@ void MeterMap::read()
       }
     }
 
-    /* update buffer length with current interval */
-    // if (details->periodic == FALSE && delta > 0 && delta != mtr->interval()) {
-    //   print(log_debug, "Updating interval to %i", mtr->name(), delta);
-    //   mtr->interval(delta);
-    // }
+    if (n > 0 && !options.haveTimeMachine())
+    {
+      for (size_t i = 0; i < n; i++)
+      {
+        if (rds[i].time_s() < 631152000)
+        {
+          // 1990-01-01 00:00:00
+          print(log_error, "meter returned readings with a timestamp before 1990, IGNORING.", mtr->name());
+          print(log_error, "most likely your meter is misconfigured,", mtr->name());
+          print(log_error, "for sml meters, set `\"use_local_time\": true` in vzlogger.conf"
+                " (meter section),", mtr->name());
+          print(log_error, "to override this check, set `\"i_have_a_time_machine\": true`"
+                " in vzlogger.conf.", mtr->name());
+          // note: we do NOT throw an exception or such,
+          // because this might be a spurious error,
+          // the next reading might be valid again.
+          n = 0;
+        }
+      }
+    }
 
     /* insert readings into channel queues */
     if (n > 0)
@@ -287,6 +279,7 @@ bool MeterMap::readyToSend()
   print(log_finest, "No waiting data, not sending ...", meter()->name());
   return false;
 }
+#endif // not VZ_USE_THREADS
 
 void MeterMap::sendData()
 {
@@ -313,14 +306,21 @@ void MeterMap::sendData()
     {
       Buffer::Ptr buf = (*ch)->buffer();
       Buffer::iterator it;
+      buf->lock();
       for (it = buf->begin(); it != buf->end(); ++it)
       {
-        Reading &r = *it;
-        if (!r.deleted())
+        if (&*it)
         {
-          mqttClient->publish((*ch), r, true);
+          // this seems dirty. see issue #427
+          // the lock()/unlock() should avoid it.
+          Reading &r = *it;
+          if (!r.deleted())
+          {
+            mqttClient->publish((*ch), r, true);
+          }
         }
       }
+      buf->unlock();
     }
 #endif
 
@@ -329,7 +329,7 @@ void MeterMap::sendData()
     (*ch)->notify();
 #else // not VZ_USE_THREADS
     print(log_debug, "Sending %d readings to channel ...", (*ch)->name(), (*ch)->size());
-    (*ch)->sendData();
+    (*ch)->sendData(*ch);
 #endif // VZ_USE_THREADS
 
     /* debugging */
@@ -341,4 +341,4 @@ void MeterMap::sendData()
   }
   print(log_debug, "All meter data sent.", meter()->name());
 }
-#endif // not VZ_USE_THREADS
+

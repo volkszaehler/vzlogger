@@ -119,47 +119,54 @@ Channel::~Channel() {
 }
 
 // Send data - taken from threads.cpp
-void Channel::sendData()
+void Channel::sendData(Ptr this_shared)
 {
   extern Config_Options options;
 
   print(log_debug, "Sending data for %s-api.", name(), apiProtocol().c_str());
 
   // create configured api interfaces
-  // NOTE: if additional APIs are introduced both threads.cpp and MeterMap.cpp need to be updated
   if(api == NULL)
   {
-#ifdef VZ_USE_API_MYSMARTGRID
-    if (0 == strcasecmp(apiProtocol().c_str(), "mysmartgrid")) {
-      api = vz::ApiIF::Ptr(new vz::api::MySmartGrid(this, this->options());
-      print(log_debug, "Using MySmartGrid api.", name());
-    } else
-#endif // VZ_USE_API_MYSMARTGRID
-#ifdef VZ_USE_API_INFLUXDB
-    if (0 == strcasecmp(apiProtocol().c_str(), "influxdb")) {
-      api = vz::ApiIF::Ptr(new vz::api::InfluxDB(this, this->options()));
-      print(log_debug, "Using InfluxDB api", name());
-    } else
-#endif // VZ_USE_API_INFLUXDB
-    if (0 == strcasecmp(apiProtocol().c_str(), "null")) {
-      api = vz::ApiIF::Ptr(new vz::api::Null(Channel::Ptr(this), this->options()));
-      print(log_debug, "Using null api- meter data available via local httpd if enabled.",
-          name());
-    } else {
-      if (strcasecmp(apiProtocol().c_str(), "volkszaehler"))
-        print(log_alert, "Wrong config! api: <%s> is unknown!", name(),
-          apiProtocol().c_str());
-      // try to use volkszaehler api anyhow:
-
-      // default == volkszaehler
-      print(log_debug, "Using default volkszaehler api.", name());
-      api = vz::ApiIF::Ptr(new vz::api::Volkszaehler(Channel::Ptr(this), this->options()));
-      print(log_debug, "Created volkszaehler api.", name());
-    }
+    api = this->connect(this_shared);
   }
 
   print(log_debug, "Sending data ...", name());
   api->send();
   print(log_finest, "Sending completed.", name());
+}
+
+vz::shared_ptr<vz::ApiIF> Channel::connect(Ptr this_shared)
+{
+#ifdef VZ_USE_API_MYSMARTGRID
+  if (0 == strcasecmp(apiProtocol().c_str(), "mysmartgrid"))
+  {
+    print(log_debug, "Using MySmartGrid api.", name());
+    return vz::ApiIF::Ptr(new vz::api::MySmartGrid(this_shared this->options());
+  }
+#endif // VZ_USE_API_MYSMARTGRID
+#ifdef VZ_USE_API_INFLUXDB
+  if (0 == strcasecmp(apiProtocol().c_str(), "influxdb"))
+  {
+    print(log_debug, "Using InfluxDB api", name());
+    return vz::ApiIF::Ptr(new vz::api::InfluxDB(this_shared this->options()));
+  }
+#endif // VZ_USE_API_INFLUXDB
+
+  if (0 == strcasecmp(apiProtocol().c_str(), "null"))
+  {
+    print(log_debug, "Using null api- meter data available via local httpd if enabled.", name());
+    return vz::ApiIF::Ptr(new vz::api::Null(this_shared, this->options()));
+  }
+
+  if (strcasecmp(apiProtocol().c_str(), "volkszaehler"))
+  {
+    print(log_alert, "Wrong config! api: <%s> is unknown!", name(), apiProtocol().c_str());
+    // try to use volkszaehler api anyhow:
+  }
+
+  // default == volkszaehler
+  print(log_debug, "Using default volkszaehler api.", name());
+  return vz::ApiIF::Ptr(new vz::api::Volkszaehler(this_shared, this->options()));
 }
 

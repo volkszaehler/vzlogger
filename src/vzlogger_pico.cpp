@@ -19,6 +19,9 @@ using namespace std;
 
 // --------------------------------------------------------------
 // Pico has no filesystem, hence no config file to read, hence inline config:
+// For EmonLib calibration values see here:
+//   https://docs.openenergymonitor.org/electricity-monitoring/ctac/calibration.html
+// Voltage: Multimeter says U=220, with vCal=230 resulting U=204 -> new vCal=248
 // --------------------------------------------------------------
 
 static const char * inlineConfig =
@@ -37,26 +40,41 @@ static const char * inlineConfig =
          { \
            'uuid': '3a145ba0-db39-11ee-a6a8-57d706d8e278', \
            'api': 'volkszaehler', \
-           'middleware': 'http://vz-server:8000/middleware.php' \
+           'middleware': 'http://chives:8000/middleware.php' \
          } \
        ] \
-     }, \
-     { \
+     } \
+     ,{ \
        'enabled': true, \
        'skip': false, \
        'interval': 10, \
-       'protocol': 'sct013', \
-       'adcnum': 0, \
-       'scttype': 30, \
+       'protocol': 'emonlib', \
+       'adcCurrent': 0, \
+       'adcVoltage': 1, \
+       'currentCalibration' : 30, \
+       'voltageCalibration' : 247, \
+       'phaseCalibration' : 1, \
        'delay': 10, \
-       'numsamples': 1480, \
+       'numSamples': 20, \
        'channels': \
        [ \
          { \
            'uuid': 'f3ef9b70-de3b-11ee-83b5-73042e2a7e09', \
            'api': 'volkszaehler', \
-           'middleware': 'http://vz-server:8000/middleware.php', \
-           'identifier': 'Power'\
+           'middleware': 'http://chives:8000/middleware.php', \
+           'identifier': 'RealPower'\
+         }, \
+         { \
+           'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
+           'api': 'volkszaehler', \
+           'middleware': 'http://chives:8000/middleware.php', \
+           'identifier': 'Voltage'\
+         }, \
+         { \
+           'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
+           'api': 'volkszaehler', \
+           'middleware': 'http://chives:8000/middleware.php', \
+           'identifier': 'Current' \
          } \
        ] \
      } \
@@ -66,13 +84,13 @@ static const char * inlineConfig =
          { \
            'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
            'api': 'volkszaehler', \
-           'middleware': 'http://vz-server:8000/middleware.php', \
+           'middleware': 'http://chives:8000/middleware.php', \
            'identifier': 'Current' \
          }, \
 */
 
-static const char * wifiSSID = TODO "";
-static const char * wifiPW   = TODO "";
+static const char * wifiSSID = "bes-tge";
+static const char * wifiPW   = "Bitte ...";
 
 static const uint tzOffset = 0; // 3600; // 1h ahead of UTC
 

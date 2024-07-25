@@ -108,7 +108,7 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	_api->addHeader("Accept: application/json");
 	_api->addHeader(agent);
 
-        // Something like https://chives:8000/middleware.php"
+        // Something like https://vz-server:8000/middleware.php"
         char prot[10], h[128], url[512];
         uint p;
         if(sscanf(_middleware.c_str(), "%[^:]://%[^:]:%d/%s", prot, h, &p, url) == 4)

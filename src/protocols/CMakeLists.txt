@@ -71,11 +71,12 @@ else ( VZ_USE_METER_W1THERM )
   set(w1therm_srcs "")
 endif( VZ_USE_METER_W1THERM )
 
-if( VZ_USE_METER_PICO_SCT013 )
-  set(pico_sct013_srcs MeterSCT013.cpp ../../include/protocols/MeterSCT013.hpp)
-else ( VZ_USE_METER_PICO_SCT013 )
-  set(pico_sct013_srcs "")
-endif( VZ_USE_METER_PICO_SCT013 )
+if( VZ_USE_METER_PICO_EMONLIB )
+  set(pico_emonlib_srcs MeterEmonLib ../../include/protocols/MeterEmonLib.hpp)
+  include_directories(${CMAKE_CURRENT_LIST_DIR}/../../libs/EmonLib)
+else ( VZ_USE_METER_PICO_EMONLIB )
+  set(pico_emonlib_srcs "")
+endif( VZ_USE_METER_PICO_EMONLIB )
 
 if( VZ_USE_METER_PICO_ONBOARD_TEMP )
   set(pico_onboardTemp_srcs MeterOnboardTemp.cpp ../../include/protocols/MeterOnboardTemp.hpp)
@@ -95,7 +96,7 @@ set(proto_srcs
   ${sml_srcs}
   ${ocr_srcs}
   ${oms_srcs}
-  ${pico_sct013_srcs}
+  ${pico_emonlib_srcs}
   ${pico_onboardTemp_srcs}
 )
 
