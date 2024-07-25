@@ -1,5 +1,5 @@
 /**
- * Read SCT013 current sensor on Raspberry PICO via GPIO
+ * Read EmonLib current sensor on Raspberry PICO via GPIO
  *
  * @package vzlogger
  * @copyright Copyright (c) 2011, The volkszaehler.org project
@@ -23,30 +23,41 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _METER_SCT013_H_
-#define _METER_SCT013_H_
+#ifndef _METER_EMONLIB_H_
+#define _METER_EMONLIB_H_
 
 #include <protocols/Protocol.hpp>
+#include <EmonLib.h>
 
-class MeterSCT013 : public vz::protocol::Protocol {
-
+class MeterEmonLib : public vz::protocol::Protocol
+{
   public:
-    MeterSCT013(std::list<Option> options);
-    virtual ~MeterSCT013();
+    MeterEmonLib(std::list<Option> options);
+    virtual ~MeterEmonLib();
 
     int open();
     int close();
     ssize_t read(std::vector<Reading> &rds, size_t n);
 
   private:
-    uint  maxCurrent;   // SCT max current, e.g. 30
-    uint  adcNum;       // Which ADC pin, starting with 0 from 26
-    float offset;
-    uint  adcPin;       // Resulting ADC pin
+    EnergyMonitor emon;
+
+    uint  maxCurrent;   // SCT max current, e.g. 30A
+    uint  adcCurrent;   // Which ADC pin, starting with 0 from 26
+    uint  adcVoltage;   // Which ADC pin, starting with 0 from 26
+    uint  adcPinI;      // Resulting ADC pin (current)
+    uint  adcPinU;      // Resulting ADC pin (voltage)
     uint  numSamples;   // How many GPIO ADC queries that will be averaged into one sample
     uint  delay;        // Pause between GPIO ADC queries
-    float ratio;        // Calc current from measured voltage
     uint  cycles;
+    float iCal, vCal, phaseCal;
+
+    // StringIdentifier ids[5];
+    // ReadingIdentifier * ids[5];
+    const char * ids[5];
+
+    ssize_t readIrms(std::vector<Reading> &rds, size_t n);
+    ssize_t readIV(std::vector<Reading> &rds, size_t n);
 };
 
-#endif /* _METER_SCT013_H_ */
+#endif /* _METER_EMONLIB_H_ */
