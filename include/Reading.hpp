@@ -171,6 +171,7 @@ class Reading {
 	// not needed yet: void time_from_ms( int64_t &ms );
 	void time_from_double(double const &d);
 
+	void identifier(ReadingIdentifier::Ptr rid) { _identifier = rid; }
 	void identifier(ReadingIdentifier *rid) { _identifier.reset(rid); }
 	const ReadingIdentifier::Ptr identifier() { return _identifier; }
 

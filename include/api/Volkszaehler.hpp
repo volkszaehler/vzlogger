@@ -87,6 +87,10 @@ class Volkszaehler : public ApiIF {
 	 */
 	json_object *api_json_tuples(Buffer::Ptr buf);
 
+        std::string  outputData;
+	CURLresponse response;
+        std::string  errMsg;
+
 	/**
 	 * Parses JSON encoded exception and stores describtion in err
 	 */

@@ -16,6 +16,7 @@ using namespace std;
 #include <Config_Options.hpp>
 #include <Meter.hpp>
 #include <Ntp.hpp>
+#include <malloc.h>
 
 // --------------------------------------------------------------
 // Pico has no filesystem, hence no config file to read, hence inline config:
@@ -53,7 +54,7 @@ static const char * inlineConfig =
        'adcVoltage': 1, \
        'currentCalibration' : 30, \
        'voltageCalibration' : 247, \
-       'phaseCalibration' : 1, \
+       'phaseCalibration' : 1.28, \
        'delay': 10, \
        'numSamples': 20, \
        'channels': \
@@ -256,6 +257,10 @@ int main()
     if((nextDue > 0) && ((cycle % 10) == 0))
     {
       print(log_debug, "Cycle %d: All meters and pending I/O processed. Next due: %ds. Napping ...", "", cycle, nextDue);
+
+      struct mallinfo m = mallinfo();
+      extern char __StackLimit, __bss_end__;
+      print(log_debug, "MEM: Used: %ld, Free: %ld", "", m.uordblks, (&__StackLimit  - &__bss_end__) - m.uordblks);
     }
     cycle++;
 
@@ -306,6 +311,7 @@ void print(log_level_t level, const char *format, const char *id, ...)
 
 extern "C" void vzlogger_panic(const char * fmt, ...)
 {
-  printf("PANIC\n");
+  extern char __StackLimit, __bss_end__;
+  printf("PANIC: %s stacklimit: %p, BSS end: %p, heap: %d, stack: %d\n", fmt, &__StackLimit, &__bss_end__, PICO_HEAP_SIZE, PICO_STACK_SIZE);
   watchdog_enable(1, 1);
 }

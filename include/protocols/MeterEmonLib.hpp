@@ -52,9 +52,7 @@ class MeterEmonLib : public vz::protocol::Protocol
     uint  cycles;
     float iCal, vCal, phaseCal;
 
-    // StringIdentifier ids[5];
-    // ReadingIdentifier * ids[5];
-    const char * ids[5];
+    ReadingIdentifier::Ptr ids[5];
 
     ssize_t readIrms(std::vector<Reading> &rds, size_t n);
     ssize_t readIV(std::vector<Reading> &rds, size_t n);

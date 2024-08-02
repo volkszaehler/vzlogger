@@ -62,7 +62,7 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	OptionList optlist;
 	char agent[255];
 
-        print(log_debug, "Creating Volkszaehler API instance", "");
+        print(log_debug, "Creating Volkszaehler API instance", ch->name());
 
 	// parse options
 	try {
@@ -97,15 +97,16 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	_url.append(channel()->uuid());
 	_url.append(".json");
 
-        print(log_debug, "Volkszaehler API: %s (timeout %d)", "", _url.c_str(), _curlTimeout);
+        print(log_debug, "Volkszaehler API: %s (timeout %d)", ch->name(), _url.c_str(), _curlTimeout);
 
 #ifdef VZ_PICO
-        _api = new vz::api::LwipIF(_curlTimeout);
+        _api = new vz::api::LwipIF(ch->name(), _curlTimeout);
 
 	sprintf(agent, "User-Agent: %s/%s (LwIP %s)", PACKAGE, VERSION, LWIP_VERSION_STRING); // build user agent
         // is a std::set
 	_api->addHeader("Content-type: application/json");
 	_api->addHeader("Accept: application/json");
+	_api->addHeader("Connection: keep-alive");
 	_api->addHeader(agent);
 
         // Something like https://vz-server:8000/middleware.php"
@@ -113,12 +114,12 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
         uint p;
         if(sscanf(_middleware.c_str(), "%[^:]://%[^:]:%d/%s", prot, h, &p, url) == 4)
         {
-          print(log_debug, "Volkszaehler API connecting %s:%d ...", "", h, p);
+          print(log_debug, "Volkszaehler API connecting %s:%d ...", ch->name(), h, p);
           _api->connect(h, p);
         }
         else if(sscanf(_middleware.c_str(), "%[^:]://%[^:]/%s", prot, h, url) == 3)
         {
-          print(log_debug, "Volkszaehler API connecting %s ...", "", h);
+          print(log_debug, "Volkszaehler API connecting %s ...", ch->name(), h);
           _api->connect(h);
         }
         else
@@ -126,7 +127,7 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
           throw vz::VZException("VZ-API: Cannot parse URL %s.", _middleware.c_str());
         }
 
-        print(log_debug, "Volkszaehler API connection initiated.", "");
+        print(log_debug, "Volkszaehler API connection initiated.", ch->name());
 
 #else // VZ_PICO
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version()); // build user agent
@@ -135,6 +136,9 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	_api.headers = curl_slist_append(_api.headers, "Accept: application/json");
 	_api.headers = curl_slist_append(_api.headers, agent);
 #endif // VZ_PICO
+
+  response.size = 0;
+  response.data = NULL;
 }
 
 vz::api::Volkszaehler::~Volkszaehler() {
@@ -144,18 +148,13 @@ vz::api::Volkszaehler::~Volkszaehler() {
 #ifdef VZ_PICO
   delete _api;
 #endif // VZ_PICO
+
+  free(response.data);
 }
 
-void vz::api::Volkszaehler::send() {
-	CURLresponse response;
-	json_object *json_obj;
-
-	const char *json_str;
+void vz::api::Volkszaehler::send()
+{
 	long int http_code = 0;
-
-	// initialize response
-	response.data = NULL;
-	response.size = 0;
 
         print(log_debug, "Volkszaehler API sending data ...", channel()->name());
 
@@ -163,16 +162,12 @@ void vz::api::Volkszaehler::send() {
 	CURLcode curl_code;
 #endif // VZ_PICO
 
+        errMsg = "OK";
         uint errOK = 0;
         uint errCode = 0;
-        std::string errMsg = "OK";
 
 #ifdef VZ_PICO
     // Throws exception
-    std::string url = "/middleware.php/data/";
-    url += channel()->uuid();
-    url += ".json";
-
     uint state = _api->getState();
     if((state == VZ_SRV_CONNECTING) && ((time(NULL) - _api->getConnectInit()) > (_curlTimeout * 2)))
     {
@@ -184,7 +179,7 @@ void vz::api::Volkszaehler::send() {
     {
       // May happen, if the server closed the connection. Reconnect ...
       print(log_debug, "Volkszaehler API reconnecting ...", channel()->name());
-      _api->connect();
+      _api->reconnect();
 
       // That will happen asynchronously, so cannot send anything right now
       return;
@@ -203,8 +198,8 @@ void vz::api::Volkszaehler::send() {
       return;
     }
 
-	json_obj = api_json_tuples(channel()->buffer());
-	json_str = json_object_to_json_string(json_obj);
+    api_json_tuples(channel()->buffer());
+    const char * json_str = outputData.c_str();
 	if (json_str == NULL || strcmp(json_str, "null") == 0) {
 		print(log_debug, "JSON request body is null. Nothing to send now.", channel()->name());
 		return;
@@ -213,23 +208,38 @@ void vz::api::Volkszaehler::send() {
 #ifdef VZ_PICO
     // If we are here, the API is ready and there is something to send - do it
 
-    state =_api->postRequest(json_str, url.c_str());
-    print(log_debug, "POST request in state %d", "", state);
+    state =_api->postRequest(json_str, _url.c_str());
+    print(log_debug, "POST request in state %d", channel()->name(), state);
 
     while(_api->getState() == VZ_SRV_SENDING)
     {
-      print(log_debug, "Waiting for response ...", "");
+      print(log_debug, "Waiting for response ...", channel()->name());
       sleep_ms(1000);
+    }
+
+    // May be READY after receiving data || INIT after the server closed the connection
+    // Anything else means, we tried to send something but no idea whether it arrived or not ...
+    state = _api->getState();
+    if(state != VZ_SRV_READY && state != VZ_SRV_INIT)
+    {
+      print(log_warning, "Sending/response timed out - API in state %s", channel()->name(), _api->stateStr());
+      // Cause a reconnect at next cycle:
+      _api->setState(VZ_SRV_INIT);
+
+      // TODO Do we need to drop the data to avoid duplicates?
+      print(log_debug, "Dropping %d values", channel()->name(), _values.size());
+      _values.clear();
+
+      return;
     }
 
     const char * resp = _api->getResponse();
     if(resp == NULL || strlen(resp) == 0)
     {
-      print(log_error, "NULL response", "");
+      print(log_error, "NULL response", channel()->name());
       return;
     }
 
-// TODO Move that to LwipIF
     // Scan and remove headers
     uint num;
     char buf[128], buf2[128];
@@ -237,29 +247,29 @@ void vz::api::Volkszaehler::send() {
     {
       if(resp[0] == '\r' && resp[1] == '\n')
       {
-        print(log_debug, "HTTP empty line", "");
+        print(log_debug, "HTTP empty line", channel()->name());
       }
       else if(sscanf(resp, "HTTP/%*d.%*d %d %[^\n]\n", &http_code, buf) == 2)
       {
-        print(log_debug, "HTTP result: %d %s", "", http_code, buf);
+        print(log_debug, "HTTP result: %d %s", channel()->name(), http_code, buf);
       }
       else if((sscanf(resp, "%[^:]: %[^\n]\n", buf, buf2) == 2) && (buf[0] != '{')) // curly brace confuses vi }
       {
-        print(log_debug, "HTTP header: %s %s", "", buf, buf2);
+        print(log_debug, "HTTP header: %s %s", channel()->name(), buf, buf2);
       }
       else
       {
-        print(log_debug, "HTTP response payload: %s", "", resp);
-        response.size = strlen(resp);
-
+        print(log_debug, "HTTP response payload: %s", channel()->name(), resp);
         // ORIG response.data = strdup(resp);
-        response.data = (char *) malloc(response.size + 1);
+        if(response.size <= strlen(resp))
+        {
+          response.size = (strlen(resp) + 1);
+          response.data = (char *) realloc(response.data, response.size);
+        }
         strcpy(response.data, resp);
-        printf("MALLOC %x\n", response.data);
-
         break;
       }
-
+  
       resp = strchr(resp, '\n') + 1;
     }
 
@@ -324,8 +334,9 @@ void vz::api::Volkszaehler::send() {
 	}
 
 	// householding
+#ifndef VZ_PICO
 	free(response.data);
-	json_object_put(json_obj);
+#endif // not VZ_PICO
 
 	if ((errCode != errOK || http_code != 200)) {
 		print(log_info, "Waiting %i secs for next request due to previous failure",
@@ -337,7 +348,7 @@ void vz::api::Volkszaehler::send() {
 #endif // VZ_PICO
 	}
 
-  print(log_finest, "Volkszaehler API sending data complete.", "");
+  print(log_finest, "Volkszaehler API sending data complete.", channel()->name());
 }
 
 void vz::api::Volkszaehler::register_device() {}
@@ -395,23 +406,33 @@ json_object *vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 		return NULL;
 	}
 
-	json_object *json_tuples = json_object_new_array();
-	int nrTuples = 0;
-	for (it = _values.begin(); it != _values.end(); it++) {
-		struct json_object *json_tuple = json_object_new_array();
+  print(log_debug, "OutputData capacity: %d", channel()->name(), outputData.capacity());
 
-		json_object_array_add(json_tuple, json_object_new_int64(it->time_ms()));
-		json_object_array_add(json_tuple, json_object_new_double(it->value()));
+  outputData = "[";
+  int nrTuples = 0;
+  for (it = _values.begin(); it != _values.end(); it++)
+  {
+    outputData += "[";
+    outputData += std::to_string(it->time_ms());
+    outputData += ",";
+    outputData += std::to_string(it->value());
+    outputData += "]";
 
-		json_object_array_add(json_tuples, json_tuple);
-		++nrTuples;
-		if (nrTuples >= MAX_CHUNK_SIZE)
-			break;
-	}
-	print(log_finest, "copied %d/%d values for middleware transmission", channel()->name(),
-		  nrTuples, _values.size());
+    if(++nrTuples < _values.size())
+    {
+      outputData += ",";
+    }
 
-	return json_tuples;
+    if (nrTuples >= MAX_CHUNK_SIZE)
+    {
+      break;
+    }
+  }
+  outputData += "]";
+  print(log_debug, "copied %d/%d values for middleware transmission: %s (%d)", channel()->name(),
+        nrTuples, _values.size(), outputData.c_str(), outputData.capacity());
+
+  return NULL;
 }
 
 void vz::api::Volkszaehler::api_parse_exception(CURLresponse response, char *err, size_t n) {

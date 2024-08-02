@@ -40,7 +40,7 @@ namespace api {
 
 class LwipIF {
   public:
-    LwipIF(uint timeout = 30);
+    LwipIF(const char * apiId, uint timeout = 30);
     ~LwipIF();
 
     void addHeader(const std::string value);
@@ -49,9 +49,11 @@ class LwipIF {
 
     // Null values for connect can be used as reconnect, if already set
     void   connect(const char * hostname = NULL, uint port = 0);
+    void   reconnect();
     uint   postRequest(const char * data, const char * url);
-    char * getResponse();
     uint   getPort();
+
+    const char * getResponse();
     void   setResponse(const char * resp);
 
     uint   getState();
@@ -62,8 +64,10 @@ class LwipIF {
     void               deletePCB();
     const char       * stateStr();
     time_t             getConnectInit();
+    const char       * getId();
 
   private:
+    std::string        id;
     std::set<std::string> headers;
 
     uint               state;
@@ -72,6 +76,7 @@ class LwipIF {
 
     std::string        hostname;
     int                port;
+    std::string        request;
     std::string        response;
 
     struct altcp_tls_config * tls_config;

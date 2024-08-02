@@ -49,18 +49,11 @@
 
 MeterEmonLib::MeterEmonLib(std::list<Option> options) : Protocol("emonlib")
 {
-/*
-  ids[0] = new StringIdentifier("Current");
-  ids[1] = new StringIdentifier("ApparentPower");
-  ids[2] = new StringIdentifier("Voltage");
-  ids[3] = new StringIdentifier("RealPower");
-  ids[4] = new StringIdentifier("PowerFactor");
-*/
-  ids[0] = "Current";
-  ids[1] = "ApparentPower";
-  ids[2] = "Voltage";
-  ids[3] = "RealPower";
-  ids[4] = "PowerFactor";
+  ids[0] = ReadingIdentifier::Ptr(new StringIdentifier("Current"));
+  ids[1] = ReadingIdentifier::Ptr(new StringIdentifier("ApparentPower"));
+  ids[2] = ReadingIdentifier::Ptr(new StringIdentifier("Voltage"));
+  ids[3] = ReadingIdentifier::Ptr(new StringIdentifier("RealPower"));
+  ids[4] = ReadingIdentifier::Ptr(new StringIdentifier("PowerFactor"));
 
   OptionList optlist;
 
@@ -147,20 +140,17 @@ ssize_t MeterEmonLib::readIrms(std::vector<Reading> &rds, size_t n)
   print(log_debug, "MeterEmonLib::readIrms: irms %.2fA -> %.2fW", "", irms, watts);
   print(log_debug, "MeterEmonLib::readIrms: %d, %d", "", rds.size(), n);
 
-  if(cycles++ == 0)
+  // Seems as if the very first cycles always produces rubbish values ...
+  if(cycles++ < 4)
   {
-    // Seems as if the very first run always produces rubbish values ...
+    print(log_debug, "Ignoring because cycles: %d", "", (cycles - 1));
     return 0;
   }
 
   for(uint i = 0; i < 2; i++)
   {
     rds[i].value(i == 0 ? irms : watts);
-//    ReadingIdentifier * ri(&(ids[i]));
-//    rds[i].identifier(ri);
-// geht auch nicht    rds[i].identifier(ids[i]);
-    ReadingIdentifier * ri(new StringIdentifier(ids[i]));
-    rds[i].identifier(ri);
+    rds[i].identifier(ids[i]);
     rds[i].time(); // use current timestamp
   }
 
@@ -180,11 +170,17 @@ ssize_t MeterEmonLib::readIV(std::vector<Reading> &rds, size_t n)
   print(log_debug, "MeterEmonLib::readIV: irms %.2fA Voltage: %.2fV -> %.2fW (app: %.2fW, factor: %.2f)", "",
         emon.Irms, emon.Vrms, emon.realPower, emon.apparentPower, emon.powerFactor);
 
-  if(cycles++ == 0)
+  // Seems as if the very first cycles always produces rubbish values ...
+  if(cycles++ < 4)
   {
-    // Seems as if the very first run always produces rubbish values ...
+    print(log_debug, "Ignoring because cycles: %d", "", (cycles - 1));
     return 0;
   }
+
+// TGE: Fix realPower - konsistent ~30W zu niedrig:
+// Dito Irms??
+// TGE: Jetzt mit phaseCal = 1.28
+// double realPower = emon.realPower + 30;
 
   for(uint i = 0; i < 5; i++)
   {
@@ -196,12 +192,7 @@ ssize_t MeterEmonLib::readIV(std::vector<Reading> &rds, size_t n)
       case 3: rds[i].value(emon.realPower);     break;
       case 4: rds[i].value(emon.powerFactor);   break;
     }
-//    ReadingIdentifier * ri(&(ids[i]));
-//    rds[i].identifier(ri);
-// geht auch nicht    rds[i].identifier(ids[i]);
-
-    ReadingIdentifier * ri(new StringIdentifier(ids[i]));
-    rds[i].identifier(ri);
+    rds[i].identifier(ids[i]);
     rds[i].time(); // use current timestamp
   }
 
