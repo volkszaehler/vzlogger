@@ -93,7 +93,7 @@ void vz::api::LwipIF::deletePCB()
 {
   if(pcb != NULL)
   {
-    print(log_debug, "Destryoing PCB ...", id.c_str());
+    print(log_debug, "Destroying PCB ...", id.c_str());
     altcp_arg(pcb, NULL);
     altcp_poll(pcb, NULL, 0);
     altcp_recv(pcb, NULL);
@@ -164,7 +164,10 @@ void vz::api::LwipIF::connect(const char * h, uint p)
   if (err != ERR_OK && err != ERR_INPROGRESS)
   {
     cyw43_arch_lwip_end();
-    throw vz::VZException("LwipIF: error initiating DNS resolving, err=%d", err);
+    // throw vz::VZException("LwipIF: error initiating DNS resolving, err=%d", err);
+    print(log_error, "Error initiating DNS resolving: %d", id.c_str(), err);
+    state = VZ_SRV_INIT;
+    return;
   }
 
   cyw43_arch_lwip_end();
@@ -173,6 +176,7 @@ void vz::api::LwipIF::connect(const char * h, uint p)
 }
 
 struct altcp_pcb * vz::api::LwipIF::getPCB() { return pcb; }
+void vz::api::LwipIF::resetPCB() { pcb = NULL; }
 
 // ==============================
 
@@ -210,10 +214,15 @@ uint vz::api::LwipIF::postRequest(const char * data, const char * url)
   cyw43_arch_lwip_end();
   if (err != ERR_OK)
   {
-    throw vz::VZException("LwipIF: error sending data, err=%d", err);
+    // throw vz::VZException("LwipIF: error sending data, err=%d", err);
+    print(log_error, "Error sending request: %d", id.c_str(), err);
+    state = VZ_SRV_INIT;
   }
-  print(log_debug, "Sending request complete", id.c_str());
-  state = VZ_SRV_SENDING;
+  else
+  {
+    print(log_debug, "Sending request complete", id.c_str());
+    state = VZ_SRV_SENDING;
+  }
   return state;
 }
 
@@ -229,12 +238,18 @@ static void altcp_client_dns_found(const char* hostname, const ip_addr_t *ipaddr
     err_t err = altcp_connect(ai->getPCB(), ipaddr, ai->getPort(), altcp_client_connected);
     if (err != ERR_OK)
     {
-      throw vz::VZException("LwipIF: error initiating connect, err=%d", err);
+      // throw vz::VZException("LwipIF: error initiating connect, err=%d", err);
+      print(log_error, "Error initiating connect: %d", ai->getId(), err);
+      ai->setState(VZ_SRV_INIT);
+      return;
     }
   }
   else
   {
-    throw vz::VZException("LwipIF: error resolving hostname %s", hostname);
+    // throw vz::VZException("LwipIF: error resolving hostname %s", hostname);
+    print(log_error, "Error resolving hostname %s", ai->getId(), hostname);
+    ai->setState(VZ_SRV_INIT);
+    return;
   }
   print(log_debug, "Connection initiated", ai->getId());
 }
@@ -243,11 +258,14 @@ static void altcp_client_dns_found(const char* hostname, const ip_addr_t *ipaddr
 
 static err_t altcp_client_connected(void *arg, struct altcp_pcb *pcb, err_t err)
 {
+  vz::api::LwipIF * ai = (vz::api::LwipIF *) arg;
   if (err != ERR_OK)
   {
-    throw vz::VZException("LwipIF: connect failed %d", err);
+    // throw vz::VZException("LwipIF: connect failed %d", err);
+    print(log_error, "Connect failed: %d", ai->getId(), err);
+    ai->setState(VZ_SRV_INIT);
+    return err;
   }
-  vz::api::LwipIF * ai = (vz::api::LwipIF *) arg;
   print(log_debug, "Server connected", ai->getId());
   ai->setState(VZ_SRV_READY);
   return ERR_OK;
@@ -287,6 +305,11 @@ static void altcp_client_err(void *arg, err_t err)
   ai->setState(VZ_SRV_INIT);
   // ai->setState(VZ_SRV_ERROR);
   // throw vz::VZException("LwipIF: altcp_client_err %d", err);
+  print(log_error, "LwipIF: altcp_client_err: %d", ai->getId(), err);
+
+  // Doc says: "The corresponding pcb is already freed when this callback is called!"
+  // So we must not do this again, as it normally happens when reconnecting
+  ai->resetPCB();
 }
 
 // ==============================

@@ -59,6 +59,7 @@ class LwipIF {
     uint   getState();
     void   setState(uint state);
 
+    void               resetPCB();
     struct altcp_pcb * getPCB();
     void               initPCB();
     void               deletePCB();

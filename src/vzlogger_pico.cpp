@@ -25,9 +25,54 @@ using namespace std;
 // Voltage: Multimeter says U=220, with vCal=230 resulting U=204 -> new vCal=248
 // --------------------------------------------------------------
 
+#define VZ_SERVER_URL "http://vz-server:8000/middleware.php"
+
+static const char * wifiSSID = "bes-tge";
+static const char * wifiPW   = "Bitte ...";
+
 static const char * inlineConfig =
 "{ 'verbosity': 10, \
    'retry': 30, \
+   'meters': \
+   [ \
+     { \
+       'enabled': true, \
+       'skip': false, \
+       'interval': 10, \
+       'protocol': 'emonlib', \
+       'adcCurrent': 0, \
+       'adcVoltage': 1, \
+       'currentCalibration' : 30, \
+       'voltageCalibration' : 247.0, \
+       'phaseCalibration' : 26.0, \
+       'delay': 10, \
+       'numSamples': 20, \
+       'channels': \
+       [ \
+         { \
+           'uuid': 'f3ef9b70-de3b-11ee-83b5-73042e2a7e09', \
+           'api': 'volkszaehler', \
+           'middleware': 'VZ_SERVER_URL', \
+           'identifier': 'RealPower'\
+         }, \
+         { \
+           'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
+           'api': 'volkszaehler', \
+           'middleware': 'VZ_SERVER_URL', \
+           'identifier': 'Voltage'\
+         } \
+       ] \
+     } \
+   ] }";
+
+/* Not needed anymore - redundant with Power
+         { \
+           'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
+           'api': 'volkszaehler', \
+           'middleware': 'VZ_SERVER_URL', \
+           'identifier': 'Current' \
+         }, */
+/* Other example:
    'meters': \
    [ \
      { \
@@ -41,57 +86,10 @@ static const char * inlineConfig =
          { \
            'uuid': '3a145ba0-db39-11ee-a6a8-57d706d8e278', \
            'api': 'volkszaehler', \
-           'middleware': 'http://chives:8000/middleware.php' \
+           'middleware': 'VZ_SERVER_URL' \
          } \
        ] \
-     } \
-     ,{ \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 10, \
-       'protocol': 'emonlib', \
-       'adcCurrent': 0, \
-       'adcVoltage': 1, \
-       'currentCalibration' : 30, \
-       'voltageCalibration' : 247, \
-       'phaseCalibration' : 1.28, \
-       'delay': 10, \
-       'numSamples': 20, \
-       'channels': \
-       [ \
-         { \
-           'uuid': 'f3ef9b70-de3b-11ee-83b5-73042e2a7e09', \
-           'api': 'volkszaehler', \
-           'middleware': 'http://chives:8000/middleware.php', \
-           'identifier': 'RealPower'\
-         }, \
-         { \
-           'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
-           'api': 'volkszaehler', \
-           'middleware': 'http://chives:8000/middleware.php', \
-           'identifier': 'Voltage'\
-         }, \
-         { \
-           'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
-           'api': 'volkszaehler', \
-           'middleware': 'http://chives:8000/middleware.php', \
-           'identifier': 'Current' \
-         } \
-       ] \
-     } \
-   ] }";
-
-/* Not needed anymore - redundant with Power, just fills up DB
-         { \
-           'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
-           'api': 'volkszaehler', \
-           'middleware': 'http://chives:8000/middleware.php', \
-           'identifier': 'Current' \
-         }, \
-*/
-
-static const char * wifiSSID = "bes-tge";
-static const char * wifiPW   = "Bitte ...";
+     } */
 
 static const uint tzOffset = 0; // 3600; // 1h ahead of UTC
 
@@ -151,7 +149,7 @@ int main()
   // --------------------------------------------------------------
 
   {
-    // In block, so ntp gets deconstructed, not needed anymore
+    // In block, so ntp gets deconstructed, not needed anymore later
     Ntp ntp;
     time_t utc = ntp.queryTime();
     printf("** Got NTP UTC time %s", ctime(&utc));
@@ -308,6 +306,10 @@ void print(log_level_t level, const char *format, const char *id, ...)
   printf("\n");
   va_end(args);
 }
+
+// --------------------------------------------------------------
+// Will be called in Out-of-memory situation. Do a HW reset (not 100% reliable)
+// --------------------------------------------------------------
 
 extern "C" void vzlogger_panic(const char * fmt, ...)
 {

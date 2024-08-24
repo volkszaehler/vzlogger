@@ -50,7 +50,7 @@ class MeterEmonLib : public vz::protocol::Protocol
     uint  numSamples;   // How many GPIO ADC queries that will be averaged into one sample
     uint  delay;        // Pause between GPIO ADC queries
     uint  cycles;
-    float iCal, vCal, phaseCal;
+    double iCal, vCal, phaseCal;
 
     ReadingIdentifier::Ptr ids[5];
 

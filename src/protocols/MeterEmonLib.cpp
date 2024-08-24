@@ -69,7 +69,7 @@ MeterEmonLib::MeterEmonLib(std::list<Option> options) : Protocol("emonlib")
     optName = "numSamples"; numSamples = optlist.lookup_int(options, optName);
     optName = "delay";      delay = optlist.lookup_int(options, optName);
     optName = "currentCalibration"; iCal = optlist.lookup_int(options, optName);
-    optName = "voltageCalibration"; vCal = optlist.lookup_int(options, optName);
+    optName = "voltageCalibration"; vCal = optlist.lookup_double(options, optName);
   }
   catch (vz::VZException &e)
   {
@@ -80,7 +80,7 @@ MeterEmonLib::MeterEmonLib(std::list<Option> options) : Protocol("emonlib")
   try
   {
     optName = "adcVoltage";       adcVoltage = optlist.lookup_int(options, optName);
-    optName = "phaseCalibration"; phaseCal = optlist.lookup_int(options, optName);
+    optName = "phaseCalibration"; phaseCal = optlist.lookup_double(options, optName);
   }
   catch (vz::VZException &e)
   {
