@@ -208,6 +208,7 @@ void vz::api::Volkszaehler::send()
 #ifdef VZ_PICO
     // If we are here, the API is ready and there is something to send - do it
 
+    print(log_info, "POSTing %d tuples ...", channel()->name(), _values.size());
     state =_api->postRequest(json_str, _url.c_str());
     print(log_debug, "POST request in state %d", channel()->name(), state);
 

@@ -27,6 +27,9 @@
 #define _METER_EMONLIB_H_
 
 #include <protocols/Protocol.hpp>
+#ifndef RPI_PICO
+# define RPI_PICO // Definitely need this
+#endif // RPI_PICO
 #include <EmonLib.h>
 
 class MeterEmonLib : public vz::protocol::Protocol

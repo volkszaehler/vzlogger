@@ -27,11 +27,12 @@ using namespace std;
 
 #define VZ_SERVER_URL "http://vz-server:8000/middleware.php"
 
-static const char * wifiSSID = "bes-tge";
-static const char * wifiPW   = "Bitte ...";
+static const char * wifiSSID = TODO
+static const char * wifiPW   = TODO
 
+// log_alert = 0, log_error = 1, log_warning = 3, log_info = 5, log_debug = 10, log_finest = 15
 static const char * inlineConfig =
-"{ 'verbosity': 10, \
+"{ 'verbosity': 5, \
    'retry': 30, \
    'meters': \
    [ \
@@ -45,20 +46,20 @@ static const char * inlineConfig =
        'currentCalibration' : 30, \
        'voltageCalibration' : 247.0, \
        'phaseCalibration' : 26.0, \
-       'delay': 10, \
+       'delay': 100, \
        'numSamples': 20, \
        'channels': \
        [ \
          { \
            'uuid': 'f3ef9b70-de3b-11ee-83b5-73042e2a7e09', \
            'api': 'volkszaehler', \
-           'middleware': 'VZ_SERVER_URL', \
+           'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'RealPower'\
          }, \
          { \
            'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
            'api': 'volkszaehler', \
-           'middleware': 'VZ_SERVER_URL', \
+           'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'Voltage'\
          } \
        ] \
@@ -69,7 +70,7 @@ static const char * inlineConfig =
          { \
            'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
            'api': 'volkszaehler', \
-           'middleware': 'VZ_SERVER_URL', \
+           'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'Current' \
          }, */
 /* Other example:
@@ -86,7 +87,7 @@ static const char * inlineConfig =
          { \
            'uuid': '3a145ba0-db39-11ee-a6a8-57d706d8e278', \
            'api': 'volkszaehler', \
-           'middleware': 'VZ_SERVER_URL' \
+           'middleware': '" VZ_SERVER_URL "' \
          } \
        ] \
      } */

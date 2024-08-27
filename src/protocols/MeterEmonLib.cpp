@@ -60,7 +60,7 @@ MeterEmonLib::MeterEmonLib(std::list<Option> options) : Protocol("emonlib")
   adcCurrent = 0; // Effectively use Pin 26 + 0
   adcVoltage = 1000;
   numSamples = 1480; // One sample every ~15s
-  delay = 10; // 100 per sec
+  delay = 0;
 
   const char * optName;
   try
@@ -165,7 +165,7 @@ ssize_t MeterEmonLib::readIV(std::vector<Reading> &rds, size_t n)
 {
   print(log_debug, "Reading MeterEmonLib at GPIO %d (ADC %d), U: %d (%d)", "", adcPinI, adcCurrent, adcPinU, adcVoltage);
 
-  emon.calcVI(numSamples, TIMEOUT);       // Calculate all. No.of half wavelengths (crossings), time-out
+  emon.calcVI(numSamples, TIMEOUT, delay);       // Calculate all. No.of half wavelengths (crossings), time-out
   
   print(log_debug, "MeterEmonLib::readIV: irms %.2fA Voltage: %.2fV -> %.2fW (app: %.2fW, factor: %.2f)", "",
         emon.Irms, emon.Vrms, emon.realPower, emon.apparentPower, emon.powerFactor);

@@ -266,7 +266,7 @@ static err_t altcp_client_connected(void *arg, struct altcp_pcb *pcb, err_t err)
     ai->setState(VZ_SRV_INIT);
     return err;
   }
-  print(log_debug, "Server connected", ai->getId());
+  print(log_info, "Server connected", ai->getId());
   ai->setState(VZ_SRV_READY);
   return ERR_OK;
 }
