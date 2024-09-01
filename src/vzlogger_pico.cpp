@@ -45,7 +45,7 @@ static const char * inlineConfig =
        'adcVoltage': 1, \
        'currentCalibration' : 30, \
        'voltageCalibration' : 247.0, \
-       'phaseCalibration' : 26.0, \
+       'phaseCalibration' : 35.0, \
        'delay': 100, \
        'numSamples': 20, \
        'channels': \
@@ -55,24 +55,55 @@ static const char * inlineConfig =
            'api': 'volkszaehler', \
            'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'RealPower'\
-         }, \
-         { \
+         } \
+        ,{ \
            'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
            'api': 'volkszaehler', \
            'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'Voltage'\
-         } \
-       ] \
-     } \
-   ] }";
-
-/* Not needed anymore - redundant with Power
-         { \
+         }"
+/* Not needed normally, disable to save DB space:
+        ,{ \
            'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
            'api': 'volkszaehler', \
            'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'Current' \
-         }, */
+         } \
+*/
+      "] \
+     } \
+    ,{ \
+       'enabled': true, \
+       'skip': false, \
+       'interval': 10, \
+       'protocol': 'emonlib', \
+       'adcCurrent': 2, \
+       'adcVoltage': 1, \
+       'currentCalibration' : 30, \
+       'voltageCalibration' : 247.0, \
+       'phaseCalibration' : 132.0, \
+       'delay': 100, \
+       'numSamples': 20, \
+       'channels': \
+       [ \
+         { \
+           'uuid': 'a8d6bba0-6462-11ef-aea1-3b1a1ab3364e', \
+           'api': 'volkszaehler', \
+           'middleware': '" VZ_SERVER_URL "', \
+           'identifier': 'RealPower'\
+         }"
+/* Not needed normally, disable to save DB space:
+        ,{ \
+           'uuid': 'd9c7cd20-67bf-11ef-938c-3b62ce66ce08', \
+           'api': 'volkszaehler', \
+           'middleware': '" VZ_SERVER_URL "', \
+           'identifier': 'Current' \
+         } \
+       ] \
+*/
+    "} \
+   ] }";
+
 /* Other example:
    'meters': \
    [ \
@@ -213,7 +244,7 @@ int main()
   while(true)
   {
     // --------------------------------------------------------------
-    // Blink the LED ... TODO maybe disable this later ...
+    // Blink the LED to see something is happening
     // --------------------------------------------------------------
 
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
@@ -249,8 +280,9 @@ int main()
     catch (std::exception &e)
     {
       print(log_alert, "Reading meter failed: %s", "", e.what());
-//      sleep_ms(500); // To see what happened via USB
-//      exit(1);
+      // sleep_ms(500); // To see what happened via USB
+      // exit(1);
+      // We don't exit, just go on, try to recover whatever possibe
     }
 
     if((nextDue > 0) && ((cycle % 10) == 0))
@@ -259,7 +291,7 @@ int main()
 
       struct mallinfo m = mallinfo();
       extern char __StackLimit, __bss_end__;
-      print(log_debug, "MEM: Used: %ld, Free: %ld", "", m.uordblks, (&__StackLimit  - &__bss_end__) - m.uordblks);
+      print(log_info, "Cycle %d, MEM: Used: %ld, Free: %ld", "", cycle, m.uordblks, (&__StackLimit  - &__bss_end__) - m.uordblks);
     }
     cycle++;
 

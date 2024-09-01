@@ -177,11 +177,6 @@ ssize_t MeterEmonLib::readIV(std::vector<Reading> &rds, size_t n)
     return 0;
   }
 
-// TGE: Fix realPower - konsistent ~30W zu niedrig:
-// Dito Irms??
-// TGE: Jetzt mit phaseCal = 1.28
-// double realPower = emon.realPower + 30;
-
   for(uint i = 0; i < 5; i++)
   {
     switch(i)
