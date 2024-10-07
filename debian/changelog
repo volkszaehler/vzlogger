@@ -1,3 +1,9 @@
+vzlogger (0.8.8) unstable; urgency=medium
+
+  * Fix to have bulleye accept usernames with underscore 
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sun, 06 Oct 2024 12:20:24 +0200
+
 vzlogger (0.8.7) unstable; urgency=medium
 
   * Added OMS support to the native Debian build
