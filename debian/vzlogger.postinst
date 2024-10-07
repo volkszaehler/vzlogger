@@ -2,8 +2,14 @@
 
 set -e
 
+ADDUSER_VER=$(dpkg-query --showformat='${Version}' --show adduser)
+if dpkg --compare-versions "$ADDUSER_VER" lt 3.131; then
+    FORCE=" --force-badname "
+fi
+
 case "$1" in
     configure)
+
     if id vzlogger > /dev/null 2>&1 \
 		&& dpkg --compare-versions "$2" le-nl 0.8.3 \
 		&& dpkg --compare-versions "$2" ge 0.8.2; then
@@ -12,7 +18,7 @@ case "$1" in
 		groupmod --new-name _vzlogger vzlogger
 	fi
     if ! id _vzlogger > /dev/null 2>&1 ; then
-        adduser --quiet --system --no-create-home --home /nonexistent \
+        adduser --quiet --system "$FORCE" --no-create-home --home /nonexistent \
             --group --disabled-password --shell /bin/false \
             _vzlogger
         usermod -a -G dialout _vzlogger
