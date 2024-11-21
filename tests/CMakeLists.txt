@@ -26,6 +26,7 @@ set(test_libraries
     ${GNUTLS_LIBRARIES}
     ${OCR_LIBRARIES}
     ${OPENSSL_LIBRARIES}
+    ${GPIOD_LIBRARY}
 )
 
 if(SML_FOUND AND ENABLE_SML)
