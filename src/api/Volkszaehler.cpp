@@ -213,7 +213,7 @@ json_object *vz::api::Volkszaehler::api_json_tuples(Buffer::Ptr buf) {
 					// a) timestamp
 					// b) duplicate value
 					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
-						(r.value() != _lastReadingSent->value())) {
+						(fabs(r.value() - _lastReadingSent->value()) > 0.000001)) {
 						// send the current one:
 						_values.push_back(r);
 						_last_timestamp = timestamp;
