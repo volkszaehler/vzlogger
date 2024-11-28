@@ -1,8 +1,17 @@
+
+# this Dockerfile is expected to run with a checkout
+# of the vzlogger source as the build context (working directory),
+# which it will copy into the container and then build.
+
 ############################
 # STEP 1 build executable binary
 ############################
 
 FROM alpine:latest as builder
+
+COPY . /vzlogger
+# ensure we error early if there is no source in the build context
+COPY CMakeLists.txt /vzlogger/
 
 RUN apk add --no-cache \
     gcc \
@@ -36,8 +45,6 @@ RUN git clone https://github.com/rscada/libmbus.git --depth 1 \
     && cd libmbus \
     && ./build.sh \
     && make install
-
-COPY . /vzlogger
 
 ARG build_test=off
 RUN cmake -DBUILD_TEST=${build_test} \
