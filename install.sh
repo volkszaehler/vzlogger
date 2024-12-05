@@ -117,7 +117,7 @@ echo "vzlogger installation script"
 echo
 echo -n "checking prerequisites:"
 
-deps=( grep extrace git cmake pkg-config dh-autoreconf )
+deps=( grep extrace git cmake pkg-config dh_autoreconf )
 for binary in "${deps[@]}"; do
 	if binpath="$(which $binary)" ; then
 		echo -n " $binary"
