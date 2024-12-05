@@ -12,7 +12,7 @@ Installation
 ---------------
 To install, follow the detailed installation instructions at http://wiki.volkszaehler.org/software/controller/vzlogger/installation_cpp-version
 
-If you're impatient you can quickstart using (Debian Bookworm or Ubuntu 18.04 LTS):
+If you're impatient you can quickstart using (Debian Bookworm or Ubuntu 24.04 LTS):
 
     sudo apt-get install extrace git-core cmake libtool dh-autoreconf uuid-dev libmicrohttpd-dev \
         build-essential pkg-config libgnutls28-dev libssl-dev libmosquitto-dev libgcrypt20-dev libcurl3-dev \
