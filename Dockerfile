@@ -2,7 +2,7 @@
 # STEP 1 build executable binary
 ############################
 
-FROM alpine:latest as builder
+FROM alpine:latest AS builder
 
 RUN apk add --no-cache \
     gcc \
