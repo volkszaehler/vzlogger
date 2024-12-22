@@ -37,6 +37,7 @@ namespace api {
 #define VZ_SRV_READY 2
 #define VZ_SRV_SENDING 3
 #define VZ_SRV_ERROR 4
+#define VZ_SRV_RETRY 5
 
 class LwipIF {
   public:

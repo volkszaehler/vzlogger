@@ -34,6 +34,8 @@
 #ifdef VZ_PICO
 # include <protocols/MeterOnboardTemp.hpp>
 # include <protocols/MeterEmonLib.hpp>
+# include <protocols/MeterHCSR04.hpp>
+# include "protocols/MeterW1thGpio.hpp"
 #else // VZ_PICO
 # include <protocols/MeterD0.hpp>
 # include <protocols/MeterExec.hpp>
@@ -64,7 +66,9 @@ static const meter_details_t protocols[] = {
 	// name, alias, description, max_rds
 #ifdef VZ_PICO
 	METER_DETAIL(onboardTemp, OnboardTemp, "Raspberry Pico Onboard Temperature", 1),
-	METER_DETAIL(emonlib, EmonLib, "EmonLib current and voltage", 5),
+	METER_DETAIL(emonlib, EmonLib, "EmonLib current, voltage and power", 5),
+	METER_DETAIL(hcsr04, HCSR04, "HC-SR04 distance sensor", 1),
+	METER_DETAIL(w1tGpio, W1thGpio, "GPIO-based w1 thermal sensor", 5),
 #else // VZ_PICO
 	METER_DETAIL(file, File, "Read from file or fifo", 32),
 	METER_DETAIL(exec, Exec, "Parse program output", 32),
@@ -207,6 +211,14 @@ Meter::Meter(std::list<Option> pOptions) : _name("meter") {
 		break;
 	case meter_protocol_emonlib:
 		_protocol = vz::protocol::Protocol::Ptr(new MeterEmonLib(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
+	case meter_protocol_hcsr04:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterHCSR04(pOptions));
+		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
+		break;
+	case meter_protocol_w1tGpio:
+		_protocol = vz::protocol::Protocol::Ptr(new MeterW1thGpio(pOptions));
 		_identifier = ReadingIdentifier::Ptr(new StringIdentifier());
 		break;
 #endif // VZ_PICO

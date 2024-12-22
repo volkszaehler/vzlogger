@@ -89,6 +89,7 @@ class StringIdentifier : public ReadingIdentifier {
   public:
 	StringIdentifier() {}
 	StringIdentifier(std::string s) : _string(s) {}
+	StringIdentifier(const char * s) : _string(s) {}
 
 	void parse(const char *buffer);
 	size_t unparse(char *buffer, size_t n);

@@ -211,6 +211,12 @@ void vz::api::Volkszaehler::send()
     print(log_info, "POSTing %d tuples ...", channel()->name(), _values.size());
     state =_api->postRequest(json_str, _url.c_str());
     print(log_debug, "POST request in state %d", channel()->name(), state);
+    if(state == VZ_SRV_RETRY)
+    {
+      print(log_info, "POSTing to be retried: %d", channel()->name(), state);
+      _api->setState(VZ_SRV_READY);
+      return;
+    }
 
     while(_api->getState() == VZ_SRV_SENDING)
     {

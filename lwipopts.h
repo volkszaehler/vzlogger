@@ -9,7 +9,9 @@
 #define TCP_WND  16384
 
 #define LWIP_ALTCP               1
-#define LWIP_DEBUG 1
+#define LWIP_DEBUG 0
+#define LWIP_STATS                  0
+#define LWIP_STATS_DISPLAY          0
 
 // Two different modes:
 #define PICO_CYW43_ARCH_THREADSAFE_BACKGROUND 1

@@ -24,6 +24,8 @@ option(VZ_USE_METER_SML "" OFF)
 option(VZ_USE_METER_W1THERM "" ON)
 option(VZ_USE_METER_PICO_EMONLIB "" OFF)
 option(VZ_USE_METER_PICO_ONBOARD_TEMP "" OFF)
+option(VZ_USE_METER_PICO_HCSR04 "" OFF)
+option(VZ_USE_METER_PICO_W1THERM_GPIO "" OFF)
 
 option(VZ_USE_HTTPS "" OFF)
 
@@ -43,6 +45,7 @@ if(VZ_BUILD_ON_PICO)
                     ${PICO_SDK_PATH}/src/rp2_common/pico_stdio/include
                     ${PICO_SDK_PATH}/src/rp2_common/hardware_uart/include
                     ${PICO_SDK_PATH}/src/rp2_common/hardware_adc/include
+                    ${PICO_SDK_PATH}/src/rp2_common/hardware_pio/include
                     ${PICO_SDK_PATH}/src/rp2_common/pico_cyw43_arch/include
                     ${PICO_SDK_PATH}/src/rp2_common/pico_cyw43_driver/include
                     ${PICO_SDK_PATH}/src/rp2_common/pico_async_context/include
@@ -72,6 +75,8 @@ if(VZ_BUILD_ON_PICO)
 
   set(VZ_USE_METER_PICO_EMONLIB ON)
   set(VZ_USE_METER_PICO_ONBOARD_TEMP ON)
+  set(VZ_USE_METER_PICO_HCSR04 ON)
+  set(VZ_USE_METER_PICO_W1THERM_GPIO ON)
 
   set(VZ_USE_CURL OFF)
   set(VZ_USE_ALTCP ON)
@@ -163,9 +168,12 @@ if(VZ_BUILD_ON_PICO)
           ${vz_pico_tls_libs}
           pico_stdlib
           hardware_adc
+          hardware_pio
           proto vz vz-api
           json-c
           emonlib
+          distance-sensor
+          pico_one_wire
           )
 #  target_link_libraries(vzlogger -fno-omit-frame-pointer -mapcs-frame -funwind-tables -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,realloc -Wl,-wrap,free)
 

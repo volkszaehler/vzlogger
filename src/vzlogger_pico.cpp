@@ -99,12 +99,17 @@ static const char * inlineConfig =
            'middleware': '" VZ_SERVER_URL "', \
            'identifier': 'Current' \
          } \
-       ] \
 */
-    "} \
+      "] \
+     } \
    ] }";
 
-/* Other example:
+/* Other examples:
+
+---------------------------------------------------
+Onboard temperature:
+---------------------------------------------------
+
    'meters': \
    [ \
      { \
@@ -121,7 +126,56 @@ static const char * inlineConfig =
            'middleware': '" VZ_SERVER_URL "' \
          } \
        ] \
-     } */
+     }
+
+---------------------------------------------------
+HC-SR04 distance sensor + 2x DS18B20 w2 therm sensor (GPIO-based):
+---------------------------------------------------
+
+   'meters': \
+   [ \
+     { \
+       'enabled': true, \
+       'skip': false, \
+       'interval': 60, \
+       'protocol': 'w1tGpio', \
+       'w1pin': 26, \
+       'channels': \
+       [ \
+         { \
+           'uuid': '815e8820-bd87-11ef-992f-017e1a2d8ec8', \
+           'api': 'volkszaehler', \
+           'middleware': '" VZ_SERVER_URL "', \
+           'identifier': '2880A6860000008B'\
+         } \
+        ,{ \
+           'uuid': '9757f240-bd87-11ef-a7dd-57cb8572778f', \
+           'api': 'volkszaehler', \
+           'middleware': '" VZ_SERVER_URL "', \
+           'identifier': '284208830000006A'\
+         }"
+      "] \
+     } \
+    ,{ \
+       'enabled': true, \
+       'skip': false, \
+       'interval': 10, \
+       'protocol': 'hcsr04', \
+       'trigger': 0, \
+       'pioInst': 0, \
+       'channels': \
+       [ \
+         { \
+           'uuid': '600884e0-bd87-11ef-95ef-d9dde5b5e151', \
+           'api': 'volkszaehler', \
+           'middleware': '" VZ_SERVER_URL "', \
+           'identifier': 'Distance'\
+         }"
+      "] \
+     } \
+   ] }";
+
+*/
 
 static const uint tzOffset = 0; // 3600; // 1h ahead of UTC
 

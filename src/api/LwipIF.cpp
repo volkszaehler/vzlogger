@@ -203,7 +203,8 @@ uint vz::api::LwipIF::postRequest(const char * data, const char * url)
   request += "\r\n";
   request += data;
 
-  print(log_debug, "Sending request: %s", id.c_str(), request.c_str());
+  print(log_debug, "Sending request (%d bytes): %s", id.c_str(), request.length(), request.c_str());
+
   cyw43_arch_lwip_begin();
   err_t err = altcp_write(pcb, request.c_str(), strlen(request.c_str()), TCP_WRITE_FLAG_COPY);
   if (err == ERR_OK)
@@ -212,6 +213,17 @@ uint vz::api::LwipIF::postRequest(const char * data, const char * url)
     err = altcp_output(pcb);
   }
   cyw43_arch_lwip_end();
+  if (err == ERR_MEM)
+  {
+    // See: https://www.nongnu.org/lwip/2_1_x/group__tcp__raw.html#ga6b2aa0efbf10e254930332b7c89cd8c5
+    // "The proper way to use this function is to call the function with at most tcp_sndbuf() bytes of data.
+    // If the function returns ERR_MEM, the application should wait until some of the currently enqueued data
+    // has been successfully received by the other host and try again."
+
+    print(log_warning, "Error sending request: %d -> state RETRY (%d)", id.c_str(), err, altcp_sndbuf(pcb));
+    return VZ_SRV_RETRY;
+  }
+
   if (err != ERR_OK)
   {
     // throw vz::VZException("LwipIF: error sending data, err=%d", err);

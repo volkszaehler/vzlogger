@@ -1,8 +1,9 @@
 /**
- * Meter interface
+ * Read HC-SR04 distance sensor on Raspberry PICO via GPIO
+ * See https://github.com/dangarbri/pico-distance-sensor
  *
  * @package vzlogger
- * @copyright Copyright (c) 2011 - 2023, The volkszaehler.org project
+ * @copyright Copyright (c) 2011, The volkszaehler.org project
  * @license http://www.gnu.org/licenses/gpl.txt GNU Public License
  * @author Steffen Vogel <info@steffenvogel.de>
  */
@@ -23,24 +24,30 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _meter_protocol_hpp_
-#define _meter_protocol_hpp_
+#ifndef _METER_HCSR04_H_
+#define _METER_HCSR04_H_
 
-typedef enum meter_procotol {
-	meter_protocol_none = 0,
-	meter_protocol_file = 1,
-	meter_protocol_exec,
-	meter_protocol_random,
-	meter_protocol_s0,
-	meter_protocol_d0,
-	meter_protocol_sml,
-	meter_protocol_fluksov2,
-	meter_protocol_ocr,
-	meter_protocol_w1therm,
-	meter_protocol_oms,
-	meter_protocol_onboardTemp,
-	meter_protocol_emonlib,
-	meter_protocol_hcsr04,
-	meter_protocol_w1tGpio
-} meter_protocol_t;
-#endif /* _meter_protocol_hpp_ */
+#include <protocols/Protocol.hpp>
+
+class DistanceSensor;
+
+class MeterHCSR04 : public vz::protocol::Protocol
+{
+  public:
+    MeterHCSR04(std::list<Option> options);
+    virtual ~MeterHCSR04();
+
+    int open();
+    int close();
+    ssize_t read(std::vector<Reading> &rds, size_t n);
+
+  private:
+    DistanceSensor * hcsr04;
+
+    uint trigger;  // Which GPIO pin, starting with 0 from 26
+    uint pioInst;  // Which PIO instance: 0 or 1
+
+    ReadingIdentifier::Ptr ids[1];
+};
+
+#endif /* _METER_HCSR04_H_ */

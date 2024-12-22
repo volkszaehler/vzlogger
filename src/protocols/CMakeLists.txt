@@ -84,6 +84,19 @@ else ( VZ_USE_METER_PICO_ONBOARD_TEMP )
   set(pico_onboardTemp_srcs "")
 endif( VZ_USE_METER_PICO_ONBOARD_TEMP )
 
+if( VZ_USE_METER_PICO_HCSR04 )
+  set(pico_hcsr04_srcs MeterHCSR04 ../../include/protocols/MeterHCSR04.hpp)
+  include_directories(${CMAKE_CURRENT_LIST_DIR}/../../libs/HC-SR04/include)
+else ( VZ_USE_METER_PICO_HCSR04 )
+  set(pico_hcsr04_srcs "")
+endif( VZ_USE_METER_PICO_HCSR04 )
+
+if( VZ_USE_METER_PICO_W1THERM_GPIO )
+  set(pico_w1therm_gpio_srcs MeterW1thGpio.cpp ../../include/protocols/MeterW1thGpio.hpp)
+  include_directories(${CMAKE_CURRENT_LIST_DIR}/../../libs/pico-onewire/api)
+else ( VZ_USE_METER_PICO_W1THERM_GPIO )
+  set(pico_w1therm_gpio_srcs "")
+endif( VZ_USE_METER_PICO_W1THERM_GPIO )
 
 set(proto_srcs
   ${s0_srcs}
@@ -98,6 +111,8 @@ set(proto_srcs
   ${oms_srcs}
   ${pico_emonlib_srcs}
   ${pico_onboardTemp_srcs}
+  ${pico_hcsr04_srcs}
+  ${pico_w1therm_gpio_srcs}
 )
 
 add_library(proto STATIC ${proto_srcs})
