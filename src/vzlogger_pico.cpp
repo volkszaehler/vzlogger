@@ -7,6 +7,7 @@ using namespace std;
 #define PICO_CYW43_ARCH_THREADSAFE_BACKGROUND 1
 
 #include "lwip/netif.h"
+#include "lwip/init.h"
 
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
@@ -15,175 +16,19 @@ using namespace std;
 
 #include <Config_Options.hpp>
 #include <Meter.hpp>
-#include <Ntp.hpp>
 #include <malloc.h>
 
-// --------------------------------------------------------------
-// Pico has no filesystem, hence no config file to read, hence inline config:
-// For EmonLib calibration values see here:
-//   https://docs.openenergymonitor.org/electricity-monitoring/ctac/calibration.html
-// Voltage: Multimeter says U=220, with vCal=230 resulting U=204 -> new vCal=248
-// --------------------------------------------------------------
+#include "VzPicoWifi.h"
 
-#define VZ_SERVER_URL "http://vz-server:8000/middleware.php"
-
-static const char * wifiSSID = TODO
-static const char * wifiPW   = TODO
-
-// log_alert = 0, log_error = 1, log_warning = 3, log_info = 5, log_debug = 10, log_finest = 15
-static const char * inlineConfig =
-"{ 'verbosity': 5, \
-   'retry': 30, \
-   'meters': \
-   [ \
-     { \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 10, \
-       'protocol': 'emonlib', \
-       'adcCurrent': 0, \
-       'adcVoltage': 1, \
-       'currentCalibration' : 30, \
-       'voltageCalibration' : 247.0, \
-       'phaseCalibration' : 35.0, \
-       'delay': 100, \
-       'numSamples': 20, \
-       'channels': \
-       [ \
-         { \
-           'uuid': 'f3ef9b70-de3b-11ee-83b5-73042e2a7e09', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'RealPower'\
-         } \
-        ,{ \
-           'uuid': '560ff4e0-2d94-11ef-9a04-7f5c06e34262', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'Voltage'\
-         }"
-/* Not needed normally, disable to save DB space:
-        ,{ \
-           'uuid': '2e2a8c90-dd66-11ee-9621-0d0747854c29', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'Current' \
-         } \
-*/
-      "] \
-     } \
-    ,{ \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 10, \
-       'protocol': 'emonlib', \
-       'adcCurrent': 2, \
-       'adcVoltage': 1, \
-       'currentCalibration' : 30, \
-       'voltageCalibration' : 247.0, \
-       'phaseCalibration' : 132.0, \
-       'delay': 100, \
-       'numSamples': 20, \
-       'channels': \
-       [ \
-         { \
-           'uuid': 'a8d6bba0-6462-11ef-aea1-3b1a1ab3364e', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'RealPower'\
-         }"
-/* Not needed normally, disable to save DB space:
-        ,{ \
-           'uuid': 'd9c7cd20-67bf-11ef-938c-3b62ce66ce08', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'Current' \
-         } \
-*/
-      "] \
-     } \
-   ] }";
-
-/* Other examples:
-
----------------------------------------------------
-Onboard temperature:
----------------------------------------------------
-
-   'meters': \
-   [ \
-     { \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 120, \
-       'protocol': 'onboardTemp', \
-       'unit': 'C', \
-       'channels': \
-       [ \
-         { \
-           'uuid': '3a145ba0-db39-11ee-a6a8-57d706d8e278', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "' \
-         } \
-       ] \
-     }
-
----------------------------------------------------
-HC-SR04 distance sensor + 2x DS18B20 w2 therm sensor (GPIO-based):
----------------------------------------------------
-
-   'meters': \
-   [ \
-     { \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 60, \
-       'protocol': 'w1tGpio', \
-       'w1pin': 26, \
-       'channels': \
-       [ \
-         { \
-           'uuid': '815e8820-bd87-11ef-992f-017e1a2d8ec8', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': '2880A6860000008B'\
-         } \
-        ,{ \
-           'uuid': '9757f240-bd87-11ef-a7dd-57cb8572778f', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': '284208830000006A'\
-         }"
-      "] \
-     } \
-    ,{ \
-       'enabled': true, \
-       'skip': false, \
-       'interval': 10, \
-       'protocol': 'hcsr04', \
-       'trigger': 0, \
-       'pioInst': 0, \
-       'channels': \
-       [ \
-         { \
-           'uuid': '600884e0-bd87-11ef-95ef-d9dde5b5e151', \
-           'api': 'volkszaehler', \
-           'middleware': '" VZ_SERVER_URL "', \
-           'identifier': 'Distance'\
-         }"
-      "] \
-     } \
-   ] }";
-
-*/
-
-static const uint tzOffset = 0; // 3600; // 1h ahead of UTC
+// Shutdown WiFi is at least 60s down, else not worth it
+// TODO: Should be configurable ...
+static const uint wifiStopTime = 60;
 
 // --------------------------------------------------------------
 // Global vars referenced elsewhere
 // --------------------------------------------------------------
 
-time_t         sysRefTime;
+time_t         sysRefTime = 0;
 Config_Options options;    // global application options
 
 // --------------------------------------------------------------
@@ -198,51 +43,24 @@ int main()
   //  sudo screen -L /dev/ttyACM0
   sleep_ms(5000);
 
-  // --------------------------------------------------------------
-  printf("** Starting ... init WIFi ...\n");
-  // --------------------------------------------------------------
+  printf("--------------------------------------------------------------\n");
+  printf("** vzlogger %s/%s (LwIP %s) starting up ...\n", PACKAGE, VERSION, LWIP_VERSION_STRING);
+  printf("** Connecting WiFi ...\n");
+  printf("--------------------------------------------------------------\n");
 
-  if (cyw43_arch_init())
+  options.verbosity(5); // INFO at startup, will be overwritte when parsing config
+
+  VzPicoWifi wifi;
+  if(! wifi.init())
   {
-    fprintf(stderr, "ERROR: Wi-Fi init failed");
+    fprintf(stderr, "*** ERROR: Wi-Fi connect failed");
     return EXIT_FAILURE;
   }
-  cyw43_arch_enable_sta_mode();
-
-  // --------------------------------------------------------------
-  printf("** Connecting WIFi %s ...\n", wifiSSID);
-  // --------------------------------------------------------------
-
-  bool connected = false;
-  for(int i = 0; i < 20; i++)
+  sysRefTime = wifi.getSysRefTime();
+  if(! sysRefTime)
   {
-    if(! cyw43_arch_wifi_connect_timeout_ms(wifiSSID, wifiPW, CYW43_AUTH_WPA2_AES_PSK, 30000))
-    {
-      connected = true;
-      break;
-    }
-    printf("Failed to connect WiFi '%s'\n", wifiSSID);
-    sleep_ms(2000);
-  }
-  if(! connected)
-  {
-    fprintf(stderr, "ERROR: Wi-Fi connect failed");
+    fprintf(stderr, "*** ERROR: Failed to get NTP time.");
     return EXIT_FAILURE;
-  }
-
-  // --------------------------------------------------------------
-  printf("** Getting NTP time ...\n");
-  // --------------------------------------------------------------
-
-  {
-    // In block, so ntp gets deconstructed, not needed anymore later
-    Ntp ntp;
-    time_t utc = ntp.queryTime();
-    printf("** Got NTP UTC time %s", ctime(&utc));
-    utc += tzOffset; // Add TZ offset
-    time(&sysRefTime); // Something like 1.1.1970 00:00:07
-    sysRefTime = utc - sysRefTime;
-    printf("** Sys boot time    %s", ctime(&sysRefTime));
   }
 
   // --------------------------------------------------------------
@@ -297,13 +115,7 @@ int main()
   uint cycle = 0;
   while(true)
   {
-    // --------------------------------------------------------------
-    // Blink the LED to see something is happening
-    // --------------------------------------------------------------
-
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-    sleep_ms(10);
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+    bool keepWifi = false;
 
     // --------------------------------------------------------------
     // Check the meters ...
@@ -327,7 +139,15 @@ int main()
 
         if(it->readyToSend())
         {
-          it->sendData();
+          if(wifi.isLinkUp() || wifi.enable())
+          {
+            it->sendData();
+            keepWifi = true;
+          }
+        }
+        else if(it->isBusy())
+        {
+          keepWifi = true;
         }
       }
     }
@@ -351,6 +171,24 @@ int main()
 
     // Sleep a while ... TODO config, or even calculate from config
     sleep_ms(1000);
+
+    // --------------------------------------------------------------
+    // Blink the LED to see something is happening
+    // Cannot use onboard LED as this is preventing from disabling WiFi if not needed (for saving energy)
+    // So, do that only if currently WiFi is on
+    // --------------------------------------------------------------
+
+    if(wifi.isLinkUp())
+    {
+      cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+      sleep_ms(10);
+      cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
+      if((! keepWifi) && (nextDue > wifiStopTime))
+      {
+        wifi.disable();
+      }
+    }
   }
 
   return EXIT_SUCCESS;
@@ -370,25 +208,32 @@ void print(log_level_t level, const char *format, const char *id, ...)
     return; /* skip message if its under the verbosity level */
   }
 
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  now.tv_sec += sysRefTime;
-  struct tm tm;
-  struct tm * timeinfo = localtime_r(&now.tv_sec, &tm);
-
-  /* format timestamp */
   char prefix[24];
-  size_t pos = strftime(prefix, 18, "[%b %d %H:%M:%S]", timeinfo);
-
-  /* format section */
-  if (id)
+  if(sysRefTime > 0)
   {
-    snprintf(prefix + pos, 8, "[%s]", (char *)id);
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    now.tv_sec += sysRefTime + tzOffset;
+    struct tm tm;
+    struct tm * timeinfo = localtime_r(&now.tv_sec, &tm);
+
+    /* format timestamp */
+    size_t pos = strftime(prefix, 18, "[%b %d %H:%M:%S]", timeinfo);
+
+    /* format section */
+    if (id)
+    {
+      snprintf(prefix + pos, 8, "[%s]", (char *)id);
+    }
+  }
+  else
+  {
+    strcpy(prefix, "** ");
   }
 
   va_list args;
   va_start(args, id);
-  printf("%-24s", prefix);
+  printf((sysRefTime > 0 ? "%-24s" : "%s"), prefix);
   vprintf(format, args);
   printf("\n");
   va_end(args);

@@ -41,7 +41,7 @@ namespace api {
 
 class LwipIF {
   public:
-    LwipIF(const char * apiId, uint timeout = 30);
+    LwipIF(const char * hn, uint port, const char * apiId, uint timeout = 30);
     ~LwipIF();
 
     void addHeader(const std::string value);
@@ -49,7 +49,7 @@ class LwipIF {
     void commitHeader();
 
     // Null values for connect can be used as reconnect, if already set
-    void   connect(const char * hostname = NULL, uint port = 0);
+    void   connect();
     void   reconnect();
     uint   postRequest(const char * data, const char * url);
     uint   getPort();
@@ -67,6 +67,8 @@ class LwipIF {
     const char       * stateStr();
     time_t             getConnectInit();
     const char       * getId();
+
+    static vz::api::LwipIF * getInstance(const std::string & url, uint timeout);
 
   private:
     std::string        id;

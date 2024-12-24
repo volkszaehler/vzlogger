@@ -242,7 +242,7 @@ void MeterMap::read()
   } while ((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
   print(log_debug, "Reading data complete. Publishing ...", mtr->name());
-  this->sendData();
+// TGE  this->sendData();
 
 #ifndef VZ_USE_THREADS
   lastRead = time(NULL);
@@ -277,6 +277,21 @@ bool MeterMap::readyToSend()
     }
   }
   print(log_finest, "No waiting data, not sending ...", meter()->name());
+  return false;
+}
+
+bool MeterMap::isBusy()
+{
+  print(log_finest, "Checking for busy network ...", meter()->name());
+  for (MeterMap::iterator ch = this->begin(); ch != this->end(); ch++)
+  {
+    if((*ch)->isBusy())
+    {
+      print(log_debug, "Busy network I/O ...", meter()->name());
+      return true;
+    }
+  }
+  print(log_finest, "No busy network.", meter()->name());
   return false;
 }
 #endif // not VZ_USE_THREADS

@@ -99,6 +99,7 @@ class MeterMap {
 #else // VZ_USE_THREADS
         int  isDueIn();
         bool readyToSend();
+        bool isBusy();
 #endif // VZ_USE_THREADS
         void sendData();
 

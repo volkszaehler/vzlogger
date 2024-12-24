@@ -100,32 +100,32 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
         print(log_debug, "Volkszaehler API: %s (timeout %d)", ch->name(), _url.c_str(), _curlTimeout);
 
 #ifdef VZ_PICO
-        _api = new vz::api::LwipIF(ch->name(), _curlTimeout);
-
-	sprintf(agent, "User-Agent: %s/%s (LwIP %s)", PACKAGE, VERSION, LWIP_VERSION_STRING); // build user agent
-        // is a std::set
-	_api->addHeader("Content-type: application/json");
-	_api->addHeader("Accept: application/json");
-	_api->addHeader("Connection: keep-alive");
-	_api->addHeader(agent);
-
         // Something like https://vz-server:8000/middleware.php"
-        char prot[10], h[128], url[512];
+        char prot[10], h[128], url[512], baseUrl[256];
         uint p;
         if(sscanf(_middleware.c_str(), "%[^:]://%[^:]:%d/%s", prot, h, &p, url) == 4)
         {
-          print(log_debug, "Volkszaehler API connecting %s:%d ...", ch->name(), h, p);
-          _api->connect(h, p);
+          sprintf(baseUrl, "%s://%s:%d", prot, h, p);
         }
         else if(sscanf(_middleware.c_str(), "%[^:]://%[^:]/%s", prot, h, url) == 3)
         {
-          print(log_debug, "Volkszaehler API connecting %s ...", ch->name(), h);
-          _api->connect(h);
+          sprintf(baseUrl, "%s://%s:%d", prot, h, (strcmp(prot, "https") == 0 ? 443: 80));
         }
         else
         {
           throw vz::VZException("VZ-API: Cannot parse URL %s.", _middleware.c_str());
         }
+
+        _api = vz::api::LwipIF::getInstance(baseUrl, _curlTimeout);
+
+	sprintf(agent, "User-Agent: %s/%s (LwIP %s)", PACKAGE, VERSION, LWIP_VERSION_STRING); // build user agent
+	_api->addHeader("Content-type: application/json");
+	_api->addHeader("Accept: application/json");
+	_api->addHeader("Connection: keep-alive");
+	_api->addHeader(agent);
+
+        print(log_debug, "Volkszaehler API connecting %s ...", ch->name(), baseUrl);
+        _api->connect();
 
         print(log_debug, "Volkszaehler API connection initiated.", ch->name());
 
@@ -357,6 +357,14 @@ void vz::api::Volkszaehler::send()
 
   print(log_finest, "Volkszaehler API sending data complete.", channel()->name());
 }
+
+#ifdef VZ_PICO // Otherwise use base-class method
+bool vz::api::Volkszaehler::isBusy() const
+{
+  uint state = _api->getState();
+  return (state != VZ_SRV_READY && state != VZ_SRV_INIT);
+}
+#endif // VZ_PICO
 
 void vz::api::Volkszaehler::register_device() {}
 

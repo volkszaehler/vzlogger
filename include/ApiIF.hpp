@@ -53,6 +53,9 @@ class ApiIF {
 	virtual void send() = 0;
 	virtual void register_device() = 0;
 
+        // Override as needed
+	virtual bool isBusy() const { return false; }
+
   protected:
 	Channel::Ptr channel() { return _ch; }
 

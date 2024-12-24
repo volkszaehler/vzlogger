@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <map>
 
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
@@ -45,7 +46,11 @@ static void  altcp_client_err(void *arg, err_t err);
 static err_t altcp_client_recv(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t err);
 static err_t altcp_client_sent(void *arg, struct altcp_pcb *pcb, u16_t len);
 
-vz::api::LwipIF::LwipIF(const char * apiId, uint t) : id(apiId), pcb(NULL), tls_config(NULL), timeout(t), state(VZ_SRV_INIT), connectInitiated(0)
+static const char * logMsgId = "lwip";
+
+vz::api::LwipIF::LwipIF(const char * hn, uint p, const char * apiId, uint t) :
+  id(apiId), pcb(NULL), tls_config(NULL), timeout(t), state(VZ_SRV_INIT), connectInitiated(0),
+  hostname(hn), port(p)
 {
   print(log_debug, "Creating LwipIF instance (timeout: %d)...", id.c_str(), timeout);
   this->initPCB();
@@ -135,11 +140,8 @@ time_t vz::api::LwipIF::getConnectInit() { return connectInitiated; }
 
 // ==============================
 
-void vz::api::LwipIF::connect(const char * h, uint p)
+void vz::api::LwipIF::connect()
 {
-  if(p != 0) { port = p; }
-  if(h != NULL) { hostname = h; }
-
   print(log_info, "Connecting %s:%d ...", id.c_str(), hostname.c_str(), port);
 
   this->initPCB();
@@ -367,4 +369,45 @@ void vz::api::LwipIF::reconnect()
   print(log_debug, "Reconnecting %s:%d ...", id.c_str(), hostname.c_str(), port);
   this->deletePCB();
   this->connect();
+}
+
+// ==============================
+
+vz::api::LwipIF * vz::api::LwipIF::getInstance(const std::string & url, uint t)
+{
+  static std::map<std::string, vz::api::LwipIF *> connections;
+
+  print(log_debug, "Getting Lwip instance for %s ...", logMsgId, url.c_str());
+
+  uint numConn = connections.size();
+  vz::api::LwipIF * ai = connections[url];
+  if(ai)
+  {
+    print(log_debug, "Found Lwip instance for %s at %p (%d).", logMsgId, url.c_str(), ai, numConn);
+  }
+  else
+  {
+    char apiId[10];
+    sprintf(apiId, "lwi%d", numConn);
+
+    char prot[10], h[128];
+    uint p;
+    if(sscanf(url.c_str(), "%[^:]://%[^:]:%d", prot, h, &p) == 3)
+    {
+      ai = new vz::api::LwipIF(h, p, apiId, t);
+    }
+    else if(sscanf(url.c_str(), "%[^:]://%[^:]", prot, h) == 2)
+    {
+      throw vz::VZException("VZ-API: Cannot parse URL %s - need port.", url.c_str());
+    }
+    else
+    {
+      throw vz::VZException("VZ-API: Cannot parse URL %s.", url.c_str());
+    }
+
+    connections[url] = ai;
+    print(log_debug, "Created new Lwip instance for %s at %p (%d).", logMsgId, url.c_str(), ai, numConn);
+  }
+
+  return ai;
 }

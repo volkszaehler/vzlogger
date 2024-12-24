@@ -69,6 +69,9 @@ class Volkszaehler : public ApiIF {
 	~Volkszaehler();
 
 	void send();
+#ifdef VZ_PICO // Otherwise use base-class method
+        bool isBusy() const;
+#endif // VZ_PICO
 
 	void register_device();
 

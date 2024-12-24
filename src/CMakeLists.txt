@@ -5,6 +5,7 @@
 #AM_LDFLAGS =
 
 option(VZ_BUILD_ON_PICO "Build on pico" ON)
+add_compile_options(-DVZ_PICO_CUSTOM_CONFIG="vz_pico_brunnen.h")
 
 option(VZ_USE_THREADS "Use threads" ON)
 option(VZ_USE_INFLUXDB "Use influxdb" ON)
@@ -114,6 +115,7 @@ if(VZ_BUILD_ON_PICO)
     vzlogger_pico.cpp
     Meter.cpp
     Ntp.cpp
+    VzPicoWifi.cpp
   )
 else(VZ_BUILD_ON_PICO)
   set(vzlogger_srcs

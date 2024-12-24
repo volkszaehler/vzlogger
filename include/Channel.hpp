@@ -127,6 +127,7 @@ class Channel {
 #endif // VZ_USE_THREADS
 
 	int duplicates() const { return _duplicates; }
+        bool isBusy() const;
 
   private:
 	static int instances;
