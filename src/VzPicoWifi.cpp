@@ -23,6 +23,7 @@
  * along with volkszaehler.org. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define PICO_CYW43_ARCH_THREADSAFE_BACKGROUND 1
 #include "pico/cyw43_arch.h"
 #include "VzPicoWifi.h"
 #include <Ntp.hpp>
@@ -31,9 +32,14 @@ static const char * statusTxt[] = { "Wifi down", "Connected", "Connection failed
                                     "No matching SSID found", "Authenticatation failure" };
 static const char * wifiLogId = "wifi";
 
-VzPicoWifi::VzPicoWifi(uint numRetries) : sysRefTime(0), firstTime(true)
+VzPicoWifi::VzPicoWifi(const char * hn, uint numRetries) : sysRefTime(0), firstTime(true), numUsed(0), accTimeUp(0), accTimeDown(0), accTimeConnecting(0)
 {
   retries = numRetries;
+  lastChange = time(NULL);
+  if(hn != NULL)
+  {
+    hostname = hn;
+  }
 }
 VzPicoWifi::~VzPicoWifi()
 {
@@ -47,6 +53,10 @@ VzPicoWifi::~VzPicoWifi()
 
 bool VzPicoWifi::enable()
 {
+  time_t now = time(NULL);
+  accTimeDown += (now - lastChange);
+  lastChange = now;
+
   // --------------------------------------------------------------
   print(log_info, "Enabling WiFi ...", wifiLogId);
   // --------------------------------------------------------------
@@ -59,16 +69,43 @@ bool VzPicoWifi::enable()
   }
   cyw43_arch_enable_sta_mode();
 
+  cyw43_arch_lwip_begin();
+  struct netif * n = &cyw43_state.netif[CYW43_ITF_STA];
+  if(hostname.empty())
+  {
+    hostname = netif_get_hostname(n);
+  }
+  else
+  {
+    netif_set_hostname(n, hostname.c_str());
+    netif_set_up(n);
+  }
+  cyw43_arch_lwip_end();
+
   for(int i = 0; i < retries; i++)
   {
     // --------------------------------------------------------------
-    print(log_debug, "Connecting WiFi %s (%d) ...", wifiLogId, wifiSSID, i);
+    print(log_debug, "Connecting WiFi %s (%d) as '%s' ...", wifiLogId, wifiSSID, i, hostname.c_str());
     // --------------------------------------------------------------
 
     if(! (rc = cyw43_arch_wifi_connect_timeout_ms(wifiSSID, wifiPW, CYW43_AUTH_WPA2_AES_PSK, 30000)))
     {
-      print(log_debug, "WiFi %s connected.", wifiLogId, wifiSSID);
+      int32_t rssi;
+      uint8_t mac[6];
+      
+      cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, mac);
+      cyw43_wifi_get_rssi(&cyw43_state, &rssi);
+      cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+
+      print(log_debug, "WiFi '%s' connected. Signal: %d, MAC: %02x:%02x:%02x:%02x:%02x:%02x, IP: %s", wifiLogId, wifiSSID, rssi,
+            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], ipaddr_ntoa(&cyw43_state.netif[CYW43_ITF_STA].ip_addr));
       firstTime = false;
+
+      now = time(NULL);
+      accTimeConnecting += (now - lastChange);
+      lastChange = now;
+      numUsed++;
+
       return true;
     }
     sleep_ms(2000);
@@ -111,6 +148,10 @@ bool VzPicoWifi::init()
 
 void VzPicoWifi::disable()
 {
+  time_t now = time(NULL);
+  accTimeUp += (now - lastChange);
+  lastChange = now;
+
   print(log_info, "Disabling WiFi ...", wifiLogId);
   cyw43_arch_deinit();
   print(log_debug, "WiFi disabled.", wifiLogId);
@@ -118,9 +159,19 @@ void VzPicoWifi::disable()
 
 time_t VzPicoWifi::getSysRefTime() { return sysRefTime; }
 
-bool VzPicoWifi::isLinkUp()
+bool VzPicoWifi::isConnected()
 {
   int linkStatus = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
   print(log_debug, "WiFi link status: %s (%d).", wifiLogId, statusTxt[linkStatus], linkStatus);
   return (linkStatus == CYW43_LINK_JOIN);
+}
+
+void VzPicoWifi::printStatistics(log_level_t logLevel)
+{
+  // Power consumption:
+  //  Connecting ~60mA
+  //  Up ~40mA
+  //  Down ~20mA
+  print(logLevel, "WiFi statistics: NumUsed: %d, Time connecting: %ds, up: %ds, down: %ds", wifiLogId,
+        numUsed, accTimeConnecting, accTimeUp, accTimeDown);
 }

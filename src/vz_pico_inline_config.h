@@ -13,6 +13,11 @@
 static const uint tzOffset   = 3600; // 1h ahead of UTC
 static const char * wifiSSID = "TODO";
 static const char * wifiPW   = "TODO";
+static const char * myHostname   = "TODO";
+
+static const uint wifiStopTime = 60;       // Shutdown WiFi is at least 60s down from now on, else not worth it
+static const uint lowCPUfactor = 20;       // Energy-saving low CPU speed, results in 6Mhz (default is 125MHz)
+static const uint sendDataInterval = 300;  // Send data not more often than 5min, immediately if 0
 
 // log_alert = 0, log_error = 1, log_warning = 3, log_info = 5, log_debug = 10, log_finest = 15
 static const char * inlineConfig =

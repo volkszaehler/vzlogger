@@ -33,19 +33,27 @@
 class VzPicoWifi
 {
   public:
-    VzPicoWifi(uint numRetries = 20);
+    VzPicoWifi(const char * hn = NULL, uint numRetries = 20);
     ~VzPicoWifi();
 
-    bool init();
-    bool enable();
-    void disable();
+    bool   init();
+    bool   enable();
+    void   disable();
     time_t getSysRefTime();
-    bool isLinkUp();
+    bool   isConnected();
+    void   printStatistics(log_level_t logLevel);
 
   private:
     uint    retries;
     time_t  sysRefTime;
     bool    firstTime;
+    std::string hostname;
+
+    uint    numUsed;
+    uint    accTimeConnecting;
+    uint    accTimeUp;
+    uint    accTimeDown;
+    time_t  lastChange;
 };
 
 #endif // VZ_PICO_WIFI

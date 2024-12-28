@@ -102,6 +102,7 @@ class MeterMap {
         bool isBusy();
 #endif // VZ_USE_THREADS
         void sendData();
+        void printStatistics(log_level_t logLevel);
 
   private:
 	Meter::Ptr _meter;
@@ -114,6 +115,11 @@ class MeterMap {
 #else // VZ_USE_THREADS
         time_t lastRead;
 #endif // VZ_USE_THREADS
+
+        // Statistics counters
+        uint accTimeRead;
+        uint accTimeSend;
+        uint numUsed;
 };
 
 /**

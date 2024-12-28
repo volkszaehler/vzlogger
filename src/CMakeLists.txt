@@ -116,6 +116,7 @@ if(VZ_BUILD_ON_PICO)
     Meter.cpp
     Ntp.cpp
     VzPicoWifi.cpp
+    VzPicoSys.cpp
   )
 else(VZ_BUILD_ON_PICO)
   set(vzlogger_srcs

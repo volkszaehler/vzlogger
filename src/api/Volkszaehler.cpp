@@ -124,10 +124,12 @@ vz::api::Volkszaehler::Volkszaehler(Channel::Ptr ch, std::list<Option> pOptions)
 	_api->addHeader("Connection: keep-alive");
 	_api->addHeader(agent);
 
-        print(log_debug, "Volkszaehler API connecting %s ...", ch->name(), baseUrl);
-        _api->connect();
-
-        print(log_debug, "Volkszaehler API connection initiated.", ch->name());
+        if(_api->getConnectInit() == 0)
+        {
+          print(log_debug, "Volkszaehler API connecting %s ...", ch->name(), baseUrl);
+          _api->connect();
+          print(log_debug, "Volkszaehler API connection initiated.", ch->name());
+        }
 
 #else // VZ_PICO
 	sprintf(agent, "User-Agent: %s/%s (%s)", PACKAGE, VERSION, curl_version()); // build user agent

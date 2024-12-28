@@ -247,8 +247,8 @@ static void altcp_client_dns_found(const char* hostname, const ip_addr_t *ipaddr
   vz::api::LwipIF * ai = (vz::api::LwipIF *) arg;
   if (ipaddr)
   {
-    print(log_debug, "DNS resolving complete", ai->getId());
-    print(log_debug, "Connecting to server IP %s port %d", ai->getId(), ipaddr_ntoa(ipaddr), ai->getPort());
+    print(log_debug, "DNS resolution complete: %s -> %s", ai->getId(), hostname, ipaddr_ntoa(ipaddr));
+    print(log_debug, "Connecting to %s:%d", ai->getId(), hostname, ai->getPort());
     err_t err = altcp_connect(ai->getPCB(), ipaddr, ai->getPort(), altcp_client_connected);
     if (err != ERR_OK)
     {

@@ -79,6 +79,9 @@ void MeterMap::start() {
 		print(log_info, "Meter for protocol '%s' is disabled. Skipping.", _meter->name(),
 			  _meter->protocol()->name().c_str());
 	}
+  accTimeRead = 0;
+  accTimeSend = 0;
+  numUsed = 0;
 }
 
 void MeterMap::cancel() { // is called from MapContainer::quit which is called from sigint handler
@@ -124,6 +127,8 @@ void MeterMap::registration() {
 
 void MeterMap::read()
 {
+  time_t tStart = time(NULL);
+
   Meter::Ptr mtr = this->meter();
   time_t aggIntEnd;
   const meter_details_t * details = meter_get_details(mtr->protocolId());
@@ -242,11 +247,18 @@ void MeterMap::read()
   } while ((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
   print(log_debug, "Reading data complete. Publishing ...", mtr->name());
-// TGE  this->sendData();
+
+#ifndef VZ_PICO
+  // Sending from here not on RPi Pico - will be called from main loop
+  this->sendData();
+#endif // VZ_PICO
 
 #ifndef VZ_USE_THREADS
   lastRead = time(NULL);
 #endif // not VZ_USE_THREADS
+
+  accTimeRead += (time(NULL) - tStart);
+  numUsed++;
 }
 
 #ifndef VZ_USE_THREADS
@@ -282,22 +294,22 @@ bool MeterMap::readyToSend()
 
 bool MeterMap::isBusy()
 {
-  print(log_finest, "Checking for busy network ...", meter()->name());
   for (MeterMap::iterator ch = this->begin(); ch != this->end(); ch++)
   {
     if((*ch)->isBusy())
     {
-      print(log_debug, "Busy network I/O ...", meter()->name());
+      print(log_debug, "Network I/O busy.", meter()->name());
       return true;
     }
   }
-  print(log_finest, "No busy network.", meter()->name());
+  print(log_finest, "Network not busy.", meter()->name());
   return false;
 }
 #endif // not VZ_USE_THREADS
 
 void MeterMap::sendData()
 {
+  time_t tStart = time(NULL);
   print(log_debug, "Sending data ...", meter()->name());
   for (MeterMap::iterator ch = this->begin(); ch != this->end(); ch++)
   {
@@ -354,6 +366,12 @@ void MeterMap::sendData()
       //(*ch)->size(), (*ch)->dump().c_str());
     }
   }
+  accTimeSend += (time(NULL) - tStart);
   print(log_debug, "All meter data sent.", meter()->name());
+}
+
+void MeterMap::printStatistics(log_level_t logLevel)
+{
+  print(logLevel, "Read %d times, spent %ds reading, %ds sending", meter()->name(), numUsed, accTimeRead, accTimeSend);
 }
 
