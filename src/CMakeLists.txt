@@ -5,7 +5,8 @@
 #AM_LDFLAGS =
 
 option(VZ_BUILD_ON_PICO "Build on pico" ON)
-add_compile_options(-DVZ_PICO_CUSTOM_CONFIG="vz_pico_brunnen.h")
+# add_compile_options(-DVZ_PICO_CUSTOM_CONFIG="vz_pico_brunnen.h")
+add_compile_options(-DVZ_PICO_CUSTOM_CONFIG="vz_w1th_schlazi.h")
 
 option(VZ_USE_THREADS "Use threads" ON)
 option(VZ_USE_INFLUXDB "Use influxdb" ON)
@@ -52,6 +53,7 @@ if(VZ_BUILD_ON_PICO)
                     ${PICO_SDK_PATH}/src/rp2_common/pico_async_context/include
                     ${PICO_SDK_PATH}/lib/mbedtls/include
                     ${PICO_SDK_PATH}/src/common/pico_stdlib/include
+                    ${PICO_SDK_PATH}/src/common/pico_stdlib_headers/include
                     ${PICO_SDK_PATH}/lib/cyw43-driver/src
                     $<TARGET_PROPERTY:pico_lwip_core_headers,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:pico_base_headers,INTERFACE_INCLUDE_DIRECTORIES>

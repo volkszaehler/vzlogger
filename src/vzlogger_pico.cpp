@@ -272,7 +272,7 @@ void print(log_level_t level, const char *format, const char *id, ...)
     /* format section */
     if (id)
     {
-      snprintf(prefix + pos, 8, "[%s]", (char *)id);
+      snprintf(prefix + pos, 6, "[%s]", (char *)id);
     }
   }
   else

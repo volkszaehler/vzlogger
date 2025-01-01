@@ -7,7 +7,7 @@
 #include "protocols/MeterW1thGpio.hpp"
 #include "one_wire.h"
 
-MeterW1thGpio::MeterW1thGpio(const std::list<Option> &options) : Protocol("w1tGpio"), one_wire(NULL)
+MeterW1thGpio::MeterW1thGpio(const std::list<Option> &options) : Protocol("w1tG"), one_wire(NULL)
 {
   OptionList optlist;
   const char * optName;
