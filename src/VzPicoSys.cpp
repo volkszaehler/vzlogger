@@ -53,7 +53,6 @@ int VzPicoSys::init()
 #ifdef PICO_VSYS_PIN
   // setup adc
   adc_gpio_init(PICO_VSYS_PIN);
-printf("TGE adc_gpio_init(%d)\n", PICO_VSYS_PIN);
 #else
   state |= VZ_PICO_SYS_VOLTAGE_INFO_UNAVAIL;
 #endif
@@ -92,11 +91,9 @@ float VzPicoSys::getVoltage()
 # if CYW43_USES_VSYS_PIN
   cyw43_thread_enter();
   // Make sure cyw43 is awake
-  int x = cyw43_arch_gpio_get(CYW43_WL_GPIO_VBUS_PIN);
-printf("TGE cyw43_arch_gpio_get(%d): %d\n", CYW43_WL_GPIO_VBUS_PIN, x);
+  cyw43_arch_gpio_get(CYW43_WL_GPIO_VBUS_PIN);
 # endif
 
-printf("TGE gpio pin %d - %d\n", PICO_VSYS_PIN, PICO_VSYS_PIN - PICO_FIRST_ADC_PIN);
   adc_gpio_init(PICO_VSYS_PIN);
   adc_select_input(PICO_VSYS_PIN - PICO_FIRST_ADC_PIN);
   adc_fifo_setup(true, false, 0, false, false);
