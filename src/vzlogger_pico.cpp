@@ -6,7 +6,7 @@ using namespace std;
 
 #include "lwip/init.h"
 #include "pico/stdlib.h"
-#include "pico/cyw43_arch.h"
+// #include "pico/cyw43_arch.h"
 #include "hardware/watchdog.h"
 
 #include <Config_Options.hpp>
@@ -185,18 +185,10 @@ int main()
 
     if((nextDue > 0) && ((cycle % 10) == 0))
     {
-      print(log_debug, "Cycle %d: All meters and pending I/O processed. Next due: %ds. Napping ...", "", cycle, nextDue);
+      print(log_info, "Cycle %d: All meters and pending I/O processed. Next due: %ds. Napping ...", "", cycle, nextDue);
 
-// TODO: Make these metrics available as a meter (?)
-      print(log_info, "Cycle %d, MEM: Used: %ld, Free: %ld", "", cycle, vzPicoSys.getMemUsed(), vzPicoSys.getMemFree());
-
-// TODO TGE - make it debug:
-      wifi.printStatistics(log_info);
-      vzPicoSys.printStatistics(log_info);
-      for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++)
-      {
-        it->printStatistics(log_info);
-      }
+      // TODO: Make these metrics available as a meter (?)
+      print(log_debug, "Cycle %d, MEM: Used: %ld, Free: %ld", "", cycle, vzPicoSys.getMemUsed(), vzPicoSys.getMemFree());
     }
 
     // --------------------------------------------------------------
@@ -208,13 +200,12 @@ int main()
     // In low-power mode, do not even query WiFi
     if(clockSpeedIsDefault && wifi.isConnected())
     {
-      cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-      sleep_ms(10);
-      cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+      // Blink LED for 10ms (depends on WiFi, so only if WiFi is on) saying: "WiFi is on"
+      wifi.ledOn(10);
 
       if((cycle % 10) == 0)
       {
-        // Depends on WiFi chip - and uses ADC, possibly collides with other ADC meters (?)
+        // Seems to depend on WiFi chip - so do this only if WiFi is on
         // TODO: Make these metrics available as a meter (?)
         print(log_info, "Power Source: %s Voltage: %.2f", "", (vzPicoSys.isOnBattery() ? "Battery" : "USB"), vzPicoSys.getVoltage());
       }
@@ -226,12 +217,20 @@ int main()
         wifi.disable();
         sendDataComplete = time(NULL);
       }
+      // TODO: Make these metrics available as a meter (?)
+      wifi.printStatistics(log_info);
     }
 
     // Reduce clock speed after everything WiFi or peripheral is done
     if(clockSpeedIsDefault && ! wifi.isConnected())
     {
       vzPicoSys.setCpuSpeedLow(lowCPUfactor);
+      // TODO: Make these metrics available as a meter (?)
+      vzPicoSys.printStatistics(log_info);
+      for (MapContainer::iterator it = mappings.begin(); it != mappings.end(); it++)
+      {
+        it->printStatistics(log_info);
+      }
     }
 
     // Sleep a while ...
@@ -272,7 +271,7 @@ void print(log_level_t level, const char *format, const char *id, ...)
     /* format section */
     if (id)
     {
-      snprintf(prefix + pos, 6, "[%s]", (char *)id);
+      snprintf(prefix + pos, 7, "[%s]", (char *)id);
     }
   }
   else

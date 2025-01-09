@@ -42,6 +42,7 @@ class VzPicoWifi
     time_t getSysRefTime();
     bool   isConnected();
     void   printStatistics(log_level_t logLevel);
+    void   ledOn(uint msecs = 0);
 
   private:
     uint    retries;
@@ -54,6 +55,7 @@ class VzPicoWifi
     uint    accTimeUp;
     uint    accTimeDown;
     time_t  lastChange;
+    bool    initialized;
 };
 
 #endif // VZ_PICO_WIFI

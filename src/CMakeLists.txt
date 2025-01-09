@@ -34,6 +34,9 @@ option(VZ_USE_HTTPS "" OFF)
 if(VZ_BUILD_ON_PICO)
   message(STATUS "Building VZ for Raspberry Pico ...")
 
+# Set this is building for a RPi Pico 1:
+# add_compile_options(-DPICO_RP2040)
+
   include_directories(${CMAKE_SOURCE_DIR}/include)
   include_directories(${CMAKE_SOURCE_DIR}/libs)
   include_directories(${CMAKE_SOURCE_DIR}/libs/EmonLib)
@@ -59,6 +62,7 @@ if(VZ_BUILD_ON_PICO)
                     $<TARGET_PROPERTY:pico_base_headers,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:pico_rand,INTERFACE_INCLUDE_DIRECTORIES>
   )
+
 
 # Build the absolute minimum - switch on as needed:
   set(VZ_USE_THREADS OFF)
