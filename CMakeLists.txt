@@ -175,6 +175,13 @@ endif(WIN32)
 
 find_library(LIBUUID uuid)
 find_library(LIBGCRYPT gcrypt)
+find_library(GPIOD_LIBRARY NAMES gpiod)
+
+if(NOT GPIOD_LIBRARY)
+  message(FATAL_ERROR "gpiod library not found")
+else()
+  message(STATUS "gpiod library found: ${GPIOD_LIBRARY}")
+endif()
 
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
