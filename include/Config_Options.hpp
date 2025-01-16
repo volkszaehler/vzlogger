@@ -76,6 +76,7 @@ class Config_Options {
 	bool channel_index() const { return _channel_index; }
 	bool local() const { return _local; }
 	bool foreground() const { return _foreground; }
+	bool singleshot() const { return _singleshot; }
 
 	bool doRegistration() const { return _doRegistration; }
 
@@ -94,6 +95,8 @@ class Config_Options {
 	void local(const bool v) { _local = v; }
 
 	void foreground(const bool v) { _foreground = v; }
+
+	void singleshot(const bool v) { _singleshot = v; }
 
 	void doRegistration(const bool v) { _doRegistration = v; }
 
@@ -117,6 +120,7 @@ class Config_Options {
 	int _channel_index : 1;  // give a index of all available channels via local interface
 	int _local : 1;          // enable local interface
 	int _foreground : 1;     // don't daemonize
+	int _singleshot : 1;     // only get a single reading from each meter, then exit
 	int _doRegistration : 1; // FIXME
 	int _time_machine : 1;   // accept readings from before smart-metering existed
 };

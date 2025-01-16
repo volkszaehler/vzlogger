@@ -17,6 +17,7 @@ class Channel {
 	MOCK_METHOD1(start, void(Channel::Ptr));
 	MOCK_METHOD0(join, void());
 	MOCK_METHOD0(cancel, void());
+	MOCK_METHOD0(running, bool());
 	MOCK_METHOD0(name, const char *());
 	MOCK_METHOD0(options, std::list<Option> &());
 	MOCK_METHOD0(apiProtocol, const std::string());
