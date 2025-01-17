@@ -29,12 +29,13 @@
 #include <Ntp.hpp>
 
 static const char * statusTxt[] = { "Wifi down", "Connected", "Connection failed",
-                                    "No matching SSID found", "Authenticatation failure" };
+                                    "No matching SSID found", "Authentication failure" };
 static const char * wifiLogId = "wifi";
 
-VzPicoWifi::VzPicoWifi(const char * hn, uint numRetries) : sysRefTime(0), firstTime(true), numUsed(0), accTimeUp(0), accTimeDown(0), accTimeConnecting(0), initialized(false)
+VzPicoWifi::VzPicoWifi(const char * hn, uint numRetries, uint timeout) : sysRefTime(0), firstTime(true), numUsed(0), accTimeUp(0), accTimeDown(0), accTimeConnecting(0), initialized(false)
 {
   retries = numRetries;
+  connTimeout = timeout;
   lastChange = time(NULL);
   if(hn != NULL)
   {
@@ -51,51 +52,55 @@ VzPicoWifi::~VzPicoWifi()
  * To be done on demand
  * ====================================================================== */
 
-bool VzPicoWifi::enable()
+bool VzPicoWifi::enable(uint enableRetries)
 {
+  int rc;
   if(initialized)
   {
-    return true;
+    int linkStatus = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+    print(log_debug, "Not initializing WiFi - already done. Link status: %d", wifiLogId, linkStatus);
+  }
+  else
+  { 
+    // --------------------------------------------------------------
+    print(log_info, "Enabling WiFi ...", wifiLogId);
+    // --------------------------------------------------------------
+
+    if(rc = cyw43_arch_init())
+    {
+      print(log_error, "WiFi init failed. Error %d.", wifiLogId, rc);
+      return false;
+    }
+    cyw43_arch_enable_sta_mode();
+
+    this->ledOn();
+
+    cyw43_arch_lwip_begin();
+    struct netif * n = &cyw43_state.netif[CYW43_ITF_STA];
+    if(hostname.empty())
+    {
+      hostname = netif_get_hostname(n);
+    }
+    else
+    {
+      netif_set_hostname(n, hostname.c_str());
+      netif_set_up(n);
+    }
+    cyw43_arch_lwip_end();
+    initialized = true;
   }
 
   time_t now = time(NULL);
   accTimeDown += (now - lastChange);
   lastChange = now;
 
-  // --------------------------------------------------------------
-  print(log_info, "Enabling WiFi ...", wifiLogId);
-  // --------------------------------------------------------------
-
-  int rc;
-  if(rc = cyw43_arch_init())
-  {
-    print(log_error, "WiFi init failed. Error %d.", wifiLogId, rc);
-    return false;
-  }
-  cyw43_arch_enable_sta_mode();
-
-  this->ledOn();
-
-  cyw43_arch_lwip_begin();
-  struct netif * n = &cyw43_state.netif[CYW43_ITF_STA];
-  if(hostname.empty())
-  {
-    hostname = netif_get_hostname(n);
-  }
-  else
-  {
-    netif_set_hostname(n, hostname.c_str());
-    netif_set_up(n);
-  }
-  cyw43_arch_lwip_end();
-
-  for(int i = 0; i < retries; i++)
+  for(int i = 0; i < (enableRetries > 0 ? enableRetries : retries); i++)
   {
     // --------------------------------------------------------------
     print(log_debug, "Connecting WiFi %s (%d) as '%s' ...", wifiLogId, wifiSSID, i, hostname.c_str());
     // --------------------------------------------------------------
 
-    if(! (rc = cyw43_arch_wifi_connect_timeout_ms(wifiSSID, wifiPW, CYW43_AUTH_WPA2_AES_PSK, 30000)))
+    if(! (rc = cyw43_arch_wifi_connect_timeout_ms(wifiSSID, wifiPW, CYW43_AUTH_WPA2_AES_PSK, connTimeout)))
     {
       int32_t rssi;
       uint8_t mac[6];
@@ -113,7 +118,6 @@ bool VzPicoWifi::enable()
       lastChange = now;
       numUsed++;
 
-      initialized = true;
       return true;
     }
     sleep_ms(1000);
@@ -121,6 +125,7 @@ bool VzPicoWifi::enable()
   }
 
   print(log_error, "Failed to connect WiFi '%s'. Error: %d.", wifiLogId, wifiSSID, rc);
+  this->disable();
   return false;
 }
 
@@ -178,6 +183,10 @@ bool VzPicoWifi::isConnected()
 {
   int linkStatus = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
   print(log_debug, "WiFi link status: %s (%d).", wifiLogId, statusTxt[linkStatus], linkStatus);
+  if(linkStatus < 0)
+  {
+    print(log_error, "WiFi link status: %d.", wifiLogId, linkStatus);
+  }
   return (linkStatus == CYW43_LINK_JOIN);
 }
 
