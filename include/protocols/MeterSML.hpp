@@ -65,6 +65,8 @@ class MeterSML : public vz::protocol::Protocol {
 	parity_type_t _parity;
 	std::string _pull;
 	bool _use_local_time;
+	bool _obis1570abs; // returns absolute value for OBIS 15.7.0
+	int _obis1570sign; // sign of OBIS 15.7.0, 1 for positive, -1 for negative
 
 	int _fd;                 /* file descriptor of port */
 	struct termios _old_tio; /* required to reset port */
