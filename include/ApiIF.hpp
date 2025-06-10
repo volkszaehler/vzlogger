@@ -58,7 +58,7 @@ class ApiIF {
 
   private:
 	Channel::Ptr _ch; /**< pointer to channel where API belongs to */
-};                    // class ApiIF
+}; // class ApiIF
 
 } // namespace vz
 #endif /* _ApiIF_hpp_ */

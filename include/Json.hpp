@@ -11,9 +11,7 @@ class Json {
 	Json(struct json_object *jso) : _jso(jso){};
 	~Json() { _jso = NULL; };
 
-	struct json_object *Object() {
-		return _jso;
-	}
+	struct json_object *Object() { return _jso; }
 
   private:
 	struct json_object *_jso;
