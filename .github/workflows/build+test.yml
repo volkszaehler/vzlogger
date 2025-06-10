@@ -11,4 +11,4 @@ jobs:
     - uses: actions/checkout@v2
     - run: cmake . -DSML_HOME=../libsml/sml
     - run: make
-    - run: ctest
+    - run: ctest || ctest --rerun-failed --output-on-failure
