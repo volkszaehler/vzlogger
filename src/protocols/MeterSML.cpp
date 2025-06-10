@@ -194,6 +194,19 @@ MeterSML::MeterSML(std::list<Option> options)
 		print(log_alert, "Failed to parse the parity", name().c_str());
 		throw;
 	}
+
+	_obis1570abs = true; // default to absolute value for OBIS 15.7.0
+	try {
+		_obis1570abs = optlist.lookup_bool(options, "obis1570abs");
+	} catch (vz::OptionNotFoundException &e) {
+		/* using default value if not specified */
+		_obis1570abs = true;
+	}
+
+	_obis1570sign = 1; // default to positive sign for OBIS 15.7.0
+
+	// print(log_info, "MeterSML created with device=%s host=%s baudrate=%d parity=%d pullseq='%s'",
+	//       name().c_str(), _device.c_str(), _host.c_str(), _baudrate, _parity, _pull.c_str());
 }
 
 MeterSML::MeterSML(const MeterSML &proto) : Protocol(proto), _fd(ERR), BUFFER_LEN(SML_BUFFER_LEN) {}
@@ -321,6 +334,33 @@ bool MeterSML::_parse(sml_list *entry, Reading *rd) {
 			return false;
 		} else {
 			rd->value(sml_value_to_double(entry->value) * pow(10, scaler));
+
+			if (!_obis1570abs) {
+
+				// OBIS 15.7.0 values should not be handled as absolute power values
+				print(log_debug, "Value for obis %s: %f (scaler=%d) (status type=%x) (status=%x)", name().c_str(), obis.toString().c_str(),
+				  rd->value(), scaler, (entry->status) ? entry->status->type : 0, (entry->status) ? *entry->status->data.status8 : 0);
+
+				// determine sign of current power from OBIS 1.8.0 status byte			
+				if (Obis(1, 0, 1, 8, 0, 255) == obis) {
+					if (((entry->status) && (entry->status->type == (SML_TYPE_UNSIGNED + SML_TYPE_NUMBER_8 + 1) /*TL=0x62*/) &&
+ 						 (*entry->status->data.status8 & 0x20))) { // Status bit 5 ist set (0x20) if we sent power to the grid
+
+						_obis1570sign = -1; // set sign to negative 
+						print(log_debug, "Power sent to grid.", name().c_str());
+					} else {
+
+						_obis1570sign = 1; // reset sign to positive
+						print(log_debug, "Power consumend from grid.", name().c_str());
+					}
+				}
+
+				// set the sign of current power (OBIS 15.7.1)			
+				if (Obis(1, 0, 15, 7, 0, 255) == obis) {
+					rd->value(rd->value() * _obis1570sign);
+				}
+				print(log_debug, "Value for obis %s: %f (sign=%d)", name().c_str(), obis.toString().c_str(), rd->value(), _obis1570sign);
+			}
 		}
 
 		ReadingIdentifier *rid(new ObisIdentifier(obis));
