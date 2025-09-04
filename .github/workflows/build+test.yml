@@ -2,7 +2,7 @@ name: build+test
 on: [push, pull_request]
 jobs:
   build_and_test:
-    runs-on: ubuntu-latest
+    runs-on: debian-experimental
     steps:
     - name: install deps
       run: sudo apt-get update && sudo apt-get install libjson-c-dev libcurl4-openssl-dev libmicrohttpd-dev libgcrypt20-dev libsasl2-dev libunistring-dev libmosquitto-dev libgmock-dev libgtest-dev
