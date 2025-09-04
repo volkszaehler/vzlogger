@@ -26,6 +26,7 @@
 #ifndef _READING_H_
 #define _READING_H_
 
+#include <cstdint>
 #include <sstream>
 #include <string>
 
