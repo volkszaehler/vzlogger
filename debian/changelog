@@ -1,3 +1,9 @@
+vzlogger (0.8.9) unstable; urgency=medium
+
+  *  Removed CMake min. version and C++ version
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sun, 07 Sep 2025 07:49:18 +0200
+
 vzlogger (0.8.8) unstable; urgency=medium
 
   * Fix to have bulleye accept usernames with underscore 
