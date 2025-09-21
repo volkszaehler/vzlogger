@@ -1,6 +1,7 @@
 vzlogger (0.8.9) unstable; urgency=medium
 
-  *  Removed CMake min. version and C++ version
+  * Removed CMake min. version and C++ version
+  * Removed watch file 
 
  -- Joachim Zobel <jz-2017@heute-morgen.de>  Sun, 07 Sep 2025 07:49:18 +0200
 
