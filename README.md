@@ -58,7 +58,7 @@ For RPi 2 and above Debian packages run on Raspberry Pi OS.
 Our packages are built with MQTT support. The package that is in Debian is 
 built without OMS support while starting with 0.8.7 ours is. 
 
-The packages attached to the release are meant for Debian trixie. The full set
+The packages attached to the release are meant for Debian forky. The full set
 of packages is provided through a repository graciously provided by 
 [Cloudsmith](https://cloudsmith.com).
 
@@ -75,10 +75,10 @@ trust you put into cloudsmith not beeing compromised. As an alternative there
 is the manual way to achive the same result. That starts with adding a file to
 /etc/apt/sources.list.d/ containing
 ```
-deb [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian bookworm main
-deb-src [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian bookworm main
+deb [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian trixie main
+deb-src [signed-by=/usr/share/keyrings/volkszaehler-volkszaehler-org-project-archive-keyring.gpg] https://dl.cloudsmith.io/public/volkszaehler/volkszaehler-org-project/deb/debian trixie main
 ```
-You need to replace bookworm with your distro and debian with raspbian in case
+You need to replace trixie with your distro and debian with raspbian in case
 you are using an RPi 1. You also need to retrieve our repository key as a 
 trusted one. 
 ```
@@ -92,7 +92,7 @@ apt update
 apt install vzlogger
 ```
 
-An official Debian vzlogger package is currently in unstable.
+In addition an official Debian vzlogger package is in trixie and unstable.
 
 OMS Support
 -------------

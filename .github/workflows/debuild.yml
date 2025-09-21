@@ -29,7 +29,7 @@ jobs:
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
       - name: add cloudsmith repo
         run: |
-          LISTENTRY="deb [signed-by=$KEYFILE] $CLOUDURL/debian trixie main"
+          LISTENTRY="deb [signed-by=$KEYFILE] $CLOUDURL/debian forky main"
           echo "$LISTENTRY" | sudo tee -a /etc/apt/sources.list
           gpg --keyserver $KEYSERVER --recv-key $CLOUD_KEY_ID
           sudo -E gpg -v --output "$KEYFILE" --export $CLOUD_KEY_ID
@@ -86,7 +86,7 @@ jobs:
     strategy:
       matrix:
         os: [debian, raspbian]
-        distribution: [trixie, bookworm, bullseye]
+        distribution: [forky, trixie, bookworm, bullseye]
         architecture: [armhf, arm64, amd64]
         exclude:
           - os: raspbian
@@ -94,7 +94,7 @@ jobs:
           - os: raspbian
             architecture: amd64
           - os: raspbian
-            distribution: trixie
+            distribution: forky
         include:
           - mirrorsite: http://ftp2.de.debian.org/debian/
           - mirrorsite: http://mirror.netcologne.de/raspbian/raspbian/
@@ -173,7 +173,7 @@ jobs:
       - name: upload as Release
         run: |
           set -x
-          if [[ "${{ matrix.distribution }}" != trixie ]]; then
+          if [[ "${{ matrix.distribution }}" != forky ]]; then
             exit
           fi
           assets=()
