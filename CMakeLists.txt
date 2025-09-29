@@ -1,4 +1,6 @@
 # -*- mode: cmake; -*-
+# CMake 4 won't build without
+cmake_minimum_required(VERSION 3.5)
 project(vzlogger)
 if(POLICY CMP0011)
   cmake_policy(SET CMP0011 NEW)

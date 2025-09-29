@@ -1,6 +1,7 @@
 vzlogger (0.8.9) unstable; urgency=medium
 
-  * Removed CMake min. version and C++ version
+  * Bumped CMake min. version to 3.5
+  * Removed C++ version
   * Removed watch file
   * Added forky to the Github release
 
