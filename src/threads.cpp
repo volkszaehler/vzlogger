@@ -148,7 +148,7 @@ void *reading_thread(void *arg) {
 							}
 						}
 
-					}                                                   // channel loop
+					} // channel loop
 			} while ((mtr->aggtime() > 0) && (time(NULL) < aggIntEnd)); /* default aggtime is -1 */
 
 			for (MeterMap::iterator ch = mapping->begin(); ch != mapping->end(); ch++) {

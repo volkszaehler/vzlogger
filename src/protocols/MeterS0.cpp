@@ -300,7 +300,7 @@ void MeterS0::counter_thread() {
 				nanosleep(&ts, NULL);              // we can ignore any errors here
 			}
 		} // non blocking case
-	}     // while
+	} // while
 	print(log_finest, "Counter thread stopped with %d imp", name().c_str(), _impulses.load());
 }
 

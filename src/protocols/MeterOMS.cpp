@@ -601,7 +601,7 @@ double MeterOMS::get_record_value(mbus_data_record *record) const {
 			t.tm_year =
 				100 + (((record->data[3] & 0xe0) >> 5) |
 					   ((record->data[4] & 0xf0) >> 1)); // tm_year is number of years since 1900.
-			t.tm_isdst = ((record->data[0] & 0x40) == 0x40) ? 1 : 0;
+			t.tm_isdst = -1;                             // We ignore data[0] & 0x40
 			// check for time invalid at bit 16 (1-based)
 			if ((record->data[1] & 0x80) == 0x80) {
 				// time invalid!
