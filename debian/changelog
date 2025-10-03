@@ -1,3 +1,10 @@
+vzlogger (0.8.9-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #1113626, #1114439)
+  * Migrated watch file to version 5
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Thu, 02 Oct 2025 05:48:53 +0200
+
 vzlogger (0.8.6-2) unstable; urgency=medium
 
   * Added patch that removes an assert for a time duration (Closes: #1071728) 
