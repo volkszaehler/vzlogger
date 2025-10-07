@@ -1,5 +1,5 @@
 Version: 5
 
 Source: https://github.com/volkszaehler/vzlogger/tags
-Matching-Pattern: .*/v?(\d.*)@ARCHIVE_EXT@
+Matching-Pattern: .*/v?([\d.]*)@ARCHIVE_EXT@
 
