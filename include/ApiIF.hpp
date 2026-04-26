@@ -44,7 +44,7 @@ class ApiIF {
 	typedef vz::shared_ptr<ApiIF> Ptr;
 
 	ApiIF(Channel::Ptr ch) : _ch(ch) {}
-	virtual ~ApiIF(){};
+	virtual ~ApiIF() {};
 
 	/**
 	 * @brief send measurement values to middleware

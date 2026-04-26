@@ -43,7 +43,7 @@ typedef struct Pixa PIXA;
 
 class Reads {
   public:
-	Reads() : value(0.0), min_conf(DBL_MAX){};
+	Reads() : value(0.0), min_conf(DBL_MAX) {};
 	double value;
 	std::string conf_id;
 	double min_conf;
@@ -97,7 +97,7 @@ class MeterOCR : public vz::protocol::Protocol {
 		Recognizer(const std::string &type, struct json_object *);
 		virtual bool recognize(PIX *image, int dX, int dY, ReadsMap &reads,
 							   const ReadsMap *old_reads, PIXA *debugPixa) = 0;
-		virtual ~Recognizer(){};
+		virtual ~Recognizer() {};
 		virtual void getCaptureCoords(int &minX, int &minY, int &maxX, int &maxY) = 0;
 
 	  protected:

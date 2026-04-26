@@ -43,14 +43,14 @@
 class ReadingIdentifier {
   public:
 	typedef vz::shared_ptr<ReadingIdentifier> Ptr;
-	virtual ~ReadingIdentifier(){};
+	virtual ~ReadingIdentifier() {};
 
 	virtual size_t unparse(char *buffer, size_t n) = 0;
 	bool operator==(ReadingIdentifier const &other) const { return other.isEqual(this); }
 	virtual const std::string toString() = 0;
 
   protected:
-	explicit ReadingIdentifier(){};
+	explicit ReadingIdentifier() {};
 	virtual bool isEqual(ReadingIdentifier const *other) const = 0;
 
   private:
@@ -73,7 +73,7 @@ class ObisIdentifier : public ReadingIdentifier {
 
 	ObisIdentifier() {}
 	ObisIdentifier(Obis obis) : _obis(obis) {}
-	virtual ~ObisIdentifier(){};
+	virtual ~ObisIdentifier() {};
 
 	size_t unparse(char *buffer, size_t n);
 	bool operator==(ObisIdentifier const &other) const { return _obis == other.obis(); }

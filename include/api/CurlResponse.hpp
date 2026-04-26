@@ -37,7 +37,7 @@ class CurlResponse {
 	typedef vz::shared_ptr<CurlResponse> Ptr;
 
 	CurlResponse() : _header(""), _body("") { clear_response(); };
-	~CurlResponse(){};
+	~CurlResponse() {};
 
 	const std::string get_response() { return _response_data; }
 	const std::string body() const { return _body; }

@@ -17,8 +17,8 @@ namespace mock_MeterS0 {
 
 class mock_S0hwif : public MeterS0::HWIF {
   public:
-	mock_S0hwif(){};
-	virtual ~mock_S0hwif(){};
+	mock_S0hwif() {};
+	virtual ~mock_S0hwif() {};
 	MOCK_METHOD0(_open, bool());
 	MOCK_METHOD0(_close, bool());
 	MOCK_METHOD1(waitForImpulse, bool(bool &));

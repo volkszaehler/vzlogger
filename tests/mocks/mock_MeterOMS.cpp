@@ -17,7 +17,7 @@ namespace mock_MeterOMS {
 
 class mock_OMShwif : public MeterOMS::OMSHWif {
   public:
-	mock_OMShwif() : returned(0), remain(0), data(0){};
+	mock_OMShwif() : returned(0), remain(0), data(0) {};
 	virtual ~mock_OMShwif() {
 		if (data)
 			free(data);

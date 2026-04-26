@@ -37,7 +37,7 @@ template <class T> class List {
 	class Iterator; /* public forward declaration */
 	typedef Iterator iterator;
 
-	List() : size(0), head(NULL), tail(NULL){};
+	List() : size(0), head(NULL), tail(NULL) {};
 	~List() { clear(); };
 
 	Iterator push(T data) {
@@ -108,7 +108,7 @@ template <class T> class List<T>::Iterator {
 	friend class List<T>;
 
   public:
-	Iterator() : cur(NULL){};
+	Iterator() : cur(NULL) {};
 
 	bool operator==(Iterator const &i) const { return (cur == i.cur); };
 	bool operator!=(Iterator const &i) const { return (cur != i.cur); };
@@ -122,7 +122,7 @@ template <class T> class List<T>::Iterator {
 	};
 
   protected:
-	Iterator(Node *node) : cur(node){};
+	Iterator(Node *node) : cur(node) {};
 
 	Node *cur;
 };

@@ -18,8 +18,8 @@ class MeterOMS : public vz::protocol::Protocol {
 	// abstract hw interface access for testability:
 	class OMSHWif {
 	  public:
-		OMSHWif(){};
-		virtual ~OMSHWif(){};
+		OMSHWif() {};
+		virtual ~OMSHWif() {};
 
 		virtual ssize_t read(void *buf, size_t count) = 0;        // similar to ::read
 		virtual ssize_t write(const void *buf, size_t count) = 0; // similar to ::write

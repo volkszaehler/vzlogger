@@ -42,7 +42,7 @@ extern Config_Options options;
 
 class ChannelData {
   public:
-	ChannelData(const int64_t &t, const double &v) : _t(t), _v(v){};
+	ChannelData(const int64_t &t, const double &v) : _t(t), _v(v) {};
 	int64_t _t;
 	double _v;
 };

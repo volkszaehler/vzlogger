@@ -20,8 +20,8 @@ namespace mock_metermap {
 
 class mock_meter : public Meter {
   public:
-	mock_meter(const std::list<Option> &o) : Meter(o){};
-	virtual ~mock_meter(){};
+	mock_meter(const std::list<Option> &o) : Meter(o) {};
+	virtual ~mock_meter() {};
 	//    mock_meter() : Meter(std::list<Option>()) {};
 	MOCK_METHOD0(open, void());
 	MOCK_METHOD0(close, int());

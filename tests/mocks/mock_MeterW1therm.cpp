@@ -16,8 +16,8 @@ namespace mock_MeterW1therm {
 
 class mock_W1hwif : public MeterW1therm::W1HWif {
   public:
-	mock_W1hwif(){};
-	virtual ~mock_W1hwif(){};
+	mock_W1hwif() {};
+	virtual ~mock_W1hwif() {};
 	MOCK_METHOD0(scanW1devices, bool());
 	MOCK_CONST_METHOD0(W1devices, const std::list<std::string> &());
 	MOCK_METHOD2(readTemp, bool(const std::string &dev, double &value));

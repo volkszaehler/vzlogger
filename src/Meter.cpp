@@ -48,8 +48,7 @@
 #endif
 // #include <protocols/.h>
 
-#define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS)                                               \
-	{ meter_protocol_##NAME, #NAME, DESC, MAX_RDS }
+#define METER_DETAIL(NAME, CLASSNAME, DESC, MAX_RDS) {meter_protocol_##NAME, #NAME, DESC, MAX_RDS}
 
 int Meter::instances = 0;
 
