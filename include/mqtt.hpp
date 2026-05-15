@@ -49,12 +49,23 @@ class MqttClient {
 	int _qos = 0;
 	bool _timestamp = false;
 
+	// Home Assistant MQTT Discovery
+	// (https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery)
+	bool _haEnabled = false;
+	std::string _haPrefix;           // discovery prefix, defaults to "homeassistant"
+	std::string _haDeviceName;       // HA device name, defaults to "vzlogger"
+	std::string _haDeviceIdentifier; // HA device identifier, defaults to client id
+
+	void parseHaDiscoveryConfig(struct json_object *option);
+	void publishHaDiscovery(Channel &ch, const std::string &stateTopic, bool aggregated);
+
 	bool _isConnected = false;
 
 	struct mosquitto *_mcs = nullptr; // mosquitto client session data
 
 	struct ChannelEntry {
 		bool _announced = false;
+		bool _haAnnounced = false;
 		bool _sendRaw = true;
 		bool _sendAgg = true;
 		std::string _fullTopicRaw;

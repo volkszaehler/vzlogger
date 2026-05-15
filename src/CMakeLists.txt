@@ -17,7 +17,7 @@ else(LOCAL_SUPPORT)
 endif(LOCAL_SUPPORT)
 
 if(ENABLE_MQTT)
-  set(mqtt_srcs mqtt.cpp)
+  set(mqtt_srcs mqtt.cpp mqtt_ha_discovery.cpp)
 else(ENABLE_MQTT)
   set(mqtt_srcs "")
 endif(ENABLE_MQTT)
