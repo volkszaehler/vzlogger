@@ -6,6 +6,7 @@
 #include "mqtt.hpp"
 #include "common.h"
 #include "mosquitto.h"
+#include "mqtt_ha_discovery.hpp"
 #include <cassert>
 #include <sstream>
 #include <unistd.h>
@@ -63,6 +64,8 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 				_timestamp = json_object_get_boolean(local_value);
 			} else if (strcmp(key, "id") == 0 && local_type == json_type_string) {
 				_id = json_object_get_string(local_value);
+			} else if (strcmp(key, "ha_discovery") == 0 && local_type == json_type_object) {
+				parseHaDiscoveryConfig(local_value);
 			} else {
 				print(log_alert, "Ignoring invalid field or type: %s=%s", NULL, key,
 					  json_object_get_string(local_value));
@@ -77,6 +80,16 @@ MqttClient::MqttClient(struct json_object *option) : _enabled(false) {
 		_topic = std::string("vzlogger/");
 	else
 		_topic += '/';
+
+	// HA discovery defaults
+	if (_haEnabled) {
+		if (!_haPrefix.length())
+			_haPrefix = "homeassistant";
+		if (!_haDeviceName.length())
+			_haDeviceName = "vzlogger";
+		if (!_haDeviceIdentifier.length())
+			_haDeviceIdentifier = _id.length() ? _id : _haDeviceName;
+	}
 
 	// mosquitto lib init:
 	if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
@@ -219,6 +232,72 @@ MqttClient::~MqttClient() {
 	mosquitto_lib_cleanup(); // this assumes nobody else is using libmosquitto!
 }
 
+void MqttClient::parseHaDiscoveryConfig(struct json_object *option) {
+	if (!option)
+		return;
+	json_object_object_foreach(option, key, value) {
+		enum json_type type = json_object_get_type(value);
+		if (strcmp(key, "enabled") == 0 && type == json_type_boolean) {
+			_haEnabled = json_object_get_boolean(value);
+		} else if (strcmp(key, "prefix") == 0 && type == json_type_string) {
+			_haPrefix = json_object_get_string(value);
+		} else if (strcmp(key, "device_name") == 0 && type == json_type_string) {
+			_haDeviceName = json_object_get_string(value);
+		} else if (strcmp(key, "device_identifier") == 0 && type == json_type_string) {
+			_haDeviceIdentifier = json_object_get_string(value);
+		} else {
+			print(log_alert, "Ignoring invalid ha_discovery field: %s", NULL, key);
+		}
+	}
+}
+
+void MqttClient::publishHaDiscovery(Channel &ch, const std::string &stateTopic, bool aggregated) {
+	if (!_mcs)
+		return;
+
+	// Resolve OBIS identifier (if any) for metadata lookup.
+	std::string obisKey;
+	char unparseBuf[200] = {0};
+	if (ch.identifier() && ch.identifier()->unparse(unparseBuf, sizeof(unparseBuf))) {
+		obisKey = unparseBuf;
+	}
+	const vz::mqtt_ha::ObisHaMeta *meta = vz::mqtt_ha::lookupObisHa(obisKey);
+
+	// Unique id derived from channel UUID (dashes stripped for an entity-id friendly slug).
+	std::string uuid = ch.uuid() ? ch.uuid() : "";
+	std::string slug;
+	slug.reserve(uuid.size());
+	for (char c : uuid) {
+		if (c != '-')
+			slug.push_back(c);
+	}
+	if (slug.empty())
+		slug = ch.name() ? ch.name() : "channel";
+	const std::string uniqueId = "vzlogger_" + slug;
+
+	std::string sensorName = meta ? meta->defaultName : (obisKey.length() ? obisKey : uniqueId);
+	if (aggregated)
+		sensorName += " (agg)";
+
+	struct json_object *cfg = vz::mqtt_ha::buildDiscoveryConfig(
+		uniqueId, sensorName, stateTopic, _timestamp, meta, _haDeviceIdentifier, _haDeviceName);
+
+	const std::string discoveryTopic = _haPrefix + "/sensor/" + uniqueId + "/config";
+	const char *payload = json_object_to_json_string(cfg);
+	int payloadLen = static_cast<int>(strlen(payload));
+	// HA Discovery requires the config topic to be retained so HA picks it up on reconnect.
+	int res = mosquitto_publish(_mcs, 0, discoveryTopic.c_str(), payloadLen, payload, _qos, true);
+	if (res != MOSQ_ERR_SUCCESS) {
+		print(log_warning, "HA discovery publish to %s failed: %s", "mqtt", discoveryTopic.c_str(),
+			  mosquitto_strerror(res));
+	} else {
+		print(log_finest, "HA discovery published %s -> state=%s", "mqtt", discoveryTopic.c_str(),
+			  stateTopic.c_str());
+	}
+
+	json_object_put(cfg);
+}
+
 void MqttClient::ChannelEntry::generateNames(const std::string &prefix, Channel &ch) {
 	_announceValues.clear();
 	_fullTopicRaw = prefix;
@@ -282,6 +361,15 @@ void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
 				entry._announced = true; // if one can be announced we treat it successfull
 			}
 		}
+	}
+
+	// Publish Home Assistant MQTT Discovery config once per channel. The state_topic
+	// follows whichever data stream is actually being emitted (agg-only vs. raw).
+	if (_haEnabled && !entry._haAnnounced) {
+		const bool aggOnly = entry._sendAgg && !entry._sendRaw;
+		const std::string &stateTopic = aggOnly ? entry._fullTopicAgg : entry._fullTopicRaw;
+		publishHaDiscovery(*ch, stateTopic, aggOnly);
+		entry._haAnnounced = true;
 	}
 
 	std::string &topic = aggregate ? entry._fullTopicAgg : entry._fullTopicRaw;
