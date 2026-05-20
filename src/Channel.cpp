@@ -86,6 +86,11 @@ Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtoco
 		throw;
 	}
 
+	try {
+		_mqttTopic = optlist.lookup_string(pOptions, "mqtt_topic");
+	} catch (vz::OptionNotFoundException &e) {
+		// optional, defaults to empty string
+	}
 	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
 }
 
