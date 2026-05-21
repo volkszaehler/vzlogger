@@ -54,6 +54,7 @@ static obis_alias_t aliases[] = {
 	{Obis(1, 0, 21, 7, DC, DC), "power-l1", "Wirkleistung  (Phase 1)"},
 	{Obis(1, 0, 41, 7, DC, DC), "power-l2", "Wirkleistung  (Phase 2)"},
 	{Obis(1, 0, 61, 7, DC, DC), "power-l3", "Wirkleistung  (Phase 3)"},
+	{Obis(1, 0, 15, 7, DC, DC), "power-abs", "Wirkleistung  (absolut)"},
 
 	{Obis(1, 0, 12, 7, DC, DC), "voltage", "Spannung      (Mittelwert)"},
 	{Obis(1, 0, 32, 7, DC, DC), "voltage-l1", "Spannung      (Phase 1)"},
