@@ -89,6 +89,21 @@ Channel::Channel(const std::list<Option> &pOptions, const std::string apiProtoco
 	pthread_cond_init(&condition, NULL); // initialize thread syncronization helpers
 }
 
+bool Channel::running() {
+	if (!_thread_running)
+		return _thread_running;
+	int ret = pthread_tryjoin_np(_thread, NULL);
+	if (ret == EBUSY) {
+		// thread still running
+		_thread_running = true;
+	} else if (ret != 0) {
+		print(log_alert, "error from pthread_tryjoin_np()", name());
+	} else {
+		_thread_running = false;
+	}
+	return _thread_running;
+}
+
 /**
  * Free all allocated memory recursively
  */

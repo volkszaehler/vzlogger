@@ -37,7 +37,10 @@
 
 #include "Options.hpp"
 #include "protocols/MeterS0.hpp"
+#include <Config_Options.hpp>
 #include <VZException.hpp>
+
+extern Config_Options options;
 
 MeterS0::MeterS0(std::list<Option> options, HWIF *hwif, HWIF *hwif_dir)
 	: Protocol("s0"), _hwif(hwif), _hwif_dir(hwif_dir), _counter_thread_stop(false),
@@ -423,10 +426,12 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 			rds[ret].value(value);
 			++ret;
 		}
-		rds[ret].identifier(new StringIdentifier("Impulse"));
-		rds[ret].time(req);
-		rds[ret].value(t_imp);
-		++ret;
+		if (!options.singleshot()) {
+			rds[ret].identifier(new StringIdentifier("Impulse"));
+			rds[ret].time(req);
+			rds[ret].value(t_imp);
+			++ret;
+		}
 	}
 
 	if (_send_zero || t_imp_neg > 0) {
@@ -437,10 +442,12 @@ ssize_t MeterS0::read(std::vector<Reading> &rds, size_t n) {
 			rds[ret].value(value);
 			++ret;
 		}
-		rds[ret].identifier(new StringIdentifier("Impulse_neg"));
-		rds[ret].time(req);
-		rds[ret].value(t_imp_neg);
-		++ret;
+		if (!options.singleshot()) {
+			rds[ret].identifier(new StringIdentifier("Impulse_neg"));
+			rds[ret].time(req);
+			rds[ret].value(t_imp_neg);
+			++ret;
+		}
 	}
 	if (_first_impulse && ret > 0)
 		_first_impulse = false;
