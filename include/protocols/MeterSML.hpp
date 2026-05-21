@@ -65,6 +65,7 @@ class MeterSML : public vz::protocol::Protocol {
 	parity_type_t _parity;
 	std::string _pull;
 	bool _use_local_time;
+	bool _direction_from_status;
 
 	int _fd;                 /* file descriptor of port */
 	struct termios _old_tio; /* required to reset port */
@@ -84,7 +85,7 @@ class MeterSML : public vz::protocol::Protocol {
 	 * @param rd the reading to store to
 	 * @return true if it is a valid entry
 	 */
-	bool _parse(sml_list *list, Reading *rd);
+	bool _parse(sml_list *list, Reading *rd, bool *direction_from_status);
 
 	/**
 	 * Open serial port by device
