@@ -34,6 +34,7 @@ add_executable(mock_metermap
 	${mock_sml_sources}
 	../../src/protocols/MeterFluksoV2.cpp
 	../../src/protocols/MeterW1therm.cpp
+	../../src/protocols/MeterSOS_S0.cpp
 	../../src/Reading.cpp
 	../../src/Obis.cpp
 	../../src/ltqnorm.cpp
