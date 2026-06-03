@@ -38,7 +38,7 @@
 #include "local.h"
 #endif
 #ifdef ENABLE_MQTT
-#include "mqtt.hpp"
+#include <api/MQTT.hpp>
 #endif
 #include "PushData.hpp"
 
@@ -139,12 +139,6 @@ void *reading_thread(void *arg) {
 									pushDataList->add(uuid, rds[i].time_ms(), rds[i].value());
 									print(log_finest, "added to uuid %s", "push", uuid.c_str());
 								}
-#ifdef ENABLE_MQTT
-								// update mqtt values as well:
-								if (mqttClient) {
-									mqttClient->publish((*ch), rds[i]);
-								}
-#endif
 							}
 						}
 
@@ -164,24 +158,6 @@ void *reading_thread(void *arg) {
 				if (options.local()) {
 					shrink_localbuffer();          // remove old/outdated data in the local buffer
 					add_ch_to_localbuffer(*(*ch)); // add this ch data to the local buffer
-				}
-#endif
-#ifdef ENABLE_MQTT
-				// update mqtt values as well:
-				if (mqttClient) {
-					Buffer::Ptr buf = (*ch)->buffer();
-					Buffer::iterator it;
-					buf->lock();
-					for (it = buf->begin(); it != buf->end(); ++it) {
-						if (&*it) { // this seems dirty. see issue #427
-									// the lock()/unlock() should avoid it.
-							Reading &r = *it;
-							if (!r.deleted()) {
-								mqttClient->publish((*ch), r, true);
-							}
-						}
-					}
-					buf->unlock();
 				}
 #endif
 
@@ -229,6 +205,11 @@ void *logging_thread(void *arg) { // is started by Channel::start and stopped vi
 		api = vz::ApiIF::Ptr(new vz::api::Null(ch, ch->options()));
 		print(log_debug, "Using null api- meter data available via local httpd if enabled.",
 			  ch->name());
+#ifdef ENABLE_MQTT
+	} else if (0 == strcasecmp(ch->apiProtocol().c_str(), "mqtt")) {
+		api = vz::ApiIF::Ptr(new vz::api::MQTT(ch, ch->options()));
+		print(log_debug, "Using MQTT api", ch->name());
+#endif
 	} else {
 		if (strcasecmp(ch->apiProtocol().c_str(), "volkszaehler"))
 			print(log_alert, "Wrong config! api: <%s> is unknown!", ch->name(),

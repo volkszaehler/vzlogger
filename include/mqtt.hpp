@@ -6,12 +6,7 @@
 #ifndef __mqtt_hpp_
 #define __mqtt_hpp_
 
-#include "Channel.hpp"
-#include "Reading.hpp"
-#include <mutex>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 struct mosquitto; // forward decl. to avoid pulling the header here
 
@@ -23,8 +18,16 @@ class MqttClient {
 	~MqttClient();
 	bool isConfigured() const;
 
-	void publish(Channel::Ptr ch, Reading &rds,
-				 bool aggregate = false); // thread safe, non blocking
+	// thread safe, non blocking. Used by the per-channel mqtt api (vz::api::MQTT).
+	void publish(const std::string &topic, const std::string &payload);
+
+	// global defaults from the "mqtt" config block, used by the api as fallback:
+	const std::string &topicPrefix() const { return _topic; } // ends with '/'
+	int qos() const { return _qos; }
+	bool retain() const { return _retain; }
+	bool timestamp() const { return _timestamp; }
+	bool rawAndAgg() const { return _rawAndAgg; }
+
   protected:
 	friend void *mqtt_client_thread(void *);
 	void connect_callback(struct mosquitto *mosq, int result);
@@ -52,19 +55,6 @@ class MqttClient {
 	bool _isConnected = false;
 
 	struct mosquitto *_mcs = nullptr; // mosquitto client session data
-
-	struct ChannelEntry {
-		bool _announced = false;
-		bool _sendRaw = true;
-		bool _sendAgg = true;
-		std::string _fullTopicRaw;
-		std::string _fullTopicAgg;
-		std::string _announceName;
-		std::vector<std::pair<std::string, std::string>> _announceValues;
-		void generateNames(const std::string &prefix, Channel &ch);
-	};
-	std::mutex _chMapMutex;
-	std::unordered_map<std::string, ChannelEntry> _chMap;
 };
 
 extern MqttClient *mqttClient;

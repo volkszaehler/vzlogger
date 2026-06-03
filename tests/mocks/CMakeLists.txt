@@ -5,7 +5,7 @@ if(LOCAL_SUPPORT)
 endif(LOCAL_SUPPORT)
 
 if(ENABLE_MQTT)
-	set(mock_mqtt_sources ../../src/mqtt.cpp)
+	set(mock_mqtt_sources ../../src/mqtt.cpp ../../src/api/MQTT.cpp)
 else(ENABLE_MQTT)
 	set(mock_mqtt_sources "")
 endif(ENABLE_MQTT)
