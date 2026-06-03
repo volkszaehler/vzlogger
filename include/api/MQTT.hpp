@@ -64,8 +64,8 @@ class MQTT : public ApiIF {
 	bool _retain;
 	bool _timestamp; // include a {timestamp,value} json payload instead of bare value
 
-	bool _announced;                                              // uuid/id already announced
-	std::string _announcePrefix;                                  // topic prefix for announcements
+	bool _announced;             // uuid/id already announced
+	std::string _announcePrefix; // topic prefix for announcements
 	std::vector<std::pair<std::string, std::string>> _announceValues; // e.g. uuid, id
 
 	int64_t _last_timestamp; // remember last sent timestamp (duplicates support)

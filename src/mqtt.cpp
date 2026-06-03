@@ -230,8 +230,8 @@ void MqttClient::publish(const std::string &topic, const std::string &payload) {
 
 	print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 
-	int res = mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos,
-								_retain);
+	int res =
+		mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos, _retain);
 	if (res != MOSQ_ERR_SUCCESS) {
 		print(log_finest, "mosquitto_publish failed: %s", "mqtt", mosquitto_strerror(res));
 	}
