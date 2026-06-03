@@ -42,6 +42,9 @@
 #include <api/MySmartGrid.hpp>
 #include <api/Null.hpp>
 #include <api/Volkszaehler.hpp>
+#ifdef ENABLE_MQTT
+#include <api/MQTT.hpp>
+#endif
 
 extern Config_Options options; /* global application options */
 
@@ -117,6 +120,11 @@ void MeterMap::registration() {
 			api = vz::ApiIF::Ptr(new vz::api::Null(*ch, (*ch)->options()));
 			print(log_debug, "Using null api - meter data available via local httpd if enabled.",
 				  (*ch)->name());
+#ifdef ENABLE_MQTT
+		} else if (0 == strcasecmp((*ch)->apiProtocol().c_str(), "mqtt")) {
+			api = vz::ApiIF::Ptr(new vz::api::MQTT(*ch, (*ch)->options()));
+			print(log_debug, "Using MQTT api", (*ch)->name());
+#endif
 		} else {
 			if (strcasecmp((*ch)->apiProtocol().c_str(), "volkszaehler"))
 				print(log_alert, "Wrong config! api: <%s> is unknown!", (*ch)->name(),

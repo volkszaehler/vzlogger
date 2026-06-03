@@ -7,6 +7,7 @@
 #include "common.h"
 #include "mosquitto.h"
 #include <cassert>
+#include <json-c/json.h>
 #include <sstream>
 #include <unistd.h>
 
@@ -219,96 +220,20 @@ MqttClient::~MqttClient() {
 	mosquitto_lib_cleanup(); // this assumes nobody else is using libmosquitto!
 }
 
-void MqttClient::ChannelEntry::generateNames(const std::string &prefix, Channel &ch) {
-	_announceValues.clear();
-	_fullTopicRaw = prefix;
-	_fullTopicRaw += ch.name(); // todo this converts from std::string to const char and back...
-	_fullTopicRaw += '/';
-	if (ch.identifier()) {
-		char unparseBuf[200];
-		unparseBuf[0] = 0;
-		if (ch.identifier()->unparse(unparseBuf, sizeof(unparseBuf))) {
-			_announceValues.emplace_back("id", unparseBuf);
-		}
-		print(log_finest, "generateNames: ch.name()=%s ch.identifier.toString==%s unparse=%s",
-			  "mqtt", ch.name(), ch.identifier()->toString().c_str(), unparseBuf);
-	}
-	_sendAgg = ch.buffer() && ch.buffer()->get_aggmode() != Buffer::aggmode::NONE;
-
-	_fullTopicAgg = _fullTopicRaw;
-	_announceName = _fullTopicRaw;
-
-	_fullTopicRaw += "raw";
-	_fullTopicAgg += "agg";
-	std::string uuid = ch.uuid();
-	if (uuid.length())
-		_announceValues.emplace_back("uuid", uuid);
-}
-
-void MqttClient::publish(Channel::Ptr ch, Reading &rds, bool aggregate) {
+void MqttClient::publish(const std::string &topic, const std::string &payload) {
 	// take care: this function must be thread safe and non-blocking!
-	// for now we do only call this from read_thread and our mqtt_client thread doesn't harm here
+	// it is called from the per-channel logging threads via vz::api::MQTT.
 	// mosquitto_publish doesn't seem to be blocking. needs further investigation!
 
-	if (!ch)
-		return;
 	if (!_mcs)
 		return;
 
-	// search for cached values:
-	std::unique_lock<std::mutex> lock(_chMapMutex);
-	auto it = _chMap.find(ch->name());
-	if (it == _chMap.end()) {
-		ChannelEntry entry;
-		entry.generateNames(_topic, (*ch));
-		if (entry._sendAgg && !_rawAndAgg)
-			entry._sendRaw = false;
+	print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
 
-		it = _chMap.emplace(std::make_pair(ch->name(), entry)).first;
-	}
-
-	assert(it != _chMap.end());
-	ChannelEntry &entry = (*it).second;
-	// do we need to announce the uuid?
-	if (!entry._announced && entry._announceValues.size()) {
-		for (auto &v : entry._announceValues) {
-			std::string name = entry._announceName + v.first;
-			int res = mosquitto_publish(_mcs, 0, name.c_str(), v.second.length(), v.second.c_str(),
-										_qos, _retain);
-			if (res != MOSQ_ERR_SUCCESS) {
-				print(log_finest, "mosquitto_publish announce \"%s\" failed: %s", "mqtt",
-					  name.c_str(), mosquitto_strerror(res));
-			} else {
-				entry._announced = true; // if one can be announced we treat it successfull
-			}
-		}
-	}
-
-	std::string &topic = aggregate ? entry._fullTopicAgg : entry._fullTopicRaw;
-	if ((entry._sendAgg and aggregate) or (entry._sendRaw && !aggregate)) {
-		lock.unlock(); // we can unlock here already
-		std::string payload;
-		struct json_object *payload_obj = NULL;
-
-		if (_timestamp) {
-			payload_obj = json_object_new_object();
-			json_object_object_add(payload_obj, "timestamp", json_object_new_int64(rds.time_ms()));
-			json_object_object_add(payload_obj, "value", json_object_new_double(rds.value()));
-			payload = json_object_to_json_string(payload_obj);
-		} else {
-			payload = std::to_string(rds.value());
-		}
-
-		print(log_finest, "publish %s=%s", "mqtt", topic.c_str(), payload.c_str());
-
-		int res = mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos,
-									_retain);
-		if (res != MOSQ_ERR_SUCCESS) {
-			print(log_finest, "mosquitto_publish failed: %s", "mqtt", mosquitto_strerror(res));
-		}
-		if (payload_obj != NULL) {
-			json_object_put(payload_obj);
-		}
+	int res = mosquitto_publish(_mcs, 0, topic.c_str(), payload.length(), payload.c_str(), _qos,
+								_retain);
+	if (res != MOSQ_ERR_SUCCESS) {
+		print(log_finest, "mosquitto_publish failed: %s", "mqtt", mosquitto_strerror(res));
 	}
 }
 
