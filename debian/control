@@ -2,13 +2,14 @@ Source: vzlogger
 Section: net
 Priority: optional
 Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
-Build-Depends: debhelper (>= 12),
+Build-Depends: debhelper-compat (= 12),
  pkgconf,
+ cmake
+Build-Depends-Arch:
  libjson-c-dev,
  libcurl4-openssl-dev,
  libmicrohttpd-dev (>= 0.4.6),
  libsml-dev (>= 1.0),
- cmake,
  libsasl2-dev,
  libssl-dev,
  libgcrypt-dev,
