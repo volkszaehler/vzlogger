@@ -186,6 +186,14 @@ MHD_RESULT handle_request(void *cls, struct MHD_Connection *connection, const ch
 
 						json_object_object_add(json_ch, "uuid",
 											   json_object_new_string((*ch)->uuid()));
+						// Add OBIS identifier from config (e.g. "1-0:1.8.0")
+						try {
+							const std::string obis_str = (*ch)->identifier()->toString();
+							json_object_object_add(json_ch, "obis",
+												   json_object_new_string(obis_str.c_str()));
+						} catch (std::exception &e) {
+							// identifier not set or not convertible — skip silently
+						}
 						json_object_object_add(
 							json_ch, "last",
 							json_object_new_int64((*ch)->time_ms())); // return here in ms as well
