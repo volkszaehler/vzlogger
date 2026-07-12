@@ -1,3 +1,11 @@
+vzlogger (0.8.10) unstable; urgency=medium
+
+  * include OBIS identifiers in local httpd json output
+  * allow mqtt_topic to be set from the channel config
+  * split off Build-Depends-Arch in debian/control
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Sun, 12 Jul 2026 16:20:37 +0200
+
 vzlogger (0.8.9) unstable; urgency=medium
 
   * Bumped CMake min. version to 3.5
