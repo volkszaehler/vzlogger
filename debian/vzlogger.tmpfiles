@@ -1,0 +1,1 @@
+f /var/log/vzlogger.log 0644 _vzlogger adm
