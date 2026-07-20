@@ -162,7 +162,9 @@ jobs:
                  --basetgz $PBRT/current.tgz \
                  --debootstrap mmdebstrap \
                    --debootstrapopts \
-                     --keyring=/usr/share/keyrings/${{ matrix.keyring }}.gpg
+                     --keyring=/usr/share/keyrings/${{ matrix.keyring }}.gpg \
+                   --debootstrapopts \
+				     --verbose
       - name: pbuild ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.distribution }}
         # https://stackoverflow.com/questions/70435286/resource-not-accessible-by-integration-on-github-post-repos-owner-repo-ac
         run: |
