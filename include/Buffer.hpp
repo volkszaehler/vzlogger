@@ -44,7 +44,7 @@ class Buffer {
 	enum aggmode { NONE, MAX, AVG, SUM };
 
 	Buffer();
-	virtual ~Buffer();
+	~Buffer();
 
 	void aggregate(int aggtime, bool aggFixedInterval);
 	void push(const Reading &rd);
