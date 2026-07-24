@@ -77,6 +77,27 @@ void MeterMap::start() {
 	}
 }
 
+bool MeterMap::running() {
+	int ret;
+	if (!_thread_running)
+		return _thread_running;
+	for (iterator it = _channels.begin(); it != _channels.end(); it++) {
+		if ((*it)->running())
+			return _thread_running;
+	}
+	ret = pthread_tryjoin_np(_thread, NULL);
+	if (ret == EBUSY) {
+		// thread still running
+		return _thread_running;
+	} else if (ret != 0) {
+		print(log_alert, "error from pthread_tryjoin_np()", _meter->name());
+	} else {
+		// tread has exited
+	}
+	_thread_running = false;
+	return false;
+}
+
 void MeterMap::cancel() { // is called from MapContainer::quit which is called from sigint handler
 						  // handler ::quit
 	print(log_finest, "MeterMap::cancel entered...", _meter->name());
