@@ -56,8 +56,8 @@ class MeterMap {
 	MeterMap(const std::list<Option> &options) : _meter(new Meter(options)) {
 		_thread_running = false;
 	}
-	MeterMap(Meter *m) : _meter(m), _thread_running(false){};
-	~MeterMap(){};
+	MeterMap(Meter *m) : _meter(m), _thread_running(false) {};
+	~MeterMap() {};
 	Meter::Ptr meter() { return _meter; }
 
 	/**
@@ -102,8 +102,8 @@ class MapContainer {
 	typedef std::vector<MeterMap>::iterator iterator;
 	typedef std::vector<MeterMap>::const_iterator const_iterator;
 
-	MapContainer(){};
-	~MapContainer(){};
+	MapContainer() {};
+	~MapContainer() {};
 
 	/**
 	 *  Accessor to the MeterMap (meter and its channels) list

@@ -222,7 +222,8 @@ MqttClient::~MqttClient() {
 void MqttClient::ChannelEntry::generateNames(const std::string &prefix, Channel &ch) {
 	_announceValues.clear();
 	_fullTopicRaw = prefix;
-	_fullTopicRaw += ch.name(); // todo this converts from std::string to const char and back...
+	// Use configured mqtt_topic if set, otherwise fall back to ch.name()
+	_fullTopicRaw += (!ch.mqttTopic().empty()) ? ch.mqttTopic() : ch.name();
 	_fullTopicRaw += '/';
 	if (ch.identifier()) {
 		char unparseBuf[200];

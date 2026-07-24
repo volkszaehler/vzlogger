@@ -10,10 +10,10 @@
 class Channel {
   public:
 	typedef vz::shared_ptr<Channel> Ptr;
-	Channel() : mock_buf(new Buffer()){};
+	Channel() : mock_buf(new Buffer()) {};
 	Channel(const std::list<Option> &pOptions, const std::string api, const std::string pUuid,
 			ReadingIdentifier::Ptr pIdentifier)
-		: mock_buf(new Buffer()){};
+		: mock_buf(new Buffer()) {};
 	MOCK_METHOD1(start, void(Channel::Ptr));
 	MOCK_METHOD0(join, void());
 	MOCK_METHOD0(cancel, void());

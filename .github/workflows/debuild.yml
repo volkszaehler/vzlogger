@@ -86,7 +86,7 @@ jobs:
     strategy:
       matrix:
         os: [debian, raspbian]
-        distribution: [forky, trixie, bookworm, bullseye]
+        distribution: [forky, trixie, bookworm]
         architecture: [armhf, arm64, amd64]
         exclude:
           - os: raspbian

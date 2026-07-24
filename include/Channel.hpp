@@ -74,6 +74,7 @@ class Channel {
 
 	const char *name() const { return _name.c_str(); }
 	std::list<Option> &options() { return _options; }
+	std::string mqttTopic() const { return _mqttTopic; }
 
 	ReadingIdentifier::Ptr identifier() {
 		if (_identifier.use_count() < 1)
@@ -116,6 +117,7 @@ class Channel {
 	std::string _name; // name of the channel
 	std::list<Option> _options;
 
+	std::string _mqttTopic;
 	Buffer::Ptr _buffer; // circular queue to buffer readings
 
 	ReadingIdentifier::Ptr _identifier; // channel identifier (OBIS, string)

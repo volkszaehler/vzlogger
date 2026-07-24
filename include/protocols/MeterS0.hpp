@@ -42,7 +42,7 @@ class MeterS0 : public vz::protocol::Protocol {
   public:
 	class HWIF {
 	  public:
-		virtual ~HWIF(){};
+		virtual ~HWIF() {};
 		virtual bool _open() = 0;
 		virtual bool _close() = 0;
 		virtual bool waitForImpulse(bool &timeout) = 0; // blocking interface

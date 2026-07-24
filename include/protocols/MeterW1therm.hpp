@@ -17,8 +17,8 @@ class MeterW1therm : public vz::protocol::Protocol {
 	// abstract hw interface access for testability:
 	class W1HWif {
 	  public:
-		W1HWif(){};
-		virtual ~W1HWif(){};
+		W1HWif() {};
+		virtual ~W1HWif() {};
 
 		virtual bool scanW1devices() = 0; // scan for w1 devices
 		virtual const std::list<std::string> &
@@ -28,8 +28,8 @@ class MeterW1therm : public vz::protocol::Protocol {
 
 	class W1sysHWif : public W1HWif {
 	  public:
-		W1sysHWif(){};
-		virtual ~W1sysHWif(){};
+		W1sysHWif() {};
+		virtual ~W1sysHWif() {};
 
 		virtual bool scanW1devices();
 		virtual const std::list<std::string> &W1devices() const { return _devices; }

@@ -42,9 +42,9 @@ class Protocol {
   public:
 	typedef vz::shared_ptr<Protocol> Ptr;
 
-	Protocol(const std::string &name) : _name(name){};
+	Protocol(const std::string &name) : _name(name) {};
 
-	virtual ~Protocol(){};
+	virtual ~Protocol() {};
 
 	virtual int open() = 0;
 	virtual int close() = 0;

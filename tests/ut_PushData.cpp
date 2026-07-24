@@ -68,7 +68,7 @@ TEST(PushData, PDL_basic_waitForData4) {
 
 class PushDataServerTest {
   public:
-	PushDataServerTest(PushDataServer &pds) : _pds(pds){};
+	PushDataServerTest(PushDataServer &pds) : _pds(pds) {};
 	std::string generateJson(PushDataList::DataMap &dataMap) { return _pds.generateJson(dataMap); }
 	size_t size() { return _pds._middlewareList.size(); };
 	PushDataServer &_pds;

@@ -5,11 +5,12 @@ Maintainer: Joachim Zobel <jz-2017@heute-morgen.de>
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-installsysusers,
  pkgconf,
+ cmake
+Build-Depends-Arch:
  libjson-c-dev,
  libcurl4-openssl-dev,
  libmicrohttpd-dev (>= 0.4.6),
  libsml-dev (>= 1.0),
- cmake,
  libsasl2-dev,
  libssl-dev (>= 3.0),
  libgcrypt-dev,

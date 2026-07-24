@@ -8,7 +8,7 @@ class Json {
   public:
 	typedef vz::shared_ptr<Json> Ptr;
 
-	Json(struct json_object *jso) : _jso(jso){};
+	Json(struct json_object *jso) : _jso(jso) {};
 	~Json() { _jso = NULL; };
 
 	struct json_object *Object() { return _jso; }
