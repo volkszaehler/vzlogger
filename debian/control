@@ -21,7 +21,7 @@ Build-Depends-Arch:
  libgtest-dev,
  pandoc,
  libmosquitto-dev
-Standards-Version: 4.7.2
+Standards-Version: 4.7.4.1
 Rules-Requires-Root: no
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
 Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian

@@ -1,3 +1,15 @@
+vzlogger (0.8.10-1) unstable; urgency=medium
+
+  * New upstream release
+
+  [ Marc Haber ]
+  * split off Build-Depends-Arch in debian/control
+
+  [ Luca Boccassi ]
+  * Install and use sysusers.d/tmpfiles.d config files
+
+ -- Joachim Zobel <jz-2017@heute-morgen.de>  Fri, 24 Jul 2026 16:45:56 +0200
+
 vzlogger (0.8.9-1) unstable; urgency=medium
 
   * New upstream release (Closes: #1113626, #1114439)
