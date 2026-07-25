@@ -261,7 +261,7 @@ popd
 
 ###############################
 # vzlogger
-if [ -z "$1" ] || contains "$*" vzlogger; then
+if [ -z "$1" ] || contains "$*" vzlogger || contains "$*" mqtt; then
 	echo
 	echo "building and installing vzlogger"
 
