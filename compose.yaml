@@ -1,0 +1,23 @@
+# Example Compose file for running vzlogger from the prebuilt
+# multi-arch image published to GitHub Container Registry.
+#
+# Quick start:
+#   1. Put your vzlogger.conf next to this file.
+#   2. Replace the device path below with your meter's
+#      /dev/serial/by-id/... path.
+#   3. docker compose up -d
+
+services:
+  vzlogger:
+    image: ghcr.io/volkszaehler/vzlogger:latest
+    container_name: vzlogger
+    restart: unless-stopped
+    volumes:
+      - ./vzlogger.conf:/etc/vzlogger.conf:ro
+    devices:
+      # Replace with the persistent path of your meter's USB serial
+      # adapter. You can pass multiple device entries if needed.
+      - /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_XXXXXXXX-if00-port0
+    # Uncomment to expose vzlogger's local HTTP API on the host.
+    # ports:
+    #   - "8080:8080"

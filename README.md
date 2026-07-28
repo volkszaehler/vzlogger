@@ -26,19 +26,30 @@ Then run the installation:
 Docker
 ------
 
-You can also build a docker image:
+### Prebuilt multi-arch image
 
-     docker build -t vzlogger .
-     
-Note, that this will use the newest vzlogger from volkszaehler github (not your local clone).
-You can start it:
+Multi-arch images for `linux/amd64`, `linux/arm64` and `linux/arm/v7`
+are published to GitHub Container Registry and signed with cosign:
 
-     docker run --restart=always -v /home/pi/projects/vzlogger-docker:/etc \
-     --device=/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A9U5N-if00-port0 \
-     --name vzlogger -d vzlogger
+    docker pull ghcr.io/volkszaehler/vzlogger:latest
 
-where /home/pi/projects/vzlogger-docker is the path to the directory containing the vzlogger.conf file and
-/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A8U6N-if00-port0 is your device. You can pass several devices if you have them.
+The easiest way to run vzlogger is with the example Compose file
+shipped in this repository: copy `compose.yaml` next to your
+`vzlogger.conf`, edit the `devices:` line to point at your meter's
+`/dev/serial/by-id/...` path (and add more entries if you have
+multiple meters), then start it with:
+
+    docker compose up -d
+
+### Building locally
+
+To build the image from your local checkout instead (for example to
+test a change before pushing):
+
+    docker build -t vzlogger .
+
+You can then point the Compose file at the local tag by changing
+`image: ghcr.io/volkszaehler/vzlogger:latest` to `image: vzlogger`.
 
 Debian and Raspberry Pi OS Packages
 -------------
