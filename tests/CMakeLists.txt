@@ -49,8 +49,10 @@ else(OCR_TESSERACT_SUPPORT)
 endif(OCR_TESSERACT_SUPPORT)
 
 if(ENABLE_MQTT)
-    list(APPEND test_sources ../src/mqtt.cpp)
+    list(APPEND test_sources ../src/mqtt.cpp ../src/mqtt_ha_discovery.cpp)
     list(APPEND test_libraries ${MQTT_LIBRARY})
+else(ENABLE_MQTT)
+    list(REMOVE_ITEM test_sources ${CMAKE_CURRENT_SOURCE_DIR}/ut_mqtt_ha_discovery.cpp)
 endif(ENABLE_MQTT)
 
 if(OMS_SUPPORT)
