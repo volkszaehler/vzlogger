@@ -32,6 +32,7 @@
 
 #include <ApiIF.hpp>
 #include <Options.hpp>
+#include <TransferBuffer.hpp>
 #include <api/CurlIF.hpp>
 #include <api/CurlResponse.hpp>
 #include <common.h>
@@ -42,6 +43,7 @@ namespace api {
 class InfluxDB : public ApiIF {
   public:
 	typedef vz::shared_ptr<ApiIF> Ptr;
+	typedef TransferBuffer::size_type size_type;
 
 	InfluxDB(const Channel::Ptr &ch, const std::list<Option> &options);
 	~InfluxDB();
@@ -65,16 +67,13 @@ class InfluxDB : public ApiIF {
 	std::string _tags;
 	std::string _url;
 	int _max_batch_inserts;
-	int _max_buffer_size;
+	size_type _max_buffer_size;
 	unsigned int _curl_timeout;
 	bool _send_uuid;
 	bool _ssl_verifypeer;
-	std::list<Reading> _values;
 	CurlResponse::Ptr _response;
-
-	int64_t _last_timestamp; /* remember last timestamp */
-	// duplicates support:
-	Reading *_lastReadingSent;
+	TransferBuffer _buffer;
+	std::stringstream _request;
 
 	typedef struct {
 		CURL *curl;

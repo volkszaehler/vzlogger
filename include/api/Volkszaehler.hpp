@@ -38,6 +38,7 @@
 #include <stdint.h>
 
 #include "Buffer.hpp"
+#include "TransferBuffer.hpp"
 #include <ApiIF.hpp>
 #include <Options.hpp>
 
@@ -59,7 +60,6 @@ class Volkszaehler : public ApiIF {
 	typedef vz::shared_ptr<ApiIF> Ptr;
 
 	Volkszaehler(Channel::Ptr ch, std::list<Option> options);
-	~Volkszaehler();
 
 	void send();
 
@@ -71,6 +71,8 @@ class Volkszaehler : public ApiIF {
 	std::string _middleware;
 	unsigned int _curlTimeout;
 	std::string _url;
+	api_handle_t _api;
+	TransferBuffer _buffer;
 
 	/**
 	 * Create JSON object of tuples
@@ -87,14 +89,6 @@ class Volkszaehler : public ApiIF {
 	void api_parse_exception(CURLresponse response, char *err, size_t n);
 
   private:
-	api_handle_t _api;
-
-	// Volatil
-	std::list<Reading> _values;
-	int64_t _last_timestamp; /**< remember last timestamp */
-	// duplicate support:
-	Reading *_lastReadingSent;
-
 }; // class Volkszaehler
 
 /**

@@ -41,7 +41,7 @@
 extern Config_Options options;
 
 vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOptions)
-	: ApiIF(ch), _response(new vz::api::CurlResponse()), _last_timestamp(0), _lastReadingSent(0) {
+	: ApiIF(ch), _response(new vz::api::CurlResponse()) {
 	OptionList optlist;
 	print(log_debug, "InfluxDB API initialize", ch->name());
 
@@ -169,7 +169,7 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 	}
 
 	try {
-		_max_buffer_size = optlist.lookup_int(pOptions, "max_buffer_size");
+		_max_buffer_size = static_cast<size_type>(optlist.lookup_int(pOptions, "max_buffer_size"));
 		print(log_finest, "api InfluxDB using max_buffer_size: %i", ch->name(), _max_buffer_size);
 	} catch (vz::OptionNotFoundException &e) {
 		_max_buffer_size = _max_batch_inserts * 100; // max items in buffer
@@ -240,12 +240,12 @@ vz::api::InfluxDB::InfluxDB(const Channel::Ptr &ch, const std::list<Option> &pOp
 vz::api::InfluxDB::~InfluxDB() { curl_slist_free_all(_token_header); }
 
 void vz::api::InfluxDB::send() {
+	using std::fixed;
+	using std::setprecision;
+	using std::to_string;
+
 	long int http_code;
 	CURLcode curl_code;
-	int request_body_lines = 0;
-	std::string request_body;
-	Buffer::Ptr buf = channel()->buffer();
-	Buffer::iterator it;
 
 	_api.curl =
 		curlSessionProvider ? curlSessionProvider->get_easy_session(_host + channel()->uuid()) : 0;
@@ -254,109 +254,56 @@ void vz::api::InfluxDB::send() {
 		throw vz::VZException("CURL: cannot create handle.");
 	}
 
+	Buffer::Ptr buf = channel()->buffer();
 	print(log_debug, "Buffer has %i items", channel()->name(), buf->size());
 
 	// delete items if the buffer grows too large
-	if (buf->size() > (unsigned)_max_buffer_size) {
+	if (_buffer.size() > _max_buffer_size) {
 		print(log_warning,
-			  "Buffer too big (%i items). Deleting items. (This indicates a connection problem)",
-			  channel()->name(), buf->size());
-		unsigned int delta_delete =
-			buf->size() - (unsigned)_max_buffer_size; // number of items to delete from buffer
-		buf->lock();
-		it = buf->begin();
-		while (!(
-			delta_delete == 0 ||
-			(it ==
-			 buf->end()))) { // buf->end() check shouldnt be necessary. But better safe than sorry.
-			it->mark_delete();
-			it++;
-			delta_delete--;
-		}
-		buf->unlock();
-		buf->clean();
-		print(log_debug, "cleaned buffer, now %i items", channel()->name(), buf->size());
+			  "Transfer buffer too big (%i items). Deleting items. (This indicates a connection "
+			  "problem)",
+			  channel()->name(), _buffer.size());
+
+		_buffer.discard(_buffer.size() - _max_buffer_size);
+		print(log_debug, "cleaned buffer, now %i items", channel()->name(), _buffer.size());
 	}
 
-	int64_t timestamp = 1;
-	const int duplicates = channel()->duplicates();
-	const int duplicates_ms = duplicates * 1000;
+	_buffer.append(*buf, channel()->name(), 1000 * channel()->duplicates());
 
-	// build request body from buffer contents
-	buf->lock();
-	for (it = buf->begin(); it != buf->end(); it++) {
-		if (request_body_lines >= _max_batch_inserts) {
-			print(log_debug, "reached maximum lines for InfluxDB insertion request.",
-				  channel()->name());
-			break;
-		}
+	// build request body from buffer content
+	auto it(_buffer.begin());
+	auto last(std::min(it + _max_buffer_size, _buffer.end()));
 
-		bool sendData = false;
+	_request.clear();
+	_request.seekp(0, std::ios_base::beg);
+	_request << fixed << setprecision(6);
 
-		timestamp = it->time_ms();
-
-		print(log_finest, "Reading buffer: timestamp %lld value %f", channel()->name(),
-			  it->time_ms(), it->value());
-
-		print(log_debug, "compare: %lld %lld", channel()->name(), _last_timestamp, timestamp);
-		// we can only add/consider a timestamp if the ms resolution is not before than from
-		// previous one:
-		if (_last_timestamp <= timestamp) {
-			if (0 == duplicates) { // send all values
-				sendData = true;
-				_last_timestamp = timestamp;
-			} else {
-				const Reading &r = *it;
-				// duplicates should be ignored
-				// but send at least each <duplicates> seconds
-
-				if (!_lastReadingSent) { // first one from the duplicate consideration -> send it
-					sendData = true;
-					_lastReadingSent = new Reading(r);
-					_last_timestamp = timestamp;
-				} else { // one reading sent already. compare
-					// a) timestamp
-					// b) duplicate value
-					if ((timestamp >= (_last_timestamp + duplicates_ms)) ||
-						(r.value() != _lastReadingSent->value())) {
-						// send the current one:
-						sendData = true;
-						_last_timestamp = timestamp;
-						*_lastReadingSent = r;
-					} else {
-						// ignore it
-					}
-				}
-			}
-		}
-
-		if (sendData) {
-			request_body.append(_measurement_name);
-			if (_send_uuid) {
-				request_body.append(",uuid=");
-				request_body.append(channel()->uuid());
-			}
-			if (!_tags.empty()) {
-				request_body.append(",");
-				request_body.append(_tags);
-			}
-			std::stringstream value_str;
-			value_str << " value=" << std::fixed << std::setprecision(6) << it->value();
-			request_body.append(value_str.str());
-			request_body.append(" ");
-			request_body.append(std::to_string(timestamp));
-			request_body.append("\n"); // each measurement on new line
-			request_body_lines++;
-		}
-
-		it->mark_delete();
+	std::string prefix(_measurement_name);
+	if (_send_uuid) {
+		prefix += ",uuid=";
+		prefix += channel()->uuid();
 	}
 
-	buf->unlock();
+	if (!_tags.empty()) {
+		prefix += ",";
+		prefix += _tags;
+	}
 
-	if (request_body_lines > 0) { // there is something to send
-		print(log_finest, "request body is %s", channel()->name(), request_body.c_str());
+	for (; it != last; ++it) {
+		_request << prefix << " value=" << it->value() << " " << to_string(it->time_ms()) << "\n";
+	}
 
+	if (_request.tellp() > 0) { // there is something to send
+
+#if __cplusplus >= 202002L
+		_request << std::ends; // ensure _request is null-terminated
+		const char *request_body = _request.view().data();
+#else
+		auto tmp = _request.str();
+		const char *request_body = tmp.c_str();
+#endif
+
+		print(log_finest, "request body is %s", channel()->name(), request_body);
 		_response->clear_response(); // initialize with empty response
 
 		// if the username option is set, use curl with HTTP basic auth
@@ -378,7 +325,7 @@ void vz::api::InfluxDB::send() {
 		curl_easy_setopt(_api.curl, CURLOPT_NOSIGNAL, 1);
 		curl_easy_setopt(_api.curl, CURLOPT_TIMEOUT, _curl_timeout);
 
-		curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body.c_str());
+		curl_easy_setopt(_api.curl, CURLOPT_POSTFIELDS, request_body);
 		curl_easy_setopt(_api.curl, CURLOPT_WRITEFUNCTION,
 						 &(vz::api::CurlCallback::write_callback));
 		curl_easy_setopt(_api.curl, CURLOPT_WRITEDATA, response());
@@ -390,9 +337,12 @@ void vz::api::InfluxDB::send() {
 
 		if (curl_code == CURLE_OK && http_code >= 200 && http_code < 300) { // everything is ok
 			print(log_debug, "InfluxDB CURL success", channel()->name());
-			buf->clean(); // delete the stuff we just sent to InfluxDB from the buffer
+			auto ndel = _buffer.discard(_max_buffer_size);
+			if (_buffer.empty())
+				print(log_finest, "emptied all (%d) values", channel()->name(), ndel);
+			else
+				print(log_finest, "emptied MAX_CHUNK_SIZE (%d) values", channel()->name(), ndel);
 		} else {
-			buf->undelete(); // failure to insert, so dont delete the buffer
 			if (curl_code != CURLE_OK) {
 				print(log_error, "CURL Error: %s", channel()->name(),
 					  curl_easy_strerror(curl_code));
@@ -414,5 +364,5 @@ void vz::api::InfluxDB::send() {
 }
 
 void vz::api::InfluxDB::register_device() {
-	// TODO: is this needed?
+	// implements purely virtual ApiIF::register_device
 }
