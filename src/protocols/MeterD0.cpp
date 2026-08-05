@@ -416,7 +416,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 	char endseq[2 + 1]; // Endsequence ! not ?!
 	size_t number_of_tuples;
 	int bytes_read;
-	time_t start_time, end_time;
+	time_t start_time, act_time, cur_time;
 	struct termios tio;
 	int baudrate_connect, baudrate_read; // Baudrates for switching
 
@@ -442,7 +442,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 			  wlen);
 	}
 
-	time(&start_time);
+	time(&act_time);
 
 	byte_iterator = number_of_tuples = baudrate = 0;
 	byte = lastbyte = 0;
@@ -474,8 +474,8 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 	while (1) {
 		_safe_to_cancel();
 		// check for timeout
-		time(&end_time);
-		if (difftime(end_time, start_time) > _read_timeout_s) {
+		time(&cur_time);
+		if (difftime(cur_time, act_time) > _read_timeout_s) {
 			print(log_error, "nothing received for more than %d seconds", name().c_str(),
 				  _read_timeout_s);
 			dump_file(CTRL, "timeout!");
@@ -496,7 +496,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 
 		// reset timeout if we are making progress
 		if (context != START) {
-			time(&start_time);
+			time(&act_time);
 		}
 
 		lastbyte = byte;
@@ -513,6 +513,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 		case START:            // strip the initial "/"
 			if (byte == '/') { // if ((byte != '\r') &&  (byte != '\n')) { 	// allow extra new line
 							   // at the start
+				time(&start_time);                    // remember time of start of transmission
 				byte_iterator = number_of_tuples = 0; // start
 				context = VENDOR;                     // set new context: START -> VENDOR
 			} // else ignore the other chars. -> Wait for / (!? is checked above already)
@@ -794,7 +795,7 @@ ssize_t MeterD0::read(std::vector<Reading> &rds, size_t max_readings) {
 						Obis obis(obis_code);
 						ReadingIdentifier *rid(new ObisIdentifier(obis));
 						rds[number_of_tuples].identifier(rid);
-						rds[number_of_tuples].time();
+						rds[number_of_tuples].time(start_time);
 						number_of_tuples++;
 					} catch (vz::VZException &e) {
 						print(log_alert, "Failed to parse obis code (%s)", name().c_str(),
