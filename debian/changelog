@@ -2,11 +2,28 @@ vzlogger (0.8.10-1) unstable; urgency=medium
 
   * New upstream release
 
+  [ Joachim Zobel ]
+  * d/control: 
+    - Bumped Standards-version
+    - Removed outdated BD version constraints
+
   [ Marc Haber ]
   * split off Build-Depends-Arch in debian/control
 
+    This makes it easier to build the source package only, for example for a
+    binary build inside sbuild. Build-Depends: must always be satisfied,
+    Build-Depends-Arch: only when the architecture dependent binary packages
+    are built. So, one just needs debhelper-compat 12, pkgconf, and cmake to
+    build the source package. All the library dev packages are only needed
+    to build the actual binary package.
+
   [ Luca Boccassi ]
   * Install and use sysusers.d/tmpfiles.d config files
+
+    sysusers.d/tmpfiles.d config files allow a package to use declarative
+    configuration instead of manually written maintainer scripts. This also
+    allows image-based systems to be created with /usr/ only, and also
+    allows for factory resetting a system and recreating /etc/ on boot.
 
  -- Joachim Zobel <jz-2017@heute-morgen.de>  Fri, 24 Jul 2026 16:45:56 +0200
 

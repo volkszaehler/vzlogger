@@ -9,10 +9,10 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch:
  libjson-c-dev,
  libcurl4-openssl-dev,
- libmicrohttpd-dev (>= 0.4.6),
+ libmicrohttpd-dev,
  libsml-dev (>= 1.0),
  libsasl2-dev,
- libssl-dev (>= 3.0),
+ libssl-dev,
  libgcrypt-dev,
  libgnutls28-dev,
  uuid-dev,
@@ -21,7 +21,7 @@ Build-Depends-Arch:
  libgtest-dev,
  pandoc,
  libmosquitto-dev
-Standards-Version: 4.7.4.1
+Standards-Version: 4.7.4
 Rules-Requires-Root: no
 Homepage: http://wiki.volkszaehler.org/software/controller/vzlogger
 Vcs-Git: https://github.com/volkszaehler/vzlogger.git -b debian
