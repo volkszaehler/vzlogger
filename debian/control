@@ -6,6 +6,7 @@ Build-Depends: debhelper-compat (= 12),
  pkgconf,
  cmake
 Build-Depends-Arch:
+ dh-sequence-cruft,
  libjson-c-dev,
  libcurl4-openssl-dev,
  libmicrohttpd-dev (>= 0.4.6),
