@@ -73,6 +73,7 @@ class InfluxDB : public ApiIF {
 	CurlResponse::Ptr _response;
 
 	int64_t _last_timestamp; /* remember last timestamp */
+	bool _send_failed;       /* last insert failed, log when it succeeds again */
 	// duplicates support:
 	Reading *_lastReadingSent;
 
