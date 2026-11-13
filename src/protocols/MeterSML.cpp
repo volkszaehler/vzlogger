@@ -46,6 +46,7 @@
 #include "threads.h"
 
 /* sml stuff */
+#include <sml/sml_crc16.h>
 #include <sml/sml_file.h>
 #include <sml/sml_transport.h>
 
@@ -98,6 +99,12 @@ MeterSML::MeterSML(std::list<Option> options)
 	} catch (vz::OptionNotFoundException &e) {
 		/* using default value if not specified */
 		_use_local_time = false;
+	}
+	try {
+		_dump_crc_errors = optlist.lookup_bool(options, "dump_crc_errors");
+	} catch (vz::OptionNotFoundException &e) {
+		/* using default value if not specified */
+		_dump_crc_errors = false;
 	}
 
 	/* baudrate */
@@ -278,6 +285,12 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 		return (0);
 	}
 
+	if (_dump_crc_errors && !_transport_crc_ok(buffer, bytes)) {
+		print(log_warning, "SML transport CRC mismatch, raw frame (%zu bytes):", name().c_str(),
+			  bytes);
+		_dump_frame(buffer, bytes);
+	}
+
 	/* parse SML file & stripping escape sequences */
 	file = sml_file_parse(buffer + 8, bytes - 16);
 
@@ -302,6 +315,33 @@ ssize_t MeterSML::read(std::vector<Reading> &rds, size_t n) {
 	sml_file_free(file);
 
 	return m; // return number of successful readings
+}
+
+/*
+ * Verify the CRC of the SML transport frame (escape start ... 1b1b1b1b 1a NN CRC CRC).
+ * libsml only checks the per-message CRCs and silently drops bad messages, so this is
+ * the only place where the whole raw frame is still available.
+ * Accept CRC-16/X.25 and CRC-16/Kermit (Holley DTZ541), same as libsml does per message.
+ */
+bool MeterSML::_transport_crc_ok(const unsigned char *buf, size_t len) const {
+	if (len < 16)
+		return false;
+	u16 crc = (u16)((buf[len - 2] << 8) | buf[len - 1]);
+	return crc == sml_crc16_calculate((unsigned char *)buf, len - 2) ||
+		   crc == sml_crc16kermit_calculate((unsigned char *)buf, len - 2);
+}
+
+/* hexdump in 32-byte lines so the output stays well below print()'s line limit */
+void MeterSML::_dump_frame(const unsigned char *buf, size_t len) const {
+	const size_t per_line = 32;
+	char line[per_line * 2 + 1];
+	for (size_t off = 0; off < len; off += per_line) {
+		size_t n = (len - off < per_line) ? len - off : per_line;
+		for (size_t i = 0; i < n; i++)
+			snprintf(line + i * 2, 3, "%02x", buf[off + i]);
+		line[n * 2] = '\0';
+		print(log_warning, "  %04zx: %s", name().c_str(), off, line);
+	}
 }
 
 bool MeterSML::_parse(sml_list *entry, Reading *rd) {
