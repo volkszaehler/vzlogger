@@ -523,6 +523,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "use the local time for reading timestamp?"
+                        },
+                        "dump_crc_errors": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "check the transport CRC of each SML frame; on a mismatch drop the frame and log it as hex (log level warning)"
                         }
                     },
                 "required": ["protocol", "device", "baudrate", "parity"]
@@ -565,6 +570,11 @@
                             "type": "boolean",
                             "default": false,
                             "description": "use the local time for reading timestamp?"
+                        },
+                        "dump_crc_errors": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "check the transport CRC of each SML frame; on a mismatch drop the frame and log it as hex (log level warning)"
                         }
                     },
                 "required": ["protocol", "host", "baudrate", "parity"]
